@@ -1,11 +1,13 @@
 import React from 'react';
-import styles from './App.module.css';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { Button } from 'antd';
 
 function App() {
   return (
     <Router>
-      <div className={styles.App}>ss</div>
+      <div className="App">
+        <Button type="primary">Button</Button>
+      </div>
     </Router>
   );
 }

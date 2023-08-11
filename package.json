@@ -38,6 +38,7 @@
     "vite": "^2.5.10"
   },
   "dependencies": {
+    "antd": "^5.8.3",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "react": "^17.0.2",
