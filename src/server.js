@@ -1,6 +1,6 @@
 const path = require('path');
 const express = require('express');
-const router = require('./lib/router');
+const router = require('./api/router');
 
 const { PORT = 3001 } = process.env;
 
