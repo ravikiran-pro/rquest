@@ -1,14 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { default as routes } from './routes';
-import { Loginscreen } from '../../screens';
+import { LoginScreen, HomeScreen } from '../../screens';
 
 export default function AppRoutes() {
   return (
     <Router>
       <Switch>
+        <Route path={routes.login}>
+          <LoginScreen />
+        </Route>
         <Route path={routes.home}>
-          <Loginscreen />
+          <HomeScreen />
         </Route>
       </Switch>
     </Router>

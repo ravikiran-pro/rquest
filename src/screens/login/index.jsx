@@ -3,7 +3,7 @@ import { Form, Input, Button, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
 
-const Loginscreen = () => {
+const LoginScreen = () => {
   const { register, handleSubmit, errors } = useForm();
 
   const onSubmit = (data) => {
@@ -44,4 +44,4 @@ const Loginscreen = () => {
   );
 };
 
-export default Loginscreen;
+export default LoginScreen;
