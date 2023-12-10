@@ -4,11 +4,10 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
 
 const LoginScreen = () => {
-  const { register, handleSubmit, errors } = useForm();
+  const { handleSubmit } = useForm();
 
   const onSubmit = (data) => {
     console.log('Login data:', data);
-    // Perform login logic here
   };
 
   return (

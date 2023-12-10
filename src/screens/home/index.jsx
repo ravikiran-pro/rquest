@@ -1,27 +1,19 @@
 import React, { useState } from 'react';
 import { Input, Button, Modal, Typography, Col, Row } from 'antd';
-import { useForm } from 'react-hook-form';
+// import { useForm } from 'react-hook-form';
 import { SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent } from '../../app/components';
 
 const { Text } = Typography;
 
 const HomeScreen = () => {
-  const { register, handleSubmit, errors } = useForm();
+  // const { register, handleSubmit, errors } = useForm();
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
 
   const handleSearch = (value) => {
-    // Handle search logic here
     console.log('Search Text:', value);
-  };
-
-  const handleShowLocation = () => {
-    // Implement logic to show current location
-    // For simplicity, let's just log a message and update marker location
-    console.log('Show current location clicked');
-    setMarkerLocation([/* Updated latitude */, /* Updated longitude */]);
   };
 
   const handleOpenModal = () => {
@@ -43,35 +35,39 @@ const HomeScreen = () => {
     >
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <Row>
-        <Col span={24}>
-          <div>
-            <Input
-              placeholder="Search for products..."
-              allowClear
-              onChange={(e) => setSearchText(e.target.value)}
-              value={searchText}
-              style={{ marginRight: '10px' }}
-              onPressEnter={() => handleSearch(searchText)}
-              suffix={
-                <Button
-                  type="primary"
-                  icon={<SearchOutlined />}
-                  onClick={() => handleSearch(searchText)}
-                />
-              }
-            />
-          </div>
-          <div>
-            <Text
-              type="secondary"
-              underline
-              onClick={handleOpenModal}
-              style={{ marginRight: '10px', cursor: 'pointer', float:'right' }}
-            >
-              Current Marker Location
-            </Text>
-          </div>
-        </Col>
+          <Col span={24}>
+            <div>
+              <Input
+                placeholder="Search for products..."
+                allowClear
+                onChange={(e) => setSearchText(e.target.value)}
+                value={searchText}
+                style={{ marginRight: '10px' }}
+                onPressEnter={() => handleSearch(searchText)}
+                suffix={
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={() => handleSearch(searchText)}
+                  />
+                }
+              />
+            </div>
+            <div>
+              <Text
+                type="secondary"
+                underline
+                onClick={handleOpenModal}
+                style={{
+                  marginRight: '10px',
+                  cursor: 'pointer',
+                  float: 'right',
+                }}
+              >
+                Current Marker Location
+              </Text>
+            </div>
+          </Col>
         </Row>
       </div>
       <Modal
@@ -81,10 +77,13 @@ const HomeScreen = () => {
         footer={null}
       >
         <div>
-          <LeafletComponent markerLocation={markerLocation} />
+          <LeafletComponent
+            markerLocation={markerLocation}
+            setMarkerLocation={setMarkerLocation}
+          />
         </div>
       </Modal>
-    </div >
+    </div>
   );
 };
 
