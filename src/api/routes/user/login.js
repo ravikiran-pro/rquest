@@ -30,7 +30,7 @@ const login = async (req, res) => {
       } else {
         res.status(500).json({
           success: false,
-          error: error,
+          error: 'Password Authentication Failed',
           message: 'Password Authentication Failed',
         });
       }
