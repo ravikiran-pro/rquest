@@ -21,7 +21,7 @@ const createUser = async (req, res) => {
         success: true,
         token: token,
         user_data: {
-          username: user?.username,
+          username: user.username,
         },
       });
     } else {
