@@ -6,10 +6,9 @@ import { netWorkCall, storageKeys } from '../../app/utils/helper';
 import { useHistory } from 'react-router-dom';
 import { useGlobalStore } from '../../app/zustand';
 
-
 const RegisterScreen = () => {
   const history = useHistory();
-  const update_user_data = useGlobalStore((state) => state.update_user_data)
+  const update_user_data = useGlobalStore((state) => state.update_user_data);
 
   const { handleSubmit, register } = useForm();
 
@@ -18,17 +17,17 @@ const RegisterScreen = () => {
       let body = JSON.stringify({
         username: data.username,
         password: data.password,
-        mobile: data.mobile
+        mobile: data.mobile,
       });
-      const res = await netWorkCall('user/register', 'POST', body)
-      if(res.success === true){
-        sessionStorage.setItem(storageKeys.auth_token, res.token)
-        update_user_data(res.user_data)
+      const res = await netWorkCall('user/register', 'POST', body);
+      if (res.success === true) {
+        sessionStorage.setItem(storageKeys.auth_token, res.token);
+        update_user_data(res.user_data);
         history.push('/home');
-      }else{
-        alert(res.message)
+      } else {
+        alert(res.message);
       }
-      console.log(res)
+      console.log(res);
     }
   };
 
@@ -42,7 +41,10 @@ const RegisterScreen = () => {
       }}
     >
       <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-        <Typography.Title level={5} style={{ textAlign: 'left', marginBottom: 20 }}>
+        <Typography.Title
+          level={5}
+          style={{ textAlign: 'left', marginBottom: 20 }}
+        >
           Register User:
         </Typography.Title>
         <Form.Item
@@ -60,7 +62,7 @@ const RegisterScreen = () => {
           rules={[{ required: true, message: 'Please enter your username' }]}
         >
           <Input
-            type='mobile'
+            type="mobile"
             prefix={<UserOutlined />}
             placeholder="Mobile"
             {...register('mobile')}

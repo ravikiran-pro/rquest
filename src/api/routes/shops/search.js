@@ -86,9 +86,9 @@ const getMyShops = async (req, res) => {
         'updatedAt',
       ],
       where: {
-        owner_id : user_id
+        owner_id: user_id,
       },
-      order: [['createdAt', 'ASC']]
+      order: [['createdAt', 'ASC']],
     });
 
     res.send(200, {

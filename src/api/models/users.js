@@ -12,12 +12,11 @@ module.exports = (sequelize) => {
     },
     mobile: {
       type: DataTypes.STRING,
-      unique: true
+      unique: true,
     },
     password: {
       type: DataTypes.STRING,
       allowNull: false,
-      
     },
     role_id: {
       type: DataTypes.UUID,

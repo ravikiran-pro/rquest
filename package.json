@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "client:dev": "vite",
     "server:dev": "nodemon src/server.js",
-    "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/api/config,src/api/models,src/api/routes' src",
+    "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/api/config,src/api/models,src/api/routes,src/api/auth' src",
     "client:build": "vite build",
     "build": "npm run server:build && npm run client:build",
     "serve": "vite preview",

@@ -8,8 +8,7 @@ import { useGlobalStore } from '../../app/zustand';
 
 const LoginScreen = () => {
   const history = useHistory();
-  const update_user_data = useGlobalStore((state) => state.update_user_data)
-
+  const update_user_data = useGlobalStore((state) => state.update_user_data);
 
   const { handleSubmit } = useForm();
 
@@ -18,16 +17,16 @@ const LoginScreen = () => {
       let body = JSON.stringify({
         mobile: data.mobile,
         password: data.password,
-      })
-      const res = await netWorkCall('user/login', 'POST', body)
-      if(res.success === true){
-        sessionStorage.setItem(storageKeys.auth_token, res.token)
-        update_user_data(res.user_data)
+      });
+      const res = await netWorkCall('user/login', 'POST', body);
+      if (res.success === true) {
+        sessionStorage.setItem(storageKeys.auth_token, res.token);
+        update_user_data(res.user_data);
         history.push('/home');
-      }else{
-        alert(res.message)
+      } else {
+        alert(res.message);
       }
-      console.log(res)
+      console.log(res);
     }
   };
 
@@ -41,7 +40,12 @@ const LoginScreen = () => {
       }}
     >
       <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-      <Typography.Title level={5} style={{textAlign: 'left', marginBottom:20}}>Login:</Typography.Title>
+        <Typography.Title
+          level={5}
+          style={{ textAlign: 'left', marginBottom: 20 }}
+        >
+          Login:
+        </Typography.Title>
         <Form.Item
           name="mobile"
           rules={[{ required: true, message: 'Please enter your mobile' }]}

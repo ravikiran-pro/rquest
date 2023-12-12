@@ -1,21 +1,12 @@
 import React from 'react';
-import { Card, Rate, Button, Typography } from 'antd';
-import {
-  EnvironmentOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+import { Card, Rate, Typography } from 'antd';
+import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 
-const BussinessCard = ({ shopDetails }) => {
-  const {
-    shop_name,
-    address,
-    area,
-    rating,
-    shop_type,
-    image_url,
-  } = shopDetails;
+const BussinessCard = ({ shopDetails = {} }) => {
+  const { shop_name, address, area, rating, shop_type, image_url } =
+    shopDetails;
 
   return (
     <Card
@@ -28,16 +19,23 @@ const BussinessCard = ({ shopDetails }) => {
       bodyStyle={{
         display: 'flex',
         flexDirection: 'column',
-        textAlign: 'left'
+        textAlign: 'left',
       }}
     >
       <div style={{ display: 'flex', textAlign: 'left', width: '100%' }}>
         <div style={{ width: '100%' }}>
           <div>
-            <h3 style={{
-              margin: 0, fontSize: 18, fontWeight: 'bold', textAlign: 'left',
-              whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-            }}>
+            <h3
+              style={{
+                margin: 0,
+                fontSize: 18,
+                fontWeight: 'bold',
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+              }}
+            >
               {shop_name}
             </h3>
           </div>

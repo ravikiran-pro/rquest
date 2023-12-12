@@ -3,7 +3,7 @@ const Routes = {
   login: '/login',
   client: '/client_register',
   chat: '/chat',
-  register: '/register'
+  register: '/register',
 };
 
 export default Routes;

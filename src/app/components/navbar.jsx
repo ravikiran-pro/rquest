@@ -8,13 +8,13 @@ import { useHistory } from 'react-router-dom';
 
 const Navbar = () => {
   const history = useHistory();
-  const {user_data, update_user_data} = useGlobalStore((state) => state)
+  const { user_data, update_user_data } = useGlobalStore((state) => state);
 
-  const logout = () =>{
-    update_user_data({})
+  const logout = () => {
+    update_user_data({});
     sessionStorage.clear();
     history.push('/login');
-  }
+  };
 
   return (
     <div
@@ -29,49 +29,52 @@ const Navbar = () => {
     >
       {user_data?.username && <div>Welcome Home {user_data?.username}</div>}
       &nbsp;
-      <div style={{
-        display: 'flex',
-        justifyContent: 'flex-end',
-        alignItems: 'center',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'flex-end',
+          alignItems: 'center',
+        }}
+      >
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <div>
             <Link to={Routes.home}>
-              <Button type="link" size={"large"}>
+              <Button type="link" size={'large'}>
                 Home
               </Button>
             </Link>
           </div>
           <div>
             <Link to={Routes.client}>
-              <Button type="link" size={"large"}>
+              <Button type="link" size={'large'}>
                 Client Register
               </Button>
             </Link>
           </div>
-          {
-            sessionStorage?.[storageKeys.auth_token] ? <div>
-              <Button type="link" size={"large"} onClick={()=>logout()}>
-                      Logout
+          {sessionStorage?.[storageKeys.auth_token] ? (
+            <div>
+              <Button type="link" size={'large'} onClick={() => logout()}>
+                Logout
               </Button>
-            </div> :
-              <>
-                <div>
-                  <Link to={Routes.login}>
-                    <Button type="link" size={"large"}>
-                      Login
-                    </Button>
-                  </Link>
-                </div>
-                <div>
-                  <Link to={Routes.register}>
-                    <Button type="link" size={"large"}>
-                      Register
-                    </Button>
-                  </Link>
-                </div>
-              </>
-          }
+            </div>
+          ) : (
+            <>
+              <div>
+                <Link to={Routes.login}>
+                  <Button type="link" size={'large'}>
+                    Login
+                  </Button>
+                </Link>
+              </div>
+              <div>
+                <Link to={Routes.register}>
+                  <Button type="link" size={'large'}>
+                    Register
+                  </Button>
+                </Link>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

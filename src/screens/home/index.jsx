@@ -90,7 +90,7 @@ const HomeScreen = () => {
                 suffix={
                   <Button
                     type="primary"
-                    size='small'
+                    size="small"
                     onClick={() => debounce(handleSearch(searchText))}
                   >
                     <SearchOutlined />
@@ -107,7 +107,7 @@ const HomeScreen = () => {
                   marginRight: '10px',
                   cursor: 'pointer',
                   float: 'right',
-                  fontSize: 14
+                  fontSize: 14,
                 }}
               >
                 Current Location

@@ -1,13 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Upload,
-  Button,
-  Typography,
-  Row,
-  Col,
-} from 'antd';
+import { Form, Input, Upload, Button, Typography, Row, Col } from 'antd';
 import { AutoComplete } from 'antd';
 import { useForm, Controller } from 'react-hook-form';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
@@ -19,8 +11,8 @@ import { BussinessCard } from '../../app/components';
 const ClientRegister = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [allShops, setIsAllShops] = useState([])
-  const [isFormEnable, setIsFormEnable] = useState(false)
+  const [allShops, setIsAllShops] = useState([]);
+  const [isFormEnable, setIsFormEnable] = useState(false);
   const [shopDetails, setShopDetails] = useState({});
   const {
     control,
@@ -48,9 +40,16 @@ const ClientRegister = () => {
     }
   };
 
-
   function isValidData(shopDetails) {
-    const requiredKeys = ['shop_name', 'address', 'area', 'mobile_number', 'website', 'shop_type', 'map_link'];
+    const requiredKeys = [
+      'shop_name',
+      'address',
+      'area',
+      'mobile_number',
+      'website',
+      'shop_type',
+      'map_link',
+    ];
 
     const allKeysPresent = requiredKeys.every((key) => {
       return shopDetails[key];
@@ -62,7 +61,7 @@ const ClientRegister = () => {
   const createClient = async () => {
     if (isValidData(shopDetails)) {
       const payload = {
-        owner_id: "b447f177-bb2f-4b33-881e-30fb140c52ea",
+        owner_id: 'b447f177-bb2f-4b33-881e-30fb140c52ea',
         shop_name: shopDetails.shop_name,
         address: shopDetails.address,
         area: shopDetails.area,
@@ -71,49 +70,54 @@ const ClientRegister = () => {
         rating: (Math.random() * (5 - 0) + 0).toFixed(1),
         products_list: [],
         shop_type: shopDetails.shop_type,
-        directions: shopDetails.map_link
-      }
-      let body = JSON.stringify(payload)
+        directions: shopDetails.map_link,
+      };
+      let body = JSON.stringify(payload);
 
-      const response = await netWorkCall('shops/client_register', 'POST', body, true)
+      const response = await netWorkCall(
+        'shops/client_register',
+        'POST',
+        body,
+        true
+      );
       if (response.success === true) {
-        fetchInitData()
-        setIsFormEnable(false)
+        fetchInitData();
+        setIsFormEnable(false);
       }
     } else {
-      alert('please enter all fields')
+      alert('please enter all fields');
     }
-  }
+  };
 
   const handleInputChange = (event) => {
     setShopDetails({ ...shopDetails, [event.target.name]: event.target.value });
   };
 
   const onFinish = async (data) => {
-    createClient()
+    createClient();
   };
 
   const onSelect = async (data) => {
     setShopDetails({ ...shopDetails, shop_type: data });
-  }
+  };
 
   const onDropdowChange = async (text, keyName) => {
-
-    let filters = shopDetails.shopOptions.filter(item => item.value.toLowerCase().includes(text.toLowerCase()))
+    let filters = shopDetails.shopOptions.filter((item) =>
+      item.value.toLowerCase().includes(text.toLowerCase())
+    );
     setShopDetails({ ...shopDetails, shop_type: text, [keyName]: filters });
-  }
+  };
 
   const fetchInitData = async () => {
-    const response = await netWorkCall('shops/my_shops', 'POST', null, true)
+    const response = await netWorkCall('shops/my_shops', 'POST', null, true);
     if (response.success) {
-      setIsAllShops([...response.data])
+      setIsAllShops([...response.data]);
     }
-  }
+  };
 
   useEffect(() => {
     fetchInitData();
-  }, [])
-
+  }, []);
 
   useEffect(() => {
     setShopDetails({
@@ -133,16 +137,15 @@ const ClientRegister = () => {
         { value: 'Hotels' },
         { value: 'Hardawers and tools' },
         { value: 'Mechanic' },
-        { value: 'Others' }
-      ]
-    })
-  }, [isFormEnable])
+        { value: 'Others' },
+      ],
+    });
+  }, [isFormEnable]);
 
   return (
     <Row>
-
-      {
-        isFormEnable ? <>
+      {isFormEnable ? (
+        <>
           <Col span={24} style={{ textAlign: 'center' }}>
             <Typography.Title level={5}>Register Business</Typography.Title>
           </Col>
@@ -155,7 +158,12 @@ const ClientRegister = () => {
                       // <Image width={200} src={imageUrl} alt="Shop Image" />
                       <Space direction="vertical">
                         <Space wrap size={16}>
-                          <Avatar shape="square" style={{ backgroundColor: '#00a2ae' }} size={80} src={<img src={imageUrl} />} />
+                          <Avatar
+                            shape="square"
+                            style={{ backgroundColor: '#00a2ae' }}
+                            size={80}
+                            src={<img src={imageUrl} />}
+                          />
                         </Space>
                       </Space>
                     )}
@@ -197,8 +205,9 @@ const ClientRegister = () => {
                           placeholder="select Industry"
                           // onChange={onSelect}
                           onSelect={onSelect}
-                          onSearch={(text) => onDropdowChange(text, "shopOptions_reduce")}
-
+                          onSearch={(text) =>
+                            onDropdowChange(text, 'shopOptions_reduce')
+                          }
                         />
                       )}
                     />
@@ -241,7 +250,9 @@ const ClientRegister = () => {
                         />
                       )}
                     />
-                    {errors.area && <Form.Error>{errors.area.message}</Form.Error>}
+                    {errors.area && (
+                      <Form.Error>{errors.area.message}</Form.Error>
+                    )}
                   </Form.Item>
                   <Form.Item label="Mobile Number" required>
                     <Controller
@@ -293,12 +304,10 @@ const ClientRegister = () => {
                       )}
                     />
                   </Form.Item>
-                  <Form.Item style={{ display: 'flex', justifyContent: 'center' }}>
-                    <Button
-                      type="primary"
-                      title="Submit"
-                      onClick={onFinish}
-                    >
+                  <Form.Item
+                    style={{ display: 'flex', justifyContent: 'center' }}
+                  >
+                    <Button type="primary" title="Submit" onClick={onFinish}>
                       Register
                     </Button>
                     <Button
@@ -310,33 +319,44 @@ const ClientRegister = () => {
                     </Button>
                   </Form.Item>
                 </Form>
-
               </Col>
             </Row>
           </Col>
         </>
-          :
-          <>
-            <div style={{ display: 'flex', flexDirection: 'column', padding: 20, width: '100%' }}>
-              <Row style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
-                <div >
-                  <Button onClick={() => setIsFormEnable(true)} style={{ color: '#007bff' }} type='link' icon={<PlusOutlined />}>Add New Business</Button>
-                </div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              padding: 20,
+              width: '100%',
+            }}
+          >
+            <Row style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
+              <div>
+                <Button
+                  onClick={() => setIsFormEnable(true)}
+                  style={{ color: '#007bff' }}
+                  type="link"
+                  icon={<PlusOutlined />}
+                >
+                  Add New Business
+                </Button>
+              </div>
+            </Row>
+            {allShops && allShops.length ? (
+              <Row style={{ display: 'flex', justifyContent: 'center' }}>
+                {allShops?.map((data) => (
+                  <div style={{ width: 300, margin: '0px 10px' }}>
+                    <BussinessCard shopDetails={data} />
+                  </div>
+                ))}
               </Row>
-            {
-              allShops && allShops.length ?
-                <Row style={{ display: 'flex', justifyContent: 'center' }}>
-                  {allShops?.map((data) => (
-                    <div style={{ width: 300, margin: '0px 10px' }}>
-                      <BussinessCard shopDetails={data} />
-                    </div>
-                  ))}
-                </Row>
-                : null
-            }
-            </div>
-          </>
-      }
+            ) : null}
+          </div>
+        </>
+      )}
     </Row>
   );
 };
