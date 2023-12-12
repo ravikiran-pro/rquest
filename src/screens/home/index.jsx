@@ -2,9 +2,8 @@ import React, { useState } from 'react';
 import { Input, Button, Modal, Typography, Col, Row } from 'antd';
 // import { useForm } from 'react-hook-form';
 import { SearchOutlined } from '@ant-design/icons';
-import { LeafletComponent } from '../../app/components';
+import { LeafletComponent, ShopCard } from '../../app/components';
 import { debounce } from '../../app/utils/helper';
-import ShopCard from '../../app/components/shopcards';
 
 const { Text } = Typography;
 
@@ -87,14 +86,15 @@ const HomeScreen = () => {
                 allowClear
                 onChange={(e) => debounce(handleSearch(e.target.value))}
                 value={searchText}
-                style={{ marginRight: '10px' }}
                 onPressEnter={() => debounce(handleSearch(searchText))}
                 suffix={
                   <Button
                     type="primary"
-                    icon={<SearchOutlined />}
+                    size='small'
                     onClick={() => debounce(handleSearch(searchText))}
-                  />
+                  >
+                    <SearchOutlined />
+                  </Button>
                 }
               />
             </div>
@@ -107,9 +107,10 @@ const HomeScreen = () => {
                   marginRight: '10px',
                   cursor: 'pointer',
                   float: 'right',
+                  fontSize: 14
                 }}
               >
-                Current Marker Location
+                Current Location
               </Text>
             </div>
           </Col>

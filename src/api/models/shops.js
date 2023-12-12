@@ -18,7 +18,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
     },
     address: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
     area: {
       type: DataTypes.STRING,
@@ -27,7 +27,7 @@ module.exports = (sequelize) => {
       type: DataTypes.STRING,
     },
     website: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
     rating: {
       type: DataTypes.FLOAT,
@@ -45,8 +45,10 @@ module.exports = (sequelize) => {
       type: DataTypes.DOUBLE,
     },
     directions: {
-      type: DataTypes.STRING,
+      type: DataTypes.TEXT,
     },
+  },{
+    timestamps: true,
   });
 
   return Shop;

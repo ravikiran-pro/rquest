@@ -66,4 +66,39 @@ const getShopsFilter = async (req, res) => {
   }
 };
 
-module.exports = { getShopsFilter };
+const getMyShops = async (req, res) => {
+  try {
+    const { user_id } = req.headers;
+    const results = await shops.findAll({
+      attributes: [
+        'shop_name',
+        'address',
+        'area',
+        'mobile_number',
+        'website',
+        'rating',
+        'products_list',
+        'shop_type',
+        'latitude',
+        'longitude',
+        'directions',
+        'createdAt',
+        'updatedAt',
+      ],
+      where: {
+        owner_id : user_id
+      },
+      order: [['createdAt', 'ASC']]
+    });
+
+    res.send(200, {
+      data: results,
+      success: true,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+module.exports = { getShopsFilter, getMyShops };

@@ -1,11 +1,12 @@
 import React from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { default as routes } from './routes';
-import { LoginScreen, HomeScreen, ClientRegister } from '../../screens';
+import { LoginScreen, HomeScreen, ClientRegister, RegisterScreen } from '../../screens';
 import Navbar from '../components/navbar';
 import ChatApp from '../components/chat/chat';
 
 export default function AppRoutes() {
+
   return (
     <Router>
       <Navbar />
@@ -22,6 +23,9 @@ export default function AppRoutes() {
           </Route>
           <Route path={routes.chat}>
             <ChatApp />
+          </Route>
+          <Route path={routes.register}>
+            <RegisterScreen />
           </Route>
         </Switch>
       </div>

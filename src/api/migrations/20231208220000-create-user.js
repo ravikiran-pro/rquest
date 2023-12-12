@@ -15,6 +15,15 @@ module.exports = {
           type: Sequelize.STRING,
           allowNull: false,
         },
+        mobile: {
+          type: Sequelize.STRING,
+          unique: true,
+          allowNull: false,
+        },
+        password: {
+          type: Sequelize.STRING,
+          allowNull: false,
+        },
         role_id: {
           type: Sequelize.UUID,
           references: {
@@ -23,6 +32,14 @@ module.exports = {
           },
           onUpdate: 'CASCADE',
           onDelete: 'SET NULL',
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
         },
       },
       {

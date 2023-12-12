@@ -4,6 +4,8 @@ const cors = require('cors');
 const router = require('./api/routes');
 const http = require('http');
 const { Server } = require('socket.io');
+const bodyParser = require('body-parser')
+
 
 const { PORT = 3001 } = process.env;
 
@@ -12,6 +14,11 @@ const server = http.createServer(app);
 
 // handle cors
 app.use(cors());
+
+app.use(bodyParser.urlencoded({ extended: false }))
+
+// parse application/json
+app.use(bodyParser.json())
 
 // Middleware that parses json and looks at requests where the Content-Type header matches the type option.
 app.use(express.json());

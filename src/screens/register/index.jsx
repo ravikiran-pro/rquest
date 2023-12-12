@@ -6,20 +6,21 @@ import { netWorkCall, storageKeys } from '../../app/utils/helper';
 import { useHistory } from 'react-router-dom';
 import { useGlobalStore } from '../../app/zustand';
 
-const LoginScreen = () => {
+
+const RegisterScreen = () => {
   const history = useHistory();
   const update_user_data = useGlobalStore((state) => state.update_user_data)
 
-
-  const { handleSubmit } = useForm();
+  const { handleSubmit, register } = useForm();
 
   const onSubmit = async (e, data) => {
-    if (data.mobile && data.password) {
+    if (data.username && data.password) {
       let body = JSON.stringify({
-        mobile: data.mobile,
+        username: data.username,
         password: data.password,
-      })
-      const res = await netWorkCall('user/login', 'POST', body)
+        mobile: data.mobile
+      });
+      const res = await netWorkCall('user/register', 'POST', body)
       if(res.success === true){
         sessionStorage.setItem(storageKeys.auth_token, res.token)
         update_user_data(res.user_data)
@@ -41,22 +42,43 @@ const LoginScreen = () => {
       }}
     >
       <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-      <Typography.Title level={5} style={{textAlign: 'left', marginBottom:20}}>Login:</Typography.Title>
+        <Typography.Title level={5} style={{ textAlign: 'left', marginBottom: 20 }}>
+          Register User:
+        </Typography.Title>
+        <Form.Item
+          name="username"
+          rules={[{ required: true, message: 'Please enter your username' }]}
+        >
+          <Input
+            prefix={<UserOutlined />}
+            placeholder="Username"
+            {...register('username')}
+          />
+        </Form.Item>
         <Form.Item
           name="mobile"
-          rules={[{ required: true, message: 'Please enter your mobile' }]}
+          rules={[{ required: true, message: 'Please enter your username' }]}
         >
-          <Input prefix={<UserOutlined />} placeholder="Mobile" />
+          <Input
+            type='mobile'
+            prefix={<UserOutlined />}
+            placeholder="Mobile"
+            {...register('mobile')}
+          />
         </Form.Item>
         <Form.Item
           name="password"
           rules={[{ required: true, message: 'Please enter your password' }]}
         >
-          <Input.Password prefix={<LockOutlined />} placeholder="Password" />
+          <Input.Password
+            prefix={<LockOutlined />}
+            placeholder="Password"
+            {...register('password')}
+          />
         </Form.Item>
         <Form.Item>
           <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-            Log in
+            Register
           </Button>
         </Form.Item>
       </Form>
@@ -64,4 +86,4 @@ const LoginScreen = () => {
   );
 };
 
-export default LoginScreen;
+export default RegisterScreen;

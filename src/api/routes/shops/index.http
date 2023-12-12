@@ -7,3 +7,29 @@ Content-Type: application/json
     "lon": 80.2612,
     "search": "ro"
 }
+
+
+### cdn clear
+POST  https://rquest-cdn.onrender.com/clear HTTP/1.1
+Content-Type: application/json
+
+{
+}
+    
+
+### mobile link
+POST http://localhost:3001/api/v1/shops/client_register
+Content-Type: application/json
+
+{
+    "owner_id": "b447f177-bb2f-4b33-881e-30fb140c52ea",
+    "shop_name": "Biriyani Mubaarak Palavakkam",
+    "address": "1, 146, East Coast Rd, VGP Layout, Palavakkam, Chennai, Tamil Nadu 600041",
+    "area": "Palavakkam",
+    "mobile_number": "",
+    "website": "http://www.biriyanimubaarak.com/",
+    "rating": "1.1",
+    "products_list": [],
+    "shop_type": "Restaurants",
+    "directions": "https://www.google.com/maps/dir//54+St,+Tamil+Nadu+600053/@13.1071053,80.1716768,12z/data=!4m8!4m7!1m0!1m5!1m1!1s0x3a5265ce01ed2c67:0xc3af32e327685d2d!2m2!1d80.2540588!2d13.1071244?entry=ttu"
+}

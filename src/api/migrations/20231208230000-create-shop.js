@@ -23,7 +23,7 @@ module.exports = {
           type: Sequelize.STRING,
         },
         address: {
-          type: Sequelize.STRING,
+          type: Sequelize.TEXT,
         },
         area: {
           type: Sequelize.STRING,
@@ -32,7 +32,7 @@ module.exports = {
           type: Sequelize.STRING,
         },
         website: {
-          type: Sequelize.STRING,
+          type: Sequelize.TEXT,
         },
         rating: {
           type: Sequelize.FLOAT,
@@ -44,13 +44,21 @@ module.exports = {
           type: Sequelize.STRING,
         },
         directions: {
-          type: Sequelize.STRING,
+          type: Sequelize.TEXT,
         },
         latitude: {
           type: Sequelize.DOUBLE,
         },
         longitude: {
           type: Sequelize.DOUBLE,
+        },
+        createdAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
+        },
+        updatedAt: {
+          type: Sequelize.DATE,
+          allowNull: true,
         },
       },
       {
