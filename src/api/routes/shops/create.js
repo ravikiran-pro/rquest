@@ -61,13 +61,11 @@ const createShops = async (req, res) => {
 
         res.status(201).json({ success: true, data: createdShop });
       } else {
-        res
-          .status(201)
-          .json({
-            success: false,
-            error: 'Invalid direction url',
-            message: 'Invalid direction url',
-          });
+        res.status(201).json({
+          success: false,
+          error: 'Invalid direction url',
+          message: 'Invalid direction url',
+        });
       }
     });
   } catch (error) {

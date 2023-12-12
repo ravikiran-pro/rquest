@@ -35,12 +35,10 @@ async function authMiddleware(req, res, next) {
     req.headers = decoded;
     next();
   } catch (e) {
-    res
-      .status(500)
-      .json({
-        error: 'Authentication Failed',
-        message: 'Authentication Failed',
-      });
+    res.status(500).json({
+      error: 'Authentication Failed',
+      message: 'Authentication Failed',
+    });
   }
 }
 

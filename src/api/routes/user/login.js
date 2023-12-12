@@ -28,31 +28,25 @@ const login = async (req, res) => {
           user_data: payload,
         });
       } else {
-        res
-          .status(500)
-          .json({
-            success: false,
-            error: error,
-            message: 'Password Authentication Failed',
-          });
+        res.status(500).json({
+          success: false,
+          error: error,
+          message: 'Password Authentication Failed',
+        });
       }
     } else {
-      res
-        .status(500)
-        .json({
-          success: false,
-          error: 'Username and password required',
-          message: 'Username and password required',
-        });
+      res.status(500).json({
+        success: false,
+        error: 'Username and password required',
+        message: 'Username and password required',
+      });
     }
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        success: false,
-        error: error,
-        message: 'Password Authentication Failed',
-      });
+    res.status(500).json({
+      success: false,
+      error: error,
+      message: 'Password Authentication Failed',
+    });
   }
 };
 
