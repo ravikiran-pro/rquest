@@ -16,10 +16,10 @@ const login = async (req, res) => {
       const user = await users.findOne({
         where: filter,
       });
-      if (user?.password === hashedPassword) {
+      if (user && user.password === hashedPassword) {
         let payload = {
-          username: user?.username,
-          user_id: user?.id,
+          username: user.username,
+          user_id: user.id,
         };
         let token = await generateJwt(payload);
         res.status(201).json({
