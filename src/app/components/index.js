@@ -1,2 +1,2 @@
 export { default as LeafletComponent } from './leaflet';
-export { default as NavBar} from './navbar';
+export { default as NavBar } from './navbar';

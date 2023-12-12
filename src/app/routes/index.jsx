@@ -8,22 +8,22 @@ import ChatApp from '../components/chat/chat';
 export default function AppRoutes() {
   return (
     <Router>
-      <Navbar/>
-      <div style={{height:'calc(100vh - 40px)', overflow:'auto'}}>
-      <Switch>
-        <Route path={routes.login}>
-          <LoginScreen />
-        </Route>
-        <Route path={routes.home}>
-          <HomeScreen />
-        </Route>
-        <Route path={routes.client}>
-          <ClientRegister />
-        </Route>
-        <Route path={routes.chat}>
-          <ChatApp />
-        </Route>
-      </Switch>
+      <Navbar />
+      <div style={{ height: 'calc(100vh - 40px)', overflow: 'auto' }}>
+        <Switch>
+          <Route path={routes.login}>
+            <LoginScreen />
+          </Route>
+          <Route path={routes.home}>
+            <HomeScreen />
+          </Route>
+          <Route path={routes.client}>
+            <ClientRegister />
+          </Route>
+          <Route path={routes.chat}>
+            <ChatApp />
+          </Route>
+        </Switch>
       </div>
     </Router>
   );

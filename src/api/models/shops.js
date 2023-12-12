@@ -44,9 +44,9 @@ module.exports = (sequelize) => {
     longitude: {
       type: DataTypes.DOUBLE,
     },
-    directions:{
+    directions: {
       type: DataTypes.STRING,
-    }
+    },
   });
 
   return Shop;

@@ -13,7 +13,7 @@ const HomeScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
-  const [searchMarkers, setSearchMarkers] = useState([])
+  const [searchMarkers, setSearchMarkers] = useState([]);
 
   // React.useEffect(() => {
   //   handleSearch('r')
@@ -32,17 +32,20 @@ const HomeScreen = () => {
   React.useEffect(async () => {
     try {
       if (searchText) {
-        const response = await fetch('http://localhost:3001/api/v1/shops/search', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            lat: markerLocation[0],
-            lon: markerLocation[1],
-            search: searchText,
-          }),
-        });
+        const response = await fetch(
+          'http://localhost:3001/api/v1/shops/search',
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              lat: markerLocation[0],
+              lon: markerLocation[1],
+              search: searchText,
+            }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -51,13 +54,12 @@ const HomeScreen = () => {
         const data = await response.json();
         // Handle the response data as needed
         setSearchMarkers(data.data);
-      }else setSearchMarkers([]);
+      } else setSearchMarkers([]);
     } catch (error) {
       // Handle errors
       console.error('Error:', error.message);
     }
-  }, [markerLocation, searchText])
-
+  }, [markerLocation, searchText]);
 
   const handleOpenModal = () => {
     setIsModalVisible(true);
@@ -111,16 +113,21 @@ const HomeScreen = () => {
               </Text>
             </div>
           </Col>
-          {
-            searchMarkers?.length ? <Row style={{ display: 'flex', justifyContent: 'center' }}>
-              {
-                searchMarkers?.map(marker => <div style={{ width: 300, margin: '0px 10px' }}>
+          {searchMarkers?.length ? (
+            <Row style={{ display: 'flex', justifyContent: 'center' }}>
+              {searchMarkers?.map((marker) => (
+                <div style={{ width: 300, margin: '0px 10px' }}>
                   <ShopCard shopDetails={marker} />
-                </div>)
-              }
+                </div>
+              ))}
             </Row>
-              : searchText && <Col span={24}><Text>No Match Found</Text></Col>
-          }
+          ) : (
+            searchText && (
+              <Col span={24}>
+                <Text>No Match Found</Text>
+              </Col>
+            )
+          )}
         </Row>
       </div>
       <Modal

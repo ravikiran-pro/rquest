@@ -5,7 +5,7 @@ import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 import 'leaflet/dist/leaflet.css';
 import 'leaflet-geosearch/dist/geosearch.css';
 
-import * as L from "leaflet";
+import * as L from 'leaflet';
 import { func } from 'prop-types';
 
 const LeafletComponent = (props) => {
@@ -15,7 +15,8 @@ const LeafletComponent = (props) => {
   const [searchControl, setSearchControl] = useState(null);
 
   const RedMarkerIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
@@ -23,13 +24,13 @@ const LeafletComponent = (props) => {
   });
 
   const GreenMarkerIcon = new L.Icon({
-    iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
     iconSize: [25, 41],
     iconAnchor: [12, 41],
     popupAnchor: [1, -34],
     shadowSize: [41, 41],
   });
-
 
   useEffect(() => {
     // Create the search control outside the SearchBox component
@@ -100,21 +101,21 @@ const LeafletComponent = (props) => {
           Longitude: {position[1]}
         </Popup>
       </Marker>
-      {
-        searchMarkers?.map((marker,index) => {
-          return <Marker
+      {searchMarkers?.map((marker, index) => {
+        return (
+          <Marker
             position={[marker.latitude, marker.longitude]}
             draggable={false}
-            icon={index==0 ? GreenMarkerIcon : RedMarkerIcon}
-          // eventHandlers={{ dragend: handleMarkerDrag }}
+            icon={index == 0 ? GreenMarkerIcon : RedMarkerIcon}
+            // eventHandlers={{ dragend: handleMarkerDrag }}
           >
             <Popup>
               {marker.shop_name} <br />
               {marker.address}
             </Popup>
           </Marker>
-        })
-      }
+        );
+      })}
     </MapContainer>
   );
 };

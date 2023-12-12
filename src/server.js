@@ -1,9 +1,9 @@
 const path = require('path');
 const express = require('express');
-const cors = require('cors'); 
+const cors = require('cors');
 const router = require('./api/routes');
-const http = require("http");
-const { Server } = require("socket.io");
+const http = require('http');
+const { Server } = require('socket.io');
 
 const { PORT = 3001 } = process.env;
 
@@ -24,17 +24,17 @@ app.use(express.static('dist/app'));
 
 const io = new Server(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: '*',
+    methods: ['GET', 'POST'],
   },
 });
 
-io.on("connection", (socket) => {
-  console.log(socket.id)
-  io.to(socket.id).emit("socket_id", socket.id);
+io.on('connection', (socket) => {
+  console.log(socket.id);
+  io.to(socket.id).emit('socket_id', socket.id);
 
-  socket.on("send_message", (messageData) => {
-    socket.emit("receive_message", messageData);
+  socket.on('send_message', (messageData) => {
+    socket.emit('receive_message', messageData);
   });
 });
 

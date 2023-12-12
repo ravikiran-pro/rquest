@@ -1,39 +1,39 @@
-import React, { useState, useEffect, useRef } from "react";
-import { io } from "socket.io-client";
-import "./styles.css";
+import React, { useState, useEffect, useRef } from 'react';
+import { io } from 'socket.io-client';
+import './styles.css';
 
-const socket = io("http://localhost:3001");
+const socket = io('http://localhost:3001');
 
 function ChatApp() {
-  const [socketID, setSocketID] = useState("");
-  const [currentMessage, setCurrentMessage] = useState("");
+  const [socketID, setSocketID] = useState('');
+  const [currentMessage, setCurrentMessage] = useState('');
   const [messageList, setMessageList] = useState([]);
 
   const sendMessage = async () => {
-    if (currentMessage !== "") {
+    if (currentMessage !== '') {
       const messageData = {
         sender: socketID,
         message: currentMessage,
-        targetSocketId: "1iBSxm1kmX62zLm8AAAJ"
+        targetSocketId: '1iBSxm1kmX62zLm8AAAJ',
       };
-      await socket.emit("send_message", messageData);
+      await socket.emit('send_message', messageData);
       setMessageList((list) => [...list, messageData]);
-      setCurrentMessage("");
+      setCurrentMessage('');
     }
   };
 
   useEffect(() => {
-    socket.on("socket_id", (id) => {
+    socket.on('socket_id', (id) => {
       setSocketID(id);
     });
 
-    socket.on("receive_message", (data) => {
+    socket.on('receive_message', (data) => {
       setMessageList((list) => [...list, data]);
     });
 
     return () => {
-      socket.off("socket_id");
-      socket.off("receive_message");
+      socket.off('socket_id');
+      socket.off('receive_message');
     };
   }, [socket]);
 
@@ -45,7 +45,11 @@ function ChatApp() {
         <div class="message-container">
           {messageList.map((msg) => {
             return (
-              <div class={`message ${msg.sender === socketID ? "my-msg" : "other-msg"}`}>
+              <div
+                class={`message ${
+                  msg.sender === socketID ? 'my-msg' : 'other-msg'
+                }`}
+              >
                 {msg.message}
               </div>
             );
