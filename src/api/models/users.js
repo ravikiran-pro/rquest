@@ -16,15 +16,7 @@ module.exports = (sequelize) => {
                 model: 'roles',
                 key: 'id',
             },
-        },
-        created_at: {
-            type: DataTypes.TIMESTAMP,
-            defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-        },
-        updated_at: {
-            type: DataTypes.TIMESTAMP,
-            defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-        },
+        }
     });
 
     return User;

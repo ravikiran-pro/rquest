@@ -6,7 +6,7 @@
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
     "client:dev": "vite",
     "server:dev": "nodemon src/server.js",
-    "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/lib/' src",
+    "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/api/config,src/api/models,src/api/routes' src",
     "client:build": "vite build",
     "build": "npm run server:build && npm run client:build",
     "serve": "vite preview",
@@ -39,6 +39,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.5",
     "antd": "^5.8.3",
+    "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "leaflet": "^1.9.4",
@@ -47,11 +48,14 @@
     "pg-hstore": "^2.3.4",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
+    "react-dropzone": "^14.2.3",
     "react-hook-form": "^7.45.4",
     "react-leaflet": "^4.2.1",
     "react-router-dom": "^5.3.0",
     "sequelize": "^6.35.1",
     "sequelize-cli": "^6.6.2",
+    "socket.io": "^4.7.2",
+    "socket.io-client": "^4.7.2",
     "vite": "^5.0.7"
   }
 }

@@ -1,7 +1,7 @@
 const { DataTypes } = require('sequelize');
 
 module.exports = (sequelize) => {
-  const Shop = sequelize.define('Shop', {
+  const Shop = sequelize.define('shops', {
     id: {
       type: DataTypes.UUID,
       defaultValue: DataTypes.UUIDV4,
@@ -46,15 +46,7 @@ module.exports = (sequelize) => {
     },
     directions:{
       type: DataTypes.STRING,
-    },
-    created_at: {
-      type: DataTypes.TIMESTAMP,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-    },
-    updated_at: {
-      type: DataTypes.TIMESTAMP,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-    },
+    }
   });
 
   return Shop;

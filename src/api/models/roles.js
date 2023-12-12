@@ -11,15 +11,7 @@ module.exports = (sequelize) => {
     },
     name: {
       type: Sequelize.STRING,
-    },
-    created_at: {
-      type: DataTypes.TIMESTAMP,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-    },
-    updated_at: {
-      type: DataTypes.TIMESTAMP,
-      defaultValue: sequelize.literal('CURRENT_TIMESTAMP'),
-    },
+    }
   });
 
   return Role;

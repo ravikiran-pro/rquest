@@ -1,0 +1,65 @@
+div {
+    text-align: center;
+  }
+  
+  .container {
+    width: 25rem;
+    margin: auto;
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    border-radius: 20px;
+    box-shadow: 1px 1px 10px #888888;
+    border: 1px solid rgb(130, 130, 130);
+  }
+  
+  .input-container {
+    display: flex;
+  }
+  
+  .msg-container-wrapper {
+    height: 60vh;
+    overflow: auto;
+    display: flex;
+    flex-direction: column-reverse;
+  }
+  
+  .message {
+    text-align: left;
+    display: block;
+    padding: 5px 10px;
+    background-color: rgb(218, 218, 218);
+    margin: 10px 0;
+    border-radius: 20px;
+    width: 40%;
+    overflow-wrap: break-word;
+    height: fit-content;
+  }
+  
+  .my-msg {
+    text-align: right !important;
+    margin-left: auto !important;
+    background-color: rgb(176, 228, 240);
+  }
+  
+  input {
+    padding: 10px;
+    flex: 3;
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    border: 1px rgb(48, 109, 200) solid;
+  }
+  
+  button {
+    font-weight: bold;
+    flex: 0.5;
+    border-top-right-radius: 20px;
+    border-bottom-right-radius: 20px;
+    background-color: rgb(48, 109, 200);
+    color: white;
+    border: 1px rgb(48, 109, 200) solid;
+  }
+  
+  input:focus {
+    outline: none;
+  }

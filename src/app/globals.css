@@ -11,3 +11,19 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+
+/* Hide scrollbar for Chrome, Safari, and newer versions of Edge */
+::-webkit-scrollbar {
+  width: 0.5em;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Make the scrollbar thumb transparent */
+}
+
+
+
+::-webkit-scrollbar-corner {
+  display: none; /* Hide the scrollbar corner (only for WebKit browsers) */
+}
