@@ -5,8 +5,9 @@ import { storageKeys } from '../../utils';
 import { Button } from 'antd';
 import { useGlobalStore } from '../../services';
 import { useHistory } from 'react-router-dom';
+import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
-const Navbar = () => {
+const Navbar = ({ open, handleOpen, handleClose }) => {
   const history = useHistory();
   const { user_data, update_user_data } = useGlobalStore((state) => state);
 
@@ -37,14 +38,14 @@ const Navbar = () => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <div>
+          <div className="navbar-menu">
             <Link to={Routes.home}>
               <Button type="link" size={'large'}>
                 Home
               </Button>
             </Link>
           </div>
-          {/* <div>
+          {/* <div className='navbar-menu'>
             <Link to={Routes.client}>
               <Button type="link" size={'large'}>
                 Client Register
@@ -52,21 +53,21 @@ const Navbar = () => {
             </Link>
           </div> */}
           {sessionStorage?.[storageKeys.auth_token] ? (
-            <div>
+            <div className="navbar-menu">
               <Button type="link" size={'large'} onClick={() => logout()}>
                 Logout
               </Button>
             </div>
           ) : (
             <>
-              <div>
+              <div className="navbar-menu">
                 <Link to={Routes.login}>
                   <Button type="link" size={'large'}>
                     Login
                   </Button>
                 </Link>
               </div>
-              {/* <div>
+              {/* <div className='navbar-menu'>
                 <Link to={Routes.register}>
                   <Button type="link" size={'large'}>
                     Register
@@ -75,6 +76,18 @@ const Navbar = () => {
               </div> */}
             </>
           )}
+        </div>
+        <div className="sidebar-toggler">
+          <Button
+            type="link"
+            size={'large'}
+            onClick={() => {
+              debugger;
+              open ? handleClose() : handleOpen();
+            }}
+          >
+            {open ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+          </Button>
         </div>
       </div>
     </div>

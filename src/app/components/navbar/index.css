@@ -1,0 +1,39 @@
+.sidebar-menu {
+  text-align: left;
+}
+.sidebar-menu:hover {
+  background-color: #1677ff;
+  font-weight: 800;
+  color: #fff;
+}
+
+.close-menu {
+  position: absolute;
+  left: -30px;
+}
+
+.sidebar-root .ant-drawer-content-wrapper {
+  width: 300px !important;
+}
+
+.sidebar-root .ant-drawer-header {
+  display: none;
+}
+/* Media query for mobile devices */
+@media (max-width: 576px) {
+  .sidebar-root .ant-drawer-content-wrapper {
+    width: 100% !important; /* Set full width on mobile */
+  }
+}
+
+@media (min-width: 769px) {
+  .sidebar-toggler {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .navbar-menu {
+    display: none;
+  }
+}
