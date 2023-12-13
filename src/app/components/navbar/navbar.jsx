@@ -24,11 +24,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: 40,
-        padding: '0px 40px',
+        height: 40
       }}
     >
-      {user_data?.username && <div>Welcome Home {user_data?.username}</div>}
+      <div style={{ fontSize: 20, textAlign: 'center', marginLeft:10 }}>
+        Rquest.com
+      </div>
       &nbsp;
       <div
         style={{
@@ -82,7 +83,6 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             type="link"
             size={'large'}
             onClick={() => {
-              debugger;
               open ? handleClose() : handleOpen();
             }}
           >

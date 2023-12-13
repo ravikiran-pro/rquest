@@ -1,13 +1,10 @@
 import React from 'react';
 import Routes from '../../routes/routes';
-import { Link } from 'react-router-dom';
-import { storageKeys } from '../../utils';
 import { Button } from 'antd';
 import { useGlobalStore } from '../../services';
 import { useHistory } from 'react-router-dom';
 import { Drawer } from 'antd';
 import './index.css';
-import { Avatar } from 'antd';
 import { CloseCircleOutlined, CloseOutlined } from '@ant-design/icons';
 
 const SideBar = ({ open, handleClose }) => {
@@ -20,6 +17,11 @@ const SideBar = ({ open, handleClose }) => {
     history.push('/login');
   };
 
+  const handleClick = (route) => {
+    history.push(Routes[route])
+    handleClose()
+  }
+
   return (
     <Drawer
       rootClassName="sidebar-root"
@@ -29,35 +31,40 @@ const SideBar = ({ open, handleClose }) => {
       open={open}
     >
       {open && (
-        <div
-          className="close-menu"
-          onClick={handleClose}
-          style={{ fontSize: 24, cursor: 'pointer' }}
-        >
-          <CloseCircleOutlined />
-        </div>
+        <>
+          <div
+            className="close-menu-out"
+            onClick={handleClose}
+          >
+            <CloseCircleOutlined />
+          </div>
+          <div
+            className="close-menu-in"
+            onClick={handleClose}
+            style={{ fontSize: 24, cursor: 'pointer' }}
+          >
+            <CloseOutlined />
+          </div>
+        </>
       )}
+      <div style={{ textAlign: 'left' }}>
+        {user_data?.username && `Welcome ${user_data?.username}`}
+      </div>
       <div>
-        <div className="sidebar-menu">
-          <Link to={Routes.home}>
-            <Button type="link" size={'large'}>
-              Home
-            </Button>
-          </Link>
+        <div className="sidebar-menu" style={{ marginTop: 30 }}>
+          <Button type="link" color='primary' size={'large'} onClick={() => handleClick("home")}>
+            Home
+          </Button>
         </div>
         <div className="sidebar-menu">
-          <Link to={Routes.login}>
-            <Button type="link" size={'large'}>
-              Login
-            </Button>
-          </Link>
+          <Button type="link" size={'large'} onClick={() => handleClick("login")}>
+            Login
+          </Button>
         </div>
         <div className="sidebar-menu">
-          <Link to={Routes.client}>
-            <Button type="link" size={'large'}>
-              Client Register
-            </Button>
-          </Link>
+          <Button type="link" size={'large'} onClick={() => handleClick('client')}>
+            Client Register
+          </Button>
         </div>
       </div>
     </Drawer>

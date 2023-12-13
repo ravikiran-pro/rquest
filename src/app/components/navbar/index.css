@@ -4,12 +4,18 @@
 .sidebar-menu:hover {
   background-color: #1677ff;
   font-weight: 800;
-  color: #fff;
 }
 
-.close-menu {
+.close-menu-out {
   position: absolute;
+  font-size: 18px;
   left: -30px;
+}
+
+.close-menu-in {
+  position: absolute;
+  font-size: 18px;
+  right: 20px;
 }
 
 .sidebar-root .ant-drawer-content-wrapper {

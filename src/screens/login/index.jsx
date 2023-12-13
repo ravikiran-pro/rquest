@@ -61,11 +61,9 @@ const LoginScreen = () => {
         >
           <Input.Password prefix={<LockOutlined />} placeholder="Password" />
         </Form.Item>
-        <Form.Item>
-          <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-            Log in
-          </Button>
-        </Form.Item>
+        <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
+          Log in
+        </Button>
         <Form.Item style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <Link to={Routes.register}>Register Here</Link>
         </Form.Item>
