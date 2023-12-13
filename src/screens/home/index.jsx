@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
-import { Input, Button, Modal, Typography, Col, Row } from 'antd';
-// import { useForm } from 'react-hook-form';
-import { SearchOutlined } from '@ant-design/icons';
+import { Input, Button, Typography, Col, Row } from 'antd';
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent, ShopCard } from '../../app/components';
 import { debounce } from '../../app/utils/helper';
 
@@ -9,14 +8,10 @@ const { Text } = Typography;
 
 const HomeScreen = () => {
   // const { register, handleSubmit, errors } = useForm();
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState('ss');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
-
-  // React.useEffect(() => {
-  //   handleSearch('r')
-  // }, [])
 
   const handleSearch = async (value) => {
     if (value !== searchText) {
@@ -131,21 +126,26 @@ const HomeScreen = () => {
           )}
         </Row>
       </div>
-      <Modal
-        title="Leaflet Map"
-        visible={isModalVisible}
-        onCancel={handleCloseModal}
-        footer={null}
-      >
-        <div>
-          <LeafletComponent
-            markerLocation={markerLocation}
-            setMarkerLocation={setMarkerLocation}
-            updateMarker={updateMarker}
-            searchMarkers={searchMarkers}
-          />
+      {isModalVisible && <div className='modal-wrapper'>
+        <div id="myModal" class="overlay">
+          <div class="modal">
+            <button
+              onClick={handleCloseModal}
+              style={{ position: 'fixed', zIndex: 1000000000, right: 15, top: 15 }}
+            >
+              <CloseOutlined />
+            </button>
+            <LeafletComponent
+              isModalVisible={isModalVisible}
+              markerLocation={markerLocation}
+              setMarkerLocation={setMarkerLocation}
+              updateMarker={updateMarker}
+              searchMarkers={searchMarkers}
+            />
+          </div>
         </div>
-      </Modal>
+      </div>
+      }
     </div>
   );
 };

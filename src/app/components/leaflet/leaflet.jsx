@@ -45,6 +45,8 @@ const LeafletComponent = (props) => {
     return () => {
       // No need to remove the control here
     };
+
+
   }, []);
 
   const SearchBox = () => {
@@ -55,8 +57,10 @@ const LeafletComponent = (props) => {
         map.addControl(searchControl);
 
         const onSearchLocation = function (e) {
-          setPosition([e.location.y, e.location.x]);
-          updateMarker([e.location.y, e.location.x]);
+          if (e.location && e.location.y && e.location.x) {
+            setPosition([e.location.y, e.location.x]);
+            updateMarker([e.location.y, e.location.x]);
+          }
         };
 
         map.on('geosearch/showlocation', onSearchLocation);
@@ -76,15 +80,18 @@ const LeafletComponent = (props) => {
   };
 
   const handleMarkerDrag = (e) => {
-    setPosition([e.target._latlng.lat, e.target._latlng.lng]);
-    updateMarker([e.target._latlng.lat, e.target._latlng.lng]);
+    if (e.target._latlng) {
+      setPosition([e.target._latlng.lat, e.target._latlng.lng]);
+      updateMarker([e.target._latlng.lat, e.target._latlng.lng]);
+    }
   };
+
 
   return (
     <MapContainer
-      center={defaultPosition}
+      center={position}
       zoom={10}
-      style={{ height: '400px', width: '100%' }}
+      style={{ height: '100%', width: '100%' }}
     >
       <SearchBox />
       <TileLayer
@@ -102,6 +109,7 @@ const LeafletComponent = (props) => {
         </Popup>
       </Marker>
       {searchMarkers?.map((marker, index) => {
+        if(!marker.latitude || !marker.longitude)  return null
         return (
           <Marker
             position={[marker.latitude, marker.longitude]}
