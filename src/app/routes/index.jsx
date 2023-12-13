@@ -7,13 +7,12 @@ import {
   ClientRegister,
   RegisterScreen,
 } from '../../screens';
-import Navbar from '../components/navbar';
-import ChatApp from '../components/chat/chat';
+import { ChatApp, NavBar } from '../components';
 
 export default function AppRoutes() {
   return (
     <Router>
-      <Navbar />
+      <NavBar />
       <div style={{ height: 'calc(100vh - 40px)', overflow: 'auto' }}>
         <Switch>
           <Route path={routes.login}>

@@ -1,9 +1,9 @@
 import React from 'react';
-import Routes from '../routes/routes';
+import Routes from '../../routes/routes';
 import { Link } from 'react-router-dom';
-import { storageKeys } from '../utils/helper';
+import { storageKeys } from '../../utils';
 import { Button } from 'antd';
-import { useGlobalStore } from '../zustand';
+import { useGlobalStore } from '../../services';
 import { useHistory } from 'react-router-dom';
 
 const Navbar = () => {
@@ -44,13 +44,13 @@ const Navbar = () => {
               </Button>
             </Link>
           </div>
-          <div>
+          {/* <div>
             <Link to={Routes.client}>
               <Button type="link" size={'large'}>
                 Client Register
               </Button>
             </Link>
-          </div>
+          </div> */}
           {sessionStorage?.[storageKeys.auth_token] ? (
             <div>
               <Button type="link" size={'large'} onClick={() => logout()}>
@@ -66,13 +66,13 @@ const Navbar = () => {
                   </Button>
                 </Link>
               </div>
-              <div>
+              {/* <div>
                 <Link to={Routes.register}>
                   <Button type="link" size={'large'}>
                     Register
                   </Button>
                 </Link>
-              </div>
+              </div> */}
             </>
           )}
         </div>

@@ -2,9 +2,9 @@ import React from 'react';
 import { Form, Input, Button, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
-import { netWorkCall, storageKeys } from '../../app/utils/helper';
+import { apiConfig, netWorkCall, storageKeys } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
-import { useGlobalStore } from '../../app/zustand';
+import { useGlobalStore } from '../../app/services';
 
 const RegisterScreen = () => {
   const history = useHistory();
@@ -19,7 +19,7 @@ const RegisterScreen = () => {
         password: data.password,
         mobile: data.mobile,
       });
-      const res = await netWorkCall('user/register', 'POST', body);
+      const res = await netWorkCall(apiConfig.register, 'POST', body);
       if (res.success === true) {
         sessionStorage.setItem(storageKeys.auth_token, res.token);
         update_user_data(res.user_data);

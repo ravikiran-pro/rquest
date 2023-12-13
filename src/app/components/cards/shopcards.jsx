@@ -1,12 +1,6 @@
 import React from 'react';
 import { Card, Rate, Button, Typography } from 'antd';
-import {
-  EnvironmentOutlined,
-  PhoneOutlined,
-  GlobalOutlined,
-  ShoppingOutlined,
-  ShopOutlined,
-} from '@ant-design/icons';
+import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
 
 const { Text } = Typography;
 

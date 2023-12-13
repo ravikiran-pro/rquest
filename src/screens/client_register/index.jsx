@@ -4,8 +4,7 @@ import { AutoComplete } from 'antd';
 import { useForm, Controller } from 'react-hook-form';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Avatar, Space } from 'antd';
-import config from '../../app/utils/config';
-import { netWorkCall } from '../../app/utils/helper';
+import { apiConfig, config, netWorkCall } from '../../app/utils';
 import { BussinessCard } from '../../app/components';
 
 const ClientRegister = () => {
@@ -75,7 +74,7 @@ const ClientRegister = () => {
       let body = JSON.stringify(payload);
 
       const response = await netWorkCall(
-        'shops/client_register',
+        apiConfig.register,
         'POST',
         body,
         true
@@ -109,7 +108,7 @@ const ClientRegister = () => {
   };
 
   const fetchInitData = async () => {
-    const response = await netWorkCall('shops/my_shops', 'POST', null, true);
+    const response = await netWorkCall(apiConfig.my_shops, 'POST', null, true);
     if (response.success) {
       setIsAllShops([...response.data]);
     }
@@ -151,7 +150,7 @@ const ClientRegister = () => {
           </Col>
           <Col span={24}>
             <Row justify={'center'}>
-              <Col span={8}>
+              <Col span={8} xs={20} sm={16} md={12} lg={8}>
                 <Form layout="vertical">
                   <div style={{ marginBottom: 10, textAlign: 'left' }}>
                     {imageUrl && (

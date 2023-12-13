@@ -4,7 +4,10 @@ import { UserOutlined, LockOutlined } from '@ant-design/icons';
 import { useForm } from 'react-hook-form';
 import { netWorkCall, storageKeys } from '../../app/utils/helper';
 import { useHistory } from 'react-router-dom';
-import { useGlobalStore } from '../../app/zustand';
+import { useGlobalStore } from '../../app/services';
+import { Link } from 'react-router-dom';
+import Routes from '../../app/routes/routes';
+import { apiConfig } from '../../app/utils';
 
 const LoginScreen = () => {
   const history = useHistory();
@@ -18,7 +21,7 @@ const LoginScreen = () => {
         mobile: data.mobile,
         password: data.password,
       });
-      const res = await netWorkCall('user/login', 'POST', body);
+      const res = await netWorkCall(apiConfig.login, 'POST', body);
       if (res.success === true) {
         sessionStorage.setItem(storageKeys.auth_token, res.token);
         update_user_data(res.user_data);
@@ -62,6 +65,9 @@ const LoginScreen = () => {
           <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
             Log in
           </Button>
+        </Form.Item>
+        <Form.Item style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <Link to={Routes.register}>Register Here</Link>
         </Form.Item>
       </Form>
     </div>
