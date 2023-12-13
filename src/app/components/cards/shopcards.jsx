@@ -1,6 +1,8 @@
 import React from 'react';
 import { Card, Rate, Button, Typography } from 'antd';
-import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
+import { EnvironmentOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
+import { Space } from 'antd';
+import { Avatar } from 'antd';
 
 const { Text } = Typography;
 
@@ -28,59 +30,76 @@ const ShopCard = ({ shopDetails }) => {
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       }}
       bodyStyle={{
-        minHeight: 450,
+        minHeight: 300,
         display: 'flex',
         flexDirection: 'column',
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <img
-          src={image_url}
-          style={{
-            width: 80,
-            height: 80,
-            marginRight: 16,
-            borderRadius: '50%',
-          }}
-        />
-        <div>
-          <h3 style={{ margin: 0, fontSize: 18, fontWeight: 'bold' }}>
-            {shop_name}
-          </h3>
-          <Text type="secondary" style={{ marginBottom: 8 }}>
-            <EnvironmentOutlined /> {area} ({(distance / 1000).toFixed(2)} km)
-          </Text>
+      <div style={{ display: 'flex', textAlign: 'left', width: '100%' }}>
+        <div style={{ width: '100%', display: 'flex' }}>
+          {
+            image_url && <div style={{ width: 80, height: 40 }}>
+            <img
+              src={image_url}
+              style={{
+                width: 64,
+                height:64,
+                borderRadius: '50%',
+              }}
+            />
+          </div>
+          }
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: image_url? '200' : '100%', marginLeft: 8, }}>
+            <h5
+              style={{
+                margin: 0,
+                fontSize: 18,
+                textAlign: 'left',
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap'
+              }}
+            >
+              {shop_name}
+            </h5>
+            <div style={{ textAlign: 'left' }}>
+              <Text type="secondary" style={{ marginBottom: 8 }}>
+                <EnvironmentOutlined /> {area}
+              </Text>
+            </div>
+          </div>
         </div>
       </div>
-      <div style={{ marginTop: 16 }}>
-        <Rate
-          allowHalf
-          disabled
-          defaultValue={rating || 0}
-          style={{ color: '#FADB14' }}
-        />
-        <span style={{ fontSize: 14, marginLeft: 8 }}>{rating || 0}</span>
+      <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center' }}>
+          <Rate
+            allowHalf
+            disabled
+            defaultValue={rating || 0}
+            style={{ color: '#FADB14' }}
+          />
+          {/* <span style={{ fontSize: 14, marginLeft: 8 }}>{rating || 0}</span> */}
+        </div>
+        <Text strong style={{ marginBottom: 4, display: 'block' }}>
+          <ShopOutlined /> Address:
+        </Text>
+        <Text
+          style={{
+            overflow: 'hidden',
+            marginBottom: 4,
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
+          {address}
+        </Text>
+        <Text strong style={{ marginBottom: 4, display: 'block' }}>
+          <ShopOutlined /> Shop Type:
+        </Text>
+        <Text>{shop_type}</Text>
       </div>
-      <Text strong style={{ marginBottom: 4, display: 'block' }}>
-        <ShopOutlined /> Address:
-      </Text>
-      <Text
-        style={{
-          display: '-webkit-box',
-          WebkitBoxOrient: 'vertical',
-          overflow: 'hidden',
-          WebkitLineClamp: 2,
-          textOverflow: 'ellipsis',
-          marginBottom: 4,
-        }}
-      >
-        {address}
-      </Text>
-      <Text strong style={{ marginBottom: 4, display: 'block' }}>
-        <ShopOutlined /> Shop Type:
-      </Text>
-      <Text>{shop_type}</Text>
-      <br />
       <Button
         type="primary"
         href={directions}
@@ -97,7 +116,7 @@ const ShopCard = ({ shopDetails }) => {
         rel="noopener noreferrer"
         style={{ marginTop: 10 }}
       >
-        Contact
+        Chat
       </Button>
     </Card>
   );

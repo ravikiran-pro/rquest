@@ -5,7 +5,7 @@ import { useForm, Controller } from 'react-hook-form';
 import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Avatar, Space } from 'antd';
 import { apiConfig, config, netWorkCall } from '../../app/utils';
-import { BussinessCard } from '../../app/components';
+import { ShopCard } from '../../app/components';
 
 const ClientRegister = () => {
   const [imageUrl, setImageUrl] = useState(null);
@@ -348,7 +348,7 @@ const ClientRegister = () => {
               <Row style={{ display: 'flex', justifyContent: 'center' }}>
                 {allShops?.map((data) => (
                   <div style={{ width: 300, margin: '0px 10px' }}>
-                    <BussinessCard shopDetails={data} />
+                    <ShopCard shopDetails={data} />
                   </div>
                 ))}
               </Row>
