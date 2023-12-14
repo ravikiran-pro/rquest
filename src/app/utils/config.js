@@ -12,7 +12,7 @@ export const apiConfig = {
   register: 'user/register',
   chat_users: 'chat/getAllUsers',
   user_chats: 'chat/getAll',
-  chat_create: 'chat/create'
+  chat_create: 'chat/create',
 };
 
 export const SOCKET = io('http://localhost:3001');

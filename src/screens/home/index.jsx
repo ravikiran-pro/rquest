@@ -113,9 +113,7 @@ const HomeScreen = () => {
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
               {searchMarkers?.map((marker) => (
                 <div style={{ width: 300, margin: '0px 10px' }}>
-                  <ShopCard 
-                    shopDetails={marker} 
-                    />
+                  <ShopCard shopDetails={marker} />
                 </div>
               ))}
             </Row>
@@ -128,26 +126,24 @@ const HomeScreen = () => {
           )}
         </Row>
       </div>
-      {isModalVisible && <div className='modal-wrapper'>
-        <div id="myModal" class="overlay">
-          <div class="modal">
-            <button
-              onClick={handleCloseModal}
-              className='close-button'
-            >
-              <CloseOutlined />
-            </button>
-            <LeafletComponent
-              isModalVisible={isModalVisible}
-              markerLocation={markerLocation}
-              setMarkerLocation={setMarkerLocation}
-              updateMarker={updateMarker}
-              searchMarkers={searchMarkers}
-            />
+      {isModalVisible && (
+        <div className="modal-wrapper">
+          <div id="myModal" class="overlay">
+            <div class="modal">
+              <button onClick={handleCloseModal} className="close-button">
+                <CloseOutlined />
+              </button>
+              <LeafletComponent
+                isModalVisible={isModalVisible}
+                markerLocation={markerLocation}
+                setMarkerLocation={setMarkerLocation}
+                updateMarker={updateMarker}
+                searchMarkers={searchMarkers}
+              />
+            </div>
           </div>
         </div>
-      </div>
-      }
+      )}
     </div>
   );
 };

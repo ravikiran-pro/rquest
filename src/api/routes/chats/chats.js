@@ -1,17 +1,14 @@
 const { chats, users } = require('../../models');
 const { col, fn, Op, literal } = require('sequelize');
 
-
 const create = async (req, res) => {
   try {
-
-    let result = await createChat(req.body, req.headers.user_id)
+    let result = await createChat(req.body, req.headers.user_id);
 
     res.status(201).json({
       success: true,
       data: result[0],
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -28,7 +25,7 @@ const createChat = async (chatDetails, user_id) => {
       receiver_id: chatDetails.receiver_id,
       shop_id: chatDetails.shop_id,
       message: chatDetails.message,
-      is_read: false
+      is_read: false,
     };
 
     const res = await chats.create(payload);
@@ -44,12 +41,11 @@ const createChat = async (chatDetails, user_id) => {
 
     const formattedChats = await formatChat(allChats, user_id);
 
-    return formattedChats[payload.receiver_id]
+    return formattedChats[payload.receiver_id];
   } catch (err) {
-    throw new Error("Message Failed")
-
+    throw new Error('Message Failed');
   }
-}
+};
 
 const getAll = async (req, res) => {
   try {
@@ -65,7 +61,6 @@ const getAll = async (req, res) => {
       success: true,
       data: res,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -75,11 +70,10 @@ const getAll = async (req, res) => {
   }
 };
 
-
 const formatChat = async (allChats, user_id) => {
   const formattedChats = {};
 
-  allChats.forEach(chat => {
+  allChats.forEach((chat) => {
     const isSender = chat.sender_id === user_id;
     const otherUserId = isSender ? chat.receiver_id : chat.sender_id;
 
@@ -94,13 +88,12 @@ const formatChat = async (allChats, user_id) => {
       message: chat.message,
       updatedAt: chat.updatedAt,
       createdAt: chat.createdAt,
-      is_read: chat.is_read
+      is_read: chat.is_read,
     });
   });
 
   return formattedChats;
-}
-
+};
 
 const getAllUsers = async (req, res) => {
   try {
@@ -108,10 +101,7 @@ const getAllUsers = async (req, res) => {
 
     const allChats = await chats.findAll({
       where: {
-        [Op.or]: [
-          { 'sender_id': user_id },
-          { 'receiver_id': user_id },
-        ],
+        [Op.or]: [{ sender_id: user_id }, { receiver_id: user_id }],
       },
       include: [
         {
@@ -126,7 +116,7 @@ const getAllUsers = async (req, res) => {
         },
       ],
       // raw: true,
-      order: [['updatedAt', 'ASC']]
+      order: [['updatedAt', 'ASC']],
     });
 
     const formattedChats = await formatChat(allChats, user_id);
@@ -135,7 +125,6 @@ const getAllUsers = async (req, res) => {
       success: true,
       data: formattedChats,
     });
-
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -144,6 +133,5 @@ const getAllUsers = async (req, res) => {
     });
   }
 };
-
 
 module.exports = { create, getAll, createChat, getAllUsers };

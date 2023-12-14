@@ -18,9 +18,8 @@ div {
   background-color: #fff;
 }
 
-
 @media (max-width: 576px) {
-  .container{
+  .container {
     bottom: 0;
     right: 0;
     height: 100vh;
@@ -31,7 +30,7 @@ div {
     border-radius: 0px;
     padding-bottom: 10px;
   }
-  .chat-container{
+  .chat-container {
     height: 100% !important;
     display: flex;
     flex-direction: row;
@@ -43,7 +42,7 @@ div {
   display: flex;
 }
 
-.chat-container{
+.chat-container {
   height: 60vh;
   display: flex;
   flex-direction: column-reverse;
@@ -100,7 +99,7 @@ input:focus {
   outline: none;
 }
 
-.unread-badge{
+.unread-badge {
   position: fixed;
   right: 10px;
   margin-bottom: 25px;

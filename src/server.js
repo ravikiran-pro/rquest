@@ -12,7 +12,7 @@ const { PORT = 3001 } = process.env;
 const app = express();
 const server = http.createServer(app);
 
-let socketData = {}
+let socketData = {};
 
 // handle cors
 app.use(cors());
@@ -45,15 +45,17 @@ io.on('connection', (socket) => {
     const target = socketData[messageData.receiver_id];
     io.to(target.socket_id).emit('receive_message', messageData);
 
-    console.log(`Sent Message --> ${messageData.username} to ${target.username}`)
+    console.log(
+      `Sent Message --> ${messageData.username} to ${target.username}`
+    );
   });
 
   socket.on('connect_user', (user_data) => {
     socketData[user_data.user_id] = {
       ...user_data,
-      socket_id: socket.id
-    }
-    console.log(`user ${user_data.username} connected on ${socket.id}`)
+      socket_id: socket.id,
+    };
+    console.log(`user ${user_data.username} connected on ${socket.id}`);
   });
 });
 

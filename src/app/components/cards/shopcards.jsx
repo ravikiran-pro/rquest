@@ -3,7 +3,6 @@ import { Card, Rate, Button, Typography } from 'antd';
 import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
 import { useChatStore } from '../../services';
 
-
 const { Text } = Typography;
 
 const ShopCard = ({ shopDetails }) => {
@@ -20,7 +19,7 @@ const ShopCard = ({ shopDetails }) => {
     image_url,
     distance,
     id,
-    owner_id
+    owner_id,
   } = shopDetails;
   const { handleChatOpen } = useChatStore((state) => state);
 
@@ -40,8 +39,8 @@ const ShopCard = ({ shopDetails }) => {
     >
       <div style={{ display: 'flex', textAlign: 'left', width: '100%' }}>
         <div style={{ width: '100%', display: 'flex' }}>
-          {
-            image_url && <div style={{ width: 80, height: 40 }}>
+          {image_url && (
+            <div style={{ width: 80, height: 40 }}>
               <img
                 src={image_url}
                 style={{
@@ -51,8 +50,16 @@ const ShopCard = ({ shopDetails }) => {
                 }}
               />
             </div>
-          }
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: image_url ? '200' : '100%', marginLeft: 8, }}>
+          )}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              width: image_url ? '200' : '100%',
+              marginLeft: 8,
+            }}
+          >
             <h5
               style={{
                 margin: 0,
@@ -61,7 +68,7 @@ const ShopCard = ({ shopDetails }) => {
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
               }}
             >
               {shop_name}
@@ -74,7 +81,9 @@ const ShopCard = ({ shopDetails }) => {
           </div>
         </div>
       </div>
-      <div style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+      <div
+        style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}
+      >
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'center' }}>
           <Rate
             allowHalf
@@ -115,13 +124,13 @@ const ShopCard = ({ shopDetails }) => {
       <Button
         type="primary"
         onClick={() => handleChatOpen(owner_id, id)}
-      target="_blank"
-      rel="noopener noreferrer"
-      style={{ marginTop: 10 }}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{ marginTop: 10 }}
       >
-      Chat
-    </Button>
-    </Card >
+        Chat
+      </Button>
+    </Card>
   );
 };
 

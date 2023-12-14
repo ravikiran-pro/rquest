@@ -15,7 +15,7 @@ export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
   const { isChat } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
-  
+
   const handleClose = () => {
     setdrawer(false);
   };
@@ -24,9 +24,9 @@ export default function AppRoutes() {
     setdrawer(true);
   };
 
-  useEffect(()=>{
-    SOCKET.emit('connect_user', user_data)
-  },[])
+  useEffect(() => {
+    SOCKET.emit('connect_user', user_data);
+  }, []);
 
   return (
     <Router>
@@ -55,15 +55,15 @@ export default function AppRoutes() {
           </Route>
         </Switch>
       </div>
-      {
-        isChat && <div className='chat-wrapper'>
+      {isChat && (
+        <div className="chat-wrapper">
           <div id="myChat" class="overlay">
             <div class="chat">
               <ChatApp />
             </div>
           </div>
         </div>
-      }
+      )}
     </Router>
   );
 }

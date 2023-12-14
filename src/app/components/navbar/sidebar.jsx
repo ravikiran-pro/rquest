@@ -19,11 +19,10 @@ const SideBar = ({ open, handleClose }) => {
   };
 
   const handleClick = (route) => {
-    history.push(Routes[route])
-    handleClose()
-  }
+    history.push(Routes[route]);
+    handleClose();
+  };
 
-  
   return (
     <Drawer
       rootClassName="sidebar-root"
@@ -34,10 +33,7 @@ const SideBar = ({ open, handleClose }) => {
     >
       {open && (
         <>
-          <button
-            className="close-menu-out"
-            onClick={handleClose}
-          >
+          <button className="close-menu-out" onClick={handleClose}>
             <CloseOutlined />
           </button>
         </>
@@ -47,17 +43,30 @@ const SideBar = ({ open, handleClose }) => {
       </div>
       <div>
         <div className="sidebar-menu" style={{ marginTop: 30 }}>
-          <Button type="link" color='primary' size={'large'} onClick={() => handleClick("home")}>
+          <Button
+            type="link"
+            color="primary"
+            size={'large'}
+            onClick={() => handleClick('home')}
+          >
             Home
           </Button>
         </div>
         <div className="sidebar-menu">
-          <Button type="link" size={'large'} onClick={() => handleClick("login")}>
+          <Button
+            type="link"
+            size={'large'}
+            onClick={() => handleClick('login')}
+          >
             Login
           </Button>
         </div>
         <div className="sidebar-menu">
-          <Button type="link" size={'large'} onClick={() => handleClick('client')}>
+          <Button
+            type="link"
+            size={'large'}
+            onClick={() => handleClick('client')}
+          >
             Client Register
           </Button>
         </div>

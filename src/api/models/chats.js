@@ -43,7 +43,10 @@ module.exports = (sequelize) => {
 
   Chats.associate = (models) => {
     Chats.belongsTo(models.users, { foreignKey: 'sender_id', as: 'sender' });
-    Chats.belongsTo(models.users, { foreignKey: 'receiver_id', as: 'receiver' });
+    Chats.belongsTo(models.users, {
+      foreignKey: 'receiver_id',
+      as: 'receiver',
+    });
   };
 
   return Chats;

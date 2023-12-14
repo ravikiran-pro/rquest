@@ -45,8 +45,6 @@ const LeafletComponent = (props) => {
     return () => {
       // No need to remove the control here
     };
-
-
   }, []);
 
   const SearchBox = () => {
@@ -86,7 +84,6 @@ const LeafletComponent = (props) => {
     }
   };
 
-
   return (
     <MapContainer
       center={position}
@@ -109,7 +106,7 @@ const LeafletComponent = (props) => {
         </Popup>
       </Marker>
       {searchMarkers?.map((marker, index) => {
-        if(!marker.latitude || !marker.longitude)  return null
+        if (!marker.latitude || !marker.longitude) return null;
         return (
           <Marker
             position={[marker.latitude, marker.longitude]}

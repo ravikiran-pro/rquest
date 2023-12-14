@@ -5,14 +5,14 @@ import { ConfigProvider } from 'antd';
 function App() {
   return (
     <ConfigProvider
-      // theme={{
-      //   token: {
-      //     colorPrimary: '#0059b2',
-      //     borderRadius: 2,
+    // theme={{
+    //   token: {
+    //     colorPrimary: '#0059b2',
+    //     borderRadius: 2,
 
-      //     colorBgContainer: '#f6ffed',
-      //   }
-      // }}
+    //     colorBgContainer: '#f6ffed',
+    //   }
+    // }}
     >
       <div>
         <AppRoutes />

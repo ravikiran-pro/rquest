@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 import { defineConfig } from 'vite';
-import { VitePWA } from 'vite-plugin-pwa'
+import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
 
 const { PORT = 3001 } = process.env;
@@ -13,21 +13,21 @@ export default defineConfig({
     react(),
     VitePWA({
       manifest: {
-        name: "Rquest",
-        short_name: "Rquest",
-        description: "Rquest - Connect Everywhere Everything",
+        name: 'Rquest',
+        short_name: 'Rquest',
+        description: 'Rquest - Connect Everywhere Everything',
         icons: [
           {
             src: '/images/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
-          }
-        ]
+            type: 'image/png',
+          },
+        ],
       },
       devOptions: {
-        enabled: true
-      }
-    })
+        enabled: true,
+      },
+    }),
   ],
   server: {
     proxy: {

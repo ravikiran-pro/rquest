@@ -25,7 +25,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        height: 40
+        height: 40,
       }}
     >
       <div style={{ fontSize: 20, textAlign: 'center', marginLeft: 10 }}>
@@ -86,9 +86,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => {
               open ? handleClose() : handleOpen();
             }}
-
           >
-            {open ? <MenuFoldOutlined  className='menu'/> : <MenuUnfoldOutlined className='menu' />}
+            {open ? (
+              <MenuFoldOutlined className="menu" />
+            ) : (
+              <MenuUnfoldOutlined className="menu" />
+            )}
           </Button>
         </div>
       </div>
