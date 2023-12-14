@@ -32,7 +32,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: `http://localhost:${PORT}`,
+        target: "https://rquest.onrender.com",
         changeOrigin: true,
       },
     },
