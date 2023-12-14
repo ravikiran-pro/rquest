@@ -10,7 +10,6 @@
     "client:build": "vite build",
     "build": "npm run client:build && npm run server:build",
     "serve": "vite preview",
-    "prepare": "husky install",
     "format": "prettier . --write",
     "test": ".",
     "start": "node dist/server.js"
