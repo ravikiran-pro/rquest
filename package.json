@@ -8,7 +8,7 @@
     "server:dev": "nodemon src/server.js",
     "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/api/config,src/api/models,src/api/routes,src/api/auth' src",
     "client:build": "vite build",
-    "build": "npm run server:build && npm run client:build",
+    "build": "npm run client:build && npm run server:build",
     "serve": "vite preview",
     "prepare": "husky install",
     "format": "prettier . --write",
