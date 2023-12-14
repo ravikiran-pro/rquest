@@ -1,63 +1,156 @@
 import React, { useState, useEffect } from 'react';
-import { io } from 'socket.io-client';
 import './styles.css';
-
-const socket = io('http://localhost:3001');
+import { CloseOutlined } from '@ant-design/icons';
+import { useChatStore, useGlobalStore } from '../../services';
+import { SOCKET, apiConfig, netWorkCall } from '../../utils';
+import { MessageHeader } from './view';
 
 function ChatApp() {
   const [socketID, setSocketID] = useState('');
   const [currentMessage, setCurrentMessage] = useState('');
   const [messageList, setMessageList] = useState([]);
+  const [userMenu, setUserMenu] = useState({})
+  const [receiveMessage, setReceiveMessage] = useState({
+    data: '',
+    type: ''
+  })
+
+  const { receiver_id, shop_id, handleChatClose, updateReceiver } = useChatStore((state) => state);
+  const { user_data } = useGlobalStore((state) => state);
+
+  const [selectedChat, setSelectedChat] = useState(receiver_id)
 
   const sendMessage = async () => {
-    if (currentMessage !== '') {
+    if (currentMessage !== '' && selectedChat !== user_data.user_id) {
       const messageData = {
-        sender: socketID,
+        sender_id: user_data.user_id,
         message: currentMessage,
-        targetSocketId: '1iBSxm1kmX62zLm8AAAJ',
+        receiver_id: selectedChat,
+        username: user_data.username,
+        shop_id: shop_id
       };
-      await socket.emit('send_message', messageData);
-      setMessageList((list) => [...list, messageData]);
-      setCurrentMessage('');
+      const response = await netWorkCall(
+        apiConfig.chat_create,
+        'POST',
+        JSON.stringify(messageData),
+        true
+      );
+      if (response.data) {
+        await SOCKET.emit('send_message', response.data);
+        setReceiveMessage({ data: response.data, type: 'receiver_id' })
+        setCurrentMessage("")
+      }
     }
   };
 
+
+  const handleHeaderClick = (key) => {
+    setSelectedChat(key)
+  }
+
   useEffect(() => {
-    socket.on('socket_id', (id) => {
+    // add on temporary state on sending and receving io socket is trigger and the main state is renderd
+    const { data, type } = receiveMessage;
+    if (type && data) {
+      if (userMenu[data[type]]) {
+        userMenu[data[type]].push(data)
+      } else {
+        userMenu[data[type]] = [data]
+      }
+      setUserMenu({ ...userMenu })
+      setReceiveMessage({ data: {}, type: '' })
+    }
+  }, [receiveMessage])
+
+  useEffect(() => {
+    SOCKET.on('socket_id', (id) => {
       setSocketID(id);
     });
 
-    socket.on('receive_message', (data) => {
-      setMessageList((list) => [...list, data]);
+    SOCKET.on('receive_message', (data) => {
+      setReceiveMessage({ data: data, type: 'sender_id' })
     });
 
     return () => {
-      socket.off('socket_id');
-      socket.off('receive_message');
+      SOCKET.off('socket_id');
+      SOCKET.off('receive_message');
     };
-  }, [socket]);
+  }, [SOCKET]);
 
+  useEffect(() => {
+    SOCKET.emit('connect_user', user_data)
+  }, [])
+
+
+  useEffect(() => {
+    fetchInitData();
+  }, [])
+
+  useEffect(()=>{
+    setSelectedChat(receiver_id)
+  },[receiver_id])
+
+  const fetchInitData = async () => {
+    const response = await netWorkCall(
+      apiConfig.chat_users,
+      'POST',
+      JSON.stringify({}),
+      true
+    );
+    if (response.data && Object.keys(response.data).length) {
+      setUserMenu({ ...response.data })
+    }
+  }
+
+  const isChatSelected = selectedChat === user_data?.user_id ? false : true;
+  
   return (
     <div class="container">
-      <h1>Realtime Chat</h1>
-
-      <div class="msg-container-wrapper">
-        <div class="message-container">
-          {messageList.map((msg) => {
-            return (
-              <div
-                class={`message ${
-                  msg.sender === socketID ? 'my-msg' : 'other-msg'
-                }`}
-              >
-                {msg.message}
-              </div>
-            );
-          })}
+      <button
+        style={{ position: 'absolute', right: 15, top: 35 }}
+        onClick={() => {
+          if (isChatSelected && selectedChat !== receiver_id ) setSelectedChat(user_data?.user_id)
+          else handleChatClose()
+        }}
+      >
+        <CloseOutlined />
+      </button>
+      <div class="chat-container">
+        <div class="user-list" style={{ display: isChatSelected ? 'none' : '' }}>
+          {
+            Object.keys(userMenu).map(key => {
+              if (key === user_data.user_id) return
+              let chatData = userMenu[key];
+              let totalUnread = userMenu[key].filter(item => !item.is_read).length
+              let lastData = chatData[chatData.length-1];
+              return <MessageHeader
+                name={lastData.username}
+                message={lastData.message}
+                handleHeaderClick={() => handleHeaderClick(key)}
+                color={Math.floor(Math.random() * (4 - 0))}
+                totalUnread={totalUnread}
+                dateTime={lastData.updatedAt}
+              />
+            })
+          }
+        </div>
+        <div class="msg-container-wrapper">
+          <div class="message-container" style={{ display: isChatSelected ? '' : 'none' }}>
+            {userMenu[selectedChat]?.map((msg) => {
+              return (
+                <div
+                  class={`message ${msg.sender_id === user_data?.user_id ? 'my-msg' : 'other-msg'
+                    }`}
+                >
+                  {msg.message}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
 
-      <div class="input-container">
+      <div class="input-container" style={{ display: isChatSelected ? '' : 'none' }}>
         <input
           type="text"
           value={currentMessage}

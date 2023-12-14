@@ -9,6 +9,7 @@ import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 const Navbar = ({ open, handleOpen, handleClose }) => {
   const history = useHistory();
+
   const { user_data, update_user_data } = useGlobalStore((state) => state);
 
   const logout = () => {
@@ -27,7 +28,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         height: 40
       }}
     >
-      <div style={{ fontSize: 20, textAlign: 'center', marginLeft:10 }}>
+      <div style={{ fontSize: 20, textAlign: 'center', marginLeft: 10 }}>
         Rquest.com
       </div>
       &nbsp;
@@ -85,8 +86,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => {
               open ? handleClose() : handleOpen();
             }}
+
           >
-            {open ? <MenuFoldOutlined /> : <MenuUnfoldOutlined />}
+            {open ? <MenuFoldOutlined  className='menu'/> : <MenuUnfoldOutlined className='menu' />}
           </Button>
         </div>
       </div>

@@ -18,6 +18,8 @@ const getShopsFilter = async (req, res) => {
         'latitude',
         'longitude',
         'directions',
+        'id',
+        'owner_id',
         [
           literal(
             'earth_distance(ll_to_earth(:search_lat, :search_lon), ll_to_earth(latitude, longitude))'
@@ -84,6 +86,8 @@ const getMyShops = async (req, res) => {
         'directions',
         'createdAt',
         'updatedAt',
+        'id',
+        'owner_id'
       ],
       where: {
         owner_id: user_id,

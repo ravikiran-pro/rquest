@@ -5,11 +5,14 @@ const router = require('./api/routes');
 const http = require('http');
 const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
+const { createChat } = require('./api/routes/chats/chats');
 
 const { PORT = 3001 } = process.env;
 
 const app = express();
 const server = http.createServer(app);
+
+let socketData = {}
 
 // handle cors
 app.use(cors());
@@ -36,11 +39,21 @@ const io = new Server(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log(socket.id);
   io.to(socket.id).emit('socket_id', socket.id);
 
-  socket.on('send_message', (messageData) => {
-    socket.emit('receive_message', messageData);
+  socket.on('send_message', async (messageData) => {
+    const target = socketData[messageData.receiver_id];
+    io.to(target.socket_id).emit('receive_message', messageData);
+
+    console.log(`Sent Message --> ${messageData.username} to ${target.username}`)
+  });
+
+  socket.on('connect_user', (user_data) => {
+    socketData[user_data.user_id] = {
+      ...user_data,
+      socket_id: socket.id
+    }
+    console.log(`user ${user_data.username} connected on ${socket.id}`)
   });
 });
 

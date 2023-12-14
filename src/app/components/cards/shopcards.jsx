@@ -1,8 +1,8 @@
 import React from 'react';
 import { Card, Rate, Button, Typography } from 'antd';
-import { EnvironmentOutlined, ShopOutlined, UserOutlined } from '@ant-design/icons';
-import { Space } from 'antd';
-import { Avatar } from 'antd';
+import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
+import { useChatStore } from '../../services';
+
 
 const { Text } = Typography;
 
@@ -19,7 +19,10 @@ const ShopCard = ({ shopDetails }) => {
     directions,
     image_url,
     distance,
+    id,
+    owner_id
   } = shopDetails;
+  const { handleChatOpen } = useChatStore((state) => state);
 
   return (
     <Card
@@ -39,17 +42,17 @@ const ShopCard = ({ shopDetails }) => {
         <div style={{ width: '100%', display: 'flex' }}>
           {
             image_url && <div style={{ width: 80, height: 40 }}>
-            <img
-              src={image_url}
-              style={{
-                width: 64,
-                height:64,
-                borderRadius: '50%',
-              }}
-            />
-          </div>
+              <img
+                src={image_url}
+                style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                }}
+              />
+            </div>
           }
-          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: image_url? '200' : '100%', marginLeft: 8, }}>
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', width: image_url ? '200' : '100%', marginLeft: 8, }}>
             <h5
               style={{
                 margin: 0,
@@ -111,14 +114,14 @@ const ShopCard = ({ shopDetails }) => {
       </Button>
       <Button
         type="primary"
-        href={directions}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginTop: 10 }}
+        onClick={() => handleChatOpen(owner_id, id)}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ marginTop: 10 }}
       >
-        Chat
-      </Button>
-    </Card>
+      Chat
+    </Button>
+    </Card >
   );
 };
 

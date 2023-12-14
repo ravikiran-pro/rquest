@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import { default as routes } from './routes';
 import {
@@ -8,10 +8,14 @@ import {
   RegisterScreen,
 } from '../../screens';
 import { ChatApp, NavBar, SideBar } from '../components';
+import { useChatStore, useGlobalStore } from '../../app/services';
+import { SOCKET } from '../utils';
 
 export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
-
+  const { isChat } = useChatStore((state) => state);
+  const { user_data } = useGlobalStore((state) => state);
+  
   const handleClose = () => {
     setdrawer(false);
   };
@@ -19,6 +23,10 @@ export default function AppRoutes() {
   const handleOpen = () => {
     setdrawer(true);
   };
+
+  useEffect(()=>{
+    SOCKET.emit('connect_user', user_data)
+  },[])
 
   return (
     <Router>
@@ -39,14 +47,23 @@ export default function AppRoutes() {
           <Route path={routes.client}>
             <ClientRegister />
           </Route>
-          <Route path={routes.chat}>
+          {/* <Route path={routes.chat}>
             <ChatApp />
-          </Route>
+          </Route> */}
           <Route path={routes.register}>
             <RegisterScreen />
           </Route>
         </Switch>
       </div>
+      {
+        isChat && <div className='chat-wrapper'>
+          <div id="myChat" class="overlay">
+            <div class="chat">
+              <ChatApp />
+            </div>
+          </div>
+        </div>
+      }
     </Router>
   );
 }

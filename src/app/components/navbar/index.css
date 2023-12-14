@@ -8,8 +8,13 @@
 
 .close-menu-out {
   position: absolute;
-  font-size: 18px;
-  left: -30px;
+  font-size: 16px;
+  padding: '5px 15px';
+  right: 0px;
+  border-radius: 0;
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  cursor: pointer;
 }
 
 .close-menu-in {
@@ -36,6 +41,10 @@
   .sidebar-toggler {
     display: none;
   }
+}
+
+.sidebar-toggler .menu{
+  font-size: 30px;
 }
 
 @media (max-width: 768px) {

@@ -8,7 +8,7 @@ const { Text } = Typography;
 
 const HomeScreen = () => {
   // const { register, handleSubmit, errors } = useForm();
-  const [searchText, setSearchText] = useState('ss');
+  const [searchText, setSearchText] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
@@ -113,7 +113,9 @@ const HomeScreen = () => {
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
               {searchMarkers?.map((marker) => (
                 <div style={{ width: 300, margin: '0px 10px' }}>
-                  <ShopCard shopDetails={marker} />
+                  <ShopCard 
+                    shopDetails={marker} 
+                    />
                 </div>
               ))}
             </Row>
@@ -131,7 +133,7 @@ const HomeScreen = () => {
           <div class="modal">
             <button
               onClick={handleCloseModal}
-              style={{ position: 'fixed', zIndex: 1000000000, right: 15, top: 15 }}
+              className='close-button'
             >
               <CloseOutlined />
             </button>

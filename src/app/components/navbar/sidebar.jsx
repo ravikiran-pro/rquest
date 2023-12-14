@@ -14,6 +14,7 @@ const SideBar = ({ open, handleClose }) => {
   const logout = () => {
     update_user_data({});
     sessionStorage.clear();
+    handleClose();
     history.push('/login');
   };
 
@@ -22,6 +23,7 @@ const SideBar = ({ open, handleClose }) => {
     handleClose()
   }
 
+  
   return (
     <Drawer
       rootClassName="sidebar-root"
@@ -32,19 +34,12 @@ const SideBar = ({ open, handleClose }) => {
     >
       {open && (
         <>
-          <div
+          <button
             className="close-menu-out"
             onClick={handleClose}
           >
-            <CloseCircleOutlined />
-          </div>
-          <div
-            className="close-menu-in"
-            onClick={handleClose}
-            style={{ fontSize: 24, cursor: 'pointer' }}
-          >
             <CloseOutlined />
-          </div>
+          </button>
         </>
       )}
       <div style={{ textAlign: 'left' }}>
@@ -64,6 +59,11 @@ const SideBar = ({ open, handleClose }) => {
         <div className="sidebar-menu">
           <Button type="link" size={'large'} onClick={() => handleClick('client')}>
             Client Register
+          </Button>
+        </div>
+        <div className="sidebar-menu">
+          <Button type="link" size={'large'} onClick={logout}>
+            Logout
           </Button>
         </div>
       </div>
