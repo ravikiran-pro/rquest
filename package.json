@@ -15,10 +15,6 @@
     "start": "node dist/server.js"
   },
   "devDependencies": {
-    "@babel/cli": "^7.15.7",
-    "@babel/core": "^7.15.7",
-    "babel-eslint": "^10.1.0",
-    "babel-loader": "^8.2.2",
     "concurrently": "^6.2.1",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
@@ -37,6 +33,10 @@
     "vite-plugin-pwa": "^0.17.4"
   },
   "dependencies": {
+    "@babel/cli": "^7.15.7",
+    "@babel/core": "^7.15.7",
+    "babel-eslint": "^10.1.0",
+    "babel-loader": "^8.2.2",
     "@vitejs/plugin-react": "^1.0.2",
     "@ant-design/icons": "^5.2.5",
     "antd": "^5.8.3",
