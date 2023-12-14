@@ -44,6 +44,9 @@ export default function AppRoutes() {
           <Route path={routes.home}>
             <HomeScreen />
           </Route>
+          <Route path={'/'}>
+            <HomeScreen />
+          </Route>
           <Route path={routes.client}>
             <ClientRegister />
           </Route>
