@@ -3,6 +3,7 @@ import { Input, Button, Typography, Col, Row } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent, ShopCard } from '../../app/components';
 import { debounce } from '../../app/utils/helper';
+import { config } from '../../app/utils';
 
 const { Text } = Typography;
 
@@ -27,7 +28,7 @@ const HomeScreen = () => {
     try {
       if (searchText) {
         const response = await fetch(
-          'http://localhost:3001/api/v1/shops/search',
+          `${config.api_url}/shops/search`,
           {
             method: 'POST',
             headers: {

@@ -15,4 +15,4 @@ export const apiConfig = {
   chat_create: 'chat/create',
 };
 
-export const SOCKET = io('http://localhost:3001');
+export const SOCKET = io(config.api_url);
