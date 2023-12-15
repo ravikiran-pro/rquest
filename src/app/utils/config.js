@@ -13,6 +13,7 @@ export const apiConfig = {
   chat_users: 'chat/getAllUsers',
   user_chats: 'chat/getAll',
   chat_create: 'chat/create',
+  shops_search: 'shops/search'
 };
 
 export const SOCKET = io(config.api_url);

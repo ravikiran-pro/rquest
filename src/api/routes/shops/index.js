@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/search', getShopsFilter);
 
-router.use(authMiddleware);
+// router.use(authMiddleware);
 
 router.post('/my_shops', getMyShops);
 router.post('/client_register', createShops);

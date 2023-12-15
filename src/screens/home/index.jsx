@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { Input, Button, Typography, Col, Row } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent, ShopCard } from '../../app/components';
-import { debounce } from '../../app/utils/helper';
-import { config } from '../../app/utils';
+import { debounce, netWorkCall } from '../../app/utils/helper';
+import { apiConfig, config } from '../../app/utils';
 
 const { Text } = Typography;
 
@@ -27,31 +27,24 @@ const HomeScreen = () => {
   React.useEffect(async () => {
     try {
       if (searchText) {
-        const response = await fetch(
-          `${config.api_url}/shops/search`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              lat: markerLocation[0],
-              lon: markerLocation[1],
-              search: searchText,
-            }),
-          }
+        let body = JSON.stringify({
+          lat: markerLocation[0],
+          lon: markerLocation[1],
+          search: searchText,
+        })
+
+        const response = await netWorkCall(
+          apiConfig.shops_search,
+          'POST',
+          body,
+          true
         );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        
+        if (response.data) {
+          setSearchMarkers(response.data);
         }
-
-        const data = await response.json();
-        // Handle the response data as needed
-        setSearchMarkers(data.data);
       } else setSearchMarkers([]);
     } catch (error) {
-      // Handle errors
       console.error('Error:', error.message);
     }
   }, [markerLocation, searchText]);

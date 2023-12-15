@@ -29,7 +29,7 @@ const netWorkCall = async (endpoint, method, payload, isAuth = false) => {
     )}`;
   }
 
-  const response = await fetch(`${config.api_url}/${endpoint}`, body);
+  const response = await fetch(`${config.api_url}/api/v1/${endpoint}`, body);
   let data = await response.json();
   return data;
 };
