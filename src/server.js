@@ -5,7 +5,6 @@ const router = require('./api/routes');
 const http = require('http');
 const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
-const { createChat } = require('./api/routes/chats/chats');
 
 const { PORT = 3001 } = process.env;
 
@@ -15,7 +14,11 @@ const server = http.createServer(app);
 let socketData = {};
 
 // handle cors
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+  allowedHeaders: '*',
+}));
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
