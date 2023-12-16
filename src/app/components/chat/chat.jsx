@@ -106,7 +106,7 @@ function ChatApp() {
   return (
     <div class="container">
       <button
-        style={{ position: 'absolute', right: 15, top: 35 }}
+        style={{ position: 'absolute', right: 15, top: 15 }}
         onClick={() => {
           if (isChatSelected && selectedChat !== receiver_id)
             setSelectedChat(user_data?.user_id);

@@ -38,7 +38,7 @@ const SideBar = ({ open, handleClose }) => {
           </button>
         </>
       )}
-      <div style={{ textAlign: 'left' }}>
+      <div style={{ textAlign: 'left', marginTop: 30, marginLeft: 20 }}>
         {user_data?.username && `Welcome ${user_data?.username}`}
       </div>
       <div>
@@ -52,15 +52,17 @@ const SideBar = ({ open, handleClose }) => {
             Home
           </Button>
         </div>
-        <div className="sidebar-menu">
-          <Button
-            type="link"
-            size={'large'}
-            onClick={() => handleClick('login')}
-          >
-            Login
-          </Button>
-        </div>
+        {
+          !user_data?.username && <div className="sidebar-menu">
+            <Button
+              type="link"
+              size={'large'}
+              onClick={() => handleClick('login')}
+            >
+              Login
+            </Button>
+          </div>
+        }
         <div className="sidebar-menu">
           <Button
             type="link"
@@ -70,11 +72,13 @@ const SideBar = ({ open, handleClose }) => {
             Client Register
           </Button>
         </div>
-        <div className="sidebar-menu">
-          <Button type="link" size={'large'} onClick={logout}>
-            Logout
-          </Button>
-        </div>
+        {
+          user_data?.username && <div className="sidebar-menu">
+            <Button type="link" size={'large'} onClick={logout}>
+              Logout
+            </Button>
+          </div>
+        }
       </div>
     </Drawer>
   );

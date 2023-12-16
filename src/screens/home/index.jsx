@@ -13,6 +13,7 @@ const HomeScreen = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
+  const [position, setPosition] = useState(12.9631025, 80.25476);
 
   const handleSearch = async (value) => {
     if (value !== searchText) {
@@ -39,7 +40,7 @@ const HomeScreen = () => {
           body,
           true
         );
-        
+
         if (response.data) {
           setSearchMarkers(response.data);
         }
@@ -94,6 +95,7 @@ const HomeScreen = () => {
                 onClick={handleOpenModal}
                 style={{
                   marginRight: '10px',
+                  marginBottom: '10px',
                   cursor: 'pointer',
                   float: 'right',
                   fontSize: 14,
@@ -103,11 +105,14 @@ const HomeScreen = () => {
               </Text>
             </div>
           </Col>
-          {searchMarkers?.length ? (
+          {searchMarkers && searchMarkers?.length ? (
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
               {searchMarkers?.map((marker) => (
-                <div style={{ width: 300, margin: '0px 10px' }}>
-                  <ShopCard shopDetails={marker} />
+                <div style={{ width: 350, margin: '0px 10px' }} key={marker.id}>
+                  <ShopCard
+                    shopDetails={marker}
+                    isChat={false}
+                  />
                 </div>
               ))}
             </Row>
@@ -133,6 +138,8 @@ const HomeScreen = () => {
                 setMarkerLocation={setMarkerLocation}
                 updateMarker={updateMarker}
                 searchMarkers={searchMarkers}
+                position={position}
+                setPosition={setPosition}
               />
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
 import { default as routes } from './routes';
 import {
   LoginScreen,
@@ -44,9 +44,6 @@ export default function AppRoutes() {
           <Route path={routes.home}>
             <HomeScreen />
           </Route>
-          <Route path={'/'}>
-            <HomeScreen />
-          </Route>
           <Route path={routes.client}>
             <ClientRegister />
           </Route>
@@ -55,6 +52,9 @@ export default function AppRoutes() {
           </Route> */}
           <Route path={routes.register}>
             <RegisterScreen />
+          </Route>
+          <Route path={'/'}>
+            <Redirect to={routes.home}/>
           </Route>
         </Switch>
       </div>

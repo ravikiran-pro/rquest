@@ -9,9 +9,7 @@ import * as L from 'leaflet';
 import { func } from 'prop-types';
 
 const LeafletComponent = (props) => {
-  const { searchMarkers = [], updateMarker = func } = props;
-  const defaultPosition = [12.9389, 80.2612];
-  const [position, setPosition] = useState(defaultPosition);
+  const { searchMarkers = [], updateMarker = func, position, setPosition } = props;
   const [searchControl, setSearchControl] = useState(null);
 
   const RedMarkerIcon = new L.Icon({
@@ -77,6 +75,7 @@ const LeafletComponent = (props) => {
     return null;
   };
 
+
   const handleMarkerDrag = (e) => {
     if (e.target._latlng) {
       setPosition([e.target._latlng.lat, e.target._latlng.lng]);
@@ -92,8 +91,8 @@ const LeafletComponent = (props) => {
     >
       <SearchBox />
       <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="http://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}"
+        subdomains={['mt0', 'mt1', 'mt2', 'mt3']}
       />
       <Marker
         position={position}
@@ -112,7 +111,7 @@ const LeafletComponent = (props) => {
             position={[marker.latitude, marker.longitude]}
             draggable={false}
             icon={index == 0 ? GreenMarkerIcon : RedMarkerIcon}
-            // eventHandlers={{ dragend: handleMarkerDrag }}
+          // eventHandlers={{ dragend: handleMarkerDrag }}
           >
             <Popup>
               {marker.shop_name} <br />

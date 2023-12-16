@@ -1,5 +1,5 @@
 ### search 1
-POST  http://localhost:3001/api/v1/shops/search HTTP/1.1
+POST  https://rquest-cdn.onrender.com:3001/api/v1/shops/search HTTP/1.1
 Content-Type: application/json
 
 {

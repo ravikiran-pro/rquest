@@ -2,17 +2,38 @@ import React, { useEffect, useState } from 'react';
 import { Form, Input, Upload, Button, Typography, Row, Col } from 'antd';
 import { AutoComplete } from 'antd';
 import { useForm, Controller } from 'react-hook-form';
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons';
+import { CloseOutlined, PlusOutlined, UploadOutlined } from '@ant-design/icons';
 import { Avatar, Space } from 'antd';
 import { apiConfig, config, netWorkCall } from '../../app/utils';
-import { ShopCard } from '../../app/components';
+import { LeafletComponent, ShopCard } from '../../app/components';
 
 const ClientRegister = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [allShops, setIsAllShops] = useState([]);
   const [isFormEnable, setIsFormEnable] = useState(false);
-  const [shopDetails, setShopDetails] = useState({});
+  const [shopDetails, setShopDetails] = useState({
+    shop_name: '',
+    address: '',
+    area: '',
+    mobile_number: '',
+    website: '',
+    shop_type: '',
+    link: '',
+    map_link: '',
+    shopOptions_reduce: [],
+    shopOptions: [
+      { value: 'Provision Store' },
+      { value: 'Restaurants' },
+      { value: 'Small business' },
+      { value: 'Hotels' },
+      { value: 'Hardawers and tools' },
+      { value: 'Mechanic' },
+      { value: 'Others' },
+    ],
+  });
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [position, setPosition] = useState([12.9631025, 80.25476]);
   const {
     control,
     handleSubmit,
@@ -20,6 +41,7 @@ const ClientRegister = () => {
   } = useForm({
     defaultValues: { ...shopDetails },
   });
+
 
   const onImageUpload = async (file) => {
     setLoading(true);
@@ -70,18 +92,19 @@ const ClientRegister = () => {
         products_list: [],
         shop_type: shopDetails.shop_type,
         directions: shopDetails.map_link,
+        latitude: position[0],
+        longitude: position[1]
       };
       let body = JSON.stringify(payload);
 
       const response = await netWorkCall(
-        apiConfig.register,
+        apiConfig.register_shop,
         'POST',
         body,
         true
       );
       if (response.success === true) {
         fetchInitData();
-        setIsFormEnable(false);
       }
     } else {
       alert('please enter all fields');
@@ -109,48 +132,85 @@ const ClientRegister = () => {
 
   const fetchInitData = async () => {
     const response = await netWorkCall(apiConfig.my_shops, 'POST', null, true);
-    if (response.success) {
-      setIsAllShops([...response.data]);
+    if (response.success === true && response?.data && response.data.length) {
+      setIsAllShops(response.data);
+      setIsFormEnable(false)
     }
+  };
+
+  const handleOpenModal = async () => {
+    if (shopDetails?.map_link && position?.length) {
+      const response = await netWorkCall(
+        apiConfig.decode_link,
+        'POST',
+        JSON.stringify({
+          map_link: shopDetails?.map_link
+        }),
+        true
+      );
+      const { latitude, longitude } = response.data;
+      if (latitude && longitude) {
+        setPosition([latitude, longitude])
+        setShopDetails({ ...shopDetails, latitude: latitude, longitude: longitude })
+      }
+    }
+    setIsModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
   };
 
   useEffect(() => {
     fetchInitData();
   }, []);
 
-  useEffect(() => {
-    setShopDetails({
-      shop_name: '',
-      address: '',
-      area: '',
-      mobile_number: '',
-      website: '',
-      shop_type: '',
-      link: '',
-      map_link: '',
-      shopOptions_reduce: [],
-      shopOptions: [
-        { value: 'Provision Store' },
-        { value: 'Restaurants' },
-        { value: 'Small business' },
-        { value: 'Hotels' },
-        { value: 'Hardawers and tools' },
-        { value: 'Mechanic' },
-        { value: 'Others' },
-      ],
-    });
-  }, [isFormEnable]);
-
   return (
     <Row>
-      {isFormEnable ? (
-        <>
-          <Col span={24} style={{ textAlign: 'center' }}>
-            <Typography.Title level={5}>Register Business</Typography.Title>
+      {isModalVisible && (
+        <div className="modal-wrapper">
+          <div id="myModal" class="overlay">
+            <div class="modal">
+              <button onClick={handleCloseModal} className="close-button">
+                <CloseOutlined />
+              </button>
+              <LeafletComponent
+                isModalVisible={isModalVisible}
+                position={position}
+                setPosition={setPosition}
+              />
+            </div>
+          </div>
+        </div>
+      )}
+      {
+        !isFormEnable ? <Col span={24}>
+          <div style={{ textAlign: 'right', marginBottom: 10 }}>
+            <Button
+              onClick={() => setIsFormEnable(true)}
+              style={{ color: '#007bff' }}
+              type="link"
+              icon={<PlusOutlined />}
+            >
+              Add New Business
+            </Button>
+          </div>
+        </Col> : null
+      }
+      {
+        isFormEnable ? <>
+          <Col span={24}>
+            <Row justify={'center'}>
+              <Col span={8} xs={22} sm={18} md={14} lg={12} xl={8}>
+                <Col span={8} xs={22} sm={18} md={14} lg={12} xl={8}>
+                  <Typography.Title level={5}>Register Business</Typography.Title>
+                </Col>
+              </Col>
+            </Row>
           </Col>
           <Col span={24}>
             <Row justify={'center'}>
-              <Col span={8} xs={20} sm={16} md={12} lg={8}>
+              <Col span={8} xs={22} sm={18} md={14} lg={12} xl={8}>
                 <Form layout="vertical">
                   <div style={{ marginBottom: 10, textAlign: 'left' }}>
                     {imageUrl && (
@@ -297,8 +357,11 @@ const ClientRegister = () => {
                           {...field}
                           name="map_link"
                           value={shopDetails.map_link}
-                          placeholder="Enter Map Link"
+                          placeholder="Paste Map Link"
                           onChange={handleInputChange}
+                          suffix={
+                            <Button onClick={handleOpenModal}>Pick Location</Button>
+                          }
                         />
                       )}
                     />
@@ -321,8 +384,10 @@ const ClientRegister = () => {
               </Col>
             </Row>
           </Col>
-        </>
-      ) : (
+        </> : null
+      }
+      {
+        !isFormEnable && allShops && allShops.length ? 
         <>
           <div
             style={{
@@ -332,30 +397,16 @@ const ClientRegister = () => {
               width: '100%',
             }}
           >
-            <Row style={{ justifyContent: 'flex-end', marginBottom: 10 }}>
-              <div>
-                <Button
-                  onClick={() => setIsFormEnable(true)}
-                  style={{ color: '#007bff' }}
-                  type="link"
-                  icon={<PlusOutlined />}
-                >
-                  Add New Business
-                </Button>
-              </div>
+            <Row style={{ display: 'flex', justifyContent: 'center' }}>
+              {allShops?.map((data) => (
+                <div style={{ width: 300, margin: '0px 10px' }}>
+                  <ShopCard shopDetails={data} isChat={false} />
+                </div>
+              ))}
             </Row>
-            {allShops && allShops.length ? (
-              <Row style={{ display: 'flex', justifyContent: 'center' }}>
-                {allShops?.map((data) => (
-                  <div style={{ width: 300, margin: '0px 10px' }}>
-                    <ShopCard shopDetails={data} />
-                  </div>
-                ))}
-              </Row>
-            ) : null}
           </div>
-        </>
-      )}
+        </> : null
+      }
     </Row>
   );
 };

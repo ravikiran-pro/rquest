@@ -20,13 +20,14 @@ const ShopCard = ({ shopDetails }) => {
     distance,
     id,
     owner_id,
+    isChat
   } = shopDetails;
   const { handleChatOpen } = useChatStore((state) => state);
 
   return (
     <Card
       style={{
-        width: 300,
+        width: 320,
         marginBottom: 16,
         borderRadius: 10,
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
@@ -57,7 +58,6 @@ const ShopCard = ({ shopDetails }) => {
               flexDirection: 'column',
               justifyContent: 'center',
               width: image_url ? '200' : '100%',
-              marginLeft: 8,
             }}
           >
             <h5
@@ -117,19 +117,21 @@ const ShopCard = ({ shopDetails }) => {
         href={directions}
         target="_blank"
         rel="noopener noreferrer"
-        style={{ marginTop: 10 }}
+        style={{ marginTop: isChat ? 10 : 24 }}
       >
         Get Directions
       </Button>
-      <Button
-        type="primary"
-        onClick={() => handleChatOpen(owner_id, id)}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginTop: 10 }}
-      >
-        Chat
-      </Button>
+      {
+        isChat && <Button
+          type="primary"
+          onClick={() => handleChatOpen(owner_id, id)}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ marginTop: 10 }}
+        >
+          Chat
+        </Button>
+      }
     </Card>
   );
 };
