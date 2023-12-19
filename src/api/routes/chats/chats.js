@@ -82,10 +82,12 @@ const formatChat = async (allChats, user_id) => {
     }
 
     formattedChats[otherUserId].push({
+      id: chat.id,
       sender_id: chat.sender_id,
       receiver_id: chat.receiver_id,
       username: isSender ? chat.receiver.username : chat.sender.username,
       message: chat.message,
+      shop_id: chat.shop_id,
       updatedAt: chat.updatedAt,
       createdAt: chat.createdAt,
       is_read: chat.is_read,
@@ -134,4 +136,30 @@ const getAllUsers = async (req, res) => {
   }
 };
 
-module.exports = { create, getAll, createChat, getAllUsers };
+const markIsRead = async (req, res) => {
+  try {
+    const { unread } = req.body
+
+    const allChats = await chats.update({
+      is_read: true
+    },
+      {
+        where: {
+          id: unread
+        },
+      });
+
+    res.status(201).json({
+      success: true,
+      data: allChats,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error,
+      message: 'Internal servor error',
+    });
+  }
+};
+
+module.exports = { create, getAll, createChat, getAllUsers, markIsRead };

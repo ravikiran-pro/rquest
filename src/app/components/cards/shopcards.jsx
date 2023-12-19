@@ -5,7 +5,7 @@ import { useChatStore } from '../../services';
 
 const { Text } = Typography;
 
-const ShopCard = ({ shopDetails }) => {
+const ShopCard = ({ shopDetails, isChat = false }) => {
   const {
     shop_name,
     address,
@@ -19,8 +19,7 @@ const ShopCard = ({ shopDetails }) => {
     image_url,
     distance,
     id,
-    owner_id,
-    isChat
+    owner_id
   } = shopDetails;
   const { handleChatOpen } = useChatStore((state) => state);
 

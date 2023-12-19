@@ -72,3 +72,20 @@ body {
   right: 15px;
   top: 15px;
 }
+
+.chat-footer-icon {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  cursor: pointer;
+}
+
+.chat-footer-icon .ant-avatar {
+  width: 45px;
+  height: 45px;
+}
+
+.sub-title {
+  color: #7c7c7c;
+  font-weight: 500;
+}

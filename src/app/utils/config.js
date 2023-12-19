@@ -15,6 +15,7 @@ export const apiConfig = {
   chat_users: 'chat/getAllUsers',
   user_chats: 'chat/getAll',
   chat_create: 'chat/create',
+  chat_update_read: 'chat/markAll'
 };
 
 export const SOCKET = io(config.api_url);

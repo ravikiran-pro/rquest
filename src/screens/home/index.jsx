@@ -111,7 +111,7 @@ const HomeScreen = () => {
                 <div style={{ width: 350, margin: '0px 10px' }} key={marker.id}>
                   <ShopCard
                     shopDetails={marker}
-                    isChat={false}
+                    isChat={true}
                   />
                 </div>
               ))}

@@ -15,11 +15,24 @@ function ChatApp() {
     type: '',
   });
 
-  const { receiver_id, shop_id, handleChatClose, updateReceiver } =
+  const { receiver_id, shop_id, handleChatClose, updateShop } =
     useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
 
   const [selectedChat, setSelectedChat] = useState(receiver_id);
+
+  ///trigeger when particular chat is selected or chat is open when message is sent or received
+  const updateIsRead = async (unread_ids) => {
+    let response = await netWorkCall(
+      apiConfig.chat_update_read,
+      'POST',
+      JSON.stringify({
+        unread: unread_ids
+      }),
+      true
+    );
+    return response?.success
+  }
 
   const sendMessage = async () => {
     if (currentMessage !== '' && selectedChat !== user_data.user_id) {
@@ -44,13 +57,31 @@ function ChatApp() {
     }
   };
 
-  const handleHeaderClick = (key) => {
+  const handleHeaderClick = async (unread, key) => {
+    /// update is read for all unread
+    updateIsRead(unread)
+
+    let currentMessageList = userMenu[key].map(item => {
+      return {
+        ...item,
+        is_read: true
+      }
+    })
+    /// set selected chat
     setSelectedChat(key);
+    /// update current shop of the chat owner and updating isRead
+    updateShop(userMenu[key][0].shop_id)
+    setUserMenu({
+      ...userMenu,
+      [key]: currentMessageList
+    })
   };
 
   useEffect(() => {
     // add on temporary state on sending and receving io socket is trigger and the main state is renderd
-    const { data, type } = receiveMessage;
+    let { data, type } = receiveMessage;
+    if(!data?.id)  return false
+    data.is_read = true;
     if (type && data) {
       if (userMenu[data[type]]) {
         userMenu[data[type]].push(data);
@@ -58,6 +89,7 @@ function ChatApp() {
         userMenu[data[type]] = [data];
       }
       setUserMenu({ ...userMenu });
+      updateIsRead([data?.id]);
       setReceiveMessage({ data: {}, type: '' });
     }
   }, [receiveMessage]);
@@ -101,7 +133,15 @@ function ChatApp() {
     }
   };
 
-  const isChatSelected = selectedChat === user_data?.user_id ? false : true;
+  /// if chat not selected or selected chat as currect user id --- SET isChatSelected false
+  const isChatSelected = !selectedChat || selectedChat === user_data?.user_id ? false : true;
+
+  /// reverse back on new chat
+  if (!Object.keys(userMenu).length && !isChatSelected) {
+    // alert('no chat conversation initiated till now');
+    // handleChatClose();
+    // alert('no chat conversation initiated till now');
+  }
 
   return (
     <div class="container">
@@ -116,42 +156,49 @@ function ChatApp() {
         <CloseOutlined />
       </button>
       <div class="chat-container">
+        {
+          !Object.keys(userMenu).length && !isChatSelected && <div class="chat-no-chat sub-title">No Chat Found</div>
+        }
+        {/* entire chat list to show if no chat selected */}
         <div
           class="user-list"
           style={{ display: isChatSelected ? 'none' : '' }}
         >
-          {Object.keys(userMenu).map((key) => {
+          {!isChatSelected && Object.keys(userMenu).map((key, index) => {
             if (key === user_data.user_id) return;
             let chatData = userMenu[key];
-            let totalUnread = userMenu[key].filter(
-              (item) => !item.is_read
-            ).length;
+            let totalUnread = userMenu[key].map(item => {
+              if (!item.is_read && item.receiver_id === user_data.user_id) return item.id
+            })
+              .filter(item => item !== undefined);
             let lastData = chatData[chatData.length - 1];
             return (
               <MessageHeader
                 name={lastData.username}
                 message={lastData.message}
-                handleHeaderClick={() => handleHeaderClick(key)}
+                handleHeaderClick={() => handleHeaderClick(totalUnread, key)}
                 color={Math.floor(Math.random() * (4 - 0))}
-                totalUnread={totalUnread}
+                totalUnread={totalUnread.length}
                 dateTime={lastData.updatedAt}
+                index={index}
               />
             );
           })}
         </div>
         <div class="msg-container-wrapper">
+          {/* particular chat message after selection */}
           <div
             class="message-container"
             style={{ display: isChatSelected ? '' : 'none' }}
           >
-            {userMenu[selectedChat]?.map((msg) => {
+            {isChatSelected && userMenu[selectedChat]?.map((msg) => {
+              let className = `${!msg?.is_read ? 'highlight-msg' : 'ss'} message ${msg.sender_id === user_data?.user_id
+                ? 'my-msg'
+                : 'other-msg'
+                }`
               return (
                 <div
-                  class={`message ${
-                    msg.sender_id === user_data?.user_id
-                      ? 'my-msg'
-                      : 'other-msg'
-                  }`}
+                  class={className}
                 >
                   {msg.message}
                 </div>

@@ -7,13 +7,14 @@ import {
   ClientRegister,
   RegisterScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar } from '../components';
+import { ChatApp, NavBar, SideBar, ChatIcon } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
 import { SOCKET } from '../utils';
+import { Avatar } from 'antd';
 
 export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
-  const { isChat } = useChatStore((state) => state);
+  const { isChat, handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
 
   const handleClose = () => {
@@ -54,11 +55,11 @@ export default function AppRoutes() {
             <RegisterScreen />
           </Route>
           <Route path={'/'}>
-            <Redirect to={routes.home}/>
+            <Redirect to={routes.home} />
           </Route>
         </Switch>
       </div>
-      {isChat && (
+      {isChat ? (
         <div className="chat-wrapper">
           <div id="myChat" class="overlay">
             <div class="chat">
@@ -66,7 +67,11 @@ export default function AppRoutes() {
             </div>
           </div>
         </div>
-      )}
+      ) :
+        <div className='chat-footer-icon' onClick={()=>handleChatOpen(null, null)}>
+          <Avatar src={ChatIcon}/>
+        </div>
+      }
     </Router>
   );
 }

@@ -77,6 +77,10 @@ div {
   background-color: rgb(176, 228, 240);
 }
 
+.highlight-msg{
+  border: solid 2px red;
+}
+
 input {
   padding: 10px;
   flex: 3;
@@ -103,4 +107,11 @@ input:focus {
   position: fixed;
   right: 10px;
   margin-bottom: 25px;
+}
+
+.chat-no-chat{
+  height: 90%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
 }

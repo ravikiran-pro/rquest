@@ -22,7 +22,16 @@ const MessageHeader = ({
   color,
   totalUnread,
   dateTime,
+  index
 }) => {
+  console.log({
+    name,
+    message,
+    handleHeaderClick,
+    color,
+    totalUnread,
+    dateTime,
+  }, '\n---------', index)
   return (
     <Card
       style={{ width: '100%' }}
