@@ -4,6 +4,7 @@ import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent, ShopCard } from '../../app/components';
 import { debounce, netWorkCall } from '../../app/utils/helper';
 import { apiConfig, config } from '../../app/utils';
+import { useGlobalStore } from '../../app/services';
 
 const { Text } = Typography;
 
@@ -14,6 +15,7 @@ const HomeScreen = () => {
   const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [position, setPosition] = useState(12.9631025, 80.25476);
+  const { user_data } = useGlobalStore((state) => state);
 
   const handleSearch = async (value) => {
     if (value !== searchText) {
@@ -111,7 +113,7 @@ const HomeScreen = () => {
                 <div style={{ width: 350, margin: '0px 10px' }} key={marker.id}>
                   <ShopCard
                     shopDetails={marker}
-                    isChat={true}
+                    isChat={user_data?.user_id ? true : false}
                   />
                 </div>
               ))}
