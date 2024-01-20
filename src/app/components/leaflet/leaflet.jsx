@@ -9,7 +9,7 @@ import * as L from 'leaflet';
 import { func } from 'prop-types';
 
 const LeafletComponent = (props) => {
-  const { searchMarkers = [], updateMarker = func, position, setPosition } = props;
+  const { searchMarkers = [], updateMarker = func, position, setPosition, markerLocation } = props;
   const [searchControl, setSearchControl] = useState(null);
 
   const RedMarkerIcon = new L.Icon({
@@ -83,9 +83,13 @@ const LeafletComponent = (props) => {
     }
   };
 
+  React.useEffect(()=>{
+    setPosition(markerLocation)
+  },[markerLocation])
+
   return (
     <MapContainer
-      center={position}
+      center={markerLocation}
       zoom={10}
       style={{ height: '100%', width: '100%' }}
     >

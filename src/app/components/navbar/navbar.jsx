@@ -5,7 +5,7 @@ import { storageKeys } from '../../utils';
 import { Button } from 'antd';
 import { useGlobalStore } from '../../services';
 import { useHistory } from 'react-router-dom';
-import { MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { MenuFoldOutlined, MenuOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 
 const Navbar = ({ open, handleOpen, handleClose }) => {
   const history = useHistory();
@@ -40,6 +40,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <div className="navbar-menu" style={{ marginRight: 20 }}>
+            <Button type="link" size={'large'} style={{ textTransform: 'capitalize' }}>
+              {user_data?.user_id ? `Hi ${user_data?.username}` : ''}
+            </Button>
+          </div>
           <div className="navbar-menu">
             <Link to={Routes.home}>
               <Button type="link" size={'large'}>
@@ -87,11 +92,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
               open ? handleClose() : handleOpen();
             }}
           >
-            {open ? (
-              <MenuFoldOutlined className="menu" />
-            ) : (
-              <MenuUnfoldOutlined className="menu" />
-            )}
+            <MenuOutlined className="menu" />
           </Button>
         </div>
       </div>

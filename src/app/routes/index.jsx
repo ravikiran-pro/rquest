@@ -68,7 +68,7 @@ export default function AppRoutes() {
           </div>
         </div>
       ) :
-        <div className='chat-footer-icon' onClick={()=>handleChatOpen(null, null)}>
+        user_data.user_id && <div className='chat-footer-icon' onClick={()=>handleChatOpen(null, null)}>
           <Avatar src={ChatIcon}/>
         </div>
       }
