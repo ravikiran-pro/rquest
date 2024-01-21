@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.post('/register', createUser);
 router.post('/login', login);
+router.post('/trace_ip', login);
 
 module.exports = router;

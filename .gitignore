@@ -6,3 +6,4 @@ dist-ssr
 .eslintcache
 .vercel
 .env
+dev-dist

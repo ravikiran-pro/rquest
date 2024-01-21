@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { OpenStreetMapProvider, GeoSearchControl } from 'leaflet-geosearch';
 
@@ -9,7 +10,13 @@ import * as L from 'leaflet';
 import { func } from 'prop-types';
 
 const LeafletComponent = (props) => {
-  const { searchMarkers = [], updateMarker = func, position, setPosition, markerLocation } = props;
+  const {
+    searchMarkers = [],
+    updateMarker = func,
+    position,
+    setPosition,
+    markerLocation,
+  } = props;
   const [searchControl, setSearchControl] = useState(null);
 
   const RedMarkerIcon = new L.Icon({
@@ -75,7 +82,6 @@ const LeafletComponent = (props) => {
     return null;
   };
 
-
   const handleMarkerDrag = (e) => {
     if (e.target._latlng) {
       setPosition([e.target._latlng.lat, e.target._latlng.lng]);
@@ -83,9 +89,9 @@ const LeafletComponent = (props) => {
     }
   };
 
-  React.useEffect(()=>{
-    setPosition(markerLocation)
-  },[markerLocation])
+  React.useEffect(() => {
+    setPosition(markerLocation);
+  }, [markerLocation]);
 
   return (
     <MapContainer
@@ -102,6 +108,7 @@ const LeafletComponent = (props) => {
         position={position}
         draggable={true}
         eventHandlers={{ dragend: handleMarkerDrag }}
+        icon={GreenMarkerIcon}
       >
         <Popup>
           Latitude: {position[0]} <br />
@@ -114,8 +121,9 @@ const LeafletComponent = (props) => {
           <Marker
             position={[marker.latitude, marker.longitude]}
             draggable={false}
+            key={`marker-add-${index}`}
             icon={index == 0 ? GreenMarkerIcon : RedMarkerIcon}
-          // eventHandlers={{ dragend: handleMarkerDrag }}
+            // eventHandlers={{ dragend: handleMarkerDrag }}
           >
             <Popup>
               {marker.shop_name} <br />
@@ -126,6 +134,21 @@ const LeafletComponent = (props) => {
       })}
     </MapContainer>
   );
+};
+
+LeafletComponent.propTypes = {
+  searchMarkers: PropTypes.arrayOf(
+    PropTypes.shape({
+      latitude: PropTypes.number,
+      longitude: PropTypes.number,
+      shop_name: PropTypes.string,
+      address: PropTypes.string,
+    })
+  ),
+  updateMarker: PropTypes.func,
+  position: PropTypes.arrayOf(PropTypes.number),
+  setPosition: PropTypes.func,
+  markerLocation: PropTypes.arrayOf(PropTypes.number),
 };
 
 export default LeafletComponent;
