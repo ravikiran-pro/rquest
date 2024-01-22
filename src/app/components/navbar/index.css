@@ -64,3 +64,23 @@
 .ant-drawer-body {
   padding: 0px !important;
 }
+
+
+.logo-text{
+  font-size: 22px;
+  text-align: center;
+  margin-left: 10px;
+  font-weight: 700;
+}
+
+.version-chip{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--success);
+  color: #fff;
+  border: none;
+  padding: 0px 4px;
+  height: 18px;
+  margin-left: 10px;
+}

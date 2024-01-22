@@ -2,7 +2,7 @@ import React from 'react';
 import Routes from '../../routes/routes';
 import { Link } from 'react-router-dom';
 import { storageKeys } from '../../utils';
-import { Avatar, Button } from 'antd';
+import { Avatar, Button, Tag } from 'antd';
 import { useGlobalStore } from '../../services';
 import { useHistory } from 'react-router-dom';
 import {
@@ -35,21 +35,16 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         color: 'var(--white)',
       }}
     >
-      <div
-        style={{
-          fontSize: 22,
-          textAlign: 'center',
-          marginLeft: 10,
-          fontWeight: 700,
-        }}
-      >
+      <div style={{display: 'flex', alignItems: 'center'}}>
         <Avatar
-          style={{ background: '#fff', marginRight: 4 }}
+          style={{ background: '#fff', marginRight: 2, marginLeft: 4 }}
           src={<img src={'/images/logo.png'} alt="avatar" />}
         />
-        Rquest.com
+        <div className='logo-text'>
+          Rquest.com
+        </div>
+        <Tag  className='version-chip' >v1.0.3</Tag>
       </div>
-      &nbsp;
       <div
         style={{
           display: 'flex',
