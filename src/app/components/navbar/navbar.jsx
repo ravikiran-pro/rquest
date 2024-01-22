@@ -67,7 +67,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           {user_data?.user_id && (
             <div
               className="navbar-menu"
-              style={{ marginRight: 20, textTransform: 'capitalize' }}
+              style={{
+                marginRight: 20,
+                textTransform: 'capitalize',
+                cursor: 'pointer',
+              }}
             >
               Hi {user_data?.username}
               <Avatar

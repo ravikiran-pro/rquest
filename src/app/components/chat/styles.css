@@ -63,7 +63,7 @@ div {
 }
 
 .chat-container.shop-only {
-  min-width: '160px';
+  min-width: 200px;
 }
 
 .chat-container.shop-only .message-header-root.highlight {

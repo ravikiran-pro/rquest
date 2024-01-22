@@ -14,6 +14,7 @@ function ChatApp() {
   const [userStatus, setUserStatus] = useState({});
   const [allShops, setAllShops] = useState([]);
   const [selectedShop, setSelectedShop] = useState(null);
+  const [isChatLoading, setIsChatLoading] = useState(true);
   const [receiveMessage, setReceiveMessage] = useState({
     data: '',
     type: '',
@@ -155,9 +156,10 @@ function ChatApp() {
     setSelectedChat(receiver_id);
   }, [receiver_id]);
 
-  useEffect(() => {
+  useEffect(async () => {
     if (selectedShop >= 0 && allShops && allShops?.length) {
-      fetchInitMessageData(allShops[selectedShop].shop_id);
+      await fetchInitMessageData(allShops[selectedShop].shop_id);
+      setIsChatLoading(false);
     }
   }, [selectedShop]);
 
@@ -202,9 +204,14 @@ function ChatApp() {
       </button>
       <div className="chat-container chat-only">
         <div className="chat-box">
-          {!Object.keys(userMenu).length && !isChatSelected && (
-            <div class="chat-no-chat sub-title">No Chat Found</div>
+          {!isChatLoading && (
+            <>
+              {!Object.keys(userMenu).length && !isChatSelected && (
+                <div class="chat-no-chat sub-title">No Chat Found</div>
+              )}
+            </>
           )}
+
           {/* entire chat list to show if no chat selected */}
           <div
             class="user-list"
