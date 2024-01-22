@@ -16,9 +16,9 @@ const useChatStore = create(
 
       handleChatClose: (isChat) => set(() => ({ isChat: false })),
       updateShop: (shop_id) =>
-      set(() => ({
-        shop_id: shop_id,
-      })),
+        set(() => ({
+          shop_id: shop_id,
+        })),
     }),
     {
       name: 'chat-storage', // name of the item in the storage (must be unique)

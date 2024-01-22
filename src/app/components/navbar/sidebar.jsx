@@ -47,38 +47,48 @@ const SideBar = ({ open, handleClose }) => {
             type="link"
             color="primary"
             size={'large'}
+            className="side-link"
             onClick={() => handleClick('home')}
           >
             Home
           </Button>
         </div>
-        {
-          !user_data?.username && <div className="sidebar-menu">
+        {!user_data?.username && (
+          <div className="sidebar-menu">
             <Button
               type="link"
               size={'large'}
+              className="side-link"
               onClick={() => handleClick('login')}
             >
               Login
             </Button>
           </div>
-        }
-        <div className="sidebar-menu">
-          <Button
-            type="link"
-            size={'large'}
-            onClick={() => handleClick('client')}
-          >
-            Client Register
-          </Button>
-        </div>
-        {
-          user_data?.username && <div className="sidebar-menu">
-            <Button type="link" size={'large'} onClick={logout}>
-              Logout
-            </Button>
-          </div>
-        }
+        )}
+        {user_data?.user_id && (
+          <React.Fragment>
+            <div className="sidebar-menu">
+              <Button
+                type="link"
+                size={'large'}
+                className="side-link"
+                onClick={() => handleClick('client')}
+              >
+                Client Register
+              </Button>
+            </div>
+            <div className="sidebar-menu">
+              <Button
+                type="link"
+                size={'large'}
+                onClick={logout}
+                className="side-link"
+              >
+                Logout
+              </Button>
+            </div>
+          </React.Fragment>
+        )}
       </div>
     </Drawer>
   );

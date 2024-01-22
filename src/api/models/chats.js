@@ -47,6 +47,10 @@ module.exports = (sequelize) => {
       foreignKey: 'receiver_id',
       as: 'receiver',
     });
+    Chats.belongsTo(models.shops, {
+      foreignKey: 'shop_id',
+      as: 'shopChats',
+    });
   };
 
   return Chats;

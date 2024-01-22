@@ -1,5 +1,6 @@
 .message-header-root {
   display: flex;
+  cursor: pointer;
   /* justify-content: space-around; */
 }
 
@@ -8,6 +9,21 @@
   align-items: center;
   padding: 15px;
   width: 100%;
+}
+
+.badge {
+  height: 8px;
+  width: 8px;
+  margin-left: 5px;
+  border-radius: 50%;
+}
+
+.badge.online {
+  background-color: var(--success);
+}
+
+.badge.offline {
+  background-color: var(--error);
 }
 
 div {
@@ -25,7 +41,6 @@ div {
   margin-left: 5px;
   margin-bottom: 2px;
 }
-
 
 .message-header-edge {
   display: flex;

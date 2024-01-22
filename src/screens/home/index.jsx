@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Input, Button, Typography, Col, Row } from 'antd';
 import { CloseOutlined, SearchOutlined } from '@ant-design/icons';
 import { LeafletComponent, ShopCard } from '../../app/components';
@@ -11,8 +11,9 @@ const { Text } = Typography;
 const HomeScreen = () => {
   // const { register, handleSubmit, errors } = useForm();
   const [searchText, setSearchText] = useState('');
+  const [searchError, setSearchError] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [markerLocation, setMarkerLocation] = useState([12.9389, 80.2612]); // Default location
+  const [markerLocation, setMarkerLocation] = useState(); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [position, setPosition] = useState(12.9631025, 80.25476);
   const { user_data } = useGlobalStore((state) => state);
@@ -27,16 +28,48 @@ const HomeScreen = () => {
     setMarkerLocation(marker);
   };
 
-  React.useEffect(async () => {
+  const handleOpenModal = () => {
+    if (!markerLocation?.length) {
+      alert('please enable location to continue');
+    } else {
+      setIsModalVisible(true);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+  };
+
+  const fetchUserLocation = async () => {
+    try {
+      // Get user's geolocation using the browser's Geolocation API
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+        });
+      });
+
+      setMarkerLocation([position.coords.latitude, position.coords.longitude]);
+    } catch (error) {
+      console.error('Error getting user location:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserLocation();
+  }, []);
+
+  useEffect(async () => {
+    let response = null;
     try {
       if (searchText) {
         let body = JSON.stringify({
           lat: markerLocation[0],
           lon: markerLocation[1],
           search: searchText,
-        })
+        });
 
-        const response = await netWorkCall(
+        response = await netWorkCall(
           apiConfig.shops_search,
           'POST',
           body,
@@ -48,17 +81,10 @@ const HomeScreen = () => {
         }
       } else setSearchMarkers([]);
     } catch (error) {
-      console.error('Error:', error.message);
+      console.log(error);
     }
+    setSearchError(response?.data?.length == 0 ? 'No Match Found' : '');
   }, [markerLocation, searchText]);
-
-  const handleOpenModal = () => {
-    setIsModalVisible(true);
-  };
-
-  const handleCloseModal = () => {
-    setIsModalVisible(false);
-  };
 
   return (
     <div
@@ -72,40 +98,52 @@ const HomeScreen = () => {
       <div style={{ display: 'flex', alignItems: 'center', padding: 20 }}>
         <Row>
           <Col span={24}>
-            <div>
-              <Input
-                placeholder="Search for products..."
-                allowClear
-                onChange={(e) => debounce(handleSearch(e.target.value))}
-                value={searchText}
-                onPressEnter={() => debounce(handleSearch(searchText))}
-                suffix={
-                  <Button
+            <Row style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ width: '360px' }}>
+                <Input
+                  placeholder="Search for products..."
+                  allowClear
+                  onChange={(e) => debounce(handleSearch(e.target.value))}
+                  value={searchText}
+                  onPressEnter={() => debounce(handleSearch(searchText))}
+                  suffix={
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => debounce(handleSearch(searchText))}
+                    >
+                      <SearchOutlined />
+                    </Button>
+                  }
+                />
+                <div>
+                  <Text
                     type="primary"
-                    size="small"
-                    onClick={() => debounce(handleSearch(searchText))}
+                    underline
+                    onClick={handleOpenModal}
+                    style={{
+                      marginRight: '10px',
+                      marginBottom: '10px',
+                      cursor: 'pointer',
+                      float: 'right',
+                      fontSize: 14,
+                    }}
                   >
-                    <SearchOutlined />
-                  </Button>
-                }
-              />
-            </div>
-            <div>
-              <Text
-                type="secondary"
-                underline
-                onClick={handleOpenModal}
-                style={{
-                  marginRight: '10px',
-                  marginBottom: '10px',
-                  cursor: 'pointer',
-                  float: 'right',
-                  fontSize: 14,
-                }}
-              >
-                Current Location
-              </Text>
-            </div>
+                    Current Location
+                  </Text>
+                  <Text
+                    type="secondary"
+                    style={{
+                      fontWeight: 500,
+                      fontSize: 16,
+                      lineHeight: '60px',
+                    }}
+                  >
+                    {searchError}
+                  </Text>
+                </div>
+              </div>
+            </Row>
           </Col>
           {searchMarkers && searchMarkers?.length ? (
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
@@ -118,13 +156,7 @@ const HomeScreen = () => {
                 </div>
               ))}
             </Row>
-          ) : (
-            searchText && (
-              <Col span={24}>
-                <Text>No Match Found</Text>
-              </Col>
-            )
-          )}
+          ) : null}
         </Row>
       </div>
       {isModalVisible && (

@@ -1,5 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Switch, Redirect } from 'react-router-dom';
+import {
+  BrowserRouter as Router,
+  Route,
+  Switch,
+  Redirect,
+} from 'react-router-dom';
 import { default as routes } from './routes';
 import {
   LoginScreen,
@@ -37,7 +42,7 @@ export default function AppRoutes() {
         handleClose={handleClose}
         handleOpen={handleOpen}
       />
-      <div style={{ height: 'calc(100vh - 40px)', overflow: 'auto' }}>
+      <div style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }}>
         <Switch>
           <Route path={routes.login}>
             <LoginScreen />
@@ -67,11 +72,16 @@ export default function AppRoutes() {
             </div>
           </div>
         </div>
-      ) :
-        user_data.user_id && <div className='chat-footer-icon' onClick={()=>handleChatOpen(null, null)}>
-          <Avatar src={ChatIcon}/>
-        </div>
-      }
+      ) : (
+        user_data.user_id && (
+          <div
+            className="chat-footer-icon"
+            onClick={() => handleChatOpen(null, null)}
+          >
+            <Avatar src={ChatIcon} />
+          </div>
+        )
+      )}
     </Router>
   );
 }

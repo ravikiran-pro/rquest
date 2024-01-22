@@ -1,4 +1,5 @@
 const { DataTypes } = require('sequelize');
+const chats = require('./chats');
 
 module.exports = (sequelize) => {
   const Shop = sequelize.define(
@@ -54,6 +55,10 @@ module.exports = (sequelize) => {
       timestamps: true,
     }
   );
+
+  Shop.associate = (models) => {
+    Shop.hasMany(models.chats, { foreignKey: 'shop_id', as: 'shopChats' });
+  };
 
   return Shop;
 };

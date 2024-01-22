@@ -1,11 +1,18 @@
 import React from 'react';
-import { Card, Rate, Button, Typography } from 'antd';
-import { EnvironmentOutlined, ShopOutlined } from '@ant-design/icons';
+import { Card, Rate, Button, Typography, Row, Col, Tooltip } from 'antd';
+import {
+  EnvironmentOutlined,
+  LockOutlined,
+  ShopOutlined,
+} from '@ant-design/icons';
 import { useChatStore } from '../../services';
+import { distanceConvertor } from '../../utils';
+import { Link } from 'react-router-dom/cjs/react-router-dom.min';
+import Routes from '../../routes/routes';
 
 const { Text } = Typography;
 
-const ShopCard = ({ shopDetails, isChat = false }) => {
+const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
   const {
     shop_name,
     address,
@@ -19,8 +26,9 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
     image_url,
     distance,
     id,
-    owner_id
+    owner_id,
   } = shopDetails;
+
   const { handleChatOpen } = useChatStore((state) => state);
 
   return (
@@ -32,7 +40,7 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
         boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
       }}
       bodyStyle={{
-        minHeight: 300,
+        minHeight: 280,
         display: 'flex',
         flexDirection: 'column',
       }}
@@ -67,14 +75,14 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
                 whiteSpace: 'nowrap',
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
               }}
             >
               {shop_name}
             </h5>
             <div style={{ textAlign: 'left' }}>
               <Text type="secondary" style={{ marginBottom: 8 }}>
-                <EnvironmentOutlined /> {area}
+                <EnvironmentOutlined /> {area}{' '}
+                {isChatDisabled ? '' : <>({distanceConvertor(distance)} km)</>}
               </Text>
             </div>
           </div>
@@ -83,7 +91,7 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
       <div
         style={{ textAlign: 'left', display: 'flex', flexDirection: 'column' }}
       >
-        <div style={{ marginTop: 16, display: 'flex', alignItems: 'center' }}>
+        <div style={{ marginTop: 10, display: 'flex', alignItems: 'center' }}>
           <Rate
             allowHalf
             disabled
@@ -92,13 +100,16 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
           />
           {/* <span style={{ fontSize: 14, marginLeft: 8 }}>{rating || 0}</span> */}
         </div>
-        <Text strong style={{ marginBottom: 4, display: 'block' }}>
-          <ShopOutlined /> Address:
+        <Text
+          type="primary"
+          strong
+          style={{ marginBottom: 4, display: 'block', marginTop: 10 }}
+        >
+          <EnvironmentOutlined /> Address:
         </Text>
         <Text
           style={{
-            overflow: 'hidden',
-            marginBottom: 4,
+            marginBottom: 10,
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -111,26 +122,52 @@ const ShopCard = ({ shopDetails, isChat = false }) => {
         </Text>
         <Text>{shop_type}</Text>
       </div>
-      <Button
-        type="primary"
-        href={directions}
-        target="_blank"
-        rel="noopener noreferrer"
-        style={{ marginTop: isChat ? 10 : 24 }}
-      >
-        Get Directions
-      </Button>
-      {
-        isChat && <Button
-          type="primary"
-          onClick={() => handleChatOpen(owner_id, id)}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ marginTop: 10 }}
-        >
-          Chat
-        </Button>
-      }
+      <Row gutter={8} style={{ marginTop: 10 }}>
+        <Col span={12}>
+          <Button
+            type={isChatDisabled ? 'primary' : ''}
+            href={directions}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ width: '100%' }}
+          >
+            Get Directions
+          </Button>
+        </Col>
+        <Col span={12} style={{ display: isChatDisabled ? 'none' : '' }}>
+          <Tooltip
+            title={
+              !isChat ? (
+                <>
+                  Continue To{' '}
+                  <Link to={Routes.login}>
+                    <Button
+                      type="link"
+                      size={'small'}
+                      className="link"
+                      style={{ textDecoration: 'underscore !important' }}
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                </>
+              ) : null
+            }
+            placement="bottomRight"
+          >
+            <Button
+              type="primary"
+              onClick={() => handleChatOpen(owner_id, id)}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ width: '100%', color: '#fff' }}
+              disabled={!isChat}
+            >
+              Chat{isChat ? '' : <LockOutlined />}
+            </Button>
+          </Tooltip>
+        </Col>
+      </Row>
     </Card>
   );
 };

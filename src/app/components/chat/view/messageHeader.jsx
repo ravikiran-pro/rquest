@@ -22,16 +22,21 @@ const MessageHeader = ({
   color,
   totalUnread,
   dateTime,
-  index
+  index,
+  isOnline,
 }) => {
-  console.log({
-    name,
-    message,
-    handleHeaderClick,
-    color,
-    totalUnread,
-    dateTime,
-  }, '\n---------', index)
+  console.log(
+    {
+      name,
+      message,
+      handleHeaderClick,
+      color,
+      totalUnread,
+      dateTime,
+    },
+    '\n---------',
+    index
+  );
   return (
     <Card
       style={{ width: '100%' }}
@@ -41,7 +46,7 @@ const MessageHeader = ({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <Avatar
           style={{
-            backgroundColor: ColorList[color],
+            backgroundColor: color,
             verticalAlign: 'middle',
             marginRight: 10,
           }}
@@ -59,6 +64,7 @@ const MessageHeader = ({
         >
           <div className="title">
             <span>{name}</span>
+            <span className={`badge ${isOnline ? 'online' : 'offline'}`}></span>
           </div>
           <div className="sub-title">{message}</div>
         </Col>

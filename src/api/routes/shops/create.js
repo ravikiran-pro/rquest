@@ -33,10 +33,11 @@ const linkDecode = async (req, res) => {
       const { latitude, longitude } = result;
       if (latitude && longitude) {
         res.status(201).json({
-          success: true, data: {
+          success: true,
+          data: {
             latitude: latitude,
-            longitude: longitude
-          }
+            longitude: longitude,
+          },
         });
       } else {
         res.status(201).json({
@@ -45,7 +46,7 @@ const linkDecode = async (req, res) => {
           message: 'Invalid direction url',
         });
       }
-    })
+    });
   } catch (error) {
     res.status(201).json({
       success: false,
@@ -53,12 +54,12 @@ const linkDecode = async (req, res) => {
       message: 'Invalid direction url',
     });
   }
-}
+};
 
 const createShops = async (req, res) => {
   try {
     const shopDetails = req.body;
-    const { id:user_id } = req.headers;
+    const { id: user_id } = req.headers;
 
     const payload = {
       owner_id: user_id,
@@ -72,37 +73,36 @@ const createShops = async (req, res) => {
       shop_type: shopDetails.shop_type,
       directions: shopDetails.directions,
       latitude: shopDetails.latitude,
-      longitude: shopDetails.longitude
+      longitude: shopDetails.longitude,
     };
 
     // if (!payload?.latitude && !payload?.longitude) {
-      parseGoogleMapsUrl(shopDetails.directions).then(async (result) => {
-        const { latitude, longitude } = result;
-        if (latitude && longitude) {
-          payload['latitude'] = latitude;
-          payload['longitude'] = longitude;
-          const createdShop = await shops.create(payload);
+    parseGoogleMapsUrl(shopDetails.directions).then(async (result) => {
+      const { latitude, longitude } = result;
+      if (latitude && longitude) {
+        payload['latitude'] = latitude;
+        payload['longitude'] = longitude;
+        const createdShop = await shops.create(payload);
 
-          await users.update(
-            { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
-            {
-              where: {
-                id: user_id,
-              },
-            }
-          );
+        await users.update(
+          { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
+          {
+            where: {
+              id: user_id,
+            },
+          }
+        );
 
-          res.status(201).json({ success: true, data: createdShop });
-        } else {
-          res.status(201).json({
-            success: false,
-            error: 'Invalid direction url',
-            message: 'Invalid direction url',
-          });
-        }
-      });
+        res.status(201).json({ success: true, data: createdShop });
+      } else {
+        res.status(201).json({
+          success: false,
+          error: 'Invalid direction url',
+          message: 'Invalid direction url',
+        });
+      }
+    });
     // }
-
   } catch (error) {
     console.error(error);
     res

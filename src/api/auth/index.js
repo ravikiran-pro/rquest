@@ -32,7 +32,10 @@ async function authMiddleware(req, res, next) {
   try {
     const authorization = req.headers.authorization.split(' ');
     const decoded = await verifyJwt(authorization[1]);
-    req.headers = decoded;
+    req.headers = {
+      ...req?.headers,
+      ...decoded,
+    };
     next();
   } catch (e) {
     res.status(500).json({

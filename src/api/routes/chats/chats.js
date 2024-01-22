@@ -1,4 +1,4 @@
-const { chats, users } = require('../../models');
+const { chats, users, shops } = require('../../models');
 const { col, fn, Op, literal } = require('sequelize');
 
 const create = async (req, res) => {
@@ -18,7 +18,7 @@ const create = async (req, res) => {
   }
 };
 
-const createChat = async (chatDetails, user_id) => {
+const createChat = async (chatDetails, user_id, socketData) => {
   try {
     const payload = {
       sender_id: chatDetails.sender_id,
@@ -39,7 +39,7 @@ const createChat = async (chatDetails, user_id) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    const formattedChats = await formatChat(allChats, user_id);
+    const { formattedChats } = await formatChat(allChats, user_id, socketData);
 
     return formattedChats[payload.receiver_id];
   } catch (err) {
@@ -70,8 +70,9 @@ const getAll = async (req, res) => {
   }
 };
 
-const formatChat = async (allChats, user_id) => {
+const formatChat = async (allChats, user_id, socketData) => {
   const formattedChats = {};
+  const userChatStatus = {};
 
   allChats.forEach((chat) => {
     const isSender = chat.sender_id === user_id;
@@ -79,6 +80,9 @@ const formatChat = async (allChats, user_id) => {
 
     if (!formattedChats[otherUserId]) {
       formattedChats[otherUserId] = [];
+      userChatStatus[otherUserId] = {
+        isOnline: socketData?.[otherUserId]?.socket_id ? true : false,
+      };
     }
 
     formattedChats[otherUserId].push({
@@ -94,16 +98,52 @@ const formatChat = async (allChats, user_id) => {
     });
   });
 
-  return formattedChats;
+  return { formattedChats, userChatStatus };
+};
+
+const getAllShops = async (req, res) => {
+  try {
+    const { user_id } = req.headers;
+
+    const allshops = await chats.findAll({
+      attributes: ['shop_id'],
+      include: [
+        {
+          model: shops,
+          as: 'shopChats',
+          attributes: ['id', 'shop_name'],
+        },
+      ],
+      where: {
+        [Op.or]: [{ sender_id: user_id }, { receiver_id: user_id }],
+      },
+      group: ['shop_id', 'shopChats.id'], // Group by both shop_id and shopChats.id
+      having: literal('COUNT(chats.id) > 0'),
+      order: [[literal('shop_id'), 'ASC']],
+    });
+
+    res.status(201).json({
+      success: true,
+      data: allshops,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error,
+      message: 'Internal servor error',
+    });
+  }
 };
 
 const getAllUsers = async (req, res) => {
   try {
-    const { user_id } = req.headers;
+    const { user_id, socketData } = req.headers;
+    const { shop_id } = req.body;
 
     const allChats = await chats.findAll({
       where: {
         [Op.or]: [{ sender_id: user_id }, { receiver_id: user_id }],
+        shop_id: shop_id,
       },
       include: [
         {
@@ -121,11 +161,18 @@ const getAllUsers = async (req, res) => {
       order: [['updatedAt', 'ASC']],
     });
 
-    const formattedChats = await formatChat(allChats, user_id);
+    const { formattedChats, userChatStatus } = await formatChat(
+      allChats,
+      user_id,
+      socketData
+    );
 
     res.status(201).json({
       success: true,
-      data: formattedChats,
+      data: {
+        chats: formattedChats,
+        status: userChatStatus,
+      },
     });
   } catch (error) {
     res.status(500).json({
@@ -138,16 +185,18 @@ const getAllUsers = async (req, res) => {
 
 const markIsRead = async (req, res) => {
   try {
-    const { unread } = req.body
+    const { unread } = req.body;
 
-    const allChats = await chats.update({
-      is_read: true
-    },
+    const allChats = await chats.update(
+      {
+        is_read: true,
+      },
       {
         where: {
-          id: unread
+          id: unread,
         },
-      });
+      }
+    );
 
     res.status(201).json({
       success: true,
@@ -162,4 +211,11 @@ const markIsRead = async (req, res) => {
   }
 };
 
-module.exports = { create, getAll, createChat, getAllUsers, markIsRead };
+module.exports = {
+  create,
+  getAll,
+  createChat,
+  getAllUsers,
+  markIsRead,
+  getAllShops,
+};

@@ -43,12 +43,6 @@ const LoginScreen = () => {
       }}
     >
       <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-        <Typography.Title
-          level={5}
-          style={{ textAlign: 'left', marginBottom: 20 }}
-        >
-          Login:
-        </Typography.Title>
         <Form.Item
           name="mobile"
           rules={[{ required: true, message: 'Please enter your mobile' }]}

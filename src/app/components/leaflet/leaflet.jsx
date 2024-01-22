@@ -37,6 +37,15 @@ const LeafletComponent = (props) => {
     shadowSize: [41, 41],
   });
 
+  const BlueMarkerIcon = new L.Icon({
+    iconUrl:
+      'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-blue.png',
+    iconSize: [25, 41],
+    iconAnchor: [12, 41],
+    popupAnchor: [1, -34],
+    shadowSize: [41, 41],
+  });
+
   useEffect(() => {
     // Create the search control outside the SearchBox component
     const control = new GeoSearchControl({
@@ -108,7 +117,7 @@ const LeafletComponent = (props) => {
         position={position}
         draggable={true}
         eventHandlers={{ dragend: handleMarkerDrag }}
-        icon={GreenMarkerIcon}
+        icon={BlueMarkerIcon}
       >
         <Popup>
           Latitude: {position[0]} <br />

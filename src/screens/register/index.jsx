@@ -37,16 +37,16 @@ const RegisterScreen = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100vh',
+        height: '100%',
       }}
     >
       <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-        <Typography.Title
+        {/* <Typography.Title
           level={5}
           style={{ textAlign: 'left', marginBottom: 20 }}
         >
           Register User:
-        </Typography.Title>
+        </Typography.Title> */}
         <Form.Item
           name="username"
           rules={[{ required: true, message: 'Please enter your username' }]}

@@ -49,13 +49,18 @@
   font-size: 20px;
 }
 
+.navbar-menu a {
+  color: var(--white);
+  font-weight: 500;
+  font-weight: 600;
+}
+
 @media (max-width: 768px) {
   .navbar-menu {
     display: none;
   }
 }
 
-
-.ant-drawer-body{
+.ant-drawer-body {
   padding: 0px !important;
 }

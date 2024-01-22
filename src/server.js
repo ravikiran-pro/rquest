@@ -14,11 +14,13 @@ const server = http.createServer(app);
 let socketData = {};
 
 // handle cors
-app.use(cors({
-  origin: '*',
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  allowedHeaders: '*',
-}));
+app.use(
+  cors({
+    origin: '*',
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    allowedHeaders: '*',
+  })
+);
 
 app.use(bodyParser.urlencoded({ extended: false }));
 
@@ -27,6 +29,11 @@ app.use(bodyParser.json());
 
 // Middleware that parses json and looks at requests where the Content-Type header matches the type option.
 app.use(express.json());
+
+app.use((req, _res, next) => {
+  req.headers.socketData = socketData;
+  next();
+});
 
 // Serve API requests from the router
 app.use('/api/v1', router);

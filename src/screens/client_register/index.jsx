@@ -42,7 +42,6 @@ const ClientRegister = () => {
     defaultValues: { ...shopDetails },
   });
 
-
   const onImageUpload = async (file) => {
     setLoading(true);
     try {
@@ -93,7 +92,7 @@ const ClientRegister = () => {
         shop_type: shopDetails.shop_type,
         directions: shopDetails.map_link,
         latitude: position[0],
-        longitude: position[1]
+        longitude: position[1],
       };
       let body = JSON.stringify(payload);
 
@@ -134,7 +133,7 @@ const ClientRegister = () => {
     const response = await netWorkCall(apiConfig.my_shops, 'POST', null, true);
     if (response.success === true && response?.data && response.data.length) {
       setIsAllShops(response.data);
-      setIsFormEnable(false)
+      setIsFormEnable(false);
     }
   };
 
@@ -144,14 +143,18 @@ const ClientRegister = () => {
         apiConfig.decode_link,
         'POST',
         JSON.stringify({
-          map_link: shopDetails?.map_link
+          map_link: shopDetails?.map_link,
         }),
         true
       );
       const { latitude, longitude } = response.data;
       if (latitude && longitude) {
-        setPosition([latitude, longitude])
-        setShopDetails({ ...shopDetails, latitude: latitude, longitude: longitude })
+        setPosition([latitude, longitude]);
+        setShopDetails({
+          ...shopDetails,
+          latitude: latitude,
+          longitude: longitude,
+        });
       }
     }
     setIsModalVisible(true);
@@ -183,27 +186,38 @@ const ClientRegister = () => {
           </div>
         </div>
       )}
-      {
-        !isFormEnable ? <Col span={24}>
-          <div style={{ textAlign: 'right', marginBottom: 10 }}>
+      {!isFormEnable ? (
+        <Col span={24}>
+          <div
+            style={{
+              textAlign: 'right',
+              marginBottom: 10,
+              marginTop: 15,
+              marginRight: 15,
+            }}
+          >
             <Button
+              type="primary"
               onClick={() => setIsFormEnable(true)}
-              style={{ color: '#007bff' }}
-              type="link"
+              // style={{ color: '#007bff' }}
+              // type="link"
+              // className='link'
               icon={<PlusOutlined />}
             >
               Add New Business
             </Button>
           </div>
-        </Col> : null
-      }
-      {
-        isFormEnable ? <>
+        </Col>
+      ) : null}
+      {isFormEnable ? (
+        <>
           <Col span={24}>
             <Row justify={'center'}>
               <Col span={8} xs={22} sm={18} md={14} lg={12} xl={8}>
                 <Col span={8} xs={22} sm={18} md={14} lg={12} xl={8}>
-                  <Typography.Title level={5}>Register Business</Typography.Title>
+                  <Typography.Title level={5}>
+                    Register Business
+                  </Typography.Title>
                 </Col>
               </Col>
             </Row>
@@ -228,7 +242,9 @@ const ClientRegister = () => {
                     )}
                     {!imageUrl && (
                       <Upload beforeUpload={onImageUpload} loading={loading}>
-                        <Button icon={<UploadOutlined />}>Upload Image</Button>
+                        <Button type="primary" icon={<UploadOutlined />}>
+                          Upload Image
+                        </Button>
                       </Upload>
                     )}
                   </div>
@@ -360,7 +376,9 @@ const ClientRegister = () => {
                           placeholder="Paste Map Link"
                           onChange={handleInputChange}
                           suffix={
-                            <Button onClick={handleOpenModal}>Pick Location</Button>
+                            <Button onClick={handleOpenModal} type="primary">
+                              Pick Location
+                            </Button>
                           }
                         />
                       )}
@@ -384,10 +402,9 @@ const ClientRegister = () => {
               </Col>
             </Row>
           </Col>
-        </> : null
-      }
-      {
-        !isFormEnable && allShops && allShops.length ? 
+        </>
+      ) : null}
+      {!isFormEnable && allShops && allShops.length ? (
         <>
           <div
             style={{
@@ -397,16 +414,20 @@ const ClientRegister = () => {
               width: '100%',
             }}
           >
-            <Row style={{ display: 'flex', justifyContent: 'center' }}>
+            <Row style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
               {allShops?.map((data) => (
                 <div style={{ width: 300, margin: '0px 10px' }}>
-                  <ShopCard shopDetails={data} isChat={false} />
+                  <ShopCard
+                    shopDetails={data}
+                    isChat={false}
+                    isChatDisabled={true}
+                  />
                 </div>
               ))}
             </Row>
           </div>
-        </> : null
-      }
+        </>
+      ) : null}
     </Row>
   );
 };
