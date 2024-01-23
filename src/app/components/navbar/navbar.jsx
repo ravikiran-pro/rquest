@@ -35,15 +35,20 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         color: 'var(--white)',
       }}
     >
-      <div style={{display: 'flex', alignItems: 'center'}}>
+      <div style={{ display: 'flex', alignItems: 'center' }}>
         <Avatar
           style={{ background: '#fff', marginRight: 2, marginLeft: 4 }}
-          src={<img src={'/images/logo.png'} alt="avatar" />}
+          src={
+            <img
+              src={
+                'https://firebasestorage.googleapis.com/v0/b/rquest-61953.appspot.com/o/logo.png?alt=media&token=864d6813-db84-49ec-815d-36548c30c2f9'
+              }
+              alt="avatar"
+            />
+          }
         />
-        <div className='logo-text'>
-          Rquest.com
-        </div>
-        <Tag  className='version-chip' >v1.0.3</Tag>
+        <div className="logo-text">Rquest.com</div>
+        <Tag className="version-chip">v1.0.4</Tag>
       </div>
       <div
         style={{

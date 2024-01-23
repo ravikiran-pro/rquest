@@ -1,4 +1,4 @@
-const { shops } = require('../../models');
+const { shops, categories, sub_categories } = require('../../models');
 const { Op, literal } = require('sequelize');
 
 const getShopsFilter = async (req, res) => {
@@ -14,6 +14,9 @@ const getShopsFilter = async (req, res) => {
         'website',
         'rating',
         'products_list',
+        'img_url',
+        'category_id',
+        'sub_category_id',
         'shop_type',
         'latitude',
         'longitude',
@@ -26,6 +29,18 @@ const getShopsFilter = async (req, res) => {
           ),
           'distance',
         ],
+      ],
+      include: [
+        {
+          model: categories,
+          as: 'shopCategory',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: sub_categories,
+          as: 'shopSubCategory',
+          attributes: ['id', 'name'],
+        },
       ],
       where: {
         [Op.or]: [
@@ -77,6 +92,9 @@ const getMyShops = async (req, res) => {
         'address',
         'area',
         'mobile_number',
+        'img_url',
+        'category_id',
+        'sub_category_id',
         'website',
         'rating',
         'products_list',
@@ -89,10 +107,22 @@ const getMyShops = async (req, res) => {
         'id',
         'owner_id',
       ],
+      include: [
+        {
+          model: categories,
+          as: 'shopCategory',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: sub_categories,
+          as: 'shopSubCategory',
+          attributes: ['id', 'name'],
+        },
+      ],
       where: {
         owner_id: user_id,
       },
-      order: [['createdAt', 'ASC']],
+      order: [['createdAt', 'DESC']],
     });
 
     res.send(200, {

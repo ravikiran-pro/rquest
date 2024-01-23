@@ -59,18 +59,21 @@ const linkDecode = async (req, res) => {
 const createShops = async (req, res) => {
   try {
     const shopDetails = req.body;
-    const { id: user_id } = req.headers;
+    const { user_id } = req.headers;
 
     const payload = {
       owner_id: user_id,
       shop_name: shopDetails.shop_name,
       address: shopDetails.address,
       area: shopDetails.area,
+      img_url: shopDetails.img_url,
       mobile_number: shopDetails.mobile_number,
       website: shopDetails.website,
       rating: (Math.random() * (5 - 0) + 0).toFixed(1),
       products_list: '',
       shop_type: shopDetails.shop_type,
+      category_id: shopDetails.category_id,
+      sub_category_id: shopDetails.sub_category_id,
       directions: shopDetails.directions,
       latitude: shopDetails.latitude,
       longitude: shopDetails.longitude,

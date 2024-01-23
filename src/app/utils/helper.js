@@ -15,7 +15,6 @@ const storageKeys = {
 };
 
 const netWorkCall = async (endpoint, method, payload, isAuth = false) => {
-  if (endpoint == '/user/trace_ip') debugger;
   let body = {
     method: method,
     headers: {

@@ -1,6 +1,7 @@
 import React from 'react';
-import { Card, Rate, Button, Typography, Row, Col, Tooltip } from 'antd';
+import { Card, Rate, Button, Typography, Row, Col, Tooltip, Tag } from 'antd';
 import {
+  EditOutlined,
   EnvironmentOutlined,
   LockOutlined,
   ShopOutlined,
@@ -12,7 +13,12 @@ import Routes from '../../routes/routes';
 
 const { Text } = Typography;
 
-const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
+const ShopCard = ({
+  shopDetails,
+  isChat = false,
+  isChatDisabled = false,
+  isEdit = false,
+}) => {
   const {
     shop_name,
     address,
@@ -21,9 +27,10 @@ const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
     website,
     rating,
     products_list,
+    shopSubCategory,
     shop_type,
     directions,
-    image_url,
+    img_url,
     distance,
     id,
     owner_id,
@@ -47,10 +54,10 @@ const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
     >
       <div style={{ display: 'flex', textAlign: 'left', width: '100%' }}>
         <div style={{ width: '100%', display: 'flex' }}>
-          {image_url && (
+          {img_url && (
             <div style={{ width: 80, height: 40 }}>
               <img
-                src={image_url}
+                src={img_url}
                 style={{
                   width: 64,
                   height: 64,
@@ -64,7 +71,7 @@ const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'center',
-              width: image_url ? '200' : '100%',
+              width: img_url ? '200' : '100%',
             }}
           >
             <h5
@@ -120,7 +127,7 @@ const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
         <Text strong style={{ marginBottom: 4, display: 'block' }}>
           <ShopOutlined /> Shop Type:
         </Text>
-        <Text>{shop_type}</Text>
+        <Text>{shopSubCategory?.name || shop_type}</Text>
       </div>
       <Row gutter={8} style={{ marginTop: 10 }}>
         <Col span={12}>
@@ -167,6 +174,19 @@ const ShopCard = ({ shopDetails, isChat = false, isChatDisabled = false }) => {
             </Button>
           </Tooltip>
         </Col>
+        {isEdit && (
+          <Col span={12}>
+            <Button
+              type={'primary'}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ width: '100%' }}
+              disabled={true}
+            >
+              Edit
+            </Button>
+          </Col>
+        )}
       </Row>
     </Card>
   );

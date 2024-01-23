@@ -39,7 +39,16 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
       },
       shop_type: {
-        type: DataTypes.STRING,
+        type: DataTypes.INTEGER,
+      },
+      img_url: {
+        type: DataTypes.TEXT,
+      },
+      category_id: {
+        type: DataTypes.INTEGER,
+      },
+      sub_category_id: {
+        type: DataTypes.INTEGER,
       },
       latitude: {
         type: DataTypes.DOUBLE,
@@ -58,6 +67,14 @@ module.exports = (sequelize) => {
 
   Shop.associate = (models) => {
     Shop.hasMany(models.chats, { foreignKey: 'shop_id', as: 'shopChats' });
+    Shop.belongsTo(models.categories, {
+      foreignKey: 'category_id',
+      as: 'shopCategory',
+    });
+    Shop.belongsTo(models.sub_categories, {
+      foreignKey: 'sub_category_id',
+      as: 'shopSubCategory',
+    });
   };
 
   return Shop;

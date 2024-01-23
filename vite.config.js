@@ -4,6 +4,7 @@ dotenv.config();
 import { defineConfig } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
+// import WorkboxPlugin from 'workbox-webpack-plugin';
 
 const { PORT = 3001 } = process.env;
 
@@ -28,6 +29,11 @@ export default defineConfig({
         enabled: true,
       },
     }),
+    // WorkboxPlugin.GenerateSW({
+    //   swDest: 'dist/app/sw.js',
+    //   globDirectory: 'dist/app',
+    //   globPatterns: ['**/*.{js,css,html,png,jpg,json}'],
+    // }),
   ],
   server: {
     proxy: {

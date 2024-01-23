@@ -14,7 +14,7 @@ import {
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, ChatIcon } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
-import { SOCKET } from '../utils';
+import { SOCKET, netWorkCall } from '../utils';
 import { Avatar } from 'antd';
 
 export default function AppRoutes() {
@@ -32,6 +32,27 @@ export default function AppRoutes() {
 
   useEffect(() => {
     SOCKET.emit('connect_user', user_data);
+  }, []);
+
+  useEffect(() => {
+    // default service to trigger on change
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        fetch(`https://rquest-cdn.onrender.com/`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Clean up the event listener on component unmount
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, []);
 
   return (

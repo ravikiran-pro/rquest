@@ -65,15 +65,14 @@
   padding: 0px !important;
 }
 
-
-.logo-text{
+.logo-text {
   font-size: 22px;
   text-align: center;
   margin-left: 10px;
   font-weight: 700;
 }
 
-.version-chip{
+.version-chip {
   display: flex;
   justify-content: center;
   align-items: center;
