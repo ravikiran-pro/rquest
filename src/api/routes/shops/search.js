@@ -122,7 +122,7 @@ const getMyShops = async (req, res) => {
       where: {
         owner_id: user_id,
       },
-      order: [['createdAt', 'DESC']],
+      order: [['updatedAt', 'DESC']],
     });
 
     res.send(200, {

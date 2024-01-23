@@ -85,16 +85,26 @@ const createShops = async (req, res) => {
       if (latitude && longitude) {
         payload['latitude'] = latitude;
         payload['longitude'] = longitude;
-        const createdShop = await shops.create(payload);
 
-        await users.update(
-          { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
-          {
+        let createdShop = null;
+        if (shopDetails.shop_id) {
+          createdShop = await shops.update(payload, {
             where: {
-              id: user_id,
+              id: shopDetails.shop_id,
             },
-          }
-        );
+          });
+        } else {
+          createdShop = await shops.create(payload);
+
+          await users.update(
+            { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
+            {
+              where: {
+                id: user_id,
+              },
+            }
+          );
+        }
 
         res.status(201).json({ success: true, data: createdShop });
       } else {

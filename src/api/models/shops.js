@@ -39,7 +39,7 @@ module.exports = (sequelize) => {
         type: DataTypes.STRING,
       },
       shop_type: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.STRING,
       },
       img_url: {
         type: DataTypes.TEXT,
