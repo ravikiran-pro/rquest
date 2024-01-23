@@ -96,7 +96,7 @@ const HomeScreen = () => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', padding: 20 }}>
-        <Row>
+        <Row style={{flex: 1}}>
           <Col span={24}>
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '360px' }}>
@@ -146,7 +146,7 @@ const HomeScreen = () => {
             </Row>
           </Col>
           {searchMarkers && searchMarkers?.length ? (
-            <Row style={{ display: 'flex', justifyContent: 'center' }}>
+            <Row style={{ display: 'flex', justifyContent: 'center'}}>
               {searchMarkers?.map((marker) => (
                 <div style={{ width: 350, margin: '0px 10px' }} key={marker.id}>
                   <ShopCard
