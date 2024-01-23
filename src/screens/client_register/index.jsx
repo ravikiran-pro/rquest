@@ -22,23 +22,25 @@ import { apiConfig, config, netWorkCall } from '../../app/utils';
 import { LeafletComponent, ShopCard } from '../../app/components';
 import Select from 'react-select';
 import { useGlobalStore } from '../../app/services';
+import { useHistory, useParams } from 'react-router-dom/cjs/react-router-dom.min';
 
+const initDetails = {
+  shop_name: '',
+  address: '',
+  area: '',
+  mobile_number: '',
+  website: '',
+  category_id: '',
+  sub_category_id: '',
+  link: '',
+  map_link: '',
+}
 const ClientRegister = () => {
   const [imageUrl, setImageUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [allShops, setIsAllShops] = useState([]);
   const [isFormEnable, setIsFormEnable] = useState(false);
-  const [shopDetails, setShopDetails] = useState({
-    shop_name: '',
-    address: '',
-    area: '',
-    mobile_number: '',
-    website: '',
-    category_id: '',
-    sub_category_id: '',
-    link: '',
-    map_link: '',
-  });
+  const [shopDetails, setShopDetails] = useState({ ...initDetails });
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [filters, setFilters] = useState({
     category_id: '',
@@ -52,6 +54,8 @@ const ClientRegister = () => {
     type: '',
     label: '',
   });
+
+  const history = useHistory();
 
   const {
     control,
@@ -79,7 +83,18 @@ const ClientRegister = () => {
     }
   };
 
-  const handleEdit = () => {};
+  const handleEdit = (shopIndex) => {
+    const data = allShops[shopIndex];
+    setIsFormEnable(true)
+    let category = allCategories[data?.shopCategory?.id];
+    setShopDetails({
+      ...data,
+      map_link: data.directions,
+      category_id: { label: category?.name , value: category?.id},
+      sub_category_id: { label: data?.shopSubCategory?.name , value: data?.shopSubCategory?.id},
+    })
+    setImageUrl(data.img_url)
+  };
 
   function isValidData(shopDetails) {
     const requiredKeys = [
@@ -103,6 +118,7 @@ const ClientRegister = () => {
   const createClient = async () => {
     if (isValidData(shopDetails)) {
       const payload = {
+        shop_id: shopDetails?.id,
         owner_id: user_data?.user_id,
         shop_name: shopDetails.shop_name,
         address: shopDetails.address,
@@ -131,7 +147,7 @@ const ClientRegister = () => {
         fetchInitData();
         setAlertData({
           message: `${shopDetails.shop_name} created succesfully`,
-          type: 'error',
+          type: 'success',
         });
       }
     } else {
@@ -161,6 +177,7 @@ const ClientRegister = () => {
       setIsFormEnable(false);
     } else {
       setIsFormEnable(true);
+      setShopDetails({ ...initDetails })
     }
   };
 
@@ -231,6 +248,7 @@ const ClientRegister = () => {
     fetchUserLocation();
   }, []);
 
+
   return (
     <Row>
       {isModalVisible && (
@@ -265,7 +283,10 @@ const ClientRegister = () => {
           >
             <Button
               type="primary"
-              onClick={() => setIsFormEnable(true)}
+              onClick={() => {
+                setIsFormEnable(true)
+                setShopDetails({ ...initDetails })
+              }}
               // style={{ color: '#007bff' }}
               // type="link"
               // className='link'
@@ -545,14 +566,14 @@ const ClientRegister = () => {
             }}
           >
             <Row style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
-              {allShops?.map((data) => (
+              {allShops?.map((data, shopIndex) => (
                 <div style={{ width: 300, margin: '0px 10px' }}>
                   <ShopCard
                     shopDetails={data}
                     isChat={false}
                     isChatDisabled={true}
-                    // isEdit={true}
-                    handleEdit={handleEdit}
+                    isEdit={true}
+                    handleEdit={() => handleEdit(shopIndex)}
                   />
                 </div>
               ))}

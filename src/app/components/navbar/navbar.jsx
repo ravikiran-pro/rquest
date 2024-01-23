@@ -48,7 +48,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           }
         />
         <div className="logo-text">Rquest.com</div>
-        <Tag className="version-chip">v1.0.4</Tag>
+        <Tag className="version-chip">v1.0.5</Tag>
       </div>
       <div
         style={{
@@ -92,7 +92,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
               <div className="navbar-menu">
                 <Link to={Routes.client}>
                   <Button type="link" size={'large'} className="link">
-                    Client Register
+                  Register Shop 
                   </Button>
                 </Link>
               </div>

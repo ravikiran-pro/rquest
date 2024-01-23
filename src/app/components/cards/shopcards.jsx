@@ -18,6 +18,7 @@ const ShopCard = ({
   isChat = false,
   isChatDisabled = false,
   isEdit = false,
+  handleEdit = () => null
 }) => {
   const {
     shop_name,
@@ -127,7 +128,7 @@ const ShopCard = ({
         <Text strong style={{ marginBottom: 4, display: 'block' }}>
           <ShopOutlined /> Shop Type:
         </Text>
-        <Text>{shopSubCategory?.name || shop_type}</Text>
+        <Text>{shopSubCategory?.name || 'others'}</Text>
       </div>
       <Row gutter={8} style={{ marginTop: 10 }}>
         <Col span={12}>
@@ -181,7 +182,7 @@ const ShopCard = ({
               target="_blank"
               rel="noopener noreferrer"
               style={{ width: '100%' }}
-              disabled={true}
+              onClick={handleEdit}
             >
               Edit
             </Button>

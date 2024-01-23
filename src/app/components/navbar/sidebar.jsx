@@ -74,7 +74,7 @@ const SideBar = ({ open, handleClose }) => {
                 className="side-link"
                 onClick={() => handleClick('client')}
               >
-                Client Register
+                Register Shop 
               </Button>
             </div>
             <div className="sidebar-menu">

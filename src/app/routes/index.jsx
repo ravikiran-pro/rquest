@@ -74,6 +74,9 @@ export default function AppRoutes() {
           <Route path={routes.client}>
             <ClientRegister />
           </Route>
+          <Route path={routes.clientShop}>
+            <ClientRegister />
+          </Route>
           {/* <Route path={routes.chat}>
             <ChatApp />
           </Route> */}
