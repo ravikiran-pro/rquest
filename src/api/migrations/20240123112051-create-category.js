@@ -14,6 +14,10 @@ module.exports = {
       img_url: {
         type: Sequelize.STRING,
       },
+      is_active:{
+        type: Sequelize.BOOLEAN,
+        defaultValue: true
+      },
       createdAt: {
         allowNull: false,
         type: Sequelize.DATE,

@@ -11,6 +11,7 @@ import {
   HomeScreen,
   ClientRegister,
   RegisterScreen,
+  AdminScreen,
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, ChatIcon } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
@@ -82,6 +83,9 @@ export default function AppRoutes() {
           </Route> */}
           <Route path={routes.register}>
             <RegisterScreen />
+          </Route>
+          <Route path={routes.admin}>
+            <AdminScreen />
           </Route>
           <Route path={'/'}>
             <Redirect to={routes.home} />

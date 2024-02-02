@@ -26,6 +26,14 @@ export const apiConfig = {
   user_chats: 'chat/getAll',
   chat_create: 'chat/create',
   chat_update_read: 'chat/markAll',
+
+  master_categories : 'master/categories',
+  master_categories_stauts: 'master/categories/status',
+  master_categories_create: 'master/categories/create',
+
+  master_sub_categories : 'master/sub_categories',
+  master_sub_categories_stauts: 'master/sub_categories/status',
+  master_sub_categories_create: 'master/sub_categories/create'
 };
 
 export const SOCKET = io(config.api_url);

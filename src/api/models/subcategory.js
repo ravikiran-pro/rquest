@@ -20,6 +20,10 @@ module.exports = (sequelize) => {
     img_url: {
       type: Sequelize.STRING,
     },
+    is_active:{
+      type: Sequelize.BOOLEAN,
+      defaultValue: true
+    }
   });
 
   SubCategories.associate = (models) => {

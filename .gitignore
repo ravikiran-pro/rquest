@@ -7,3 +7,4 @@ dist-ssr
 .vercel
 .env
 dev-dist
+.pem

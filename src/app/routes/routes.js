@@ -5,6 +5,7 @@ const Routes = {
   clientShop: '/client?shop_id=:shop_id',
   chat: '/chat',
   register: '/register',
+  admin: '/admin',
 };
 
 export default Routes;

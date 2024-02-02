@@ -4,7 +4,7 @@
   "scripts": {
     "clean": "rimraf dist",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",
-    "client:dev": "vite",
+    "client:dev": "vite --host=0.0.0.0",
     "server:dev": "nodemon src/server.js",
     "server:build": "babel --verbose --out-dir dist --only 'src/server.js,src/api/config,src/api/models,src/api/routes,src/api/auth' src",
     "client:build": "vite build",
@@ -35,6 +35,8 @@
     "@ant-design/icons": "^5.2.5",
     "@babel/cli": "^7.15.7",
     "@babel/core": "^7.15.7",
+    "@emotion/styled": "^11.11.0",
+    "@mui/x-data-grid": "^6.19.2",
     "@vitejs/plugin-react": "^1.0.2",
     "antd": "^5.8.3",
     "babel-eslint": "^10.1.0",

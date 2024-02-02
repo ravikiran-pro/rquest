@@ -33,5 +33,6 @@ module.exports = {
   down: async (queryInterface) => {
     await queryInterface.removeColumn('shops', 'category_id');
     await queryInterface.removeColumn('shops', 'sub_category_id');
+    await queryInterface.removeColumn('shops', 'img_url');
   },
 };
