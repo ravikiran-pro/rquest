@@ -17,6 +17,7 @@ import { ChatApp, NavBar, SideBar, ChatIcon } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
 import { SOCKET, netWorkCall } from '../utils';
 import { Avatar } from 'antd';
+import PrivateRoute from './privateroute';
 
 export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
@@ -72,21 +73,14 @@ export default function AppRoutes() {
           <Route path={routes.home}>
             <HomeScreen />
           </Route>
-          <Route path={routes.client}>
-            <ClientRegister />
-          </Route>
-          <Route path={routes.clientShop}>
-            <ClientRegister />
-          </Route>
-          {/* <Route path={routes.chat}>
-            <ChatApp />
-          </Route> */}
+          <PrivateRoute path={routes.client} component={ClientRegister}/>
+          <PrivateRoute path={routes.clientShop} component={ClientRegister}/>
+          
           <Route path={routes.register}>
             <RegisterScreen />
           </Route>
-          <Route path={routes.admin}>
-            <AdminScreen />
-          </Route>
+
+          <PrivateRoute path={routes.admin} component={AdminScreen}/>
           <Route path={'/'}>
             <Redirect to={routes.home} />
           </Route>

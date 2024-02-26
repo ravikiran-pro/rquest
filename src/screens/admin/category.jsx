@@ -4,7 +4,10 @@ import { Button, Col, Row, message } from 'antd'; // Import message from 'antd'
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { PlusOutlined } from '@ant-design/icons';
 
-const Category = () => {
+const Category = ({
+    handleSubCategory = () => null
+}) => {
+
     const [rows, setRows] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
     const columns = [
@@ -13,7 +16,30 @@ const Category = () => {
         { key: "createdBy", title: "Created By" },
         { key: "is_active", title: "Active" },
         { key: "action", title: "Action" },
+        { key: "menu", title: "Sub Category", onClick: (data) => handleSubCategory(data) },
     ];
+
+    const handleDelete = async (record) => {
+        try {
+            let res = await netWorkCall(
+                apiConfig.master_categories_delete,
+                'DELETE',
+                JSON.stringify({
+                    category_id: record.id,
+                }),
+                true
+            );
+
+            // Update the local state
+            fetchInitData(pagination.current);
+
+            // Show success message
+            message.success(res.message);
+        } catch (error) {
+            console.error('Error updating category status:', error);
+            message.error('Failed to update category status');
+        }
+    }
 
     const fetchInitData = async (current = 1) => {
         try {
@@ -45,7 +71,6 @@ const Category = () => {
 
     const handleStatusChange = async ({ category_id, is_active }) => {
         try {
-            debugger
             await netWorkCall(
                 apiConfig.master_categories_stauts,
                 'PUT',
@@ -108,9 +133,11 @@ const Category = () => {
                     img_url: '',
                     is_active: true
                 }}
+                isAddNew={true}
                 handleTableChange={handleTableChange}
                 handleStatusChange={handleStatusChange}
                 handleRowChange={handleRowChange}
+                handleDelete={handleDelete}
             />
         </>
     );

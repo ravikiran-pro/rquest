@@ -4,31 +4,33 @@ import { Button, message } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { PlusOutlined } from '@ant-design/icons';
 
-const SubCategory = ({
+const Products = ({
   category_id = null,
-  handleProducts = () => { }
+  sub_category_id = null
 }) => {
 
   console.log('category_id', category_id)
+  console.log('sub_category_id', sub_category_id)
   const [rows, setRows] = useState([]);
   const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
 
   const columns = [
     { key: "name", title: "Name" },
     { key: "img_url", title: "Image" },
+    { key: "description", title: "Description" },
     { key: "createdBy", title: "Created By" },
     { key: "is_active", title: "Active" },
     { key: "action", title: "Action" },
-    { key: "menu", title: "Products", onClick: (data) => handleProducts(data) },
   ];
 
   const fetchInitData = async (current = 1) => {
     try {
       const response = await netWorkCall(
-        apiConfig.master_sub_categories,
+        apiConfig.master_products,
         'POST',
         JSON.stringify({
           category_id: category_id,
+          sub_category_id: sub_category_id,
           limit: pagination.pageSize,
           offset: (current - 1) * pagination.pageSize,
         }),
@@ -54,10 +56,10 @@ const SubCategory = ({
   const handleDelete = async (record) => {
     try {
       let res = await netWorkCall(
-        apiConfig.master_sub_categories_delete,
+        apiConfig.master_products_delete,
         'DELETE',
         JSON.stringify({
-          sub_category_id: record.id,
+          product_id: record.id,
         }),
         true
       );
@@ -76,7 +78,7 @@ const SubCategory = ({
   const handleStatusChange = async ({ category_id, is_active }) => {
     try {
       await netWorkCall(
-        apiConfig.master_sub_categories_stauts,
+        apiConfig.master_products_stauts,
         'PUT',
         JSON.stringify({
           subcategory_id: category_id,
@@ -96,16 +98,18 @@ const SubCategory = ({
     }
   };
 
-  const handleRowChange = async ({ id, name, img_url, is_active }) => {
+  const handleRowChange = async ({ id, name, img_url, description, is_active }) => {
     try {
       await netWorkCall(
-        apiConfig.master_sub_categories_create,
+        apiConfig.master_products_create,
         'POST',
         JSON.stringify({
-          subcategory_id: id >= 0 ? id : undefined,
+          product_id: id >= 0 ? id : undefined,
           category_id: category_id,
+          sub_category_id: sub_category_id,
           name: name,
           img_url: img_url,
+          description: description,
           is_active: is_active,
           count: pagination?.total
         }),
@@ -125,7 +129,7 @@ const SubCategory = ({
 
   useEffect(() => {
     fetchInitData();
-  }, [category_id]);
+  }, [category_id, sub_category_id]);
 
   return (
     <>
@@ -138,7 +142,7 @@ const SubCategory = ({
           img_url: '',
           is_active: true
         }}
-        isAddNew={category_id !== null && category_id >= 0}
+        isAddNew={sub_category_id !== null && sub_category_id >= 0}
         handleTableChange={handleTableChange}
         handleStatusChange={handleStatusChange}
         handleRowChange={handleRowChange}
@@ -148,4 +152,4 @@ const SubCategory = ({
   );
 };
 
-export default SubCategory;
+export default Products;

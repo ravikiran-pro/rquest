@@ -19,8 +19,8 @@ export default defineConfig({
         description: 'Rquest - Connect Everywhere Everything',
         icons: [
           {
-            src: '/images/icon-512x512.png',
-            sizes: '512x512',
+            src: '/images/logo.png',
+            sizes: '360x360',
             type: 'image/png',
           },
         ],

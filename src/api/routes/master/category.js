@@ -1,4 +1,4 @@
-const { categories } = require('../../models');
+const { categories, sub_categories, products } = require('../../models');
 
 const getAllCategories = async (req, res) => {
   try {
@@ -75,9 +75,39 @@ const editCategory = async (req, res) => {
   }
 };
 
+const deleteCategory = async (req, res) => {
+  try {
+    const { category_id } = req.body;
+
+    const res_sub = await sub_categories.destroy({
+      where:{
+        category_id: category_id 
+      }
+    })
+
+    const res_prod = await products.destroy({
+      where:{
+        category_id: category_id 
+      }
+    })
+
+    const res_cat = await categories.destroy({
+      where:{
+       id: category_id 
+      }
+    })
+    
+    return res.status(201).json({ success: true, message: 'Category Deleted Successfully', data: res_cat });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
 
 module.exports = {
   getAllCategories,
   updateCategoryStatus,
   editCategory,
+  deleteCategory
 };

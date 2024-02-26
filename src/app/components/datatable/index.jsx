@@ -2,10 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Space, Table, Tag, Form, Input, Button, Row, Col } from 'antd';
 import { Avatar } from 'antd';
 import { Upload } from 'antd';
-import { config } from '../../utils';
+import { apiConfig, config, netWorkCall } from '../../utils';
 import { PlusOutlined } from '@ant-design/icons';
 
-const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, handleStatusChange, handleRowChange }) => {
+const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableChange, handleStatusChange, handleRowChange, handleDelete }) => {
   const [data, setData] = useState(rows);
   const [editableRow, setEditableRow] = useState(null);
   const [isNew, setIsNew] = useState(false)
@@ -45,19 +45,21 @@ const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, hand
   const onImageUpload = async (file, index) => {
     try {
       const formData = new FormData();
-      formData.append('image', file);
-      const response = await fetch(config.IMAGE_CDN + '/upload', {
+      formData.append('fileData', file);
+
+      const response = await fetch(`${config.api_url}/api/v1/${apiConfig.upload}`, {
         method: 'POST',
         body: formData,
       });
-      const data = await response.json();
-      handleStateUpdate({ 'img_url': data?.url }, index)
+      const { data } = await response.json();
+      handleStateUpdate({ 'img_url': data?.Location }, index)
     } catch (error) {
       console.error(error);
     }
   };
 
-  const renderCell = (key, value, record, index) => {
+  const renderCell = (item, value, record, index) => {
+    const key = item.key;
     const isEditable = index === editableRow;
 
     switch (key) {
@@ -72,6 +74,8 @@ const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, hand
           </Space>
         </Upload> :
           <Avatar src={value || 'data:image/jpeg;base64,/9j/4AAQ...'} alt='none' />
+      case 'menu':
+        return <Button style={{ color: '#fff' }} onClick={() => item?.onClick(record)}> Add {item?.title} </Button>
       case 'createdBy':
         return <span>Admin</span>;
       case 'is_active':
@@ -91,9 +95,14 @@ const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, hand
             }}>Cancel</a>
           </Space>
         ) : (
-          <Space size="middle" onClick={() => handleEdit(index)}>
-            <a>Edit</a>
+          <>
+            <Space size="middle" onClick={() => handleEdit(index)}>
+              <a>Edit</a>
+            </Space>
+            <Space size="middle" style={{marginLeft: 10}} onClick={() => handleDelete(record)}>
+            <a>Delete</a>
           </Space>
+          </>
         );
       default:
         return isEditable ? (
@@ -108,7 +117,7 @@ const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, hand
     title: item.title,
     dataIndex: item.key,
     key: item.key,
-    render: (value, record, index) => renderCell(item.key, value, record, index),
+    render: (value, record, index) => renderCell(item, value, record, index),
   }));
 
 
@@ -124,14 +133,16 @@ const DataTable = ({ rows, columns, initRow, pagination, handleTableChange, hand
 
   return <>
     <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
-      <Row>
-        <Col>
-          <Button type='primary' onClick={() => setIsNew(!isNew)}>
-            Add New
-            <PlusOutlined />
-          </Button>
-        </Col>
-      </Row>
+      {
+        isAddNew && <Row>
+          <Col>
+            <Button type='primary' onClick={() => setIsNew(!isNew)}>
+              Add New
+              <PlusOutlined />
+            </Button>
+          </Col>
+        </Row>
+      }
     </Col>
     <Table
       columns={columnsRender}

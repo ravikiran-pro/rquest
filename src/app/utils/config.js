@@ -30,10 +30,20 @@ export const apiConfig = {
   master_categories : 'master/categories',
   master_categories_stauts: 'master/categories/status',
   master_categories_create: 'master/categories/create',
+  master_categories_delete: 'master/categories',
 
   master_sub_categories : 'master/sub_categories',
   master_sub_categories_stauts: 'master/sub_categories/status',
-  master_sub_categories_create: 'master/sub_categories/create'
+  master_sub_categories_create: 'master/sub_categories/create',
+  master_sub_categories_delete: 'master/sub_categories',
+
+
+  master_products : 'master/products',
+  master_products_stauts: 'master/products/status',
+  master_products_create: 'master/products/create',
+  master_products_delete: 'master/products',
+
+  upload: 'master/upload'
 };
 
 export const SOCKET = io(config.api_url);

@@ -23,6 +23,12 @@ module.exports = (sequelize) => {
     Categories.hasMany(models.sub_categories, {
       foreignKey: 'category_id',
       as: 'sub_categories',
+      onDelete: 'CASCADE'
+    });
+    Categories.hasMany(models.products, {
+      foreignKey: 'category_id',
+      as: 'categories_products',
+      onDelete: 'CASCADE'
     });
   };
 
