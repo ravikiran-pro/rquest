@@ -1,6 +1,6 @@
 {
   "name": "vite-react-express-boilerplate",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "scripts": {
     "clean": "rimraf dist",
     "dev": "concurrently \"npm run server:dev\" \"npm run client:dev\"",

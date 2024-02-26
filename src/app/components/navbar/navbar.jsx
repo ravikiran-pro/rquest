@@ -48,7 +48,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           }
         />
         <div className="logo-text">Rquest.com</div>
-        <Tag className="version-chip">v1.0.7</Tag>
+        <Tag className="version-chip">v1.0.8</Tag>
       </div>
       <div
         style={{
