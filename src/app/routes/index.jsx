@@ -67,6 +67,9 @@ export default function AppRoutes() {
       />
       <div style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }}>
         <Switch>
+        <Route path={'/'}>
+            <Redirect to={routes.home} />
+          </Route>
           <Route path={routes.login}>
             <LoginScreen />
           </Route>
@@ -81,9 +84,6 @@ export default function AppRoutes() {
           </Route>
 
           <PrivateRoute path={routes.admin} component={AdminScreen}/>
-          <Route path={'/'}>
-            <Redirect to={routes.home} />
-          </Route>
         </Switch>
       </div>
       {isChat ? (
