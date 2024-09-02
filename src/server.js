@@ -4,7 +4,7 @@ const cors = require('cors');
 const http = require('http');
 const bodyParser = require('body-parser');
 
-const { PORT = 3001 } = process.env;
+const { PORT = 3010 } = process.env;
 
 const app = express();
 const server = http.createServer(app);

@@ -5,7 +5,7 @@ export default class LOADINGSCREEN extends Component {
   state = { username: null };
 
   componentDidMount() {
-    fetch('http://localhost:3001/api/getUsername')
+    fetch('http://localhost:3010/api/getUsername')
       .then(res => res.json())
       .then(user => this.setState({ username: user.username }));
   }

@@ -25,7 +25,7 @@ Boom! These scripts run your server and client in development mode.
 
 The default PORTS are:
 
-- `3001` for the server
+- `3010` for the server
 - `3000` for the client
 
 If you don't like to call all scripts at once, you can also run:
@@ -39,7 +39,7 @@ You can configure the server port by setting the `PORT` environment variable. Cr
 
 | KEY  | VALUE                                                         |
 | ---- | ------------------------------------------------------------- |
-| PORT | (Optional) Port for the server environment (defaults to 3001) |
+| PORT | (Optional) Port for the server environment (defaults to 3010) |
 
 ## Building
 

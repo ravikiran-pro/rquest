@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 import react from '@vitejs/plugin-react';
 // import WorkboxPlugin from 'workbox-webpack-plugin';
 
-const { PORT = 3001 } = process.env;
+const { PORT = 3010 } = process.env;
 
 // https://vitejs.dev/config/
 export default defineConfig({

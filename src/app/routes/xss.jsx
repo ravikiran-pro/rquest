@@ -5,18 +5,15 @@ function XssScreen() {
   const [newComment, setNewComment] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:3001/api/comments")
+    fetch("http://localhost:3010/api/comments")
       .then((res) => res.json())
       .then((data) => setComments(data));
   }, []);
 
-  useEffect(() => {
-    setComments(["<script>alert('XSS!')</script>"]);
-  }, []);
   
   const handleSubmit = (e) => {
     e.preventDefault();
-    fetch("http://localhost:3001/api/comments", {
+    fetch("http://localhost:3010/api/comments", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ comment: newComment }),
