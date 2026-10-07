@@ -1,4 +1,4 @@
-const { generateHash, generateJwt } = require('../../auth');
+const { validateUser, generateJwt } = require('../../auth');
 const { users } = require('../../models');
 
 const login = async (req, res) => {
@@ -6,45 +6,51 @@ const login = async (req, res) => {
     const userDetails = req.body;
 
     if (userDetails.mobile && userDetails.password) {
-      let hashedPassword = await generateHash(userDetails.password);
-      ///default register as user
-      const filter = {
-        mobile: userDetails.mobile,
-        password: hashedPassword,
-      };
-
       const user = await users.findOne({
-        where: filter,
+        where: { mobile: String(userDetails.mobile) },
       });
-      if (user && user.password === hashedPassword) {
+
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          error: 'User not found',
+          message: 'Invalid mobile or password',
+        });
+      }
+
+      const isMatch = await validateUser(userDetails.password, user.password);
+
+      if (isMatch) {
         let payload = {
           username: user.username,
           user_id: user.id,
+          role_id: user.role_id,
         };
         let token = await generateJwt(payload);
-        res.status(201).json({
+        return res.status(200).json({
           success: true,
           token: token,
           user_data: payload,
         });
       } else {
-        res.status(500).json({
+        return res.status(401).json({
           success: false,
           error: 'Password Authentication Failed',
-          message: 'Password Authentication Failed',
+          message: 'Invalid mobile or password',
         });
       }
     } else {
-      res.status(500).json({
+      return res.status(400).json({
         success: false,
-        error: 'Username and password required',
-        message: 'Username and password required',
+        error: 'Mobile and password required',
+        message: 'Mobile and password required',
       });
     }
   } catch (error) {
-    res.status(500).json({
+    console.error('Login error:', error);
+    return res.status(500).json({
       success: false,
-      error: error,
+      error: error.message || error,
       message: 'Password Authentication Failed',
     });
   }

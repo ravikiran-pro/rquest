@@ -3,19 +3,15 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const AUTH_TOKEN = process.env.AUTH_TOKEN;
+const AUTH_TOKEN = process.env.AUTH_TOKEN || '12';
+const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
 
 const generateHash = (password) => {
-  return bcrypt.hash(password, AUTH_TOKEN);
+  return bcrypt.hash(password, Number(BCRYPT_ROUNDS));
 };
 
 function validateUser(password, hash) {
-  bcrypt
-    .compare(password, hash)
-    .then((res) => {
-      console.log(res); // return true
-    })
-    .catch((err) => console.error(err.message));
+  return bcrypt.compare(password, hash);
 }
 
 function generateJwt(payload) {
@@ -30,17 +26,34 @@ function verifyJwt(token) {
 
 async function authMiddleware(req, res, next) {
   try {
-    const authorization = req.headers.authorization.split(' ');
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        error: 'Authentication Failed',
+        message: 'No authorization token provided',
+      });
+    }
+    const authorization = authHeader.split(' ');
+    if (authorization.length !== 2 || authorization[0] !== 'Bearer') {
+      return res.status(401).json({
+        error: 'Authentication Failed',
+        message: 'Invalid authorization format',
+      });
+    }
     const decoded = await verifyJwt(authorization[1]);
     req.headers = {
       ...req?.headers,
       ...decoded,
+      user_id: decoded.user_id || decoded.id,
+      username: decoded.username,
+      role_id: decoded.role_id,
     };
+    req.user = decoded;
     next();
   } catch (e) {
-    res.status(500).json({
+    res.status(401).json({
       error: 'Authentication Failed',
-      message: 'Authentication Failed',
+      message: 'Invalid or expired token',
     });
   }
 }

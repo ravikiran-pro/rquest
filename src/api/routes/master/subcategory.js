@@ -31,7 +31,8 @@ const getAllSubCategories = async (req, res) => {
 
 const updateSubCategoryStatus = async (req, res) => {
   try {
-    const { subcategory_id, is_active } = req.body;
+    const subcategory_id = req.body.subcategory_id || req.body.category_id;
+    const { is_active } = req.body;
 
     const subcategory = await sub_categories.findByPk(subcategory_id);
 
@@ -52,9 +53,9 @@ const updateSubCategoryStatus = async (req, res) => {
 
 const editSubCategory = async (req, res) => {
   try {
-    const { category_id, subcategory_id, name, img_url, count } = req.body;
+    const { category_id, subcategory_id, name, img_url } = req.body;
 
-    if (subcategory_id !== null && subcategory_id >= 0) {
+    if (subcategory_id !== null && subcategory_id !== undefined && subcategory_id >= 0) {
       const subcategory = await sub_categories.findByPk(subcategory_id);
 
       if (!subcategory) {
@@ -62,19 +63,17 @@ const editSubCategory = async (req, res) => {
       }
 
       subcategory.name = name;
-      subcategory.img_url = img_url;
+      subcategory.img_url = img_url || '';
       await subcategory.save();
 
       res.status(200).json({ success: true, message: 'Subcategory edited successfully', data: subcategory });
     } else {
-      let count = await sub_categories.count();
-      debugger
-      if (category_id !== null && category_id >= 0) {
+      if (category_id !== null && category_id !== undefined && category_id >= 0) {
         const newSubCategory = await sub_categories.create({
           name: name,
-          img_url: img_url,
-          id: count,
-          category_id: category_id
+          img_url: img_url || '',
+          category_id: category_id,
+          is_active: true,
         });
 
         return res.status(201).json({ success: true, message: 'Subcategory created successfully', data: newSubCategory });

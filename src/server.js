@@ -53,20 +53,38 @@ io.on('connection', (socket) => {
   io.to(socket.id).emit('socket_id', socket.id);
 
   socket.on('send_message', async (messageData) => {
+    if (!messageData || !messageData.receiver_id) return;
     const target = socketData[messageData.receiver_id];
-    io.to(target.socket_id).emit('receive_message', messageData);
-
-    console.log(
-      `Sent Message --> ${messageData.username} to ${target.username}`
-    );
+    if (target && target.socket_id) {
+      io.to(target.socket_id).emit('receive_message', messageData);
+      console.log(
+        `Sent Message --> ${messageData.username} to ${target.username}`
+      );
+    } else {
+      console.log(
+        `Receiver ${messageData.receiver_id} is offline. Message saved to DB.`
+      );
+    }
   });
 
   socket.on('connect_user', (user_data) => {
-    socketData[user_data.user_id] = {
-      ...user_data,
-      socket_id: socket.id,
-    };
-    console.log(`user ${user_data.username} connected on ${socket.id}`);
+    if (user_data && user_data.user_id) {
+      socketData[user_data.user_id] = {
+        ...user_data,
+        socket_id: socket.id,
+      };
+      console.log(`user ${user_data.username} connected on ${socket.id}`);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    for (const userId of Object.keys(socketData)) {
+      if (socketData[userId]?.socket_id === socket.id) {
+        delete socketData[userId];
+        console.log(`user ${userId} disconnected`);
+        break;
+      }
+    }
   });
 });
 

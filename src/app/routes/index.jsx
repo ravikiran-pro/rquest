@@ -33,8 +33,10 @@ export default function AppRoutes() {
   };
 
   useEffect(() => {
-    SOCKET.emit('connect_user', user_data);
-  }, []);
+    if (user_data?.user_id) {
+      SOCKET.emit('connect_user', user_data);
+    }
+  }, [user_data]);
 
   useEffect(() => {
     // default service to trigger on change
@@ -45,7 +47,7 @@ export default function AppRoutes() {
           headers: {
             'Content-Type': 'application/json',
           },
-        });
+        }).catch(() => {});
       }
     };
 
@@ -67,7 +69,7 @@ export default function AppRoutes() {
       />
       <div style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }}>
         <Switch>
-        <Route path={'/'}>
+          <Route exact path="/">
             <Redirect to={routes.home} />
           </Route>
           <Route path={routes.login}>
@@ -76,14 +78,13 @@ export default function AppRoutes() {
           <Route path={routes.home}>
             <HomeScreen />
           </Route>
-          <PrivateRoute path={routes.client} component={ClientRegister}/>
-          <PrivateRoute path={routes.clientShop} component={ClientRegister}/>
-          
+          <PrivateRoute path={routes.client} component={ClientRegister} />
+          <PrivateRoute path={routes.clientShop} component={ClientRegister} />
           <Route path={routes.register}>
             <RegisterScreen />
           </Route>
-
-          <PrivateRoute path={routes.admin} component={AdminScreen}/>
+          <PrivateRoute path={routes.admin} component={AdminScreen} />
+          <Redirect to={routes.home} />
         </Switch>
       </div>
       {isChat ? (

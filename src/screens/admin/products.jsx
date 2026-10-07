@@ -81,7 +81,7 @@ const Products = ({
         apiConfig.master_products_stauts,
         'PUT',
         JSON.stringify({
-          subcategory_id: category_id,
+          product_id: category_id,
           is_active
         }),
         true
@@ -91,10 +91,10 @@ const Products = ({
       fetchInitData(pagination.current);
 
       // Show success message
-      message.success('Subcategory status updated successfully');
+      message.success('Product status updated successfully');
     } catch (error) {
-      console.error('Error updating subcategory status:', error);
-      message.error('Failed to update subcategory status');
+      console.error('Error updating product status:', error);
+      message.error('Failed to update product status');
     }
   };
 
@@ -111,7 +111,6 @@ const Products = ({
           img_url: img_url,
           description: description,
           is_active: is_active,
-          count: pagination?.total
         }),
         true
       );
@@ -120,10 +119,10 @@ const Products = ({
       fetchInitData(pagination.current);
 
       // Show success message
-      message.success('Subcategory edited successfully');
+      message.success('Product saved successfully');
     } catch (error) {
-      console.error('Error editing subcategory:', error);
-      message.error('Failed to edit subcategory');
+      console.error('Error saving product:', error);
+      message.error('Failed to save product');
     }
   };
 

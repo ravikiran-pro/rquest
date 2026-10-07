@@ -89,10 +89,19 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           </div>
           {sessionStorage?.[storageKeys.auth_token] ? (
             <>
+              {user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' && (
+                <div className="navbar-menu">
+                  <Link to={Routes.admin}>
+                    <Button type="link" size={'large'} className="link">
+                      Admin Panel
+                    </Button>
+                  </Link>
+                </div>
+              )}
               <div className="navbar-menu">
                 <Link to={Routes.client}>
                   <Button type="link" size={'large'} className="link">
-                  Register Shop 
+                    My Shops
                   </Button>
                 </Link>
               </div>
@@ -116,13 +125,13 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                   </Button>
                 </Link>
               </div>
-              {/* <div className='navbar-menu'>
+              <div className="navbar-menu">
                 <Link to={Routes.register}>
-                  <Button type="link" size={'large'} className='link'>
+                  <Button type="link" size={'large'} className="link">
                     Register
                   </Button>
                 </Link>
-              </div> */}
+              </div>
             </>
           )}
         </div>

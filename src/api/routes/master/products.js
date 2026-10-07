@@ -35,7 +35,8 @@ const getAllProducts = async (req, res) => {
 
 const updateProductsStatus = async (req, res) => {
   try {
-    const { product_id, is_active } = req.body;
+    const product_id = req.body.product_id || req.body.category_id || req.body.subcategory_id;
+    const { is_active } = req.body;
 
     const productRes = await products.findByPk(product_id);
 
@@ -59,14 +60,14 @@ const editProducts = async (req, res) => {
     const { sub_category_id, product_id, name, img_url, description } = req.body;
     let { category_id } = req.body;
 
-    if (sub_category_id !== null && sub_category_id >= 0 && !category_id) {
+    if (sub_category_id !== null && sub_category_id !== undefined && sub_category_id >= 0 && !category_id) {
       const subCategory = await sub_categories.findByPk(sub_category_id);
       if (subCategory) {
         category_id = subCategory.category_id;
       }
     }
 
-    if (product_id !== null && product_id >= 0) {
+    if (product_id !== null && product_id !== undefined && product_id >= 0) {
       const productRes = await products.findByPk(product_id);
 
       if (!productRes) {
@@ -74,21 +75,20 @@ const editProducts = async (req, res) => {
       }
 
       productRes.name = name;
-      productRes.img_url = img_url;
-      productRes.description = description;
+      productRes.img_url = img_url || '';
+      productRes.description = description || '';
       await productRes.save();
 
       res.status(200).json({ success: true, message: 'Product edited successfully', data: productRes });
     } else {
-      let count = await products.count();
-      if (sub_category_id !== null && sub_category_id >= 0) {
+      if (sub_category_id !== null && sub_category_id !== undefined && sub_category_id >= 0) {
         const newProduct = await products.create({
           name: name,
-          img_url: img_url,
-          description: description,
-          id: count,
+          img_url: img_url || '',
+          description: description || '',
           category_id: category_id,
-          sub_category_id: sub_category_id
+          sub_category_id: sub_category_id,
+          is_active: true,
         });
 
         return res.status(201).json({ success: true, message: 'Product created successfully', data: newProduct });

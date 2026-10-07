@@ -1,7 +1,7 @@
 module.exports = {
   development: {
     username: 'postgres',
-    password: '12345678',
+    password: 'postgres',
     database: 'rquest',
     host: 'localhost',
     dialect: 'postgres',

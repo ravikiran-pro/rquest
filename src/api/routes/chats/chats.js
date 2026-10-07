@@ -3,16 +3,21 @@ const { col, fn, Op, literal } = require('sequelize');
 
 const create = async (req, res) => {
   try {
-    let result = await createChat(req.body, req.headers.user_id);
+    let result = await createChat(
+      req.body,
+      req.headers.user_id,
+      req.headers.socketData
+    );
 
     res.status(201).json({
       success: true,
-      data: result[0],
+      data: result,
     });
   } catch (error) {
+    console.error('Chat creation error:', error);
     res.status(500).json({
       success: false,
-      error: error,
+      error: error.message || error,
       message: 'Data Insertion Failed',
     });
   }
@@ -20,6 +25,7 @@ const create = async (req, res) => {
 
 const createChat = async (chatDetails, user_id, socketData) => {
   try {
+    const currentUserId = user_id || chatDetails.sender_id;
     const payload = {
       sender_id: chatDetails.sender_id,
       receiver_id: chatDetails.receiver_id,
@@ -28,10 +34,10 @@ const createChat = async (chatDetails, user_id, socketData) => {
       is_read: false,
     };
 
-    const res = await chats.create(payload);
+    const created = await chats.create(payload);
 
     const allChats = await chats.findAll({
-      where: { id: res.id },
+      where: { id: created.id },
       include: [
         { model: users, as: 'sender', attributes: ['id', 'username'] },
         { model: users, as: 'receiver', attributes: ['id', 'username'] },
@@ -39,33 +45,59 @@ const createChat = async (chatDetails, user_id, socketData) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    const { formattedChats } = await formatChat(allChats, user_id, socketData);
+    const { formattedChats } = await formatChat(
+      allChats,
+      currentUserId,
+      socketData
+    );
 
-    return formattedChats[payload.receiver_id];
+    const targetKey =
+      payload.receiver_id === currentUserId
+        ? payload.sender_id
+        : payload.receiver_id;
+    const list = formattedChats[targetKey] || Object.values(formattedChats)[0] || [];
+    return list[0] || created.toJSON();
   } catch (err) {
-    throw new Error('Message Failed');
+    console.error('Error in createChat:', err);
+    throw new Error('Message Failed: ' + err.message);
   }
 };
 
 const getAll = async (req, res) => {
   try {
-    const { sender_id } = req.body;
-    const { user_id } = req.headers;
-    const payload = {
-      receiver_id: chatDetails.receiver_id,
-    };
+    const { receiver_id, sender_id } = req.body;
+    const user_id = req.headers.user_id || sender_id;
+    const target_id = receiver_id || sender_id;
 
-    const res = await chats.findAll(payload);
+    let filter = {};
+    if (target_id && user_id) {
+      filter = {
+        [Op.or]: [
+          { sender_id: user_id, receiver_id: target_id },
+          { sender_id: target_id, receiver_id: user_id },
+        ],
+      };
+    } else if (user_id) {
+      filter = {
+        [Op.or]: [{ sender_id: user_id }, { receiver_id: user_id }],
+      };
+    }
 
-    res.status(201).json({
+    const resData = await chats.findAll({
+      where: filter,
+      order: [['createdAt', 'ASC']],
+    });
+
+    res.status(200).json({
       success: true,
-      data: res,
+      data: resData,
     });
   } catch (error) {
+    console.error('Chat getAll error:', error);
     res.status(500).json({
       success: false,
-      error: error,
-      message: 'Data Insertion Failed',
+      error: error.message || error,
+      message: 'Failed to retrieve chats',
     });
   }
 };

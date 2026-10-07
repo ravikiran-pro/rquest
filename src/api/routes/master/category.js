@@ -48,11 +48,11 @@ const editCategory = async (req, res) => {
   try {
     const { category_id, name, img_url, count } = req.body;
 
-    if (category_id === undefined ) {
+    if (category_id === undefined || category_id === null || category_id === '') {
       const newCategory = await categories.create({
         name: name,
-        img_url: img_url,
-        id: count
+        img_url: img_url || '',
+        is_active: true,
       });
 
       return res.status(201).json({ success: true, message: 'Category created successfully', data: newCategory });

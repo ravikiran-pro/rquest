@@ -1,35 +1,46 @@
-import React from 'react';
-import { Form, Input, Button, Typography } from 'antd';
+import React, { useState } from 'react';
+import { Form, Input, Button, Typography, message, Card } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { useForm } from 'react-hook-form';
 import { netWorkCall, storageKeys } from '../../app/utils/helper';
 import { useHistory } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
 import { Link } from 'react-router-dom';
 import Routes from '../../app/routes/routes';
-import { apiConfig } from '../../app/utils';
+import { apiConfig, SOCKET } from '../../app/utils';
 
 const LoginScreen = () => {
   const history = useHistory();
   const update_user_data = useGlobalStore((state) => state.update_user_data);
+  const [loading, setLoading] = useState(false);
 
-  const { handleSubmit } = useForm();
-
-  const onSubmit = async (e, data) => {
-    if (data.mobile && data.password) {
-      let body = JSON.stringify({
-        mobile: data.mobile,
-        password: data.password,
-      });
-      const res = await netWorkCall(apiConfig.login, 'POST', body);
-      if (res.success === true) {
-        sessionStorage.setItem(storageKeys.auth_token, res.token);
-        update_user_data(res.user_data);
-        history.push('/home');
-      } else {
-        alert(res.message);
+  const onFinish = async (values) => {
+    if (values.mobile && values.password) {
+      setLoading(true);
+      try {
+        let body = JSON.stringify({
+          mobile: values.mobile,
+          password: values.password,
+        });
+        const res = await netWorkCall(apiConfig.login, 'POST', body);
+        if (res.success === true) {
+          sessionStorage.setItem(storageKeys.auth_token, res.token);
+          update_user_data(res.user_data);
+          SOCKET.emit('connect_user', res.user_data);
+          message.success('Logged in successfully!');
+          if (res.user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9') {
+            history.push(Routes.admin);
+          } else {
+            history.push(Routes.home);
+          }
+        } else {
+          message.error(res.message || 'Login failed. Please check credentials.');
+        }
+      } catch (err) {
+        console.error('Login error:', err);
+        message.error('An error occurred during login. Please try again.');
+      } finally {
+        setLoading(false);
       }
-      console.log(res);
     }
   };
 
@@ -39,29 +50,62 @@ const LoginScreen = () => {
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'center',
-        height: '100vh',
+        minHeight: 'calc(100vh - 60px)',
+        background: '#f0f2f5',
+        padding: '20px',
       }}
     >
-      <Form onFinish={handleSubmit(onSubmit)} style={{ width: 300 }}>
-        <Form.Item
-          name="mobile"
-          rules={[{ required: true, message: 'Please enter your mobile' }]}
+      <Card
+        style={{
+          width: 360,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+          borderRadius: 8,
+        }}
+      >
+        <Typography.Title
+          level={3}
+          style={{ textAlign: 'center', marginBottom: 24 }}
         >
-          <Input prefix={<UserOutlined />} placeholder="Mobile" />
-        </Form.Item>
-        <Form.Item
-          name="password"
-          rules={[{ required: true, message: 'Please enter your password' }]}
-        >
-          <Input.Password prefix={<LockOutlined />} placeholder="Password" />
-        </Form.Item>
-        <Button type="primary" htmlType="submit" style={{ width: '100%' }}>
-          Log in
-        </Button>
-        <Form.Item style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <Link to={Routes.register}>Register Here</Link>
-        </Form.Item>
-      </Form>
+          Login
+        </Typography.Title>
+        <Form onFinish={onFinish} layout="vertical">
+          <Form.Item
+            name="mobile"
+            label="Mobile Number"
+            rules={[{ required: true, message: 'Please enter your mobile number' }]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="Mobile number" size="large" />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Password"
+            rules={[{ required: true, message: 'Please enter your password' }]}
+          >
+            <Input.Password
+              prefix={<LockOutlined />}
+              placeholder="Password"
+              size="large"
+            />
+          </Form.Item>
+          <Form.Item style={{ marginTop: 24 }}>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              size="large"
+              style={{ width: '100%' }}
+            >
+              Log in
+            </Button>
+          </Form.Item>
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+            <span>Don't have an account? </span>
+            <Link to={Routes.register} style={{ marginLeft: 6 }}>
+              Register Here
+            </Link>
+          </div>
+        </Form>
+      </Card>
     </div>
   );
 };

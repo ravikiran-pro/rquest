@@ -3,6 +3,9 @@ const { Op, literal } = require('sequelize');
 
 const getShopsFilter = async (req, res) => {
   const { lat, lon, search } = req.body;
+  const searchLat = parseFloat(lat) || 12.9631025;
+  const searchLon = parseFloat(lon) || 80.25476;
+  const queryText = typeof search === 'string' ? search.trim() : '';
 
   try {
     const results = await shops.findAll({
@@ -46,39 +49,39 @@ const getShopsFilter = async (req, res) => {
         [Op.or]: [
           {
             shop_name: {
-              [Op.iLike]: `%${search}%`,
+              [Op.iLike]: `%${queryText}%`,
             },
           },
           {
             address: {
-              [Op.iLike]: `%${search}%`,
+              [Op.iLike]: `%${queryText}%`,
             },
           },
           {
             area: {
-              [Op.iLike]: `%${search}%`,
+              [Op.iLike]: `%${queryText}%`,
             },
           },
           {
             shop_type: {
-              [Op.iLike]: `%${search}%`,
+              [Op.iLike]: `%${queryText}%`,
             },
           },
         ],
       },
       order: [[literal('distance'), 'ASC']],
       replacements: {
-        search_lat: lat,
-        search_lon: lon,
+        search_lat: searchLat,
+        search_lon: searchLon,
       },
     });
 
-    res.send(200, {
+    res.status(200).json({
       data: results,
       success: true,
     });
   } catch (error) {
-    console.error(error);
+    console.error('Error in getShopsFilter:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -125,7 +128,7 @@ const getMyShops = async (req, res) => {
       order: [['updatedAt', 'DESC']],
     });
 
-    res.send(200, {
+    res.status(200).json({
       data: results,
       success: true,
     });

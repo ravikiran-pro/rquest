@@ -13,27 +13,21 @@ const HomeScreen = () => {
   const [searchText, setSearchText] = useState('');
   const [searchError, setSearchError] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [markerLocation, setMarkerLocation] = useState(); // Default location
+  const [markerLocation, setMarkerLocation] = useState([12.9631025, 80.25476]); // Default location
   const [searchMarkers, setSearchMarkers] = useState([]);
-  const [position, setPosition] = useState(12.9631025, 80.25476);
+  const [position, setPosition] = useState([12.9631025, 80.25476]);
   const { user_data } = useGlobalStore((state) => state);
 
-  const handleSearch = async (value) => {
-    if (value !== searchText) {
-      setSearchText(value);
-    }
+  const handleSearch = (value) => {
+    setSearchText(value);
   };
 
-  const updateMarker = async (marker) => {
+  const updateMarker = (marker) => {
     setMarkerLocation(marker);
   };
 
   const handleOpenModal = () => {
-    if (!markerLocation?.length) {
-      alert('please enable location to continue');
-    } else {
-      setIsModalVisible(true);
-    }
+    setIsModalVisible(true);
   };
 
   const handleCloseModal = () => {
@@ -42,16 +36,19 @@ const HomeScreen = () => {
 
   const fetchUserLocation = async () => {
     try {
-      // Get user's geolocation using the browser's Geolocation API
-      const position = await new Promise((resolve, reject) => {
-        navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: true,
+      if (navigator.geolocation) {
+        const pos = await new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 5000,
+          });
         });
-      });
-
-      setMarkerLocation([position.coords.latitude, position.coords.longitude]);
+        const coords = [pos.coords.latitude, pos.coords.longitude];
+        setMarkerLocation(coords);
+        setPosition(coords);
+      }
     } catch (error) {
-      console.error('Error getting user location:', error);
+      console.log('Using default location (geolocation unavailable or denied)');
     }
   };
 
@@ -59,31 +56,41 @@ const HomeScreen = () => {
     fetchUserLocation();
   }, []);
 
-  useEffect(async () => {
-    let response = null;
-    try {
-      if (searchText) {
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchShops = async () => {
+      const coords =
+        markerLocation && markerLocation.length === 2
+          ? markerLocation
+          : [12.9631025, 80.25476];
+
+      try {
         let body = JSON.stringify({
-          lat: markerLocation[0],
-          lon: markerLocation[1],
-          search: searchText,
+          lat: coords[0],
+          lon: coords[1],
+          search: searchText || '',
         });
 
-        response = await netWorkCall(
+        const response = await netWorkCall(
           apiConfig.shops_search,
           'POST',
           body,
-          true
+          false
         );
 
-        if (response.data) {
+        if (!isCancelled && response?.data) {
           setSearchMarkers(response.data);
+          setSearchError(response.data.length === 0 ? 'No Match Found' : '');
         }
-      } else setSearchMarkers([]);
-    } catch (error) {
-      console.log(error);
-    }
-    setSearchError(response?.data?.length == 0 ? 'No Match Found' : '');
+      } catch (error) {
+        if (!isCancelled) console.error('Error fetching shops:', error);
+      }
+    };
+
+    fetchShops();
+    return () => {
+      isCancelled = true;
+    };
   }, [markerLocation, searchText]);
 
   return (
@@ -96,21 +103,21 @@ const HomeScreen = () => {
       }}
     >
       <div style={{ display: 'flex', alignItems: 'center', padding: 20 }}>
-        <Row style={{flex: 1}}>
+        <Row style={{ flex: 1 }}>
           <Col span={24}>
             <Row style={{ display: 'flex', justifyContent: 'center' }}>
               <div style={{ width: '360px' }}>
                 <Input
-                  placeholder="Search for products..."
+                  placeholder="Search for products or shops..."
                   allowClear
-                  onChange={(e) => debounce(handleSearch(e.target.value))}
+                  onChange={(e) => handleSearch(e.target.value)}
                   value={searchText}
-                  onPressEnter={() => debounce(handleSearch(searchText))}
+                  onPressEnter={() => handleSearch(searchText)}
                   suffix={
                     <Button
                       type="primary"
                       size="small"
-                      onClick={() => debounce(handleSearch(searchText))}
+                      onClick={() => handleSearch(searchText)}
                     >
                       <SearchOutlined />
                     </Button>

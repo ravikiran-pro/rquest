@@ -156,12 +156,15 @@ function ChatApp() {
     setSelectedChat(receiver_id);
   }, [receiver_id]);
 
-  useEffect(async () => {
-    if (selectedShop >= 0 && allShops && allShops?.length) {
-      await fetchInitMessageData(allShops[selectedShop].shop_id);
-      setIsChatLoading(false);
-    }
-  }, [selectedShop]);
+  useEffect(() => {
+    const loadMessages = async () => {
+      if (selectedShop >= 0 && allShops && allShops?.length) {
+        await fetchInitMessageData(allShops[selectedShop].shop_id);
+        setIsChatLoading(false);
+      }
+    };
+    loadMessages();
+  }, [selectedShop, allShops]);
 
   /// if chat not selected or selected chat as currect user id --- SET isChatSelected false
   const isChatSelected =
