@@ -1,154 +1,330 @@
 import React from 'react';
 import Routes from '../../routes/routes';
-import { Link } from 'react-router-dom';
-import { storageKeys } from '../../utils';
-import { Avatar, Button, Tag } from 'antd';
-import { useGlobalStore } from '../../services';
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
+import { storageKeys, checkUserRole } from '../../utils';
 import {
-  MenuFoldOutlined,
+  Avatar,
+  Button,
+  Badge,
+  Tooltip,
+  Dropdown,
+  Flex,
+  Grid,
+} from 'antd';
+import { useGlobalStore, useCartStore, useChatStore } from '../../services';
+import './index.css';
+import {
   MenuOutlined,
-  MenuUnfoldOutlined,
   UserOutlined,
+  ShoppingCartOutlined,
+  ShopOutlined,
+  AppstoreOutlined,
+  LogoutOutlined,
+  HomeOutlined,
+  OrderedListOutlined,
+  DownOutlined,
+  MessageOutlined,
 } from '@ant-design/icons';
 
 const Navbar = ({ open, handleOpen, handleClose }) => {
   const history = useHistory();
+  const location = useLocation();
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
+  const { cart, openCart } = useCartStore((state) => state);
+  const { handleChatOpen } = useChatStore((state) => state);
+
+  const cartItemCount =
+    cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
+
+  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
+  const isLoggedIn = !!(
+    user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
+  );
 
   const logout = () => {
     update_user_data({});
     sessionStorage.clear();
-    history.push('/login');
+    history.push(Routes.login);
   };
 
-  return (
-    <div
-      className="navBar"
-      style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        height: 60,
-        backgroundColor: 'var(--primary)',
-        color: 'var(--white)',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center' }}>
-        <Avatar
-          style={{ background: '#fff', marginRight: 2, marginLeft: 4 }}
-          src={
-            <img
-              src={
-                'https://firebasestorage.googleapis.com/v0/b/rquest-61953.appspot.com/o/logo.png?alt=media&token=864d6813-db84-49ec-815d-36548c30c2f9'
-              }
-              alt="avatar"
-            />
-          }
-        />
-        <div className="logo-text">Rquest.com</div>
-        <Tag className="version-chip">v1.0.8</Tag>
-      </div>
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
-          alignItems: 'center',
-        }}
-      >
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            alignItems: 'center',
-          }}
-        >
-          {user_data?.user_id && (
-            <div
-              className="navbar-menu"
-              style={{
-                marginRight: 20,
-                textTransform: 'capitalize',
-                cursor: 'pointer',
-              }}
-            >
-              Hi {user_data?.username}
-              <Avatar
-                icon={<UserOutlined />}
-                style={{ background: 'transparent' }}
-              />
-            </div>
-          )}
-          <div className="navbar-menu">
-            <Link to={Routes.home}>
-              <Button type="link" size={'large'} className="link">
-                Home
-              </Button>
-            </Link>
+  const currentPath = location.pathname;
+
+  // Dropdown items for desktop user profile capsule
+  const userMenuItems = [
+    {
+      key: 'user-header',
+      disabled: true,
+      label: (
+        <div style={{ padding: '4px 0' }}>
+          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>
+            {user_data?.username || 'Account'}
           </div>
-          {sessionStorage?.[storageKeys.auth_token] ? (
-            <>
-              {user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' && (
-                <div className="navbar-menu">
-                  <Link to={Routes.admin}>
-                    <Button type="link" size={'large'} className="link">
-                      Admin Panel
-                    </Button>
-                  </Link>
+          <div style={{ marginTop: 4 }}>
+            {isAdmin && <span className="role-pill role-pill-admin">Admin</span>}
+            {isMerchant && <span className="role-pill role-pill-merchant">Merchant</span>}
+            {!isAdmin && !isMerchant && <span className="role-pill role-pill-user">Customer</span>}
+          </div>
+        </div>
+      ),
+    },
+    { type: 'divider' },
+    {
+      key: 'explore',
+      icon: <HomeOutlined />,
+      label: 'Explore Market',
+      onClick: () => history.push(Routes.home),
+    },
+    {
+      key: 'orders',
+      icon: <OrderedListOutlined />,
+      label: 'My Orders & Quotes',
+      onClick: () => history.push(Routes.orders),
+    },
+    {
+      key: 'chat',
+      icon: <MessageOutlined />,
+      label: 'Direct Messages',
+      onClick: () => handleChatOpen(null, null),
+    },
+    ...(isMerchant || isAdmin
+      ? [
+          {
+            key: 'merchant',
+            icon: <ShopOutlined style={{ color: '#4f46e5' }} />,
+            label: (
+              <span style={{ color: '#4f46e5', fontWeight: 600 }}>
+                Merchant Hub (Manage Shops)
+              </span>
+            ),
+            onClick: () => history.push(Routes.client),
+          },
+        ]
+      : [
+          {
+            key: 'partner',
+            icon: <ShopOutlined style={{ color: '#059669' }} />,
+            label: (
+              <span style={{ color: '#059669', fontWeight: 600 }}>
+                Sell on Rquest (Register Shop)
+              </span>
+            ),
+            onClick: () => history.push(Routes.client),
+          },
+        ]),
+    ...(isAdmin
+      ? [
+          {
+            key: 'admin',
+            icon: <AppstoreOutlined style={{ color: '#dc2626' }} />,
+            label: (
+              <span style={{ color: '#dc2626', fontWeight: 600 }}>
+                Admin Control Panel
+              </span>
+            ),
+            onClick: () => history.push(Routes.admin),
+          },
+        ]
+      : []),
+    { type: 'divider' },
+    {
+      key: 'logout',
+      icon: <LogoutOutlined />,
+      danger: true,
+      label: 'Log Out',
+      onClick: logout,
+    },
+  ];
+
+  return (
+    <header className="navBar">
+      {/* Brand Logo */}
+      <Link to={Routes.home} className="navbar-brand">
+        <div className="navbar-logo-icon">R</div>
+        <div className="navbar-brand-text">
+          <span className="navbar-brand-name">Rquest</span>
+          <span className="navbar-badge">Direct</span>
+        </div>
+      </Link>
+
+      {/* Desktop Navigation Links (≥ 992px) */}
+      <nav className="navbar-desktop-nav">
+        <Link to={Routes.home}>
+          <Button
+            type="text"
+            icon={<HomeOutlined />}
+            className={`nav-item-btn ${currentPath === Routes.home ? 'active' : ''}`}
+          >
+            Explore
+          </Button>
+        </Link>
+
+        {isLoggedIn && (
+          <Link to={Routes.orders}>
+            <Button
+              type="text"
+              icon={<OrderedListOutlined />}
+              className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
+            >
+              My Orders
+            </Button>
+          </Link>
+        )}
+
+        {isLoggedIn && (isMerchant || isAdmin) && (
+          <Link to={Routes.client}>
+            <Button
+              type="text"
+              icon={<ShopOutlined />}
+              className={`nav-item-btn ${currentPath.startsWith('/client') ? 'active' : ''}`}
+              style={{ color: '#4f46e5' }}
+            >
+              Merchant Hub
+            </Button>
+          </Link>
+        )}
+
+        {isLoggedIn && isAdmin && (
+          <Link to={Routes.admin}>
+            <Button
+              type="text"
+              icon={<AppstoreOutlined />}
+              className={`nav-item-btn ${currentPath.startsWith('/admin') ? 'active' : ''}`}
+              style={{ color: '#dc2626' }}
+            >
+              Admin Panel
+            </Button>
+          </Link>
+        )}
+
+        {!isLoggedIn && (
+          <Link to={Routes.client}>
+            <Button
+              type="text"
+              icon={<ShopOutlined />}
+              className="nav-item-btn"
+              style={{ color: '#059669' }}
+            >
+              Sell with Us
+            </Button>
+          </Link>
+        )}
+      </nav>
+
+      {/* Right Actions Container: Cart, Profile/Auth, Hamburger */}
+      <Flex align="center" gap={screens.xs ? 6 : 10}>
+        {/* Cart Button: ALWAYS visible on ALL viewports (Mobile, Tab, Desktop) */}
+        <Tooltip
+          title={
+            cartItemCount > 0
+              ? `${cartItemCount} item${cartItemCount > 1 ? 's' : ''} in cart (${cart.shop_name || 'Cart'})`
+              : 'Your cart is empty'
+          }
+        >
+          <Badge
+            count={cartItemCount}
+            offset={[-2, 4]}
+            color="#4f46e5"
+            size={screens.xs ? 'small' : 'default'}
+          >
+            <Button
+              shape="circle"
+              size={screens.xs ? 'middle' : 'large'}
+              icon={<ShoppingCartOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
+              onClick={openCart}
+              style={{
+                border: '1px solid #e2e8f0',
+                color: cartItemCount > 0 ? '#4f46e5' : '#64748b',
+                background: cartItemCount > 0 ? '#eef2ff' : '#ffffff',
+                boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(79, 70, 229, 0.2)' : 'none',
+              }}
+              aria-label="View Shopping Cart"
+            />
+          </Badge>
+        </Tooltip>
+
+        {/* Desktop / Tab User Profile & Auth (Screen md and up) */}
+        {!isMobile && (
+          <>
+            {isLoggedIn ? (
+              <Dropdown
+                menu={{ items: userMenuItems }}
+                placement="bottomRight"
+                arrow
+                trigger={['click']}
+              >
+                <div className="navbar-user-capsule">
+                  <Avatar
+                    size={30}
+                    icon={<UserOutlined />}
+                    style={{
+                      backgroundColor: isAdmin ? '#ef4444' : isMerchant ? '#7c3aed' : '#4f46e5',
+                    }}
+                  />
+                  <span className="navbar-username">
+                    {user_data?.username || 'User'}
+                  </span>
+                  {isAdmin && <span className="role-pill role-pill-admin">Admin</span>}
+                  {isMerchant && <span className="role-pill role-pill-merchant">Merchant</span>}
+                  {!isAdmin && !isMerchant && (
+                    <span className="role-pill role-pill-user">Customer</span>
+                  )}
+                  <DownOutlined style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }} />
                 </div>
-              )}
-              <div className="navbar-menu">
-                <Link to={Routes.client}>
-                  <Button type="link" size={'large'} className="link">
-                    My Shops
-                  </Button>
-                </Link>
-              </div>
-              <div className="navbar-menu">
-                <Button
-                  type="link"
-                  size={'large'}
-                  className="link"
-                  onClick={() => logout()}
-                >
-                  Logout
-                </Button>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="navbar-menu">
+              </Dropdown>
+            ) : (
+              <Flex align="center" gap={8} style={{ marginLeft: 4 }}>
                 <Link to={Routes.login}>
-                  <Button type="link" size={'large'} className="link">
+                  <Button type="default" style={{ borderRadius: 8, fontWeight: 600 }}>
                     Login
                   </Button>
                 </Link>
-              </div>
-              <div className="navbar-menu">
                 <Link to={Routes.register}>
-                  <Button type="link" size={'large'} className="link">
+                  <Button
+                    type="primary"
+                    style={{
+                      borderRadius: 8,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    }}
+                  >
                     Register
                   </Button>
                 </Link>
-              </div>
-            </>
-          )}
-        </div>
-        <div className="sidebar-toggler">
-          <Button
-            type="link"
-            size={'large'}
-            className="link"
-            onClick={() => {
-              open ? handleClose() : handleOpen();
+              </Flex>
+            )}
+          </>
+        )}
+
+        {/* Mobile View Quick User Indicator */}
+        {isMobile && isLoggedIn && (
+          <Avatar
+            size={32}
+            icon={<UserOutlined />}
+            onClick={() => (open ? handleClose() : handleOpen())}
+            style={{
+              cursor: 'pointer',
+              backgroundColor: isAdmin ? '#ef4444' : isMerchant ? '#7c3aed' : '#4f46e5',
             }}
-          >
-            <MenuOutlined className="menu" />
-          </Button>
-        </div>
-      </div>
-    </div>
+          />
+        )}
+
+        {/* Mobile View Hamburger Menu Trigger (< 768px) */}
+        {isMobile && (
+          <Button
+            type="text"
+            shape="circle"
+            size="large"
+            icon={<MenuOutlined style={{ fontSize: 20, color: '#0f172a' }} />}
+            onClick={() => (open ? handleClose() : handleOpen())}
+            style={{ borderRadius: 8 }}
+            aria-label="Toggle Menu"
+          />
+        )}
+      </Flex>
+    </header>
   );
 };
 

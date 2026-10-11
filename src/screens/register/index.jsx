@@ -57,9 +57,11 @@ const RegisterScreen = () => {
     >
       <Card
         style={{
-          width: 380,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          borderRadius: 8,
+          width: '100%',
+          maxWidth: 420,
+          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)',
+          borderRadius: 16,
+          border: '1px solid #e2e8f0',
         }}
       >
         <Typography.Title

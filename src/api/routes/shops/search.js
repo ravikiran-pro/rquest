@@ -138,4 +138,36 @@ const getMyShops = async (req, res) => {
   }
 };
 
-module.exports = { getShopsFilter, getMyShops };
+const getShopDetails = async (req, res) => {
+  try {
+    const { shop_id } = req.params;
+    const shop = await shops.findByPk(shop_id, {
+      include: [
+        {
+          model: categories,
+          as: 'shopCategory',
+          attributes: ['id', 'name'],
+        },
+        {
+          model: sub_categories,
+          as: 'shopSubCategory',
+          attributes: ['id', 'name'],
+        },
+      ],
+    });
+
+    if (!shop) {
+      return res.status(404).json({ error: 'Shop not found', success: false });
+    }
+
+    res.status(200).json({
+      data: shop,
+      success: true,
+    });
+  } catch (error) {
+    console.error('Error fetching shop details:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+module.exports = { getShopsFilter, getMyShops, getShopDetails };

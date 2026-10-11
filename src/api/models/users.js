@@ -34,6 +34,12 @@ module.exports = (sequelize) => {
       foreignKey: 'receiver_id',
       as: 'receivedChats',
     });
+    if (models.orders) {
+      User.hasMany(models.orders, { foreignKey: 'customer_id', as: 'orders' });
+    }
+    if (models.quotes) {
+      User.hasMany(models.quotes, { foreignKey: 'customer_id', as: 'quotes' });
+    }
   };
 
   return User;

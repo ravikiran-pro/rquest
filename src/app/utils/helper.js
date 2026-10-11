@@ -50,10 +50,60 @@ const getColorByName = (username) => {
   return `#${color}`;
 };
 
+const USER_ROLES = {
+  USER: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
+  MERCHANT: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5',
+  ADMIN: 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9',
+};
+
+const checkUserRole = (userData) => {
+  if (!userData || !userData.user_id) {
+    return { isAdmin: false, isMerchant: false, isUser: false, role: 'guest' };
+  }
+  const roleId = userData.role_id;
+  const roleName = (userData.role || userData.role_name || '').toLowerCase();
+  const isAdmin = roleId === USER_ROLES.ADMIN || roleName === 'admin' || roleName === 'root';
+  const isMerchant = roleId === USER_ROLES.MERCHANT || roleName === 'client' || roleName === 'merchant';
+  const isUser = !isAdmin && !isMerchant;
+  return {
+    isAdmin,
+    isMerchant,
+    isUser,
+    role: isAdmin ? 'admin' : isMerchant ? 'merchant' : 'user',
+  };
+};
+
+const getLocationName = async (lat, lng) => {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+    );
+
+    const data = await response.json();
+    const address = data.address;
+
+    return (
+      address.suburb ||
+      address.neighbourhood ||
+      address.city_district ||
+      address.town ||
+      address.city ||
+      address.village ||
+      data.display_name
+    );
+  } catch (error) {
+    console.error('Failed to get location name:', error);
+    return `${lat.toFixed(3)}, ${lng.toFixed(3)}`;
+  }
+};
+
 export {
   debounce,
   storageKeys,
   netWorkCall,
   distanceConvertor,
   getColorByName,
+  USER_ROLES,
+  checkUserRole,
+  getLocationName
 };

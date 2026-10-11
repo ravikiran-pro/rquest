@@ -57,9 +57,11 @@ const LoginScreen = () => {
     >
       <Card
         style={{
-          width: 360,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-          borderRadius: 8,
+          width: '100%',
+          maxWidth: 400,
+          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)',
+          borderRadius: 16,
+          border: '1px solid #e2e8f0',
         }}
       >
         <Typography.Title
@@ -71,10 +73,10 @@ const LoginScreen = () => {
         <Form onFinish={onFinish} layout="vertical">
           <Form.Item
             name="mobile"
-            label="Mobile Number"
-            rules={[{ required: true, message: 'Please enter your mobile number' }]}
+            label="Mobile Number or Username"
+            rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
           >
-            <Input prefix={<UserOutlined />} placeholder="Mobile number" size="large" />
+            <Input prefix={<UserOutlined />} placeholder="Mobile number or username" size="large" />
           </Form.Item>
           <Form.Item
             name="password"

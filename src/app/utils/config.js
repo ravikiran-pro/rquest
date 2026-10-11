@@ -43,7 +43,25 @@ export const apiConfig = {
   master_products_create: 'master/products/create',
   master_products_delete: 'master/products',
 
-  upload: 'master/upload'
+  upload: 'master/upload',
+
+  shop_details: 'shops',
+  listings_by_shop: 'listings/shop',
+  listings_search: 'listings/search',
+  listings_create: 'listings',
+  listings_update: 'listings',
+  listings_delete: 'listings',
+  listings_import_master: 'listings/import-master',
+
+  orders_create: 'orders',
+  orders_user: 'orders/user',
+  orders_shop: 'orders/shop',
+  orders_status: 'orders',
+
+  quotes_create: 'quotes',
+  quotes_user: 'quotes/user',
+  quotes_shop: 'quotes/shop',
+  quotes_status: 'quotes',
 };
 
 export const SOCKET = io(config.api_url);

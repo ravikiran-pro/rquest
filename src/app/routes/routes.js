@@ -6,6 +6,8 @@ const Routes = {
   chat: '/chat',
   register: '/register',
   admin: '/admin',
+  storefront: '/shop/:shop_id',
+  orders: '/orders',
 };
 
 export default Routes;

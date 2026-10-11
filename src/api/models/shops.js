@@ -75,6 +75,15 @@ module.exports = (sequelize) => {
       foreignKey: 'sub_category_id',
       as: 'shopSubCategory',
     });
+    if (models.shop_listings) {
+      Shop.hasMany(models.shop_listings, { foreignKey: 'shop_id', as: 'listings' });
+    }
+    if (models.orders) {
+      Shop.hasMany(models.orders, { foreignKey: 'shop_id', as: 'orders' });
+    }
+    if (models.quotes) {
+      Shop.hasMany(models.quotes, { foreignKey: 'shop_id', as: 'quotes' });
+    }
   };
 
   return Shop;

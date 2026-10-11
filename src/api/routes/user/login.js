@@ -6,15 +6,22 @@ const login = async (req, res) => {
     const userDetails = req.body;
 
     if (userDetails.mobile && userDetails.password) {
-      const user = await users.findOne({
-        where: { mobile: String(userDetails.mobile) },
+      const identifier = String(userDetails.mobile);
+      let user = await users.findOne({
+        where: { mobile: identifier },
       });
+
+      if (!user) {
+        user = await users.findOne({
+          where: { username: identifier },
+        });
+      }
 
       if (!user) {
         return res.status(401).json({
           success: false,
           error: 'User not found',
-          message: 'Invalid mobile or password',
+          message: 'Invalid mobile, username, or password',
         });
       }
 
@@ -36,14 +43,14 @@ const login = async (req, res) => {
         return res.status(401).json({
           success: false,
           error: 'Password Authentication Failed',
-          message: 'Invalid mobile or password',
+          message: 'Invalid mobile, username, or password',
         });
       }
     } else {
       return res.status(400).json({
         success: false,
-        error: 'Mobile and password required',
-        message: 'Mobile and password required',
+        error: 'Mobile/username and password required',
+        message: 'Mobile/username and password required',
       });
     }
   } catch (error) {

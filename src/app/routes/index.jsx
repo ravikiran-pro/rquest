@@ -12,8 +12,10 @@ import {
   ClientRegister,
   RegisterScreen,
   AdminScreen,
+  StorefrontScreen,
+  OrdersScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar, ChatIcon } from '../components';
+import { ChatApp, NavBar, SideBar, ChatIcon, CartDrawer } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
 import { SOCKET, netWorkCall } from '../utils';
 import { Avatar } from 'antd';
@@ -67,7 +69,7 @@ export default function AppRoutes() {
         handleClose={handleClose}
         handleOpen={handleOpen}
       />
-      <div style={{ height: 'calc(100vh - 60px)', overflow: 'auto' }}>
+      <div style={{ minHeight: 'calc(100vh - 64px)', overflowX: 'hidden' }}>
         <Switch>
           <Route exact path="/">
             <Redirect to={routes.home} />
@@ -78,6 +80,10 @@ export default function AppRoutes() {
           <Route path={routes.home}>
             <HomeScreen />
           </Route>
+          <Route path={routes.storefront}>
+            <StorefrontScreen />
+          </Route>
+          <PrivateRoute path={routes.orders} component={OrdersScreen} />
           <PrivateRoute path={routes.client} component={ClientRegister} />
           <PrivateRoute path={routes.clientShop} component={ClientRegister} />
           <Route path={routes.register}>
@@ -87,6 +93,7 @@ export default function AppRoutes() {
           <Redirect to={routes.home} />
         </Switch>
       </div>
+      <CartDrawer />
       {isChat ? (
         <div className="chat-wrapper">
           <div id="myChat" class="overlay">
