@@ -27,11 +27,7 @@ const LoginScreen = () => {
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
           message.success('Logged in successfully!');
-          if (res.user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9') {
-            history.push(Routes.admin);
-          } else {
-            history.push(Routes.home);
-          }
+          history.push(Routes.home);
         } else {
           message.error(res.message || 'Login failed. Please check credentials.');
         }

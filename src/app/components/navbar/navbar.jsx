@@ -39,7 +39,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
+  const { isMerchant, role } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
@@ -63,9 +63,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             {user_data?.username || 'Account'}
           </div>
           <div style={{ marginTop: 4 }}>
-            {isAdmin && <span className="role-pill role-pill-admin">Admin</span>}
-            {isMerchant && <span className="role-pill role-pill-merchant">Merchant</span>}
-            {!isAdmin && !isMerchant && <span className="role-pill role-pill-user">Customer</span>}
+            {isMerchant ? (
+              <span className="role-pill role-pill-merchant">Shop Owner</span>
+            ) : (
+              <span className="role-pill role-pill-user">Customer</span>
+            )}
           </div>
         </div>
       ),
@@ -89,7 +91,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       label: 'Direct Messages',
       onClick: () => handleChatOpen(null, null),
     },
-    ...(isMerchant || isAdmin
+    ...(isMerchant
       ? [
           {
             key: 'merchant',
@@ -114,20 +116,6 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick: () => history.push(Routes.client),
           },
         ]),
-    ...(isAdmin
-      ? [
-          {
-            key: 'admin',
-            icon: <AppstoreOutlined style={{ color: '#dc2626' }} />,
-            label: (
-              <span style={{ color: '#dc2626', fontWeight: 600 }}>
-                Admin Control Panel
-              </span>
-            ),
-            onClick: () => history.push(Routes.admin),
-          },
-        ]
-      : []),
     { type: 'divider' },
     {
       key: 'logout',
@@ -173,7 +161,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           </Link>
         )}
 
-        {isLoggedIn && (isMerchant || isAdmin) && (
+        {isLoggedIn && isMerchant && (
           <Link to={Routes.client}>
             <Button
               type="text"
@@ -182,19 +170,6 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
               style={{ color: '#4f46e5' }}
             >
               Merchant Hub
-            </Button>
-          </Link>
-        )}
-
-        {isLoggedIn && isAdmin && (
-          <Link to={Routes.admin}>
-            <Button
-              type="text"
-              icon={<AppstoreOutlined />}
-              className={`nav-item-btn ${currentPath.startsWith('/admin') ? 'active' : ''}`}
-              style={{ color: '#dc2626' }}
-            >
-              Admin Panel
             </Button>
           </Link>
         )}
@@ -260,15 +235,15 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     size={30}
                     icon={<UserOutlined />}
                     style={{
-                      backgroundColor: isAdmin ? '#ef4444' : isMerchant ? '#7c3aed' : '#4f46e5',
+                      backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
                     }}
                   />
                   <span className="navbar-username">
                     {user_data?.username || 'User'}
                   </span>
-                  {isAdmin && <span className="role-pill role-pill-admin">Admin</span>}
-                  {isMerchant && <span className="role-pill role-pill-merchant">Merchant</span>}
-                  {!isAdmin && !isMerchant && (
+                  {isMerchant ? (
+                    <span className="role-pill role-pill-merchant">Shop Owner</span>
+                  ) : (
                     <span className="role-pill role-pill-user">Customer</span>
                   )}
                   <DownOutlined style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }} />
@@ -306,7 +281,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => (open ? handleClose() : handleOpen())}
             style={{
               cursor: 'pointer',
-              backgroundColor: isAdmin ? '#ef4444' : isMerchant ? '#7c3aed' : '#4f46e5',
+              backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
             }}
           />
         )}

@@ -53,23 +53,25 @@ const getColorByName = (username) => {
 const USER_ROLES = {
   USER: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
   MERCHANT: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5',
-  ADMIN: 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9',
 };
 
 const checkUserRole = (userData) => {
   if (!userData || !userData.user_id) {
-    return { isAdmin: false, isMerchant: false, isUser: false, role: 'guest' };
+    return { isMerchant: false, isUser: false, isAdmin: false, role: 'guest' };
   }
   const roleId = userData.role_id;
   const roleName = (userData.role || userData.role_name || '').toLowerCase();
-  const isAdmin = roleId === USER_ROLES.ADMIN || roleName === 'admin' || roleName === 'root';
-  const isMerchant = roleId === USER_ROLES.MERCHANT || roleName === 'client' || roleName === 'merchant';
-  const isUser = !isAdmin && !isMerchant;
+  const isMerchant =
+    roleId === USER_ROLES.MERCHANT ||
+    roleName === 'client' ||
+    roleName === 'merchant' ||
+    roleName === 'owner';
+  const isUser = !isMerchant;
   return {
-    isAdmin,
     isMerchant,
     isUser,
-    role: isAdmin ? 'admin' : isMerchant ? 'merchant' : 'user',
+    isAdmin: false,
+    role: isMerchant ? 'owner' : 'user',
   };
 };
 

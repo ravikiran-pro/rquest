@@ -27,11 +27,7 @@ const RegisterScreen = () => {
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
           message.success('Registered successfully!');
-          if (res.user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9') {
-            history.push(Routes.admin);
-          } else {
-            history.push(Routes.home);
-          }
+          history.push(Routes.home);
         } else {
           message.error(res.message || 'Registration failed');
         }
@@ -113,9 +109,8 @@ const RegisterScreen = () => {
             <Select
               size="large"
               options={[
-                { value: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d', label: 'Customer (User)' },
-                { value: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5', label: 'Shop Owner (Client)' },
-                { value: 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9', label: 'Platform Admin' },
+                { value: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d', label: 'Customer (Shopper)' },
+                { value: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5', label: 'Shop Owner (Merchant)' },
               ]}
             />
           </Form.Item>

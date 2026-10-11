@@ -47,7 +47,7 @@ const HomeScreen = () => {
   const { addItem, openCart } = useCartStore((state) => state);
 
   const [searchText, setSearchText] = useState('');
-  const [searchMode, setSearchMode] = useState('shops'); // 'shops' or 'items'
+  const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchError, setSearchError] = useState('');
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -571,6 +571,7 @@ const HomeScreen = () => {
                           borderRadius: 8,
                           fontWeight: 700,
                           height: 38,
+                          padding: '10px 0px',
                           background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                         }}
                         onClick={(e) => {

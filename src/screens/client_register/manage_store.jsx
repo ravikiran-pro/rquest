@@ -786,7 +786,7 @@ const ManageStore = ({
 
       {/* Import from Master Products Modal */}
       <Modal
-        title="Import from Admin Master Product Library"
+        title="Import from Standard Product Catalog"
         open={isImportModalOpen}
         onCancel={() => setIsImportModalOpen(false)}
         onOk={handleImportMaster}

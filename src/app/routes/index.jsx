@@ -11,7 +11,6 @@ import {
   HomeScreen,
   ClientRegister,
   RegisterScreen,
-  AdminScreen,
   StorefrontScreen,
   OrdersScreen,
 } from '../../screens';
@@ -89,7 +88,6 @@ export default function AppRoutes() {
           <Route path={routes.register}>
             <RegisterScreen />
           </Route>
-          <PrivateRoute path={routes.admin} component={AdminScreen} />
           <Redirect to={routes.home} />
         </Switch>
       </div>

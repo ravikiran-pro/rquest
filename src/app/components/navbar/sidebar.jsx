@@ -43,7 +43,7 @@ const SideBar = ({ open, handleClose }) => {
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
+  const { isMerchant, role } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
@@ -142,7 +142,7 @@ const SideBar = ({ open, handleClose }) => {
               size={42}
               icon={<UserOutlined />}
               style={{
-                backgroundColor: isAdmin ? '#ef4444' : isMerchant ? '#7c3aed' : '#4f46e5',
+                backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 flexShrink: 0,
               }}
@@ -161,9 +161,11 @@ const SideBar = ({ open, handleClose }) => {
                 {user_data?.username || 'User'}
               </div>
               <div style={{ marginTop: 3 }}>
-                {isAdmin && <span className="role-pill role-pill-admin">Admin</span>}
-                {isMerchant && <span className="role-pill role-pill-merchant">Merchant</span>}
-                {!isAdmin && !isMerchant && <span className="role-pill role-pill-user">Customer</span>}
+                {isMerchant ? (
+                  <span className="role-pill role-pill-merchant">Shop Owner</span>
+                ) : (
+                  <span className="role-pill role-pill-user">Customer</span>
+                )}
               </div>
             </div>
           </Flex>
@@ -270,7 +272,7 @@ const SideBar = ({ open, handleClose }) => {
         )}
 
         {/* Role-Specific Sections */}
-        {isLoggedIn && (isMerchant || isAdmin) && (
+        {isLoggedIn && isMerchant && (
           <Button
             type="text"
             icon={<ShopOutlined style={{ fontSize: 17, color: '#4f46e5' }} />}
@@ -296,34 +298,8 @@ const SideBar = ({ open, handleClose }) => {
           </Button>
         )}
 
-        {isLoggedIn && isAdmin && (
-          <Button
-            type="text"
-            icon={<AppstoreOutlined style={{ fontSize: 17, color: '#dc2626' }} />}
-            className={`drawer-nav-item ${currentPath.startsWith('/admin') ? 'active' : ''}`}
-            style={{ color: '#dc2626' }}
-            onClick={() => handleNavigate(Routes.admin)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
-              Admin Control Panel
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                background: '#fee2e2',
-                color: '#b91c1c',
-                padding: '1px 6px',
-                borderRadius: 9999,
-                fontWeight: 700,
-              }}
-            >
-              Root
-            </span>
-          </Button>
-        )}
-
         {/* Partner with us / Register shop (if Customer or Guest) */}
-        {(!isLoggedIn || (!isMerchant && !isAdmin)) && (
+        {(!isLoggedIn || !isMerchant) && (
           <Button
             type="text"
             icon={<ShopOutlined style={{ fontSize: 17, color: '#059669' }} />}
