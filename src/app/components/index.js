@@ -6,3 +6,4 @@ export * from './assets';
 export * from './datatable';
 export { default as CartDrawer } from './cart';
 export * from './listings';
+export * from './profile';

@@ -14,6 +14,7 @@ import {
   Flex,
   Grid,
   Spin,
+  Modal,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -24,10 +25,12 @@ import {
   RocketOutlined,
   EditOutlined,
   CloseOutlined,
+  AimOutlined,
 } from '@ant-design/icons';
-import { apiConfig, netWorkCall } from '../../app/utils';
+import { apiConfig, netWorkCall, getPreciseUserLocation } from '../../app/utils';
 import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
+import { useLocation } from 'react-router-dom';
 import ManageStore from './manage_store';
 
 const { Title, Text, Paragraph } = Typography;
@@ -120,8 +123,9 @@ const BUSINESS_ARCHETYPES = [
 
 const ClientRegister = () => {
   const screens = Grid.useBreakpoint();
+  const location = useLocation();
 
-  const { user_data } = useGlobalStore((state) => state);
+  const { user_data, update_user_data } = useGlobalStore((state) => state);
 
   const [allShops, setAllShops] = useState([]);
   const [loadingShops, setLoadingShops] = useState(true);
@@ -158,6 +162,14 @@ const ClientRegister = () => {
         setAllShops(response.data);
         if (response.data.length === 0) {
           setIsFormEnable(true); // Open onboarding if merchant has 0 shops
+        } else {
+          // Check if a specific shop was requested via query param ?shop_id=...
+          const params = new URLSearchParams(location.search);
+          const queryShopId = params.get('shop_id');
+          if (queryShopId) {
+            const found = response.data.find((s) => s.id === queryShopId);
+            if (found) setManagedShop(found);
+          }
         }
       }
     } catch (err) {
@@ -232,6 +244,16 @@ const ClientRegister = () => {
       if (shopRes?.success && shopRes?.data) {
         const newShop = shopRes.data;
         message.success(`${newShop.shop_name} registered successfully!`);
+
+        // Promote user role in memory immediately so navbar and permissions update seamlessly
+        if (update_user_data && user_data) {
+          update_user_data({
+            ...user_data,
+            role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5',
+            role: 'client',
+            role_name: 'client',
+          });
+        }
 
         // Seed starter listings if opted in
         if (onboardingData.populate_starters && activeArchetype?.starters) {
@@ -598,12 +620,25 @@ const ClientRegister = () => {
                           Lat: {position[0]?.toFixed(4)}, Lon: {position[1]?.toFixed(4)}
                         </div>
                       </div>
-                      <Button
-                        onClick={() => setIsMapModalVisible(true)}
-                        style={{ borderRadius: 8, fontWeight: 600 }}
-                      >
-                        Adjust Pin on Map
-                      </Button>
+                      <Flex gap={8}>
+                        <Button
+                          icon={<AimOutlined />}
+                          onClick={async () => {
+                            const coords = await getPreciseUserLocation();
+                            setPosition(coords);
+                          }}
+                          style={{ borderRadius: 8, fontWeight: 600 }}
+                        >
+                          Auto-Detect GPS
+                        </Button>
+                        <Button
+                          type="primary"
+                          onClick={() => setIsMapModalVisible(true)}
+                          style={{ borderRadius: 8, fontWeight: 600 }}
+                        >
+                          Adjust Pin on Map
+                        </Button>
+                      </Flex>
                     </Flex>
                   </div>
                 </Form>
@@ -771,27 +806,42 @@ const ClientRegister = () => {
         </div>
       )}
 
-      {/* Leaflet Map Pin Modal */}
-      {isMapModalVisible && (
-        <div className="modal-wrapper">
-          <div id="myModal" className="overlay">
-            <div className="modal">
-              <button onClick={() => setIsMapModalVisible(false)} className="close-button">
-                <CloseOutlined />
-              </button>
-              <LeafletComponent
-                isModalVisible={isMapModalVisible}
-                markerLocation={position}
-                setMarkerLocation={setPosition}
-                updateMarker={(marker) => setPosition(marker)}
-                searchMarkers={null}
-                position={position}
-                setPosition={setPosition}
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Full View Map Pin Modal */}
+      <Modal
+        open={isMapModalVisible}
+        onCancel={() => setIsMapModalVisible(false)}
+        footer={null}
+        width="100vw"
+        wrapClassName="full-view-map-modal"
+        closable={false}
+        style={{
+          top: 0,
+          left: 0,
+          margin: 0,
+          padding: 0,
+          maxWidth: '100vw',
+          height: '100vh',
+        }}
+        styles={{
+          body: {
+            height: '100vh',
+            padding: 0,
+            margin: 0,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <LeafletComponent
+          isModalVisible={isMapModalVisible}
+          markerLocation={position}
+          setMarkerLocation={setPosition}
+          updateMarker={(marker) => setPosition(marker)}
+          searchMarkers={null}
+          position={position}
+          setPosition={setPosition}
+          onClose={() => setIsMapModalVisible(false)}
+        />
+      </Modal>
     </div>
   );
 };

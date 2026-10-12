@@ -13,12 +13,25 @@ import {
   RegisterScreen,
   StorefrontScreen,
   OrdersScreen,
+  ProfileScreen,
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, ChatIcon, CartDrawer } from '../components';
 import { useChatStore, useGlobalStore } from '../../app/services';
-import { SOCKET, netWorkCall } from '../utils';
-import { Avatar } from 'antd';
+import { Avatar, message, notification } from 'antd';
 import PrivateRoute from './privateroute';
+import { SOCKET } from '../utils';
+
+// Configure global message and notification toast behavior
+message.config({
+  maxCount: 3,
+  duration: 3.5,
+});
+
+notification.config({
+  placement: 'bottom',
+  bottom: 32,
+  duration: 3.5,
+});
 
 export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
@@ -83,6 +96,7 @@ export default function AppRoutes() {
             <StorefrontScreen />
           </Route>
           <PrivateRoute path={routes.orders} component={OrdersScreen} />
+          <PrivateRoute path={routes.profile} component={ProfileScreen} />
           <PrivateRoute path={routes.client} component={ClientRegister} />
           <PrivateRoute path={routes.clientShop} component={ClientRegister} />
           <Route path={routes.register}>

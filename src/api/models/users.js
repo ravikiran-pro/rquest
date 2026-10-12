@@ -25,6 +25,9 @@ module.exports = (sequelize) => {
         key: 'id',
       },
     },
+    email: {
+      type: DataTypes.STRING,
+    },
   });
 
   User.associate = (models) => {
@@ -39,6 +42,12 @@ module.exports = (sequelize) => {
     }
     if (models.quotes) {
       User.hasMany(models.quotes, { foreignKey: 'customer_id', as: 'quotes' });
+    }
+    if (models.user_addresses) {
+      User.hasMany(models.user_addresses, {
+        foreignKey: 'user_id',
+        as: 'addresses',
+      });
     }
   };
 

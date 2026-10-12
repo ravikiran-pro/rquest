@@ -34,6 +34,7 @@ import {
   SearchOutlined,
   StarFilled,
   ThunderboltFilled,
+  EditOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useGlobalStore, useChatStore, useCartStore } from '../../app/services';
@@ -275,15 +276,29 @@ const StorefrontScreen = () => {
 
   const hasFoodItems = listings.some((i) => i.listing_type === 'food');
 
+  const isOwnStore = Boolean(user_data?.user_id && shop?.owner_id && user_data.user_id === shop.owner_id);
+
   const handleOpenQuote = (item) => {
     if (!user_data?.user_id) {
       message.info('Please login to request a quote');
       history.push(Routes.login);
       return;
     }
+    if (isOwnStore) {
+      message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
+      return;
+    }
     setQuoteItem(item);
     setQuoteDesc(`I would like an estimate for: ${item.name}`);
     setQuoteModalVisible(true);
+  };
+
+  const handleAddToCart = (item) => {
+    if (isOwnStore) {
+      message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
+      return;
+    }
+    addItem(shop, item);
   };
 
   const submitQuote = async () => {
@@ -362,22 +377,80 @@ const StorefrontScreen = () => {
 
   return (
     <div style={{ maxWidth: 1160, margin: '0 auto', padding: screens.xs ? '12px 10px 100px 10px' : '20px 16px 80px 16px' }}>
-      {/* Back button */}
-      <Button
-        type="text"
-        icon={<ArrowLeftOutlined />}
-        onClick={() => history.push(Routes.home)}
-        style={{
-          marginBottom: 14,
-          fontWeight: 600,
-          color: '#475569',
-          padding: '4px 8px',
-          borderRadius: 8,
-          transition: 'all 0.2s ease',
-        }}
-      >
-        Back to Local Market
-      </Button>
+      {/* Back button & Owner Quick Shortcut */}
+      <Flex justify="space-between" align="center" style={{ marginBottom: 14 }}>
+        <Button
+          type="text"
+          icon={<ArrowLeftOutlined />}
+          onClick={() => history.push(Routes.home)}
+          style={{
+            fontWeight: 600,
+            color: '#475569',
+            padding: '4px 8px',
+            borderRadius: 8,
+            transition: 'all 0.2s ease',
+          }}
+        >
+          Back to Local Market
+        </Button>
+
+        {isOwnStore && (
+          <Button
+            type="primary"
+            icon={<EditOutlined />}
+            style={{
+              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              border: 'none',
+              borderRadius: 8,
+              fontWeight: 600,
+            }}
+            onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
+          >
+            Manage Store
+          </Button>
+        )}
+      </Flex>
+
+      {isOwnStore && (
+        <div
+          style={{
+            marginBottom: 16,
+            padding: '12px 16px',
+            borderRadius: 14,
+            background: '#ecfdf5',
+            border: '1px solid #a7f3d0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 12,
+          }}
+        >
+          <Flex align="center" gap={10}>
+            <span style={{ fontSize: 22 }}>🏪</span>
+            <div>
+              <div style={{ fontWeight: 700, color: '#065f46', fontSize: 13 }}>
+                Storefront Preview Mode
+              </div>
+              <div style={{ color: '#047857', fontSize: 12 }}>
+                This is your live storefront as seen by customers. To edit listings, stock, or prices, open Merchant Hub.
+              </div>
+            </div>
+          </Flex>
+          <Button
+            size="small"
+            style={{
+              borderColor: '#059669',
+              color: '#059669',
+              fontWeight: 600,
+              borderRadius: 6,
+            }}
+            onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
+          >
+            Edit in Merchant Hub
+          </Button>
+        </div>
+      )}
 
       {/* Hero Storefront Card - High Contrast & Modern Clean Header */}
       <Card
@@ -470,34 +543,55 @@ const StorefrontScreen = () => {
               Direct Local Store • 0% Commission
             </div>
 
-            <div
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                padding: '4px 12px',
-                borderRadius: 9999,
-                background: 'rgba(6, 78, 59, 0.6)',
-                border: '1px solid rgba(52, 211, 153, 0.35)',
-                backdropFilter: 'blur(8px)',
-                WebkitBackdropFilter: 'blur(8px)',
-                color: '#34d399',
-                fontSize: 11,
-                fontWeight: 700,
-              }}
-            >
-              <span
+            {isOwnStore ? (
+              <div
                 style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: '50%',
-                  backgroundColor: '#10b981',
-                  boxShadow: '0 0 6px #10b981',
-                  display: 'inline-block',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 12px',
+                  borderRadius: 9999,
+                  background: 'rgba(5, 150, 105, 0.85)',
+                  border: '1px solid rgba(167, 243, 208, 0.4)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  color: '#ffffff',
+                  fontSize: 11,
+                  fontWeight: 700,
                 }}
-              />
-              Open for Orders
-            </div>
+              >
+                <span>👁️ Owner Preview Mode</span>
+              </div>
+            ) : (
+              <div
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  padding: '4px 12px',
+                  borderRadius: 9999,
+                  background: 'rgba(6, 78, 59, 0.6)',
+                  border: '1px solid rgba(52, 211, 153, 0.35)',
+                  backdropFilter: 'blur(8px)',
+                  WebkitBackdropFilter: 'blur(8px)',
+                  color: '#34d399',
+                  fontSize: 11,
+                  fontWeight: 700,
+                }}
+              >
+                <span
+                  style={{
+                    width: 6,
+                    height: 6,
+                    borderRadius: '50%',
+                    backgroundColor: '#10b981',
+                    boxShadow: '0 0 6px #10b981',
+                    display: 'inline-block',
+                  }}
+                />
+                Open for Orders
+              </div>
+            )}
           </div>
         </div>
 
@@ -552,6 +646,14 @@ const StorefrontScreen = () => {
                       style={{ color: '#4f46e5', fontSize: 18 }}
                       title="Verified Local Merchant"
                     />
+                    {isOwnStore && (
+                      <Tag
+                        color="green"
+                        style={{ fontWeight: 700, margin: 0, borderRadius: 6, fontSize: 11 }}
+                      >
+                        My Store
+                      </Tag>
+                    )}
                   </Flex>
                   <Flex gap={6} align="center" wrap="wrap" style={{ marginTop: 4 }}>
                     <Tag
@@ -652,29 +754,48 @@ const StorefrontScreen = () => {
                     Directions
                   </Button>
                 )}
-                <Button
-                  type="primary"
-                  icon={<MessageOutlined />}
-                  onClick={() => {
-                    if (!user_data?.user_id) {
-                      message.info('Please log in to chat with the store owner');
-                      history.push(Routes.login);
-                    } else {
-                      handleChatOpen(shop.owner_id, shop.id);
-                    }
-                  }}
-                  style={{
-                    flex: 2,
-                    height: 42,
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                    boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
-                    border: 'none',
-                  }}
-                >
-                  Chat with Owner
-                </Button>
+                {isOwnStore ? (
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
+                    style={{
+                      flex: 2,
+                      height: 42,
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)',
+                      border: 'none',
+                    }}
+                  >
+                    Manage My Store
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    icon={<MessageOutlined />}
+                    onClick={() => {
+                      if (!user_data?.user_id) {
+                        message.info('Please log in to chat with the store owner');
+                        history.push(Routes.login);
+                      } else {
+                        handleChatOpen(shop.owner_id, shop.id);
+                      }
+                    }}
+                    style={{
+                      flex: 2,
+                      height: 42,
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
+                      border: 'none',
+                    }}
+                  >
+                    Chat with Owner
+                  </Button>
+                )}
               </Flex>
             </div>
           ) : (
@@ -735,6 +856,14 @@ const StorefrontScreen = () => {
                       style={{ color: '#4f46e5', fontSize: 20 }}
                       title="Verified Local Merchant"
                     />
+                    {isOwnStore && (
+                      <Tag
+                        color="green"
+                        style={{ fontWeight: 700, margin: 0, borderRadius: 6, fontSize: 12, padding: '1px 8px' }}
+                      >
+                        My Store
+                      </Tag>
+                    )}
                   </Flex>
 
                   {/* Badges: Category, Area, Rating */}
@@ -854,29 +983,48 @@ const StorefrontScreen = () => {
                   </Button>
                 )}
 
-                <Button
-                  type="primary"
-                  icon={<MessageOutlined />}
-                  onClick={() => {
-                    if (!user_data?.user_id) {
-                      message.info('Please log in to chat with the store owner');
-                      history.push(Routes.login);
-                    } else {
-                      handleChatOpen(shop.owner_id, shop.id);
-                    }
-                  }}
-                  style={{
-                    height: 40,
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    padding: '0 18px',
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                    boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
-                    border: 'none',
-                  }}
-                >
-                  Chat with Owner
-                </Button>
+                {isOwnStore ? (
+                  <Button
+                    type="primary"
+                    icon={<EditOutlined />}
+                    onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
+                    style={{
+                      height: 40,
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      padding: '0 18px',
+                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                      boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)',
+                      border: 'none',
+                    }}
+                  >
+                    Manage My Store
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    icon={<MessageOutlined />}
+                    onClick={() => {
+                      if (!user_data?.user_id) {
+                        message.info('Please log in to chat with the store owner');
+                        history.push(Routes.login);
+                      } else {
+                        handleChatOpen(shop.owner_id, shop.id);
+                      }
+                    }}
+                    style={{
+                      height: 40,
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      padding: '0 18px',
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
+                      border: 'none',
+                    }}
+                  >
+                    Chat with Owner
+                  </Button>
+                )}
               </Flex>
             </Flex>
           )}
@@ -1164,7 +1312,7 @@ const StorefrontScreen = () => {
                             height: 38,
                             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                           }}
-                          onClick={() => addItem(shop, item)}
+                          onClick={() => handleAddToCart(item)}
                         >
                           Book Visit
                         </Button>
@@ -1174,7 +1322,13 @@ const StorefrontScreen = () => {
                         <Button
                           block
                           style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
-                          onClick={() => handleChatOpen(shop.owner_id, shop.id)}
+                          onClick={() => {
+                            if (isOwnStore) {
+                              message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
+                              return;
+                            }
+                            handleChatOpen(shop.owner_id, shop.id);
+                          }}
                         >
                           Inquire
                         </Button>
@@ -1189,6 +1343,10 @@ const StorefrontScreen = () => {
                             background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                           }}
                           onClick={() => {
+                            if (isOwnStore) {
+                              message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
+                              return;
+                            }
                             addItem(shop, item);
                             openCart();
                           }}
@@ -1233,7 +1391,7 @@ const StorefrontScreen = () => {
                           height: 38,
                           background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
                         }}
-                        onClick={() => addItem(shop, item)}
+                        onClick={() => handleAddToCart(item)}
                       >
                         {isFood ? 'Add to Order' : 'Add to Cart'}
                       </Button>

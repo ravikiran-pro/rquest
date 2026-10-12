@@ -196,14 +196,32 @@ function ChatApp() {
         })}
       </div>
       <button
-        style={{ position: 'absolute', right: 15, top: 15, zIndex: 1000 }}
+        style={{
+          position: 'absolute',
+          right: 15,
+          top: 15,
+          zIndex: 1000,
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          border: '1px solid #e2e8f0',
+          background: '#ffffff',
+          color: '#64748b',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          boxShadow: '0 1px 3px rgba(15, 23, 42, 0.08)',
+          transition: 'all 0.2s ease',
+        }}
         onClick={() => {
           if (isChatSelected && selectedChat !== receiver_id)
             setSelectedChat(user_data?.user_id);
           else handleChatClose();
         }}
+        aria-label="Close chat"
       >
-        <CloseOutlined />
+        <CloseOutlined style={{ fontSize: 13 }} />
       </button>
       <div className="chat-container chat-only">
         <div className="chat-box">

@@ -245,6 +245,19 @@ const SideBar = ({ open, handleClose }) => {
           )}
         </Button>
 
+        {/* My Profile & Addresses (for logged-in users) */}
+        {isLoggedIn && (
+          <Button
+            type="text"
+            icon={<UserOutlined style={{ fontSize: 17 }} />}
+            className={`drawer-nav-item ${currentPath === Routes.profile ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.profile)}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>My Profile & Addresses</span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+          </Button>
+        )}
+
         {/* My Orders (for logged-in users) */}
         {isLoggedIn && (
           <Button

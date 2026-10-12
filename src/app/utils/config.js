@@ -16,6 +16,8 @@ export const apiConfig = {
   login: 'user/login',
   register: 'user/register',
   track_ip: '/user/trace_ip',
+  location_reverse: 'location/reverse',
+  location_search: 'location/search',
   my_shops: 'shops/my_shops',
   my_categories: 'shops/my_categories',
   register_shop: 'shops/client_register',
@@ -62,6 +64,9 @@ export const apiConfig = {
   quotes_user: 'quotes/user',
   quotes_shop: 'quotes/shop',
   quotes_status: 'quotes',
+
+  user_profile: 'user/profile',
+  user_addresses: 'user/addresses',
 };
 
 export const SOCKET = io(config.api_url);

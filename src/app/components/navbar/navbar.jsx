@@ -80,6 +80,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       onClick: () => history.push(Routes.home),
     },
     {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'My Profile & Addresses',
+      onClick: () => history.push(Routes.profile),
+    },
+    {
       key: 'orders',
       icon: <OrderedListOutlined />,
       label: 'My Orders & Quotes',

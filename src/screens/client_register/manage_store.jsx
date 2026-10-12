@@ -645,7 +645,6 @@ const ManageStore = ({
                       )}
                       <Button
                         type="primary"
-                        icon={<PlusOutlined />}
                         onClick={handleOpenAddModal}
                         style={{
                           borderRadius: 8,

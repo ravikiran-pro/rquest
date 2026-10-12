@@ -13,6 +13,9 @@ import {
   Flex,
   Grid,
   Space,
+  Modal,
+  message,
+  Select,
 } from 'antd';
 import {
   CloseOutlined,
@@ -20,9 +23,17 @@ import {
   EnvironmentOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
+  AimOutlined,
+  PlusOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
-import { LeafletComponent, ShopCard } from '../../app/components';
-import { getLocationName, netWorkCall } from '../../app/utils/helper';
+import { LeafletComponent, ShopCard, AddressModal } from '../../app/components';
+import {
+  getLocationName,
+  getPreciseUserLocation,
+  distanceConvertor,
+  netWorkCall,
+} from '../../app/utils/helper';
 import { apiConfig } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
 import { useHistory } from 'react-router-dom';
@@ -50,13 +61,95 @@ const HomeScreen = () => {
   const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchError, setSearchError] = useState('');
+  const getSavedLocation = () => {
+    try {
+      const saved = localStorage.getItem('rquest_user_location');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed.coords) && parsed.coords.length === 2) {
+          // If the saved location is the old hardcoded default, ignore it so fresh location is detected
+          const isMockDefault =
+            Math.abs(parsed.coords[0] - 12.9631025) < 0.0001 &&
+            Math.abs(parsed.coords[1] - 80.25476) < 0.0001;
+          if (!isMockDefault) {
+            return parsed;
+          }
+        }
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  const initialLoc = getSavedLocation();
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [markerLocation, setMarkerLocation] = useState([12.9631025, 80.25476]); // Default location
-  const [locationName, setLocationName] = useState('');
+  const [markerLocation, setMarkerLocation] = useState(
+    initialLoc?.coords || [12.9631025, 80.25476]
+  );
+  const [position, setPosition] = useState(
+    initialLoc?.coords || [12.9631025, 80.25476]
+  );
+  const [locationName, setLocationName] = useState(initialLoc?.name || '');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [itemListings, setItemListings] = useState([]);
-  const [position, setPosition] = useState([12.9631025, 80.25476]);
   const [loading, setLoading] = useState(false);
+
+  // User Saved Addresses integration
+  const [savedAddresses, setSavedAddresses] = useState([]);
+  const [selectedAddressId, setSelectedAddressId] = useState(null);
+  const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
+
+  const fetchUserAddresses = async () => {
+    if (!user_data?.user_id) return;
+    try {
+      const res = await netWorkCall(apiConfig.user_addresses, 'GET', null, true);
+      if (res?.data && res.data.length > 0) {
+        setSavedAddresses(res.data);
+        const defaultAddr = res.data.find((a) => a.is_default) || res.data[0];
+        if (defaultAddr && !selectedAddressId) {
+          handleSelectAddressForSearch(defaultAddr, false);
+        }
+      } else {
+        setSavedAddresses([]);
+      }
+    } catch (err) {
+      console.warn('Error fetching addresses on home:', err);
+    }
+  };
+
+  useEffect(() => {
+    fetchUserAddresses();
+  }, [user_data?.user_id]);
+
+  const handleSelectAddressForSearch = (addr, notify = true) => {
+    if (!addr) return;
+    setSelectedAddressId(addr.id);
+    const newCoords = [Number(addr.latitude), Number(addr.longitude)];
+    setMarkerLocation(newCoords);
+    setPosition(newCoords);
+    const displayName = `${addr.label}: ${addr.street_area || addr.city || 'Saved Area'}`;
+    setLocationName(displayName);
+    saveLocation(newCoords, displayName);
+    if (notify) {
+      message.success(`Searching near ${addr.label}`);
+    }
+  };
+
+  const handleNewAddressCreated = (newAddr) => {
+    fetchUserAddresses();
+    if (newAddr) {
+      handleSelectAddressForSearch(newAddr, true);
+    }
+  };
+
+  const saveLocation = (coords, name) => {
+    try {
+      localStorage.setItem(
+        'rquest_user_location',
+        JSON.stringify({ coords, name })
+      );
+    } catch (e) {}
+  };
 
   const handleSearch = (value) => {
     setSearchText(value);
@@ -64,6 +157,7 @@ const HomeScreen = () => {
 
   const updateMarker = (marker) => {
     setMarkerLocation(marker);
+    setPosition(marker);
   };
 
   const handleOpenModal = () => {
@@ -74,47 +168,67 @@ const HomeScreen = () => {
     setIsModalVisible(false);
   };
 
-  const fetchUserLocation = async () => {
+  const fetchUserLocation = async (isUserTriggered = false) => {
+    setIsDetectingLocation(true);
     try {
-      if (navigator.geolocation) {
-        const pos = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-          });
-        });
-        const coords = [pos.coords.latitude, pos.coords.longitude];
-        setMarkerLocation(coords);
-        setPosition(coords);
+      const coords = await getPreciseUserLocation(true);
+      setMarkerLocation(coords);
+      setPosition(coords);
+      const name = await getLocationName(coords[0], coords[1]);
+      if (name) {
+        setLocationName(name);
+        saveLocation(coords, name);
+      }
+      if (isUserTriggered) {
+        message.success(`Location set to ${name || 'detected area'}`);
       }
     } catch (error) {
-      console.log('Using default location (geolocation unavailable or denied)');
+      console.warn('Geolocation detection error:', error);
+      if (error?.isPermissionDenied) {
+        message.error(
+          'Location access is blocked in your browser. Please allow location access in your browser address bar (🔒 icon), or search your area on the map.',
+          6
+        );
+      } else if (isUserTriggered) {
+        message.warning('Could not detect exact location. You can choose or search your area on the map.');
+      }
+    } finally {
+      setIsDetectingLocation(false);
     }
   };
 
   useEffect(() => {
-    fetchUserLocation();
+    const saved = getSavedLocation();
+    if (!saved) {
+      fetchUserLocation(false);
+    } else if (!saved.name) {
+      getLocationName(saved.coords[0], saved.coords[1]).then((name) => {
+        if (name) {
+          setLocationName(name);
+          saveLocation(saved.coords, name);
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
-    const [ lat, lng ] = markerLocation;
-
+    const [lat, lng] = markerLocation;
     if (!lat || !lng) return;
-    
 
     let cancelled = false;
-
     const fetchLocation = async () => {
       try {
         const name = await getLocationName(lat, lng);
-        if (!cancelled) setLocationName(name);
+        if (!cancelled) {
+          setLocationName(name);
+          saveLocation([lat, lng], name);
+        }
       } catch {
         if (!cancelled) setLocationName('');
       }
     };
 
     fetchLocation();
-
     return () => {
       cancelled = true;
     };
@@ -236,7 +350,6 @@ const HomeScreen = () => {
 
           {/* Ant Design Search Box Card */}
           <Card
-            bordered
             style={{
               width: '100%',
               maxWidth: 720,
@@ -245,7 +358,7 @@ const HomeScreen = () => {
               border: '1px solid #e2e8f0',
               marginBottom: 10,
             }}
-            bodyStyle={{ padding: screens.xs ? 10 : 12 }}
+            styles={{ body: { padding: screens.xs ? 10 : 12 } }}
           >
             <Flex vertical gap={10}>
               <Segmented
@@ -298,34 +411,118 @@ const HomeScreen = () => {
             </Flex>
           </Card>
 
-          {/* Location Indicator */}
+          {/* Location Indicator & Saved Addresses Bar */}
+          {/* Location context indicator & Map trigger (Unified One-Line) */}
           <Flex
             align="center"
             justify="center"
-            gap={6}
+            gap={8}
             wrap="wrap"
             style={{
+              width: '100%',
+              maxWidth: 820,
+              marginTop: 8,
               fontSize: 12,
               color: '#64748b',
-              marginTop: 4,
             }}
           >
-            <EnvironmentOutlined style={{ color: '#4f46e5' }} />
-            <span>
-              Searching near:{' '}
-              <Text strong style={{ color: '#334155' }}>
-                {/* {markerLocation[0]?.toFixed(3)}, {markerLocation[1]?.toFixed(3)} */}
-                {locationName}
-              </Text>
-            </span>
-            <Button
-              type="link"
-              size="small"
-              onClick={handleOpenModal}
-              style={{ fontWeight: 700, padding: '0 4px', fontSize: 12 }}
-            >
-              Change on Map
-            </Button>
+            <Flex align="center" gap={6}>
+              <EnvironmentOutlined style={{ color: '#4f46e5', fontSize: 13 }} />
+              <span style={{ fontWeight: 500 }}>Searching near:</span>
+              {user_data?.user_id && savedAddresses.length > 0 ? (
+                <Select
+                  size="small"
+                  value={selectedAddressId || 'custom_loc'}
+                  onChange={(val) => {
+                    if (val === 'custom_loc') {
+                      setSelectedAddressId(null);
+                      fetchUserLocation(true);
+                    } else {
+                      const addr = savedAddresses.find((a) => a.id === val);
+                      if (addr) handleSelectAddressForSearch(addr, true);
+                    }
+                  }}
+                  style={{ minWidth: 160, maxWidth: 280 }}
+                  popupMatchSelectWidth={false}
+                  dropdownRender={(menu) => (
+                    <div>
+                      {menu}
+                      <div
+                        style={{
+                          padding: '6px 12px',
+                          borderTop: '1px solid #f1f5f9',
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          color: '#4f46e5',
+                          fontWeight: 600,
+                          fontSize: 12,
+                        }}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setIsAddAddressModalOpen(true);
+                        }}
+                      >
+                        + Add Address
+                      </div>
+                    </div>
+                  )}
+                  options={[
+                    ...savedAddresses.map((addr) => {
+                      const icon =
+                        (addr.label || '').toLowerCase() === 'home'
+                          ? '🏠'
+                          : (addr.label || '').toLowerCase() === 'work'
+                          ? '🏢'
+                          : '📍';
+                      return {
+                        value: addr.id,
+                        label: `${icon} ${addr.label}${addr.is_default ? ' (Default)' : ''} - ${
+                          addr.street_area || addr.city || 'Saved Area'
+                        }`,
+                      };
+                    }),
+                    ...(selectedAddressId === null && locationName
+                      ? [{ value: 'custom_loc', label: `📍 ${locationName}` }]
+                      : []),
+                  ]}
+                />
+              ) : (
+                <Text strong style={{ color: '#1e293b' }}>
+                  {locationName || (isDetectingLocation ? 'Detecting location...' : 'Current Location')}
+                </Text>
+              )}
+              {isDetectingLocation && <Spin size="small" style={{ marginLeft: 4 }} />}
+            </Flex>
+
+            <Flex align="center" gap={4}>
+              <span style={{ color: '#cbd5e1' }}>•</span>
+              <Button
+                type="link"
+                size="small"
+                icon={<AimOutlined />}
+                loading={isDetectingLocation}
+                onClick={() => {
+                  setSelectedAddressId(null);
+                  fetchUserLocation(true);
+                }}
+                style={{ fontWeight: 600, padding: '0 4px', fontSize: 12 }}
+              >
+                Use Current Location
+              </Button>
+              <span style={{ color: '#cbd5e1' }}>•</span>
+              <Button
+                type="link"
+                size="small"
+                onClick={() => {
+                  setSelectedAddressId(null);
+                  handleOpenModal();
+                }}
+                style={{ fontWeight: 700, padding: '0 4px', fontSize: 12 }}
+              >
+                Change on Map
+              </Button>
+            </Flex>
           </Flex>
 
           {/* Category Filter Pills using Ant Design CheckableTag */}
@@ -469,11 +666,13 @@ const HomeScreen = () => {
                         boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
                         transition: 'all 0.2s ease',
                       }}
-                      bodyStyle={{
-                        padding: screens.xs ? 14 : 16,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        height: '100%',
+                      styles={{
+                        body: {
+                          padding: screens.xs ? 14 : 16,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          height: '100%',
+                        },
                       }}
                     >
                       <Flex gap={12} align="start" style={{ marginBottom: 10 }}>
@@ -556,9 +755,9 @@ const HomeScreen = () => {
                       >
                         <ShopOutlined /> Store:{' '}
                         <strong>{item.shop?.shop_name || 'Nearby Store'}</strong>
-                        {item.shop?.distance !== undefined && (
+                        {item.shop?.distance !== undefined && item.shop?.distance !== null && (
                           <span style={{ color: '#10b981', fontWeight: 600, marginLeft: 6 }}>
-                            • {item.shop.distance.toFixed(1)} km
+                            • {distanceConvertor(item.shop.distance)} km
                           </span>
                         )}
                       </div>
@@ -591,26 +790,51 @@ const HomeScreen = () => {
         )}
       </div>
 
-      {/* Leaflet Map Modal */}
-      {isModalVisible && (
-        <div className="modal-wrapper">
-          <div id="myModal" className="overlay">
-            <div className="modal">
-              <button onClick={handleCloseModal} className="close-button">
-                <CloseOutlined />
-              </button>
-              <LeafletComponent
-                isModalVisible={isModalVisible}
-                markerLocation={markerLocation}
-                setMarkerLocation={setMarkerLocation}
-                updateMarker={updateMarker}
-                searchMarkers={searchMarkers}
-                position={position}
-                setPosition={setPosition}
-              />
-            </div>
-          </div>
-        </div>
+      {/* Full View Map Modal */}
+      <Modal
+        open={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={null}
+        width="100vw"
+        wrapClassName="full-view-map-modal"
+        closable={false}
+        style={{
+          top: 0,
+          left: 0,
+          margin: 0,
+          padding: 0,
+          maxWidth: '100vw',
+          height: '100vh',
+        }}
+        styles={{
+          body: {
+            height: '100vh',
+            padding: 0,
+            margin: 0,
+            overflow: 'hidden',
+          },
+        }}
+      >
+        <LeafletComponent
+          isModalVisible={isModalVisible}
+          markerLocation={markerLocation}
+          setMarkerLocation={setMarkerLocation}
+          updateMarker={updateMarker}
+          searchMarkers={searchMarkers}
+          position={position}
+          setPosition={setPosition}
+          onClose={handleCloseModal}
+        />
+      </Modal>
+
+      {/* Quick Add Address Modal from Home Search */}
+      {isAddAddressModalOpen && (
+        <AddressModal
+          open={isAddAddressModalOpen}
+          onClose={() => setIsAddAddressModalOpen(false)}
+          onSuccess={handleNewAddressCreated}
+          userProfile={user_data}
+        />
       )}
     </div>
   );

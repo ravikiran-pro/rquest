@@ -6,10 +6,12 @@ const masterRouter = require('./master');
 const listingsRouter = require('./listings');
 const ordersRouter = require('./orders');
 const quotesRouter = require('./quotes');
+const locationRouter = require('./location');
 const { authMiddleware } = require('../auth');
 
 const router = express.Router();
 
+router.use('/location', locationRouter);
 router.use('/shops', shopsRouter);
 router.use('/user', userRouter);
 router.use('/master', masterRouter);

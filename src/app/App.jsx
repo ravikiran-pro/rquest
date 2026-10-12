@@ -1,22 +1,15 @@
 import React from 'react';
 import AppRoutes from './routes';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, App as AntdApp } from 'antd';
 
 function App() {
   return (
-    <ConfigProvider
-    // theme={{
-    //   token: {
-    //     colorPrimary: '#0059b2',
-    //     borderRadius: 2,
-
-    //     colorBgContainer: '#f6ffed',
-    //   }
-    // }}
-    >
-      <div>
-        <AppRoutes />
-      </div>
+    <ConfigProvider>
+      <AntdApp notification={{ placement: 'bottom', bottom: 32 }}>
+        <div>
+          <AppRoutes />
+        </div>
+      </AntdApp>
     </ConfigProvider>
   );
 }

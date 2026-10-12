@@ -25,6 +25,9 @@ export default defineConfig({
           },
         ],
       },
+      workbox: {
+        navigateFallbackAllowlist: [/^\/.*$/],
+      },
       devOptions: {
         enabled: true,
       },

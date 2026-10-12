@@ -7,6 +7,7 @@ const Routes = {
   register: '/register',
   storefront: '/shop/:shop_id',
   orders: '/orders',
+  profile: '/profile',
 };
 
 export default Routes;

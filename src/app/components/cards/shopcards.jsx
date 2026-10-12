@@ -8,7 +8,7 @@ import {
   CompassOutlined,
   StarFilled,
 } from '@ant-design/icons';
-import { useChatStore } from '../../services';
+import { useChatStore, useGlobalStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
 
@@ -41,6 +41,9 @@ const ShopCard = ({
   } = shopDetails;
 
   const { handleChatOpen } = useChatStore((state) => state);
+  const { user_data } = useGlobalStore((state) => state);
+
+  const isOwnShop = Boolean(user_data?.user_id && owner_id && user_data.user_id === owner_id);
 
   const goToStore = () => {
     if (id) {
@@ -72,11 +75,13 @@ const ShopCard = ({
         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
       }}
-      bodyStyle={{
-        padding: screens.xs ? 14 : 16,
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
+      styles={{
+        body: {
+          padding: screens.xs ? 14 : 16,
+          display: 'flex',
+          flexDirection: 'column',
+          height: '100%',
+        },
       }}
     >
       {/* Top Banner / Avatar & Rating */}
@@ -117,6 +122,20 @@ const ShopCard = ({
           </Title>
 
           <Flex align="center" gap={6} style={{ marginTop: 4 }}>
+            {isOwnShop && (
+              <Tag
+                color="green"
+                style={{
+                  fontSize: 11,
+                  padding: '0 6px',
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
+                My Store
+              </Tag>
+            )}
+
             {/* Show category tag on desktop/tablet; remove on mobile to prevent clutter */}
             {!isMobile && categoryName && (
               <Tag
@@ -204,6 +223,47 @@ const ShopCard = ({
           >
             Manage Shop
           </Button>
+        ) : isOwnShop ? (
+          <>
+            <Button
+              type="default"
+              style={{
+                flex: 1,
+                borderRadius: 8,
+                fontWeight: 600,
+                height: 38,
+              }}
+              onClick={goToStore}
+            >
+              Preview Store <ArrowRightOutlined style={{ fontSize: 11 }} />
+            </Button>
+
+            <Button
+              type="primary"
+              icon={<EditOutlined />}
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                height: 38,
+                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                border: 'none',
+              }}
+              onClick={() => history.push(`/client_register?shop_id=${id}`)}
+            >
+              Manage
+            </Button>
+
+            {directionsUrl && (
+              <Button
+                icon={<CompassOutlined />}
+                href={directionsUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ borderRadius: 8, height: 38, width: 38 }}
+                title="Get Directions"
+              />
+            )}
+          </>
         ) : (
           <>
             <Button
