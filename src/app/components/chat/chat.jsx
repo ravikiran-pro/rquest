@@ -113,8 +113,9 @@ function ChatApp() {
 
   const [isTyping, setIsTyping] = useState(false);
   const [isChatLoading, setIsChatLoading] = useState(true);
-  const [isMobileView, setIsMobileView] = useState(window.innerWidth <= 640);
-  const [isMobileView, setIsMobileView] = useState(() => window.innerWidth <= 768);
+  const [isMobileView, setIsMobileView] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= 768 : false
+  );
   const [browsingShop, setBrowsingShop] = useState(null);
 
   const isMountedRef = useRef(true);
@@ -154,7 +155,6 @@ function ChatApp() {
     if (routeShopId) {
       netWorkCall(`${apiConfig.shop_details}/${routeShopId}/details`, 'GET', null, false)
         .then((res) => {
-          if (res?.data) {
           if (isCurrent && isMountedRef.current && res?.data) {
             setBrowsingShop(res.data);
           }
@@ -169,10 +169,8 @@ function ChatApp() {
     };
   }, [location?.pathname]);
 
-  // Track responsive screen size
   // Track responsive screen size safely
   useEffect(() => {
-    const handleResize = () => setIsMobileView(window.innerWidth <= 640);
     const handleResize = () => {
       if (isMountedRef.current) {
         setIsMobileView(window.innerWidth <= 768);
@@ -184,7 +182,6 @@ function ChatApp() {
 
   // Sync active receiver from Zustand store
   useEffect(() => {
-    if (receiver_id) {
     if (receiver_id && isMountedRef.current) {
       setSelectedChat(receiver_id);
       setUserMenu((prev) => ({
@@ -862,17 +859,10 @@ function ChatApp() {
   ]);
 
   const activeMessages = selectedChat ? userMenu[selectedChat] || [] : [];
-  const showSidebar = !isMobileView || !selectedChat;
-  const showChatPane = !isMobileView || Boolean(selectedChat);
-
   return (
     <div className="rquest-chat-overlay">
       <div className="rquest-chat-app">
         <MainContainer responsive>
-          {/* Unified Inbox Sidebar */}
-          {showSidebar && (
-            <Sidebar position="left" scrollable={false}>
-        <MainContainer>
           {/* Left Sidebar Pane (Kept in DOM to eliminate mobile unmounting crashes) */}
           <div
             className={`rquest-chat-sidebar-pane ${
@@ -1111,12 +1101,8 @@ function ChatApp() {
                 )}
               </ConversationList>
             </Sidebar>
-          )}
           </div>
 
-          {/* Right Pane: Active Thread or Welcome Pane */}
-          {showChatPane && (
-            selectedChat && activePartnerInfo ? (
           {/* Right Main Pane (Kept in DOM to eliminate mobile unmounting crashes) */}
           <div
             className={`rquest-chat-main-pane ${
@@ -1409,8 +1395,6 @@ function ChatApp() {
                   </div>
                 )}
               </div>
-            )
-          )}
             )}
           </div>
         </MainContainer>

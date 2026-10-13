@@ -652,17 +652,8 @@
 }
 
 /* Mobile Responsive */
-@media (max-width: 640px) {
 @media (max-width: 768px) {
   .rquest-chat-overlay {
-    bottom: 0;
-    right: 0;
-    width: 100vw;
-    max-width: 100vw;
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0;
-    border: none;
     bottom: 0 !important;
     right: 0 !important;
     width: 100vw !important;
@@ -675,10 +666,8 @@
     border: none !important;
   }
 
+  .rquest-chat-sidebar-pane,
   .rquest-chat-app .cs-sidebar {
-    width: 100%;
-    min-width: 100%;
-  .rquest-chat-sidebar-pane {
     width: 100% !important;
     min-width: 100% !important;
     border-right: none !important;
@@ -693,3 +682,4 @@
     display: none !important;
   }
 }
+
