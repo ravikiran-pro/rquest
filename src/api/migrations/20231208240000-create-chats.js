@@ -59,6 +59,6 @@ module.exports = {
   },
 
   down: async (queryInterface) => {
-    await queryInterface.dropTable('shops');
+    await queryInterface.dropTable('chats');
   },
 };

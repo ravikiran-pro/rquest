@@ -286,7 +286,7 @@ const ShopCard = ({
                   icon={<MessageOutlined />}
                   style={{ borderRadius: 8, height: 38, width: 38 }}
                   disabled={!isChat}
-                  onClick={() => handleChatOpen(owner_id, id)}
+                  onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
                 />
               </Tooltip>
             )}

@@ -28,6 +28,8 @@ export const apiConfig = {
   user_chats: 'chat/getAll',
   chat_create: 'chat/create',
   chat_update_read: 'chat/markAll',
+  chat_delete: 'chat/delete',
+  chat_unread_count: 'chat/unreadCount',
 
   master_categories : 'master/categories',
   master_categories_stauts: 'master/categories/status',

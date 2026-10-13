@@ -780,7 +780,7 @@ const StorefrontScreen = () => {
                         message.info('Please log in to chat with the store owner');
                         history.push(Routes.login);
                       } else {
-                        handleChatOpen(shop.owner_id, shop.id);
+                        handleChatOpen(shop.owner_id, shop.id, { shop_name: shop.shop_name });
                       }
                     }}
                     style={{
@@ -1009,7 +1009,7 @@ const StorefrontScreen = () => {
                         message.info('Please log in to chat with the store owner');
                         history.push(Routes.login);
                       } else {
-                        handleChatOpen(shop.owner_id, shop.id);
+                        handleChatOpen(shop.owner_id, shop.id, { shop_name: shop.shop_name });
                       }
                     }}
                     style={{
@@ -1327,7 +1327,7 @@ const StorefrontScreen = () => {
                               message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
                               return;
                             }
-                            handleChatOpen(shop.owner_id, shop.id);
+                            handleChatOpen(shop.owner_id, shop.id, { shop_name: shop.shop_name });
                           }}
                         >
                           Inquire

@@ -26,9 +26,6 @@
   background-color: var(--error);
 }
 
-div {
-  text-align: left;
-}
 
 .title {
   font-size: 18px;

@@ -37,8 +37,24 @@ module.exports = (sequelize) => {
     },
     is_read: {
       type: DataTypes.BOOLEAN,
-      defaultValue: true,
+      defaultValue: false,
     },
+    is_deleted: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: false,
+    },
+  }, {
+    indexes: [
+      {
+        fields: ['sender_id', 'receiver_id'],
+      },
+      {
+        fields: ['shop_id'],
+      },
+      {
+        fields: ['createdAt'],
+      },
+    ],
   });
 
   Chats.associate = (models) => {

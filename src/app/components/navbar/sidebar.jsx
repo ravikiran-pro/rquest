@@ -38,7 +38,7 @@ const SideBar = ({ open, handleClose }) => {
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
   const { cart, openCart } = useCartStore((state) => state);
-  const { handleChatOpen } = useChatStore((state) => state);
+  const { handleChatOpen, unreadTotal } = useChatStore((state) => state);
 
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
@@ -279,7 +279,10 @@ const SideBar = ({ open, handleClose }) => {
             className="drawer-nav-item"
             onClick={handleChatClick}
           >
-            <span style={{ flex: 1, textAlign: 'left' }}>Direct Chat / Messages</span>
+            <span style={{ flex: 1, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
+              Direct Chat / Messages
+              {unreadTotal > 0 && <Badge count={unreadTotal} size="small" />}
+            </span>
             <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
           </Button>
         )}

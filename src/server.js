@@ -3,15 +3,16 @@ const express = require('express');
 const cors = require('cors');
 const router = require('./api/routes');
 const http = require('http');
-const { Server } = require('socket.io');
 const bodyParser = require('body-parser');
+const { initSocket } = require('./api/socket');
 
 const { PORT = 3001 } = process.env;
 
 const app = express();
 const server = http.createServer(app);
 
-let socketData = {};
+// Initialize isolated Socket.io module
+initSocket(server);
 
 // handle cors
 app.use(
@@ -31,62 +32,11 @@ app.use(bodyParser.json());
 // Middleware that parses json and looks at requests where the Content-Type header matches the type option.
 app.use(express.json());
 
-app.use((req, _res, next) => {
-  req.headers.socketData = socketData;
-  next();
-});
-
 // Serve API requests from the router
 app.use('/api/v1', router);
 
 // Serve app production bundle
 app.use(express.static('dist/app'));
-
-const io = new Server(server, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
-
-io.on('connection', (socket) => {
-  io.to(socket.id).emit('socket_id', socket.id);
-
-  socket.on('send_message', async (messageData) => {
-    if (!messageData || !messageData.receiver_id) return;
-    const target = socketData[messageData.receiver_id];
-    if (target && target.socket_id) {
-      io.to(target.socket_id).emit('receive_message', messageData);
-      console.log(
-        `Sent Message --> ${messageData.username} to ${target.username}`
-      );
-    } else {
-      console.log(
-        `Receiver ${messageData.receiver_id} is offline. Message saved to DB.`
-      );
-    }
-  });
-
-  socket.on('connect_user', (user_data) => {
-    if (user_data && user_data.user_id) {
-      socketData[user_data.user_id] = {
-        ...user_data,
-        socket_id: socket.id,
-      };
-      console.log(`user ${user_data.username} connected on ${socket.id}`);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    for (const userId of Object.keys(socketData)) {
-      if (socketData[userId]?.socket_id === socket.id) {
-        delete socketData[userId];
-        console.log(`user ${userId} disconnected`);
-        break;
-      }
-    }
-  });
-});
 
 // Handle client routing, return all requests to the app
 app.get('*', (_req, res) => {

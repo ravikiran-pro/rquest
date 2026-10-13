@@ -467,7 +467,7 @@ const OrdersScreen = () => {
                           type="primary"
                           block
                           icon={<MessageOutlined />}
-                          onClick={() => handleChatOpen(ord.shop?.owner_id, ord.shop_id)}
+                          onClick={() => handleChatOpen(ord.shop?.owner_id, ord.shop_id, { shop_name: ord.shop?.shop_name })}
                           style={{
                             height: 40,
                             borderRadius: 10,
@@ -582,7 +582,7 @@ const OrdersScreen = () => {
                         type="primary"
                         block
                         icon={<MessageOutlined />}
-                        onClick={() => handleChatOpen(q.shop?.owner_id, q.shop_id)}
+                        onClick={() => handleChatOpen(q.shop?.owner_id, q.shop_id, { shop_name: q.shop?.shop_name })}
                         style={{ height: 40, borderRadius: 10, fontWeight: 700 }}
                       >
                         Discuss in Chat

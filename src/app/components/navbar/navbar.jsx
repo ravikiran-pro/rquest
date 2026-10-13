@@ -34,7 +34,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
   const { cart, openCart } = useCartStore((state) => state);
-  const { handleChatOpen } = useChatStore((state) => state);
+  const { handleChatOpen, unreadTotal } = useChatStore((state) => state);
 
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
@@ -94,7 +94,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
     {
       key: 'chat',
       icon: <MessageOutlined />,
-      label: 'Direct Messages',
+      label: (
+        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <span>Direct Messages</span>
+          {unreadTotal > 0 && <Badge count={unreadTotal} size="small" />}
+        </span>
+      ),
       onClick: () => handleChatOpen(null, null),
     },
     ...(isMerchant

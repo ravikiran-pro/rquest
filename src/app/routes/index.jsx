@@ -4,6 +4,7 @@ import {
   Route,
   Switch,
   Redirect,
+  useLocation,
 } from 'react-router-dom';
 import { default as routes } from './routes';
 import {
@@ -15,11 +16,12 @@ import {
   OrdersScreen,
   ProfileScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar, ChatIcon, CartDrawer } from '../components';
-import { useChatStore, useGlobalStore } from '../../app/services';
-import { Avatar, message, notification } from 'antd';
+import { ChatApp, NavBar, SideBar, CartDrawer } from '../components';
+import { useChatStore, useGlobalStore, chatSocket } from '../../app/services';
+import { apiConfig, netWorkCall } from '../utils';
+import { Avatar, Badge, message, notification } from 'antd';
+import { MessageFilled, CloseOutlined } from '@ant-design/icons';
 import PrivateRoute from './privateroute';
-import { SOCKET } from '../utils';
 
 // Configure global message and notification toast behavior
 message.config({
@@ -33,9 +35,26 @@ notification.config({
   duration: 3.5,
 });
 
+function RouteChangeHandler() {
+  const location = useLocation();
+  const { isChat, handleChatClose } = useChatStore((state) => state);
+  const prevPath = React.useRef(location.pathname);
+
+  useEffect(() => {
+    if (prevPath.current !== location.pathname) {
+      prevPath.current = location.pathname;
+      if (isChat) {
+        handleChatClose();
+      }
+    }
+  }, [location.pathname, isChat, handleChatClose]);
+
+  return null;
+}
+
 export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
-  const { isChat, handleChatOpen } = useChatStore((state) => state);
+  const { isChat, unreadTotal, handleChatOpen, handleChatClose } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
 
   const handleClose = () => {
@@ -48,9 +67,35 @@ export default function AppRoutes() {
 
   useEffect(() => {
     if (user_data?.user_id) {
-      SOCKET.emit('connect_user', user_data);
+      chatSocket.joinUser(user_data);
+
+      netWorkCall(apiConfig.chat_unread_count, 'POST', JSON.stringify({ user_id: user_data.user_id }), true)
+        .then((res) => {
+          if (res && res.count !== undefined) {
+            useChatStore.getState().setUnreadTotal(res.count);
+          }
+        })
+        .catch(() => {});
     }
   }, [user_data]);
+
+  useEffect(() => {
+    if (!user_data?.user_id) return;
+    const unsub = chatSocket.onReceiveMessage((incomingMsg) => {
+      if (!isChat) {
+        useChatStore.getState().incrementUnread(1);
+        notification.info({
+          message: `New message from ${incomingMsg.username || 'User'}`,
+          description: incomingMsg.message,
+          placement: 'bottomRight',
+          onClick: () => {
+            handleChatOpen(incomingMsg.sender_id, incomingMsg.shop_id);
+          },
+        });
+      }
+    });
+    return () => unsub();
+  }, [isChat, user_data]);
 
   useEffect(() => {
     // default service to trigger on change
@@ -75,6 +120,7 @@ export default function AppRoutes() {
 
   return (
     <Router>
+      <RouteChangeHandler />
       <NavBar open={drawer} handleOpen={handleOpen} handleClose={handleClose} />
       <SideBar
         open={drawer}
@@ -106,23 +152,20 @@ export default function AppRoutes() {
         </Switch>
       </div>
       <CartDrawer />
-      {isChat ? (
-        <div className="chat-wrapper">
-          <div id="myChat" class="overlay">
-            <div class="chat">
-              <ChatApp />
+      {isChat && <ChatApp />}
+      {user_data?.user_id && !isChat && (
+        <div
+          className="rquest-chat-fab"
+          onClick={() => handleChatOpen(null, null)}
+          title="Direct Messages & Store Chat"
+          aria-label="Open Messages"
+        >
+          <Badge count={unreadTotal} overflowCount={99}>
+            <div className="rquest-chat-fab-inner">
+              <MessageFilled style={{ fontSize: 25, color: '#ffffff' }} />
             </div>
-          </div>
+          </Badge>
         </div>
-      ) : (
-        user_data.user_id && (
-          <div
-            className="chat-footer-icon"
-            onClick={() => handleChatOpen(null, null)}
-          >
-            <Avatar src={ChatIcon} />
-          </div>
-        )
       )}
     </Router>
   );
