@@ -59,6 +59,23 @@ module.exports = (sequelize) => {
       notes: {
         type: DataTypes.TEXT,
       },
+      delivery_fee: {
+        type: DataTypes.FLOAT,
+        defaultValue: 0.0,
+      },
+      delivery_partner_id: {
+        type: DataTypes.UUID,
+        references: {
+          model: 'users',
+          key: 'id',
+        },
+      },
+      shop_upi_id: {
+        type: DataTypes.STRING,
+      },
+      delivery_notes: {
+        type: DataTypes.TEXT,
+      },
     },
     {
       timestamps: true,
@@ -69,6 +86,10 @@ module.exports = (sequelize) => {
     Order.belongsTo(models.users, {
       foreignKey: 'customer_id',
       as: 'customer',
+    });
+    Order.belongsTo(models.users, {
+      foreignKey: 'delivery_partner_id',
+      as: 'delivery_partner',
     });
     Order.belongsTo(models.shops, {
       foreignKey: 'shop_id',

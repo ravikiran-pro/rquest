@@ -17,6 +17,11 @@ import {
   Grid,
   Empty,
   Statistic,
+  Progress,
+  Steps,
+  Modal,
+  Alert,
+  Tooltip,
 } from 'antd';
 import {
   UserOutlined,
@@ -31,17 +36,25 @@ import {
   CalendarOutlined,
   SafetyCertificateOutlined,
   CheckCircleFilled,
+  CloseCircleFilled,
+  RocketOutlined,
+  ArrowRightOutlined,
+  TrophyOutlined,
+  StarFilled,
+  InfoCircleOutlined,
+  CompassOutlined,
 } from '@ant-design/icons';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
 import { netWorkCall, apiConfig, checkUserRole, storageKeys } from '../../app/utils';
 import Routes from '../../app/routes/routes';
 import { AddressCard, AddressModal } from '../../app/components/profile';
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 const ProfileScreen = () => {
   const history = useHistory();
+  const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -51,22 +64,40 @@ const ProfileScreen = () => {
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
   const [addresses, setAddresses] = useState([]);
+  const [myShops, setMyShops] = useState([]);
+  const [activeTabKey, setActiveTabKey] = useState('addresses');
   const [savingProfile, setSavingProfile] = useState(false);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
+
+  // Guided Onboarding State
+  const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+  const [onboardingStep, setOnboardingStep] = useState(0);
+  const [onboardingEmail, setOnboardingEmail] = useState('');
+  const [savingOnboarding, setSavingOnboarding] = useState(false);
 
   const [profileForm] = Form.useForm();
 
   const fetchProfileAndAddresses = async () => {
     setLoading(true);
     try {
-      const [profileRes, addrRes] = await Promise.all([
+      const promises = [
         netWorkCall(apiConfig.user_profile, 'GET', null, true),
         netWorkCall(apiConfig.user_addresses, 'GET', null, true),
-      ]);
+      ];
+
+      if (isMerchant) {
+        promises.push(netWorkCall(apiConfig.my_shops, 'POST', null, true));
+      }
+
+      const results = await Promise.all(promises);
+      const profileRes = results[0];
+      const addrRes = results[1];
+      const shopsRes = results[2];
 
       if (profileRes?.data) {
         setProfile(profileRes.data);
+        setOnboardingEmail(profileRes.data.email || '');
         profileForm.setFieldsValue({
           username: profileRes.data.username || '',
           email: profileRes.data.email || '',
@@ -76,6 +107,10 @@ const ProfileScreen = () => {
 
       if (addrRes?.data) {
         setAddresses(addrRes.data);
+      }
+
+      if (shopsRes?.success && shopsRes?.data) {
+        setMyShops(shopsRes.data);
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
@@ -88,6 +123,17 @@ const ProfileScreen = () => {
   useEffect(() => {
     fetchProfileAndAddresses();
   }, []);
+
+  // Handle URL query parameters for onboarding (e.g. ?onboarding=customer&new=true)
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const obParam = params.get('onboarding');
+    const isNew = params.get('new') === 'true';
+
+    if (obParam || isNew) {
+      setOnboardingModalOpen(true);
+    }
+  }, [location.search]);
 
   const handleUpdateProfile = async (values) => {
     setSavingProfile(true);
@@ -179,12 +225,192 @@ const ProfileScreen = () => {
     history.push(Routes.login);
   };
 
-  const memberSince = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString('en-US', {
-        month: 'short',
-        year: 'numeric',
-      })
-    : 'Recent';
+  // -------------------------------------------------------------------------
+  // Profile Completion Score Engine
+  // -------------------------------------------------------------------------
+  const calculateCompletion = () => {
+    let score = 0;
+    const checks = [];
+
+    // 1. Basic Account Created (Username + Mobile)
+    const hasBasic = !!(profile?.username && profile?.mobile);
+    if (hasBasic) {
+      score += isMerchant ? 25 : 30;
+      checks.push({
+        key: 'basic',
+        label: 'Account Verified (Mobile & User)',
+        done: true,
+        points: isMerchant ? 25 : 30,
+      });
+    } else {
+      checks.push({
+        key: 'basic',
+        label: 'Complete Account Details',
+        done: false,
+        points: isMerchant ? 25 : 30,
+        tab: 'profile_info',
+      });
+    }
+
+    // 2. Email Address
+    const hasEmail = !!(profile?.email && profile.email.trim());
+    if (hasEmail) {
+      score += isMerchant ? 20 : 25;
+      checks.push({
+        key: 'email',
+        label: 'Email Added for Receipts',
+        done: true,
+        points: isMerchant ? 20 : 25,
+      });
+    } else {
+      checks.push({
+        key: 'email',
+        label: 'Add Email Address',
+        done: false,
+        points: isMerchant ? 20 : 25,
+        tab: 'profile_info',
+      });
+    }
+
+    if (isMerchant) {
+      // 3. Storefront Registration (for Shop Owners)
+      const hasShop = myShops && myShops.length > 0;
+      if (hasShop) {
+        score += 35;
+        checks.push({
+          key: 'shop',
+          label: `Storefront Registered (${myShops[0]?.shop_name || 'Active'})`,
+          done: true,
+          points: 35,
+        });
+      } else {
+        checks.push({
+          key: 'shop',
+          label: 'Register First Physical Storefront',
+          done: false,
+          points: 35,
+          action: 'register_shop',
+        });
+      }
+
+      // 4. Shop Catalog / Address
+      const hasCatalog = myShops && myShops.some((s) => s.address || s.products_list);
+      if (hasCatalog) {
+        score += 20;
+        checks.push({
+          key: 'catalog',
+          label: 'Store Address & Catalog Configured',
+          done: true,
+          points: 20,
+        });
+      } else {
+        checks.push({
+          key: 'catalog',
+          label: 'Set Store Location & Menu/Catalog',
+          done: false,
+          points: 20,
+          action: 'register_shop',
+        });
+      }
+    } else {
+      // 3. Saved Delivery Address (for Customers)
+      const hasAddress = addresses && addresses.length > 0;
+      if (hasAddress) {
+        score += 35;
+        checks.push({
+          key: 'address',
+          label: `Delivery Address Saved (${addresses.length})`,
+          done: true,
+          points: 35,
+        });
+      } else {
+        checks.push({
+          key: 'address',
+          label: 'Add Delivery Address / Map Pin',
+          done: false,
+          points: 35,
+          action: 'add_address',
+        });
+      }
+
+      // 4. Set Default Address
+      const hasDefault = addresses && addresses.some((a) => a.is_default);
+      if (hasDefault) {
+        score += 10;
+        checks.push({
+          key: 'default_addr',
+          label: 'Default 1-Tap Delivery Address Selected',
+          done: true,
+          points: 10,
+        });
+      } else {
+        checks.push({
+          key: 'default_addr',
+          label: 'Select Default Address for Proximity Search',
+          done: false,
+          points: 10,
+          action: 'add_address',
+        });
+      }
+    }
+
+    return { score: Math.min(score, 100), checks };
+  };
+
+  const { score: completionScore, checks: completionChecks } = calculateCompletion();
+
+  // -------------------------------------------------------------------------
+  // Onboarding Guided Step Actions
+  // -------------------------------------------------------------------------
+  const handleSaveOnboardingDetails = async () => {
+    if (!onboardingEmail.trim()) {
+      setOnboardingStep(1);
+      return;
+    }
+    setSavingOnboarding(true);
+    try {
+      const res = await netWorkCall(
+        apiConfig.user_profile,
+        'PUT',
+        JSON.stringify({
+          username: profile?.username || user_data?.username,
+          email: onboardingEmail.trim(),
+        }),
+        true
+      );
+      if (res?.success) {
+        message.success('Contact info updated!');
+        setProfile((prev) => ({ ...prev, email: onboardingEmail.trim() }));
+        setOnboardingStep(1);
+      } else {
+        setOnboardingStep(1);
+      }
+    } catch (e) {
+      setOnboardingStep(1);
+    } finally {
+      setSavingOnboarding(false);
+    }
+  };
+
+  const handleSkipOnboarding = (goToMarket = false) => {
+    setOnboardingModalOpen(false);
+    // Clean up onboarding query params from URL
+    history.replace(Routes.profile);
+    message.info('You can complete your profile setup anytime from this page.');
+    if (goToMarket) {
+      history.push(Routes.app);
+    }
+  };
+
+  const handleChecklistAction = (check) => {
+    if (check.tab) {
+      setActiveTabKey(check.tab);
+    } else if (check.action === 'add_address') {
+      handleAddNewAddress();
+    } else if (check.action === 'register_shop') {
+      history.push(`${Routes.client}?onboarding=shop`);
+    }
+  };
 
   return (
     <div
@@ -206,7 +432,7 @@ const ProfileScreen = () => {
               borderRadius: 18,
               border: '1px solid #e2e8f0',
               boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.06)',
-              marginBottom: 24,
+              marginBottom: 20,
               overflow: 'hidden',
               background: 'linear-gradient(180deg, #ffffff 0%, #f8fafc 100%)',
             }}
@@ -260,22 +486,18 @@ const ProfileScreen = () => {
                         <span>{profile.email}</span>
                       </Flex>
                     )}
-                    <Flex align="center" gap={4}>
-                      <CalendarOutlined />
-                      <span>Member since {memberSince}</span>
-                    </Flex>
                   </Flex>
                 </div>
               </Flex>
 
-              {/* Action Buttons on Right */}
-              <Flex gap={10} wrap="wrap" style={{ width: isMobile ? '100%' : 'auto' }}>
+              {/* Action Buttons */}
+              <Flex gap={10} wrap="wrap">
                 <Button
-                  icon={<OrderedListOutlined />}
-                  onClick={() => history.push(Routes.orders)}
-                  style={{ borderRadius: 8, fontWeight: 600, flex: isMobile ? 1 : 'none' }}
+                  icon={<RocketOutlined />}
+                  onClick={() => setOnboardingModalOpen(true)}
+                  style={{ borderRadius: 8, fontWeight: 600, border: '1px solid #cbd5e1' }}
                 >
-                  My Orders
+                  Setup Guide
                 </Button>
                 <Button
                   danger
@@ -330,16 +552,120 @@ const ProfileScreen = () => {
                     <Button
                       size="small"
                       type="link"
-                      icon={<MessageOutlined />}
-                      onClick={() => history.push(Routes.chat)}
+                      icon={<CompassOutlined />}
+                      onClick={() => history.push(Routes.app)}
                       style={{ padding: 0, fontWeight: 600 }}
                     >
-                      Messages
+                      Explore Market
                     </Button>
                   </Flex>
                 </div>
               </Col>
             </Row>
+          </Card>
+
+          {/* ------------------------------------------------------------------
+              Profile Setup & Completion Engine Card (Always Visible & Interactive)
+              ------------------------------------------------------------------ */}
+          <Card
+            style={{
+              borderRadius: 18,
+              border: completionScore === 100 ? '1px solid #bbf7d0' : '1px solid #e0e7ff',
+              background: completionScore === 100 ? '#f0fdf4' : 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)',
+              boxShadow: '0 4px 16px -2px rgba(15, 23, 42, 0.04)',
+              marginBottom: 24,
+            }}
+            styles={{ body: { padding: screens.xs ? '18px 14px' : '22px 24px' } }}
+          >
+            <Flex justify="space-between" align={isMobile ? 'flex-start' : 'center'} vertical={isMobile} gap={14}>
+              <div style={{ flex: 1, width: '100%' }}>
+                <Flex align="center" justify="space-between" style={{ marginBottom: 6 }}>
+                  <Flex align="center" gap={8}>
+                    {completionScore === 100 ? (
+                      <TrophyOutlined style={{ color: '#16a34a', fontSize: 20 }} />
+                    ) : (
+                      <RocketOutlined style={{ color: '#4f46e5', fontSize: 20 }} />
+                    )}
+                    <span style={{ fontWeight: 800, fontSize: 16, color: '#0f172a' }}>
+                      Profile Setup: {completionScore}% Complete
+                    </span>
+                  </Flex>
+                  <Tag
+                    color={completionScore === 100 ? 'success' : completionScore >= 60 ? 'blue' : 'warning'}
+                    style={{ fontWeight: 700, borderRadius: 6, margin: 0 }}
+                  >
+                    {completionScore === 100 ? 'Verified Profile' : `${100 - completionScore}% Remaining`}
+                  </Tag>
+                </Flex>
+
+                <Progress
+                  percent={completionScore}
+                  status={completionScore === 100 ? 'success' : 'active'}
+                  strokeColor={
+                    completionScore === 100
+                      ? '#10b981'
+                      : { '0%': '#4f46e5', '100%': '#7c3aed' }
+                  }
+                  style={{ marginBottom: 14 }}
+                />
+
+                {/* Checklist Action Items */}
+                <Flex wrap="wrap" gap={8} align="center">
+                  {completionChecks.map((check) => (
+                    <div key={check.key}>
+                      {check.done ? (
+                        <Tag
+                          color="green"
+                          style={{
+                            borderRadius: 8,
+                            padding: '4px 10px',
+                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 4,
+                          }}
+                        >
+                          <CheckCircleFilled /> {check.label}
+                        </Tag>
+                      ) : (
+                        <Button
+                          size="small"
+                          type="dashed"
+                          onClick={() => handleChecklistAction(check)}
+                          style={{
+                            borderRadius: 8,
+                            fontWeight: 700,
+                            borderColor: '#c7d2fe',
+                            color: '#4338ca',
+                            background: '#eef2ff',
+                          }}
+                        >
+                          + {check.label} (+{check.points}%)
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </Flex>
+              </div>
+
+              {/* Guide Trigger Button */}
+              {completionScore < 100 && (
+                <Button
+                  type="primary"
+                  onClick={() => setOnboardingModalOpen(true)}
+                  style={{
+                    borderRadius: 10,
+                    fontWeight: 700,
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    border: 'none',
+                    height: 38,
+                    flexShrink: 0,
+                  }}
+                >
+                  Continue Setup
+                </Button>
+              )}
+            </Flex>
           </Card>
 
           {/* Main Tabs Area */}
@@ -352,7 +678,8 @@ const ProfileScreen = () => {
             styles={{ body: { padding: screens.xs ? '14px 12px' : '24px 24px' } }}
           >
             <Tabs
-              defaultActiveKey="addresses"
+              activeKey={activeTabKey}
+              onChange={setActiveTabKey}
               items={[
                 {
                   key: 'addresses',
@@ -457,41 +784,36 @@ const ProfileScreen = () => {
                       >
                         <Form.Item
                           name="username"
-                          label="Full Name / Display Name"
-                          rules={[{ required: true, message: 'Please enter your name' }]}
+                          label="Account Username"
+                          rules={[{ required: true, message: 'Please enter your username' }]}
                         >
                           <Input
                             prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
+                            placeholder="Your username"
                             size="large"
-                            style={{ borderRadius: 8 }}
                           />
                         </Form.Item>
 
                         <Form.Item
                           name="mobile"
                           label="Mobile Phone Number"
-                          rules={[
-                            { required: true, message: 'Please enter mobile number' },
-                            { pattern: /^[0-9]{10}$/, message: 'Please enter a valid 10-digit mobile number' },
-                          ]}
+                          rules={[{ required: true, message: 'Mobile number is required' }]}
                         >
                           <Input
                             prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+                            placeholder="Mobile number"
                             size="large"
-                            style={{ borderRadius: 8 }}
                           />
                         </Form.Item>
 
                         <Form.Item
                           name="email"
-                          label="Email Address (Optional)"
-                          rules={[{ type: 'email', message: 'Please enter a valid email address' }]}
+                          label="Email Address (For receipts & invoices)"
                         >
                           <Input
                             prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
+                            placeholder="you@example.com"
                             size="large"
-                            placeholder="e.g. name@example.com"
-                            style={{ borderRadius: 8 }}
                           />
                         </Form.Item>
 
@@ -546,7 +868,9 @@ const ProfileScreen = () => {
                                 Merchant Outlet Manager Active
                               </div>
                               <Text type="secondary" style={{ fontSize: 12 }}>
-                                Manage your catalog, track incoming direct orders, and update store timings.
+                                {myShops.length > 0
+                                  ? `You have ${myShops.length} active outlet(s). Manage catalog and track direct orders.`
+                                  : 'Register your first physical shop on the neighborhood map with 0% commission.'}
                               </Text>
                             </div>
                             <Button
@@ -583,7 +907,7 @@ const ProfileScreen = () => {
                             </div>
                             <Button
                               type="primary"
-                              onClick={() => history.push(Routes.client)}
+                              onClick={() => history.push(`${Routes.client}?onboarding=shop`)}
                               style={{
                                 borderRadius: 8,
                                 fontWeight: 700,
@@ -605,6 +929,264 @@ const ProfileScreen = () => {
         </>
       )}
 
+      {/* ------------------------------------------------------------------
+          Interactive Onboarding Guide Modal (New User & Merchant Setup)
+          ------------------------------------------------------------------ */}
+      <Modal
+        open={onboardingModalOpen}
+        onCancel={() => handleSkipOnboarding(false)}
+        footer={null}
+        width={600}
+        centered
+        styles={{ body: { padding: '28px 24px' } }}
+      >
+        <div style={{ textAlign: 'center', marginBottom: 20 }}>
+          <div
+            style={{
+              width: 52,
+              height: 52,
+              borderRadius: 16,
+              background: isMerchant
+                ? 'linear-gradient(135deg, #7c3aed 0%, #ec4899 100%)'
+                : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 26,
+              margin: '0 auto 12px',
+              boxShadow: '0 8px 20px rgba(79, 70, 229, 0.25)',
+            }}
+          >
+            {isMerchant ? <ShopOutlined /> : <RocketOutlined />}
+          </div>
+          <Title level={3} style={{ margin: 0, color: '#0f172a' }}>
+            {isMerchant ? 'Welcome, Shop Owner!' : 'Welcome to Rquest!'}
+          </Title>
+          <Text type="secondary" style={{ fontSize: 14 }}>
+            {isMerchant
+              ? 'Complete your profile and get your physical storefront live with 0% commission.'
+              : 'Let’s finish your profile setup to start discovering nearby neighborhood deals.'}
+          </Text>
+        </div>
+
+        {/* Onboarding Stepper */}
+        <Steps
+          current={onboardingStep}
+          size="small"
+          style={{ marginBottom: 28 }}
+          items={
+            isMerchant
+              ? [
+                  { title: 'Profile' },
+                  { title: 'Storefront' },
+                  { title: 'Launch' },
+                ]
+              : [
+                  { title: 'Profile' },
+                  { title: 'Address' },
+                  { title: 'Explore' },
+                ]
+          }
+        />
+
+        {/* Step 0: Personal Info & Email */}
+        {onboardingStep === 0 && (
+          <div>
+            <Alert
+              message="Account Details Confirmed"
+              description={`Registered mobile number: ${profile?.mobile || user_data?.mobile || 'Verified'}`}
+              type="info"
+              showIcon
+              style={{ marginBottom: 20, borderRadius: 10 }}
+            />
+
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#334155' }}>
+                Your Name / Username
+              </label>
+              <Input
+                size="large"
+                value={profile?.username || user_data?.username}
+                disabled
+                prefix={<UserOutlined />}
+              />
+            </div>
+
+            <div style={{ marginBottom: 24 }}>
+              <label style={{ display: 'block', fontWeight: 600, marginBottom: 6, color: '#334155' }}>
+                Email Address (Recommended for receipts & notices)
+              </label>
+              <Input
+                size="large"
+                placeholder="name@example.com"
+                value={onboardingEmail}
+                onChange={(e) => setOnboardingEmail(e.target.value)}
+                prefix={<MailOutlined />}
+              />
+            </div>
+
+            <Flex justify="space-between" align="center">
+              <Button type="link" onClick={() => handleSkipOnboarding(false)} style={{ color: '#64748b' }}>
+                Skip for now
+              </Button>
+              <Button
+                type="primary"
+                size="large"
+                loading={savingOnboarding}
+                onClick={handleSaveOnboardingDetails}
+                style={{
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  border: 'none',
+                  padding: '0 24px',
+                }}
+              >
+                Save & Continue <ArrowRightOutlined />
+              </Button>
+            </Flex>
+          </div>
+        )}
+
+        {/* Step 1: Address (for customer) or Storefront (for merchant) */}
+        {onboardingStep === 1 && (
+          <div>
+            {isMerchant ? (
+              <div>
+                <div style={{ textAlign: 'center', padding: '10px 0 20px' }}>
+                  <ShopOutlined style={{ fontSize: 42, color: '#7c3aed', marginBottom: 12 }} />
+                  <Title level={4} style={{ margin: '0 0 8px' }}>
+                    Register Your Storefront
+                  </Title>
+                  <Paragraph type="secondary" style={{ fontSize: 14 }}>
+                    Pin your store on the interactive Leaflet map, choose your business category, and connect with 5,000+ local neighbors with 0% platform commission.
+                  </Paragraph>
+                </div>
+
+                <Flex vertical gap={12}>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={() => {
+                      setOnboardingModalOpen(false);
+                      history.push(`${Routes.client}?onboarding=shop`);
+                    }}
+                    style={{
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+                      border: 'none',
+                      height: 48,
+                    }}
+                  >
+                    Proceed to Store Registration Wizard <ArrowRightOutlined />
+                  </Button>
+                  <Button type="text" onClick={() => setOnboardingStep(2)} style={{ color: '#64748b' }}>
+                    I’ll add my shop later
+                  </Button>
+                </Flex>
+              </div>
+            ) : (
+              <div>
+                <div style={{ textAlign: 'center', padding: '10px 0 20px' }}>
+                  <EnvironmentOutlined style={{ fontSize: 42, color: '#4f46e5', marginBottom: 12 }} />
+                  <Title level={4} style={{ margin: '0 0 8px' }}>
+                    Add Your Primary Delivery Address
+                  </Title>
+                  <Paragraph type="secondary" style={{ fontSize: 14 }}>
+                    Rquest uses your GPS location to calculate walking distance and find nearby stores within 1–5 km.
+                  </Paragraph>
+                </div>
+
+                {addresses.length > 0 ? (
+                  <Alert
+                    message={`Saved Address: ${addresses[0].label} (${addresses[0].street_area || 'Verified'})`}
+                    type="success"
+                    showIcon
+                    style={{ marginBottom: 20, borderRadius: 10 }}
+                  />
+                ) : (
+                  <Button
+                    type="dashed"
+                    size="large"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddNewAddress}
+                    style={{
+                      width: '100%',
+                      height: 52,
+                      borderRadius: 12,
+                      fontWeight: 700,
+                      marginBottom: 20,
+                      borderColor: '#818cf8',
+                      color: '#4f46e5',
+                    }}
+                  >
+                    Pin My Home / Work Address on Map
+                  </Button>
+                )}
+
+                <Flex justify="space-between" align="center">
+                  <Button type="link" onClick={() => handleSkipOnboarding(false)} style={{ color: '#64748b' }}>
+                    Skip for now
+                  </Button>
+                  <Button
+                    type="primary"
+                    size="large"
+                    onClick={() => setOnboardingStep(2)}
+                    style={{
+                      borderRadius: 10,
+                      fontWeight: 700,
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      border: 'none',
+                    }}
+                  >
+                    Next Step <ArrowRightOutlined />
+                  </Button>
+                </Flex>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Step 2: All Set & Ready to Explore */}
+        {onboardingStep === 2 && (
+          <div style={{ textAlign: 'center', padding: '10px 0 10px' }}>
+            <div style={{ fontSize: 50, marginBottom: 12 }}>🎉</div>
+            <Title level={4} style={{ margin: '0 0 8px', color: '#0f172a' }}>
+              You’re All Set!
+            </Title>
+            <Paragraph type="secondary" style={{ fontSize: 14, marginBottom: 24 }}>
+              Your Rquest account is ready. You can view your profile completion anytime from your account tab.
+            </Paragraph>
+
+            <Flex vertical gap={12}>
+              <Button
+                type="primary"
+                size="large"
+                onClick={() => handleSkipOnboarding(true)}
+                style={{
+                  borderRadius: 10,
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  border: 'none',
+                  height: 48,
+                }}
+              >
+                Start Exploring Marketplace App <ArrowRightOutlined />
+              </Button>
+              <Button
+                type="text"
+                onClick={() => handleSkipOnboarding(false)}
+                style={{ color: '#64748b' }}
+              >
+                Stay on My Profile
+              </Button>
+            </Flex>
+          </div>
+        )}
+      </Modal>
+
       {/* Address Create / Edit Modal */}
       {addressModalOpen && (
         <AddressModal
@@ -623,4 +1205,3 @@ const ProfileScreen = () => {
 };
 
 export default ProfileScreen;
-

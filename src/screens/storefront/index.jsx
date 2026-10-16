@@ -1219,6 +1219,42 @@ const StorefrontScreen = () => {
                             ⏱️ {durationMins}m
                           </Tag>
                         )}
+
+                        {item.metadata?.prescription_required && (
+                          <Tag color="error" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0, fontWeight: 700 }}>
+                            Rx Required
+                          </Tag>
+                        )}
+
+                        {item.metadata?.dosage_form && (
+                          <Tag color="cyan" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            💊 {item.metadata.dosage_form}
+                          </Tag>
+                        )}
+
+                        {item.metadata?.expiry_date && (
+                          <Tag color="orange" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            Exp: {item.metadata.expiry_date}
+                          </Tag>
+                        )}
+
+                        {(item.metadata?.warranty_period || item.metadata?.warranty_months) && (
+                          <Tag color="green" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            🛡️ {item.metadata.warranty_period || item.metadata.warranty_months}m Warranty
+                          </Tag>
+                        )}
+
+                        {item.metadata?.vehicle_type && (
+                          <Tag color="geekblue" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            🚗 {item.metadata.vehicle_type}
+                          </Tag>
+                        )}
+
+                        {item.metadata?.category_name && (
+                          <Tag color="purple" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.category_name}
+                          </Tag>
+                        )}
                       </Flex>
 
                       <Title

@@ -27,6 +27,9 @@ import {
   ShoppingCartOutlined,
   MessageOutlined,
   RightOutlined,
+  CompassOutlined,
+  CarOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 
 const { Text } = Typography;
@@ -216,14 +219,25 @@ const SideBar = ({ open, handleClose }) => {
 
       {/* Navigation List Menu */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        {/* Explore Market */}
+        {/* Home Page */}
         <Button
           type="text"
           icon={<HomeOutlined style={{ fontSize: 17 }} />}
-          className={`drawer-nav-item ${currentPath === Routes.home ? 'active' : ''}`}
-          onClick={() => handleNavigate(Routes.home)}
+          className={`drawer-nav-item ${currentPath === Routes.landing ? 'active' : ''}`}
+          onClick={() => handleNavigate(Routes.landing)}
         >
-          <span style={{ flex: 1, textAlign: 'left' }}>Explore Market</span>
+          <span style={{ flex: 1, textAlign: 'left' }}>Home</span>
+          <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+        </Button>
+
+        {/* Explore Market */}
+        <Button
+          type="text"
+          icon={<CompassOutlined style={{ fontSize: 17 }} />}
+          className={`drawer-nav-item ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+          onClick={() => handleNavigate(Routes.app)}
+        >
+          <span style={{ flex: 1, textAlign: 'left' }}>Explore Market (App)</span>
           <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
         </Button>
 
@@ -267,6 +281,21 @@ const SideBar = ({ open, handleClose }) => {
             onClick={() => handleNavigate(Routes.orders)}
           >
             <span style={{ flex: 1, textAlign: 'left' }}>My Orders & Quotes</span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+          </Button>
+        )}
+
+        {/* Delivery Partner Task Board */}
+        {isLoggedIn && (
+          <Button
+            type="text"
+            icon={<CarOutlined style={{ fontSize: 17, color: '#10b981' }} />}
+            className={`drawer-nav-item ${currentPath === Routes.deliveryPortal ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.deliveryPortal)}
+          >
+            <span style={{ flex: 1, textAlign: 'left', fontWeight: 600, color: '#047857' }}>
+              Delivery Portal
+            </span>
             <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
           </Button>
         )}
@@ -337,6 +366,33 @@ const SideBar = ({ open, handleClose }) => {
               }}
             >
               0% Fee
+            </span>
+          </Button>
+        )}
+
+        {/* Platform Admin Console (if Admin) */}
+        {isLoggedIn && (user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin') && (
+          <Button
+            type="text"
+            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: '#7c3aed' }} />}
+            className={`drawer-nav-item ${currentPath === Routes.admin ? 'active' : ''}`}
+            style={{ color: '#7c3aed' }}
+            onClick={() => handleNavigate(Routes.admin)}
+          >
+            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
+              Platform Admin Console
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                background: '#ede9fe',
+                color: '#6d28d9',
+                padding: '1px 6px',
+                borderRadius: 9999,
+                fontWeight: 700,
+              }}
+            >
+              Admin
             </span>
           </Button>
         )}

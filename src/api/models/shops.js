@@ -59,6 +59,10 @@ module.exports = (sequelize) => {
       directions: {
         type: DataTypes.TEXT,
       },
+      allow_multi_category: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+      },
     },
     {
       timestamps: true,

@@ -10,14 +10,17 @@ import { default as routes } from './routes';
 import {
   LoginScreen,
   HomeScreen,
+  LandingScreen,
   ClientRegister,
   RegisterScreen,
   StorefrontScreen,
   OrdersScreen,
   ProfileScreen,
+  DeliveryPortalScreen,
+  AdminScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar, CartDrawer } from '../components';
-import { useChatStore, useGlobalStore, chatSocket } from '../../app/services';
+import { ChatApp, NavBar, SideBar, CartDrawer, ErrorBoundary } from '../components';
+import { useChatStore, useGlobalStore, useCartStore, chatSocket } from '../../app/services';
 import { apiConfig, netWorkCall } from '../utils';
 import { Avatar, Badge, message, notification } from 'antd';
 import { MessageFilled, CloseOutlined } from '@ant-design/icons';
@@ -56,6 +59,7 @@ export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
   const { isChat, unreadTotal, handleChatOpen, handleChatClose } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
+  const isCartOpen = useCartStore((state) => state.isOpen);
 
   const handleClose = () => {
     setdrawer(false);
@@ -129,13 +133,19 @@ export default function AppRoutes() {
       />
       <div style={{ minHeight: 'calc(100vh - 64px)', overflowX: 'hidden' }}>
         <Switch>
-          <Route exact path="/">
-            <Redirect to={routes.home} />
+          <Route exact path={routes.landing}>
+            <LandingScreen />
+          </Route>
+          <Route path="/landing">
+            <LandingScreen />
           </Route>
           <Route path={routes.login}>
             <LoginScreen />
           </Route>
-          <Route path={routes.home}>
+          <Route path={routes.app}>
+            <HomeScreen />
+          </Route>
+          <Route path="/home">
             <HomeScreen />
           </Route>
           <Route path={routes.storefront}>
@@ -143,17 +153,21 @@ export default function AppRoutes() {
           </Route>
           <PrivateRoute path={routes.orders} component={OrdersScreen} />
           <PrivateRoute path={routes.profile} component={ProfileScreen} />
+          <PrivateRoute path={routes.deliveryPortal} component={DeliveryPortalScreen} />
+          <PrivateRoute path={routes.admin} component={AdminScreen} />
           <PrivateRoute path={routes.client} component={ClientRegister} />
           <PrivateRoute path={routes.clientShop} component={ClientRegister} />
           <Route path={routes.register}>
             <RegisterScreen />
           </Route>
-          <Redirect to={routes.home} />
+          <Redirect to={routes.landing} />
         </Switch>
       </div>
-      <CartDrawer />
+      <ErrorBoundary fallback={null}>
+        <CartDrawer />
+      </ErrorBoundary>
       {isChat && <ChatApp />}
-      {user_data?.user_id && !isChat && (
+      {user_data?.user_id && !isChat && !isCartOpen && (
         <div
           className="rquest-chat-fab"
           onClick={() => handleChatOpen(null, null)}

@@ -52,14 +52,15 @@ const formatLocationName = (address, displayName, lat, lng) => {
   return `${Number(lat).toFixed(3)}, ${Number(lng).toFixed(3)}`;
 };
 
-// 1. Reverse Geocode: lat, lon -> address name
+// 1. Reverse Geocode: lat, lon/lng -> address name
 router.get('/reverse', async (req, res) => {
-  const { lat, lon } = req.query;
-  if (!lat || !lon) {
+  const { lat, lon, lng } = req.query;
+  const targetLon = lon || lng;
+  if (!lat || !targetLon) {
     return res.status(400).json({ error: 'lat and lon are required' });
   }
 
-  const key = `rev_${Number(lat).toFixed(4)}_${Number(lon).toFixed(4)}`;
+  const key = `rev_${Number(lat).toFixed(4)}_${Number(targetLon).toFixed(4)}`;
   if (cache.has(key)) {
     return res.json(cache.get(key));
   }
@@ -68,8 +69,8 @@ router.get('/reverse', async (req, res) => {
     const googleKey = process.env.GOOGLE_MAPS_API_KEY || process.env.VITE_GOOGLE_MAPS_API_KEY;
     if (googleKey) {
       // If user provides Google Maps Key, use Google Geocoding API
-      const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=${googleKey}`;
-      const gRes = await fetch(gUrl);
+      const gUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${targetLon}&key=${googleKey}`;
+      const gRes = await fetch(gUrl, { signal: AbortSignal.timeout?.(5000) });
       const gData = await gRes.json();
       if (gData.status === 'OK' && gData.results?.length > 0) {
         const first = gData.results[0];
@@ -85,21 +86,22 @@ router.get('/reverse', async (req, res) => {
     }
 
     // Default: OpenStreetMap Nominatim with valid User-Agent
-    const osmUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+    const osmUrl = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${targetLon}`;
     const osmRes = await fetch(osmUrl, {
       headers: {
         'User-Agent': 'RQuest-Hyperlocal-Platform/1.0 (contact@rquest.local)',
       },
+      signal: AbortSignal.timeout?.(5000),
     });
 
     const osmData = await osmRes.json();
-    const formattedName = formatLocationName(osmData.address, osmData.display_name, lat, lon);
+    const formattedName = formatLocationName(osmData?.address, osmData?.display_name, lat, targetLon);
 
     const result = {
       success: true,
       name: formattedName,
-      address: osmData.address,
-      display_name: osmData.display_name,
+      address: osmData?.address,
+      display_name: osmData?.display_name,
       source: 'osm',
     };
 
@@ -107,9 +109,11 @@ router.get('/reverse', async (req, res) => {
     return res.json(result);
   } catch (error) {
     console.error('Error in /location/reverse:', error);
+    const fallbackLat = !isNaN(Number(lat)) ? Number(lat).toFixed(3) : lat;
+    const fallbackLon = !isNaN(Number(targetLon)) ? Number(targetLon).toFixed(3) : targetLon;
     return res.json({
       success: true,
-      name: `${Number(lat).toFixed(3)}, ${Number(lng).toFixed(3)}`,
+      name: `${fallbackLat}, ${fallbackLon}`,
       fallback: true,
     });
   }
@@ -135,7 +139,7 @@ router.get('/search', async (req, res) => {
       const gUrl = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(
         query
       )}&components=country:in&key=${googleKey}`;
-      const gRes = await fetch(gUrl);
+      const gRes = await fetch(gUrl, { signal: AbortSignal.timeout?.(5000) });
       const gData = await gRes.json();
       if (gData.status === 'OK' && gData.predictions?.length > 0) {
         // Return predictions
@@ -159,16 +163,19 @@ router.get('/search', async (req, res) => {
       headers: {
         'User-Agent': 'RQuest-Hyperlocal-Platform/1.0 (contact@rquest.local)',
       },
+      signal: AbortSignal.timeout?.(5000),
     });
 
     const osmData = await osmRes.json();
-    const results = osmData.map((item) => ({
-      name: item.name,
-      display_name: item.display_name,
-      lat: parseFloat(item.lat),
-      lon: parseFloat(item.lon),
-      source: 'osm',
-    }));
+    const results = Array.isArray(osmData)
+      ? osmData.map((item) => ({
+          name: item.name,
+          display_name: item.display_name,
+          lat: parseFloat(item.lat),
+          lon: parseFloat(item.lon),
+          source: 'osm',
+        }))
+      : [];
 
     const responseData = { success: true, data: results, source: 'osm' };
     cache.set(key, responseData);

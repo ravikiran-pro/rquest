@@ -13,7 +13,6 @@ import {
   Divider,
   message,
   Avatar,
-  Collapse,
 } from 'antd';
 import {
   OrderedListOutlined,
@@ -25,19 +24,18 @@ import {
   CloseCircleOutlined,
   SyncOutlined,
   PhoneOutlined,
-  EnvironmentOutlined,
   DownOutlined,
   UpOutlined,
-  ArrowRightOutlined,
   CheckCircleFilled,
-  CompassOutlined,
+  CarOutlined,
+  ThunderboltFilled,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useGlobalStore, useChatStore } from '../../app/services';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../app/routes/routes';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const OrdersScreen = () => {
   const history = useHistory();
@@ -62,8 +60,8 @@ const OrdersScreen = () => {
       setLoading(true);
       try {
         const [ordersRes, quotesRes] = await Promise.all([
-          netWorkCall(apiConfig.orders_user, 'GET', null, false),
-          netWorkCall(apiConfig.quotes_user, 'GET', null, false),
+          netWorkCall(apiConfig.orders_user, 'GET', null, true),
+          netWorkCall(apiConfig.quotes_user, 'GET', null, true),
         ]);
 
         if (isMounted) {
@@ -90,12 +88,46 @@ const OrdersScreen = () => {
     }));
   };
 
+  const handleSwitchToPickup = async (orderId) => {
+    try {
+      const res = await netWorkCall(
+        `${apiConfig.orders_switch_pickup}/${orderId}/switch-to-pickup`,
+        'PUT',
+        null,
+        true
+      );
+      if (res?.success) {
+        message.success('Switched to Self-Pickup. You can collect it from the store.');
+        const ordersRes = await netWorkCall(apiConfig.orders_user, 'GET', null, true);
+        if (ordersRes?.data) setOrdersList(ordersRes.data);
+      } else {
+        message.error(res?.error || 'Failed to switch to pickup');
+      }
+    } catch (err) {
+      console.error('Error switching to pickup:', err);
+      message.error('Failed to switch to pickup');
+    }
+  };
+
   const getStatusBadge = (status) => {
     switch (status) {
       case 'accepted':
         return (
           <Tag color="processing" style={{ borderRadius: 9999, fontWeight: 700, margin: 0 }}>
-            <SyncOutlined spin /> In Progress
+            <SyncOutlined spin /> Accepted & Packing
+          </Tag>
+        );
+      case 'packed':
+      case 'ready_for_pickup':
+        return (
+          <Tag color="cyan" style={{ borderRadius: 9999, fontWeight: 700, margin: 0 }}>
+            <CheckCircleFilled /> Ready for Pickup
+          </Tag>
+        );
+      case 'out_for_delivery':
+        return (
+          <Tag color="geekblue" style={{ borderRadius: 9999, fontWeight: 700, margin: 0 }}>
+            <CarOutlined /> Out for Delivery
           </Tag>
         );
       case 'completed':
@@ -232,7 +264,7 @@ const OrdersScreen = () => {
               My Orders & Quotes
             </Title>
             <Text type="secondary" style={{ fontSize: 13, color: '#64748b' }}>
-              Direct connections • 0% middleman markups
+              Track your orders and quotations
             </Text>
           </div>
 
@@ -257,7 +289,7 @@ const OrdersScreen = () => {
             key: 'orders',
             label: (
               <span style={{ fontWeight: 700, fontSize: 15 }}>
-                <OrderedListOutlined /> Direct Orders ({ordersList.length})
+                <OrderedListOutlined /> Orders ({ordersList.length})
               </span>
             ),
           },
@@ -451,14 +483,70 @@ const OrdersScreen = () => {
                     </div>
 
                     {/* Delivery & Payment details tag row */}
-                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
                       <Tag color="cyan" style={{ fontSize: 11, fontWeight: 600 }}>
-                        {ord.payment_mode === 'direct_upi' ? '💳 Direct UPI' : '💵 Cash on Delivery'}
+                        {ord.payment_mode === 'direct_upi' ? '💳 UPI' : '💵 Cash'}
                       </Tag>
-                      <Tag color="purple" style={{ fontSize: 11, fontWeight: 600 }}>
-                        📍 {ord.order_type === 'delivery' ? 'Home Delivery' : ord.order_type === 'pickup' ? 'Store Pickup' : 'Service Visit'}
+                      <Tag color={ord.order_type === 'pickup' ? 'green' : 'purple'} style={{ fontSize: 11, fontWeight: 600 }}>
+                        {ord.order_type === 'pickup' ? '🏬 Self-Pickup' : '🛵 Delivery'}
                       </Tag>
+                      {ord.order_type === 'delivery' && (
+                        <Tag color="geekblue" style={{ fontSize: 11, fontWeight: 600 }}>
+                          Delivery Fee: ₹{(parseFloat(ord.delivery_fee) || 30).toFixed(0)}
+                        </Tag>
+                      )}
                     </div>
+
+                    {/* Delivery status or Self-Pickup fallback banner */}
+                    {ord.order_type === 'delivery' && ord.status !== 'completed' && ord.status !== 'cancelled' && (
+                      <div
+                        style={{
+                          background: '#f8fafc',
+                          padding: '10px 12px',
+                          borderRadius: 10,
+                          border: '1px solid #e2e8f0',
+                          marginBottom: 12,
+                          fontSize: 12,
+                        }}
+                      >
+                        {ord.delivery_partner ? (
+                          <div style={{ color: '#0369a1', fontWeight: 600 }}>
+                            🛵 Assigned Runner: {ord.delivery_partner.username}{' '}
+                            {ord.delivery_partner.mobile && `(${ord.delivery_partner.mobile})`}
+                          </div>
+                        ) : (
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                            <span style={{ color: '#64748b' }}>
+                              Broadcasting to local runners in your area...
+                            </span>
+                            <Button
+                              size="small"
+                              type="dashed"
+                              onClick={() => handleSwitchToPickup(ord.id)}
+                              style={{ borderRadius: 6, color: '#4f46e5', fontWeight: 700 }}
+                            >
+                              Switch to Self-Pickup
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {ord.order_type === 'pickup' && ord.status !== 'completed' && ord.status !== 'cancelled' && (
+                      <div
+                        style={{
+                          background: '#f0fdf4',
+                          padding: '10px 12px',
+                          borderRadius: 10,
+                          border: '1px solid #bbf7d0',
+                          marginBottom: 12,
+                          fontSize: 12,
+                          color: '#15803d',
+                        }}
+                      >
+                        🏬 <strong>Ready for counter collection:</strong> Show order #{ord.order_number} to merchant.
+                      </div>
+                    )}
 
                     {/* High-Touch Target Mobile Action Buttons */}
                     <Row gutter={[8, 8]}>

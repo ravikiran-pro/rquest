@@ -23,10 +23,12 @@ const netWorkCall = async (endpoint, method, payload, isAuth = false) => {
     body: payload,
   };
 
-  if (isAuth) {
-    body.headers.Authorization = `Bearer ${sessionStorage.getItem(
-      storageKeys.auth_token
-    )}`;
+  const token =
+    sessionStorage.getItem(storageKeys.auth_token) ||
+    localStorage.getItem(storageKeys.auth_token);
+
+  if ((isAuth || token) && token) {
+    body.headers.Authorization = `Bearer ${token}`;
   }
 
   const response = await fetch(`${config.api_url}/api/v1/${endpoint}`, body);

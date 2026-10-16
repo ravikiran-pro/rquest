@@ -36,7 +36,7 @@ import {
 } from '../../app/utils/helper';
 import { apiConfig } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -51,6 +51,7 @@ const CATEGORY_CHIPS = [
 
 const HomeScreen = () => {
   const history = useHistory();
+  const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
@@ -61,6 +62,20 @@ const HomeScreen = () => {
   const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchError, setSearchError] = useState('');
+
+  useEffect(() => {
+    if (location.search) {
+      const params = new URLSearchParams(location.search);
+      const qParam = params.get('q');
+      const catParam = params.get('category');
+      if (qParam) {
+        setSearchText(qParam);
+      }
+      if (catParam) {
+        setActiveCategory(catParam);
+      }
+    }
+  }, [location.search]);
   const getSavedLocation = () => {
     try {
       const saved = localStorage.getItem('rquest_user_location');

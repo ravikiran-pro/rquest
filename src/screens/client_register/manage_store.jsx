@@ -19,6 +19,8 @@ import {
   Segmented,
   Flex,
   Spin,
+  Row,
+  Col,
 } from 'antd';
 import {
   PlusOutlined,
@@ -31,6 +33,9 @@ import {
   ShoppingCartOutlined,
   FileDoneOutlined,
   FileTextOutlined,
+  SettingOutlined,
+  LockOutlined,
+  UnlockOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
@@ -69,6 +74,83 @@ const ManageStore = ({
   // Quotes state
   const [quotes, setQuotes] = useState([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
+
+  // Shop Settings state
+  const [shopSettings, setShopSettings] = useState({
+    shop_name: shop?.shop_name || '',
+    address: shop?.address || '',
+    area: shop?.area || '',
+    mobile_number: shop?.mobile_number || '',
+    website: shop?.website || '',
+    img_url: shop?.img_url || '',
+    allow_multi_category: Boolean(shop?.allow_multi_category),
+  });
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [deletingShop, setDeletingShop] = useState(false);
+
+  useEffect(() => {
+    if (shop) {
+      setShopSettings({
+        shop_name: shop.shop_name || '',
+        address: shop.address || '',
+        area: shop.area || '',
+        mobile_number: shop.mobile_number || '',
+        website: shop.website || '',
+        img_url: shop.img_url || '',
+        allow_multi_category: Boolean(shop.allow_multi_category),
+      });
+    }
+  }, [shop]);
+
+  const handleSaveShopSettings = async () => {
+    setSavingSettings(true);
+    try {
+      const res = await netWorkCall(
+        apiConfig.register_shop,
+        'POST',
+        JSON.stringify({
+          shop_id: shop.id,
+          ...shopSettings,
+        }),
+        true
+      );
+      if (res?.success) {
+        message.success('Store settings & multi-category preferences updated!');
+        onRefreshShop?.();
+      } else {
+        message.error(res?.error || 'Failed to update store settings');
+      }
+    } catch (err) {
+      console.error(err);
+      message.error('An error occurred while saving store settings');
+    } finally {
+      setSavingSettings(false);
+    }
+  };
+
+  const handleDeleteShop = async () => {
+    setDeletingShop(true);
+    try {
+      const res = await netWorkCall(
+        `${apiConfig.shop_delete}/${shop.id}`,
+        'DELETE',
+        null,
+        true
+      );
+      if (res?.success) {
+        message.success('Store deleted successfully');
+        onRefreshShop?.();
+        onClose?.();
+      } else {
+        message.error(res?.error || 'Failed to delete store');
+      }
+    } catch (err) {
+      console.error(err);
+      message.error('Failed to delete store');
+    } finally {
+      setDeletingShop(false);
+    }
+  };
 
   // Compute store archetype
   const storeArchetype = useMemo(() => {
@@ -553,9 +635,18 @@ const ManageStore = ({
             <Title level={4} style={{ margin: 0, fontWeight: 800 }}>
               {shop.shop_name}
             </Title>
-            <Text type="secondary" style={{ fontSize: 13 }}>
-              {shop.area} • {shop.shopCategory?.name || shop.shop_type || 'Store Outlet'}
-            </Text>
+            <Flex align="center" gap={8} style={{ marginTop: 2 }}>
+              <Text type="secondary" style={{ fontSize: 13 }}>
+                {shop.area} • {shop.shopCategory?.name || shop.shop_type || 'Store Outlet'}
+              </Text>
+              <Tag
+                color={shop.allow_multi_category ? 'purple' : 'default'}
+                icon={shop.allow_multi_category ? <UnlockOutlined /> : <LockOutlined />}
+                style={{ fontSize: 10, margin: 0, borderRadius: 4 }}
+              >
+                {shop.allow_multi_category ? 'Multi-Category' : 'Fixed Category'}
+              </Tag>
+            </Flex>
           </div>
         </div>
 
@@ -761,6 +852,183 @@ const ManageStore = ({
                       </Space>
                     )}
                   </Spin>
+                </div>
+              ),
+            },
+            {
+              key: 'settings',
+              label: (
+                <span style={{ fontWeight: 700, fontSize: 15 }}>
+                  <SettingOutlined /> Store Settings & Info
+                </span>
+              ),
+              children: (
+                <div style={{ maxWidth: 700 }}>
+                  <div style={{ marginBottom: 20 }}>
+                    <Title level={5} style={{ margin: 0 }}>
+                      Store Information & Category Preferences
+                    </Title>
+                    <Text type="secondary" style={{ fontSize: 13 }}>
+                      Update your storefront profile, location information, and enable multi-category catalog expansion.
+                    </Text>
+                  </div>
+
+                  <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 20 }}>
+                    <div style={{ marginBottom: 16 }}>
+                      <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        Store / Outlet Name:
+                      </Text>
+                      <Input
+                        value={shopSettings.shop_name}
+                        onChange={(e) =>
+                          setShopSettings((prev) => ({ ...prev, shop_name: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <Row gutter={16} style={{ marginBottom: 16 }}>
+                      <Col span={12}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                          Area / Locality:
+                        </Text>
+                        <Input
+                          value={shopSettings.area}
+                          onChange={(e) =>
+                            setShopSettings((prev) => ({ ...prev, area: e.target.value }))
+                          }
+                        />
+                      </Col>
+                      <Col span={12}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                          Contact Phone:
+                        </Text>
+                        <Input
+                          value={shopSettings.mobile_number}
+                          onChange={(e) =>
+                            setShopSettings((prev) => ({ ...prev, mobile_number: e.target.value }))
+                          }
+                        />
+                      </Col>
+                    </Row>
+
+                    <div style={{ marginBottom: 16 }}>
+                      <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        Full Street Address:
+                      </Text>
+                      <Input.TextArea
+                        rows={2}
+                        value={shopSettings.address}
+                        onChange={(e) =>
+                          setShopSettings((prev) => ({ ...prev, address: e.target.value }))
+                        }
+                      />
+                    </div>
+
+                    <Row gutter={16} style={{ marginBottom: 20 }}>
+                      <Col span={12}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                          Website / Social:
+                        </Text>
+                        <Input
+                          value={shopSettings.website}
+                          placeholder="https://..."
+                          onChange={(e) =>
+                            setShopSettings((prev) => ({ ...prev, website: e.target.value }))
+                          }
+                        />
+                      </Col>
+                      <Col span={12}>
+                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                          Storefront Banner / Image URL:
+                        </Text>
+                        <Input
+                          value={shopSettings.img_url}
+                          placeholder="https://images.unsplash.com/..."
+                          onChange={(e) =>
+                            setShopSettings((prev) => ({ ...prev, img_url: e.target.value }))
+                          }
+                        />
+                      </Col>
+                    </Row>
+
+                    {/* Multi-category switch */}
+                    <div
+                      style={{
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: 10,
+                        padding: '14px 16px',
+                        marginBottom: 20,
+                      }}
+                    >
+                      <Flex justify="space-between" align="center">
+                        <div style={{ maxWidth: '80%' }}>
+                          <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                            {shopSettings.allow_multi_category ? <UnlockOutlined style={{ color: '#7c3aed' }} /> : <LockOutlined style={{ color: '#64748b' }} />}
+                            Allow Multiple Categories (Hybrid Store)
+                          </Text>
+                          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                            {shopSettings.allow_multi_category
+                              ? 'Enabled — You can add products spanning different domain categories (e.g. food + pharmacy + rentals).'
+                              : 'Disabled (Default) — Your product catalog is strictly locked to your registered shop category for consistency.'}
+                          </Text>
+                        </div>
+                        <Switch
+                          checked={shopSettings.allow_multi_category}
+                          onChange={(checked) =>
+                            setShopSettings((prev) => ({ ...prev, allow_multi_category: checked }))
+                          }
+                        />
+                      </Flex>
+                    </div>
+
+                    <Button
+                      type="primary"
+                      loading={savingSettings}
+                      onClick={handleSaveShopSettings}
+                      style={{
+                        background: '#4f46e5',
+                        borderColor: '#4f46e5',
+                        fontWeight: 700,
+                        borderRadius: 8,
+                      }}
+                    >
+                      Save Store Settings
+                    </Button>
+                  </Card>
+
+                  {/* Danger Zone: Delete Store */}
+                  <Card
+                    style={{
+                      borderRadius: 12,
+                      border: '1px solid #fee2e2',
+                      background: '#fff5f5',
+                    }}
+                  >
+                    <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+                      <div>
+                        <Text strong style={{ color: '#b91c1c', fontSize: 14, display: 'block' }}>
+                          Danger Zone: Delete Store Outlet
+                        </Text>
+                        <Text type="secondary" style={{ fontSize: 12, color: '#991b1b' }}>
+                          Permanently delete this shop outlet and remove all its catalog items.
+                        </Text>
+                      </div>
+
+                      <Popconfirm
+                        title="Delete this store outlet?"
+                        description="This cannot be undone. All listings under this store will be permanently deleted."
+                        okText="Yes, Delete Store"
+                        cancelText="Cancel"
+                        okButtonProps={{ danger: true, loading: deletingShop }}
+                        onConfirm={handleDeleteShop}
+                      >
+                        <Button danger type="primary">
+                          Delete Store Outlet
+                        </Button>
+                      </Popconfirm>
+                    </Flex>
+                  </Card>
                 </div>
               ),
             },

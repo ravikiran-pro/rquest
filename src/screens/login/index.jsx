@@ -1,12 +1,26 @@
 import React, { useState } from 'react';
-import { Form, Input, Button, Typography, message, Card } from 'antd';
-import { UserOutlined, LockOutlined } from '@ant-design/icons';
+import { Form, Input, Button, message } from 'antd';
+import {
+  UserOutlined,
+  LockOutlined,
+  ArrowRightOutlined,
+  ArrowLeftOutlined,
+  SafetyCertificateOutlined,
+  ShopOutlined,
+} from '@ant-design/icons';
 import { netWorkCall, storageKeys } from '../../app/utils/helper';
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
-import { Link } from 'react-router-dom';
 import Routes from '../../app/routes/routes';
 import { apiConfig, SOCKET } from '../../app/utils';
+import {
+  HandshakePinIllustration,
+  LeftCornerFlank,
+  RightCornerFlank,
+  HeroSwoosh,
+  SparkleStar,
+} from '../landing/LandingIllustrations';
+import './auth.css';
 
 const LoginScreen = () => {
   const history = useHistory();
@@ -17,7 +31,7 @@ const LoginScreen = () => {
     if (values.mobile && values.password) {
       setLoading(true);
       try {
-        let body = JSON.stringify({
+        const body = JSON.stringify({
           mobile: values.mobile,
           password: values.password,
         });
@@ -41,69 +55,164 @@ const LoginScreen = () => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: 'calc(100vh - 60px)',
-        background: '#f0f2f5',
-        padding: '20px',
-      }}
-    >
-      <Card
-        style={{
-          width: '100%',
-          maxWidth: 400,
-          boxShadow: '0 4px 16px rgba(15, 23, 42, 0.08)',
-          borderRadius: 16,
-          border: '1px solid #e2e8f0',
-        }}
-      >
-        <Typography.Title
-          level={3}
-          style={{ textAlign: 'center', marginBottom: 24 }}
-        >
-          Login
-        </Typography.Title>
-        <Form onFinish={onFinish} layout="vertical">
-          <Form.Item
-            name="mobile"
-            label="Mobile Number or Username"
-            rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
-          >
-            <Input prefix={<UserOutlined />} placeholder="Mobile number or username" size="large" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="Password"
-            rules={[{ required: true, message: 'Please enter your password' }]}
-          >
-            <Input.Password
-              prefix={<LockOutlined />}
-              placeholder="Password"
-              size="large"
-            />
-          </Form.Item>
-          <Form.Item style={{ marginTop: 24 }}>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              size="large"
-              style={{ width: '100%' }}
-            >
-              Log in
-            </Button>
-          </Form.Item>
-          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-            <span>Don't have an account? </span>
-            <Link to={Routes.register} style={{ marginLeft: 6 }}>
-              Register Here
-            </Link>
+    <div className="auth-page-wrapper">
+      {/* Background Atmosphere Blueprint Dots & Subtle Ambient Glows */}
+      <div className="auth-ambient-bg" />
+      <div className="auth-ambient-glow" />
+      <div className="auth-ambient-glow-right" />
+
+      {/* Dynamic Page Corner Accents */}
+      <LeftCornerFlank />
+      <RightCornerFlank />
+
+      <div className="auth-container">
+        <div className="auth-split-grid">
+          {/* Left Column: Visual Showcase & Brand Narrative */}
+          <div className="auth-showcase-col">
+            <div className="auth-showcase-badge">
+              <span className="auth-badge-beacon" />
+              <span className="auth-badge-text">Direct Hyperlocal Network</span>
+              <span style={{ color: '#cbd5e1' }}>/</span>
+              <span className="auth-badge-tag">Zero Platform Cut</span>
+            </div>
+
+            <h1 className="auth-showcase-title">
+              Welcome Back to Your{' '}
+              <span className="auth-title-emerald">
+                Neighborhood.
+                <HeroSwoosh className="auth-title-swoosh" />
+              </span>
+            </h1>
+
+            <p className="auth-showcase-desc">
+              Direct counter communication, 0% platform markups, and instant PIN handshake verification with physical neighborhood kiranas, food outlets, and local technicians.
+            </p>
+
+            {/* Tactile SVG Vector Illustration Deck */}
+            <div className="auth-illustration-deck">
+              <div className="auth-deck-canvas">
+                <HandshakePinIllustration />
+              </div>
+            </div>
+
+            {/* Live Trust Metrics Chips */}
+            <div className="auth-chips-row">
+              <div className="auth-chip-pill">
+                <span className="auth-chip-dot green" />
+                <span>⚡ 4-Digit Counter PIN Lock</span>
+              </div>
+              <div className="auth-chip-pill">
+                <span className="auth-chip-dot blue" />
+                <span>🛵 Direct Community Runner</span>
+              </div>
+              <div className="auth-chip-pill">
+                <span className="auth-chip-dot purple" />
+                <span>🔒 100% Real Counter MRP</span>
+              </div>
+            </div>
+
+            {/* Social Proof Mini Quote */}
+            <div className="auth-quote-card">
+              <img
+                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
+                alt="Murugan K."
+                className="auth-quote-avatar"
+              />
+              <div className="auth-quote-text">
+                &ldquo;On Rquest, my neighborhood customers pay real counter MRP and I keep 100% in my cash drawer.&rdquo;
+                <div className="auth-quote-author">Murugan K. • Sri Murugan Groceries &amp; Dairy</div>
+              </div>
+            </div>
           </div>
-        </Form>
-      </Card>
+
+          {/* Right Column: Modern Polished Glassmorphic Login Card */}
+          <div className="auth-form-col">
+            <div className="auth-card">
+              <div className="auth-card-brand-row">
+                <div className="auth-logo-badge">R</div>
+                <div>
+                  <div className="auth-brand-name">Rquest</div>
+                  <div className="auth-brand-sub">Hyperlocal Direct Commerce</div>
+                </div>
+                <div style={{ marginLeft: 'auto' }}>
+                  <SparkleStar size={20} color="#10b981" />
+                </div>
+              </div>
+
+              <h2 className="auth-card-title">Sign In to Your Account</h2>
+              <p className="auth-card-subtitle">
+                Enter your registered mobile number or username to access your dashboard.
+              </p>
+
+              <Form onFinish={onFinish} layout="vertical" className="auth-form">
+                <Form.Item
+                  name="mobile"
+                  label="Mobile Number or Username"
+                  rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
+                >
+                  <Input
+                    prefix={<UserOutlined />}
+                    placeholder="Enter 10-digit mobile or username"
+                    size="large"
+                    autoComplete="username"
+                  />
+                </Form.Item>
+
+                <Form.Item
+                  name="password"
+                  label="Password"
+                  rules={[{ required: true, message: 'Please enter your password' }]}
+                >
+                  <Input.Password
+                    prefix={<LockOutlined />}
+                    placeholder="Enter your account password"
+                    size="large"
+                    autoComplete="current-password"
+                  />
+                </Form.Item>
+
+                <Form.Item style={{ marginTop: 28, marginBottom: 12 }}>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="large"
+                    className="btn-auth-submit"
+                  >
+                    <span>Log in to Neighborhood Hub</span>
+                    <ArrowRightOutlined />
+                  </Button>
+                </Form.Item>
+
+                <div className="auth-switch-row">
+                  <span>Don&apos;t have an account yet?</span>
+                  <Link to={Routes.register} className="auth-switch-link">
+                    Create Account (₹0)
+                  </Link>
+                </div>
+
+                <div className="auth-trust-footer">
+                  <div className="auth-trust-shield">
+                    <SafetyCertificateOutlined style={{ color: '#10b981' }} />
+                    <span>256-Bit Secure Direct Session • Zero Spam Guarantee</span>
+                  </div>
+                  <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                    <Link to={Routes.landing} className="auth-back-link">
+                      <ArrowLeftOutlined style={{ fontSize: 11 }} />
+                      <span>Back to Homepage</span>
+                    </Link>
+                    <span style={{ color: '#cbd5e1' }}>•</span>
+                    <Link to={Routes.client} className="auth-back-link">
+                      <ShopOutlined style={{ fontSize: 11 }} />
+                      <span>Register Store (₹0)</span>
+                    </Link>
+                  </div>
+                </div>
+              </Form>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

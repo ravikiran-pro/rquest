@@ -24,6 +24,9 @@ import {
   OrderedListOutlined,
   DownOutlined,
   MessageOutlined,
+  CompassOutlined,
+  CarOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 
 const Navbar = ({ open, handleOpen, handleClose }) => {
@@ -74,10 +77,16 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
     },
     { type: 'divider' },
     {
-      key: 'explore',
+      key: 'home',
       icon: <HomeOutlined />,
-      label: 'Explore Market',
-      onClick: () => history.push(Routes.home),
+      label: 'Home Page',
+      onClick: () => history.push(Routes.landing),
+    },
+    {
+      key: 'explore',
+      icon: <CompassOutlined />,
+      label: 'Explore Market (App)',
+      onClick: () => history.push(Routes.app),
     },
     {
       key: 'profile',
@@ -90,6 +99,16 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       icon: <OrderedListOutlined />,
       label: 'My Orders & Quotes',
       onClick: () => history.push(Routes.orders),
+    },
+    {
+      key: 'delivery-portal',
+      icon: <CarOutlined style={{ color: '#10b981' }} />,
+      label: (
+        <span style={{ color: '#047857', fontWeight: 600 }}>
+          Delivery Portal
+        </span>
+      ),
+      onClick: () => history.push(Routes.deliveryPortal),
     },
     {
       key: 'chat',
@@ -127,6 +146,20 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick: () => history.push(Routes.client),
           },
         ]),
+    ...(user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin'
+      ? [
+          {
+            key: 'admin-console',
+            icon: <SafetyCertificateOutlined style={{ color: '#7c3aed' }} />,
+            label: (
+              <span style={{ color: '#7c3aed', fontWeight: 700 }}>
+                Platform Admin Console
+              </span>
+            ),
+            onClick: () => history.push(Routes.admin),
+          },
+        ]
+      : []),
     { type: 'divider' },
     {
       key: 'logout',
@@ -140,7 +173,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   return (
     <header className="navBar">
       {/* Brand Logo */}
-      <Link to={Routes.home} className="navbar-brand">
+      <Link to={Routes.landing} className="navbar-brand">
         <div className="navbar-logo-icon">R</div>
         <div className="navbar-brand-text">
           <span className="navbar-brand-name">Rquest</span>
@@ -150,13 +183,23 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
       {/* Desktop Navigation Links (≥ 992px) */}
       <nav className="navbar-desktop-nav">
-        <Link to={Routes.home}>
+        <Link to={Routes.landing}>
           <Button
             type="text"
             icon={<HomeOutlined />}
-            className={`nav-item-btn ${currentPath === Routes.home ? 'active' : ''}`}
+            className={`nav-item-btn ${currentPath === Routes.landing ? 'active' : ''}`}
           >
-            Explore
+            Home
+          </Button>
+        </Link>
+
+        <Link to={Routes.app}>
+          <Button
+            type="text"
+            icon={<CompassOutlined />}
+            className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+          >
+            Explore App
           </Button>
         </Link>
 
@@ -273,7 +316,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     style={{
                       borderRadius: 8,
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      background: '#0f172a',
+                      borderColor: '#0f172a',
+                      color: '#ffffff',
                     }}
                   >
                     Register

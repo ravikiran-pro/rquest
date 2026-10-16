@@ -12,6 +12,11 @@ import {
   Card,
   Empty,
   Flex,
+  Modal,
+  Tabs,
+  Row,
+  Col,
+  Form,
 } from 'antd';
 import {
   DeleteOutlined,
@@ -23,13 +28,14 @@ import {
   ShopOutlined,
   CloseOutlined,
   EnvironmentOutlined,
-  HomeOutlined,
   AimOutlined,
   UserOutlined,
   PhoneOutlined,
+  LockOutlined,
+  ThunderboltFilled,
 } from '@ant-design/icons';
 import { useCartStore, useGlobalStore } from '../../services';
-import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from '../../utils';
+import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storageKeys, SOCKET } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal } from '../profile';
@@ -40,7 +46,7 @@ const CartDrawer = () => {
   const history = useHistory();
   const { cart, isCartOpen, closeCart, updateQuantity, removeItem, clearCart } =
     useCartStore((state) => state);
-  const { user_data } = useGlobalStore((state) => state);
+  const { user_data, update_user_data } = useGlobalStore((state) => state);
 
   const [orderType, setOrderType] = useState('delivery');
   const [paymentMode, setPaymentMode] = useState('direct_upi');
@@ -49,6 +55,11 @@ const CartDrawer = () => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
+
+  // Authentication modal state for guest checkout
+  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authLoading, setAuthLoading] = useState(false);
 
   // Address integration state
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -135,14 +146,80 @@ const CartDrawer = () => {
     (sum, item) => sum + item.unit_price * item.quantity,
     0
   );
-  const platformFee = cart.items.length > 0 ? 5.0 : 0;
-  const finalTotal = itemsTotal + platformFee;
+  const deliveryFee = orderType === 'delivery' ? 30.0 : 0.0;
+  const platformFee = 0.0; // 0% commission direct commerce
+  const finalTotal = itemsTotal + deliveryFee;
+
+  const handleLoginSubmit = async (values) => {
+    setAuthLoading(true);
+    try {
+      const res = await netWorkCall(
+        apiConfig.login,
+        'POST',
+        JSON.stringify({
+          mobile: values.mobile?.trim(),
+          password: values.password?.trim(),
+        })
+      );
+      if (res?.success === true) {
+        sessionStorage.setItem(storageKeys.auth_token, res.token);
+        localStorage.setItem(storageKeys.auth_token, res.token);
+        update_user_data(res.user_data);
+        SOCKET.emit('connect_user', res.user_data);
+        message.success('Logged in successfully!');
+        setIsOnboardingModalOpen(false);
+        setPhone(res.user_data.mobile || values.mobile);
+        fetchSavedAddresses();
+      } else {
+        message.error(res?.message || 'Login failed. Please check credentials.');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      message.error('An error occurred during login. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleRegisterSubmit = async (values) => {
+    setAuthLoading(true);
+    try {
+      const res = await netWorkCall(
+        apiConfig.register,
+        'POST',
+        JSON.stringify({
+          username: values.username?.trim(),
+          mobile: values.mobile?.trim(),
+          password: values.password?.trim(),
+          userRole: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
+        })
+      );
+      if (res?.success === true) {
+        sessionStorage.setItem(storageKeys.auth_token, res.token);
+        localStorage.setItem(storageKeys.auth_token, res.token);
+        update_user_data(res.user_data);
+        SOCKET.emit('connect_user', res.user_data);
+        message.success('Account created!');
+        setIsOnboardingModalOpen(false);
+        setPhone(res.user_data.mobile || values.mobile);
+        fetchSavedAddresses();
+      } else {
+        message.error(res?.message || 'Registration failed');
+      }
+    } catch (err) {
+      console.error('Registration error:', err);
+      message.error('An error occurred during registration. Please try again.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  // Backward-compatibility alias for cached client bundles and sessions
+  const handleQuickAuth = handleLoginSubmit;
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
-      message.warning('Please log in to place an order');
-      closeCart();
-      history.push(Routes.login);
+      setIsOnboardingModalOpen(true);
       return;
     }
 
@@ -169,10 +246,11 @@ const CartDrawer = () => {
         shop_id: cart.shop_id,
         order_type: orderType,
         payment_mode: paymentMode,
-        delivery_address: address,
+        delivery_address: orderType === 'pickup' ? 'Store Self-Pickup' : address,
         customer_phone: phone,
         notes: notes,
         platform_fee: platformFee,
+        delivery_fee: deliveryFee,
         items: cart.items.map((i) => ({
           listing_id: i.listing_id,
           item_name: i.item_name,
@@ -185,15 +263,16 @@ const CartDrawer = () => {
       const res = await netWorkCall(
         apiConfig.orders_create,
         'POST',
-        JSON.stringify(payload)
+        JSON.stringify(payload),
+        true
       );
 
       if (res?.data) {
         setOrderSuccess(res.data);
         clearCart();
-        message.success('Order placed directly with merchant!');
+        message.success('Order placed successfully!');
       } else {
-        message.error(res?.error || 'Failed to place order');
+        message.error(res?.error || res?.message || 'Failed to place order');
       }
     } catch (err) {
       console.error('Error placing order:', err);
@@ -241,7 +320,7 @@ const CartDrawer = () => {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', lineHeight: 1.2 }}>
-                Your Direct Cart
+                Your Cart
               </div>
               {cart.shop_name && (
                 <div
@@ -287,6 +366,7 @@ const CartDrawer = () => {
         width={isMobile ? '100%' : 440}
         onClose={handleClose}
         open={isCartOpen}
+        zIndex={1200}
         styles={{
           body: { padding: isMobile ? '16px 14px' : '20px 24px' },
           header: { padding: isMobile ? '14px 16px' : '16px 24px', borderBottom: '1px solid #f1f5f9' },
@@ -472,22 +552,52 @@ const CartDrawer = () => {
               <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
                 Fulfillment Mode
               </div>
-              <Radio.Group
-                value={orderType}
-                onChange={(e) => setOrderType(e.target.value)}
-                buttonStyle="solid"
-                style={{ width: '100%', display: 'flex' }}
-              >
-                <Radio.Button value="delivery" style={{ flex: 1, textAlign: 'center' }}>
-                  Delivery
-                </Radio.Button>
-                <Radio.Button value="pickup" style={{ flex: 1, textAlign: 'center' }}>
-                  Store Pickup
-                </Radio.Button>
-                <Radio.Button value="service_visit" style={{ flex: 1, textAlign: 'center' }}>
-                  Service Visit
-                </Radio.Button>
-              </Radio.Group>
+              <Row gutter={[10, 10]}>
+                <Col span={12}>
+                  <div
+                    onClick={() => setOrderType('pickup')}
+                    style={{
+                      padding: '12px 10px',
+                      borderRadius: 10,
+                      border: orderType === 'pickup' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                      background: orderType === 'pickup' ? '#eef2ff' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>🏬</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'pickup' ? '#4338ca' : '#1e293b' }}>
+                      Self-Pickup
+                    </div>
+                    <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500, marginTop: 2 }}>
+                      Free
+                    </div>
+                  </div>
+                </Col>
+                <Col span={12}>
+                  <div
+                    onClick={() => setOrderType('delivery')}
+                    style={{
+                      padding: '12px 10px',
+                      borderRadius: 10,
+                      border: orderType === 'delivery' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
+                      background: orderType === 'delivery' ? '#eef2ff' : '#ffffff',
+                      cursor: 'pointer',
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                    }}
+                  >
+                    <div style={{ fontSize: 18, marginBottom: 4 }}>🛵</div>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'delivery' ? '#4338ca' : '#1e293b' }}>
+                      Delivery
+                    </div>
+                    <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 500, marginTop: 2 }}>
+                      ₹30
+                    </div>
+                  </div>
+                </Col>
+              </Row>
             </div>
 
             {/* Contact & Delivery Details */}
@@ -678,6 +788,18 @@ const CartDrawer = () => {
               />
             </div>
 
+            <div style={{ marginBottom: 12 }}>
+              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4, color: '#334155' }}>
+                Order Instructions / Notes (Optional)
+              </div>
+              <Input
+                placeholder="e.g. Ring the bell, deliver by 4 PM, etc."
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                style={{ borderRadius: 8 }}
+              />
+            </div>
+
             {/* Payment Method */}
             <div style={{ marginBottom: 16 }}>
               <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
@@ -698,6 +820,29 @@ const CartDrawer = () => {
               </Radio.Group>
             </div>
 
+            {/* Payment Notification Banner */}
+            <div
+              style={{
+                background: '#f0fdf4',
+                padding: '12px 14px',
+                borderRadius: 10,
+                border: '1px solid #bbf7d0',
+                marginBottom: 14,
+              }}
+            >
+              <Flex gap={8} align="flex-start">
+                <ThunderboltFilled style={{ color: '#16a34a', fontSize: 15, marginTop: 2 }} />
+                <div>
+                  <div style={{ fontWeight: 600, fontSize: 12, color: '#15803d' }}>
+                    Payment on Order Confirmation
+                  </div>
+                  <div style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
+                    The shop will confirm and pack your order first. Pay via UPI QR or cash upon {orderType === 'delivery' ? 'delivery' : 'pickup'}.
+                  </div>
+                </div>
+              </Flex>
+            </div>
+
             {/* Bill Summary */}
             <div
               style={{
@@ -716,25 +861,24 @@ const CartDrawer = () => {
                   fontSize: 13,
                 }}
               >
-                <Text type="secondary">Items Subtotal</Text>
-                <Text>₹{itemsTotal.toFixed(2)}</Text>
+                <Text type="secondary">Subtotal</Text>
+                <Text strong>₹{itemsTotal.toFixed(2)}</Text>
               </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
-                  fontSize: 13,
-                }}
-              >
-                <span>
-                  <Text type="secondary">Rquest Platform Fee</Text>{' '}
-                  <Tag color="green" style={{ fontSize: 10, padding: '0 4px', lineHeight: '16px' }}>
-                    0% Commission
-                  </Tag>
-                </span>
-                <Text>₹{platformFee.toFixed(2)}</Text>
-              </div>
+
+              {orderType === 'delivery' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    marginBottom: 6,
+                    fontSize: 13,
+                  }}
+                >
+                  <Text type="secondary">Delivery Fee</Text>
+                  <Text strong>₹{deliveryFee.toFixed(2)}</Text>
+                </div>
+              )}
+
               <Divider style={{ margin: '8px 0' }} />
               <div
                 style={{
@@ -744,7 +888,7 @@ const CartDrawer = () => {
                   fontWeight: 700,
                 }}
               >
-                <span>Total Payable</span>
+                <span>Total Amount</span>
                 <span style={{ color: '#4f46e5' }}>₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
@@ -760,31 +904,111 @@ const CartDrawer = () => {
               onClick={handlePlaceOrder}
               style={{
                 height: 48,
-                fontSize: 16,
-                fontWeight: 700,
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                fontSize: 15,
+                fontWeight: 600,
               }}
             >
-              Place Direct Order (₹{finalTotal.toFixed(2)})
+              Place Order (₹{finalTotal.toFixed(0)})
             </Button>
-            <div
-              style={{
-                textAlign: 'center',
-                marginTop: 8,
-                fontSize: 11,
-                color: '#94a3b8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 4,
-              }}
-            >
-              <SafetyCertificateOutlined /> Direct connection • No middleman markups
-            </div>
           </div>
         </div>
       )}
     </Drawer>
+
+      {/* Login / Register Modal for Guest Checkout */}
+      <Modal
+        title={
+          <div style={{ textAlign: 'center', paddingTop: 8, paddingBottom: 4 }}>
+            <Typography.Title level={4} style={{ margin: 0 }}>
+              {authMode === 'login' ? 'Login' : 'Create an Account'}
+            </Typography.Title>
+          </div>
+        }
+        open={isOnboardingModalOpen}
+        onCancel={() => setIsOnboardingModalOpen(false)}
+        footer={null}
+        width={400}
+        destroyOnClose
+        centered
+        zIndex={1400}
+      >
+        {authMode === 'login' ? (
+          <Form onFinish={handleLoginSubmit} layout="vertical" style={{ marginTop: 16 }}>
+            <Form.Item
+              name="mobile"
+              label="Mobile Number or Username"
+              rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Mobile number or username" size="large" />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[{ required: true, message: 'Please enter your password' }]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+            </Form.Item>
+            <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
+              <Button type="primary" htmlType="submit" loading={authLoading} size="large" block>
+                Log in
+              </Button>
+            </Form.Item>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+              <span>Don&apos;t have an account? </span>
+              <a
+                onClick={() => setAuthMode('register')}
+                style={{ marginLeft: 6, color: '#4f46e5', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Register Here
+              </a>
+            </div>
+          </Form>
+        ) : (
+          <Form
+            onFinish={handleRegisterSubmit}
+            layout="vertical"
+            style={{ marginTop: 16 }}
+            initialValues={{ userRole: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d' }}
+          >
+            <Form.Item
+              name="username"
+              label="Username"
+              rules={[{ required: true, message: 'Please enter your username' }]}
+            >
+              <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
+            </Form.Item>
+            <Form.Item
+              name="mobile"
+              label="Mobile Number"
+              rules={[{ required: true, message: 'Please enter your mobile number' }]}
+            >
+              <Input prefix={<PhoneOutlined />} placeholder="Mobile number" size="large" />
+            </Form.Item>
+            <Form.Item
+              name="password"
+              label="Password"
+              rules={[{ required: true, message: 'Please enter your password' }]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+            </Form.Item>
+            <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
+              <Button type="primary" htmlType="submit" loading={authLoading} size="large" block>
+                Register
+              </Button>
+            </Form.Item>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
+              <span>Already have an account? </span>
+              <a
+                onClick={() => setAuthMode('login')}
+                style={{ marginLeft: 6, color: '#4f46e5', fontWeight: 600, cursor: 'pointer' }}
+              >
+                Login Here
+              </a>
+            </div>
+          </Form>
+        )}
+      </Modal>
+
       {isAddAddressModalOpen && (
         <AddressModal
           open={isAddAddressModalOpen}

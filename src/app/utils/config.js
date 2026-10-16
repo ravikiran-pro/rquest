@@ -34,7 +34,10 @@ export const apiConfig = {
   master_categories : 'master/categories',
   master_categories_stauts: 'master/categories/status',
   master_categories_create: 'master/categories/create',
+  master_categories_schema: 'master/categories/form_schema',
   master_categories_delete: 'master/categories',
+  shop_update: 'shops',
+  shop_delete: 'shops',
 
   master_sub_categories : 'master/sub_categories',
   master_sub_categories_stauts: 'master/sub_categories/status',
@@ -61,6 +64,9 @@ export const apiConfig = {
   orders_user: 'orders/user',
   orders_shop: 'orders/shop',
   orders_status: 'orders',
+  orders_delivery_feed: 'orders/delivery/feed',
+  orders_claim_delivery: 'orders',
+  orders_switch_pickup: 'orders',
 
   quotes_create: 'quotes',
   quotes_user: 'quotes/user',

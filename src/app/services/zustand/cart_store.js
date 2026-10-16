@@ -86,12 +86,17 @@ const useCartStore = create(
             items: [],
           },
           isCartOpen: false,
-        });
+          pendingCheckout: false,
+        },
+        );
       },
+
+      pendingCheckout: false,
+      setPendingCheckout: (val) => set({ pendingCheckout: val }),
     }),
     {
       name: 'rquest-cart-storage',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

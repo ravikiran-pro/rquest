@@ -38,6 +38,11 @@ app.use('/api/v1', router);
 // Serve app production bundle
 app.use(express.static('dist/app'));
 
+// Serve static SEO landing page if explicitly requested
+app.get(['/seo', '/landing-page'], (_req, res) => {
+  res.sendFile(path.join(__dirname, 'app/landing.html'));
+});
+
 // Handle client routing, return all requests to the app
 app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'app/index.html'));

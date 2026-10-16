@@ -3,7 +3,7 @@ const { categories, sub_categories } = require('../../models');
 const getAllCategories = async (req, res) => {
   try {
     const results = await categories.findAll({
-      attributes: ['id', 'name', 'img_url'],
+      attributes: ['id', 'name', 'img_url', 'form_schema'],
       include: [
         {
           model: sub_categories,
@@ -11,10 +11,10 @@ const getAllCategories = async (req, res) => {
           attributes: ['id', 'name', 'img_url'],
         },
       ],
-      order: [['id', 'DESC']],
+      order: [['id', 'ASC']],
     });
 
-    res.send(200, {
+    res.status(200).json({
       data: results,
       success: true,
     });

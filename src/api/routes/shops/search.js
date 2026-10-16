@@ -37,7 +37,7 @@ const getShopsFilter = async (req, res) => {
         {
           model: categories,
           as: 'shopCategory',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'form_schema'],
         },
         {
           model: sub_categories,
@@ -105,6 +105,7 @@ const getMyShops = async (req, res) => {
         'latitude',
         'longitude',
         'directions',
+        'allow_multi_category',
         'createdAt',
         'updatedAt',
         'id',
@@ -114,7 +115,7 @@ const getMyShops = async (req, res) => {
         {
           model: categories,
           as: 'shopCategory',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'form_schema'],
         },
         {
           model: sub_categories,
@@ -146,7 +147,7 @@ const getShopDetails = async (req, res) => {
         {
           model: categories,
           as: 'shopCategory',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'form_schema'],
         },
         {
           model: sub_categories,

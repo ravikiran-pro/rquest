@@ -5,8 +5,8 @@ const getAllCategories = async (req, res) => {
     const { limit, offset } = req.body;
 
     const results = await categories.findAndCountAll({
-      attributes: ['id', 'name', 'img_url', 'is_active', 'createdAt', 'updatedAt'],
-      limit: parseInt(limit) || 10,
+      attributes: ['id', 'name', 'img_url', 'is_active', 'form_schema', 'createdAt', 'updatedAt'],
+      limit: parseInt(limit) || 20,
       offset: parseInt(offset) || 0,
       order: [['updatedAt', 'DESC']]
     });
@@ -46,13 +46,14 @@ const updateCategoryStatus = async (req, res) => {
 
 const editCategory = async (req, res) => {
   try {
-    const { category_id, name, img_url, count } = req.body;
+    const { category_id, name, img_url, form_schema, count } = req.body;
 
     if (category_id === undefined || category_id === null || category_id === '') {
       const newCategory = await categories.create({
         name: name,
         img_url: img_url || '',
         is_active: true,
+        form_schema: form_schema || [],
       });
 
       return res.status(201).json({ success: true, message: 'Category created successfully', data: newCategory });
@@ -64,13 +65,42 @@ const editCategory = async (req, res) => {
       return res.status(404).json({ error: 'Category not found' });
     }
 
-    category.name = name;
-    category.img_url = img_url;
+    if (name !== undefined) category.name = name;
+    if (img_url !== undefined) category.img_url = img_url;
+    if (form_schema !== undefined) category.form_schema = form_schema;
     await category.save();
 
     res.status(200).json({ success: true, message: 'Category edited successfully', data: category });
   } catch (error) {
     console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+};
+
+const updateCategoryFormSchema = async (req, res) => {
+  try {
+    const { category_id, form_schema } = req.body;
+
+    if (category_id === undefined || category_id === null) {
+      return res.status(400).json({ error: 'category_id is required' });
+    }
+
+    const category = await categories.findByPk(category_id);
+
+    if (!category) {
+      return res.status(404).json({ error: 'Category not found' });
+    }
+
+    category.form_schema = Array.isArray(form_schema) ? form_schema : [];
+    await category.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Category form schema updated successfully',
+      data: category,
+    });
+  } catch (error) {
+    console.error('Error updating category form schema:', error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 };
@@ -109,5 +139,6 @@ module.exports = {
   getAllCategories,
   updateCategoryStatus,
   editCategory,
+  updateCategoryFormSchema,
   deleteCategory
 };

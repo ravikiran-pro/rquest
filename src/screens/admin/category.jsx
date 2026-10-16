@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import DataTable from '../../app/components/datatable';
-import { Button, Col, Row, message } from 'antd'; // Import message from 'antd'
+import { Button, Col, Row, message, Tag } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import FormSchemaBuilderModal from './form_schema_builder';
 
 const Category = ({
     handleSubCategory = () => null
@@ -10,10 +11,40 @@ const Category = ({
 
     const [rows, setRows] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
+    const [selectedCategoryForSchema, setSelectedCategoryForSchema] = useState(null);
+    const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+
     const columns = [
         { key: "name", title: "Name" },
         { key: "img_url", title: "Image" },
         { key: "createdBy", title: "Created By" },
+        {
+            key: "form_schema",
+            title: "Product Form",
+            render: (_, record) => {
+                const fieldCount = Array.isArray(record.form_schema) ? record.form_schema.length : 0;
+                return (
+                    <Button
+                        type={fieldCount > 0 ? "primary" : "default"}
+                        size="small"
+                        icon={<SettingOutlined />}
+                        onClick={() => {
+                            setSelectedCategoryForSchema(record);
+                            setIsSchemaModalOpen(true);
+                        }}
+                        style={{
+                            borderRadius: 6,
+                            fontWeight: 600,
+                            background: fieldCount > 0 ? '#4f46e5' : undefined,
+                            borderColor: fieldCount > 0 ? '#4f46e5' : undefined,
+                            color: fieldCount > 0 ? '#fff' : undefined,
+                        }}
+                    >
+                        {fieldCount > 0 ? `Configured (${fieldCount} fields)` : '+ Configure Form'}
+                    </Button>
+                );
+            },
+        },
         { key: "is_active", title: "Active" },
         { key: "action", title: "Action" },
         { key: "menu", title: "Sub Category", onClick: (data) => handleSubCategory(data) },
@@ -138,6 +169,16 @@ const Category = ({
                 handleStatusChange={handleStatusChange}
                 handleRowChange={handleRowChange}
                 handleDelete={handleDelete}
+            />
+
+            <FormSchemaBuilderModal
+                open={isSchemaModalOpen}
+                onClose={() => {
+                    setIsSchemaModalOpen(false);
+                    setSelectedCategoryForSchema(null);
+                }}
+                category={selectedCategoryForSchema}
+                onSuccess={() => fetchInitData(pagination.current)}
             />
         </>
     );

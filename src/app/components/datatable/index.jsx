@@ -59,6 +59,9 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
   };
 
   const renderCell = (item, value, record, index) => {
+    if (typeof item.render === 'function') {
+      return item.render(value, record, index);
+    }
     const key = item.key;
     const isEditable = index === editableRow;
 

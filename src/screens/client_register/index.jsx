@@ -15,6 +15,7 @@ import {
   Grid,
   Spin,
   Modal,
+  Alert,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -30,19 +31,39 @@ import {
 import { apiConfig, netWorkCall, getPreciseUserLocation } from '../../app/utils';
 import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useHistory } from 'react-router-dom';
+import Routes from '../../app/routes/routes';
 import ManageStore from './manage_store';
 
 const { Title, Text, Paragraph } = Typography;
 
-// 5 Universal Business Archetypes
+// 6 Universal Business Archetypes (with Dynamic Category Support)
 const BUSINESS_ARCHETYPES = [
+  {
+    id: 'medical',
+    label: 'Pharmacy & Healthcare',
+    icon: '💊',
+    desc: 'Medical Stores, Pharmacies, Clinics, First Aid & Wellness Supplies',
+    defaultType: 'Health & Medicine',
+    categoryId: 8,
+    defaultUnits: ['strip', 'bottle', 'piece', 'box'],
+    sampleImages: [
+      'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=600',
+      'https://images.unsplash.com/photo-1587854692152-cbe660dbde88?w=600',
+    ],
+    starters: [
+      { name: 'Paracetamol 500mg Tablets (Strip of 10)', price: 30, mrp: 35, unit: 'strip', listing_type: 'product', metadata: { section: 'OTC Medicines', dosage_form: 'Strip / Tablets', expiry_date: '2026-12-31', prescription_required: false } },
+      { name: 'Digital Infrared Thermometer', price: 850, mrp: 1200, unit: 'piece', listing_type: 'product', metadata: { section: 'Healthcare Devices', dosage_form: 'Medical Equipment', prescription_required: false } },
+      { name: 'Amoxicillin 500mg Capsules (Strip of 10)', price: 110, mrp: 130, unit: 'strip', listing_type: 'product', metadata: { section: 'Prescription Drugs', dosage_form: 'Capsules', expiry_date: '2026-08-31', prescription_required: true, schedule_drug: true } },
+    ],
+  },
   {
     id: 'food',
     label: 'Restaurant & Food Joint',
     icon: '🍽️',
     desc: 'Biryani, Cafes, Bakeries, Cloud Kitchens & Takeaway',
-    defaultType: 'Restaurants',
+    defaultType: 'Food & Dining',
+    categoryId: 7,
     defaultUnits: ['plate', 'portion', 'piece'],
     sampleImages: [
       'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=600',
@@ -122,6 +143,7 @@ const BUSINESS_ARCHETYPES = [
 ];
 
 const ClientRegister = () => {
+  const history = useHistory();
   const screens = Grid.useBreakpoint();
   const location = useLocation();
 
@@ -131,6 +153,14 @@ const ClientRegister = () => {
   const [loadingShops, setLoadingShops] = useState(true);
   const [managedShop, setManagedShop] = useState(null);
   const [isFormEnable, setIsFormEnable] = useState(false);
+
+  const isOnboardingShop = new URLSearchParams(location.search).get('onboarding') === 'shop';
+
+  useEffect(() => {
+    if (isOnboardingShop) {
+      setIsFormEnable(true);
+    }
+  }, [isOnboardingShop]);
 
   // Guided Onboarding Wizard State
   const [currentStep, setCurrentStep] = useState(0);
@@ -232,8 +262,9 @@ const ClientRegister = () => {
         website: onboardingData.website || '',
         directions: onboardingData.directions || `https://www.google.com/maps/@${position[0]},${position[1]}`,
         img_url: onboardingData.img_url || activeArchetype?.sampleImages[0],
-        category_id: onboardingData.category_id || null,
+        category_id: onboardingData.category_id || activeArchetype?.categoryId || null,
         sub_category_id: onboardingData.sub_category_id || null,
+        allow_multi_category: false,
         latitude: position[0],
         longitude: position[1],
         rating: 5.0,
@@ -450,6 +481,29 @@ const ClientRegister = () => {
             >
               Back to Merchant Studio
             </Button>
+          )}
+
+          {isOnboardingShop && (
+            <Alert
+              message={
+                <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
+                  <span>
+                    <strong>🚀 Step 2: Register Your Physical Storefront</strong> — Pin your shop on the map with 0% platform commission.
+                  </span>
+                  <Button
+                    type="link"
+                    size="small"
+                    onClick={() => history.push(Routes.app)}
+                    style={{ padding: 0, fontWeight: 700 }}
+                  >
+                    Skip to Marketplace →
+                  </Button>
+                </Flex>
+              }
+              type="info"
+              showIcon
+              style={{ marginBottom: 16, borderRadius: 12, border: '1px solid #c7d2fe' }}
+            />
           )}
 
           <Card

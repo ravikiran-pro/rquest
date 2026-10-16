@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import {
   Modal,
@@ -12,12 +12,19 @@ import {
   Button,
   Radio,
   Checkbox,
-  Segmented,
+  Switch,
   Tag,
   Flex,
   message,
   Space,
+  Divider,
 } from 'antd';
+import {
+  LockOutlined,
+  UnlockOutlined,
+  AppstoreOutlined,
+  CheckCircleOutlined,
+} from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 
 const { Text } = Typography;
@@ -35,6 +42,15 @@ export const getShopArchetype = (shop) => {
     (shop?.shopSubCategory?.name || '')
   ).toLowerCase();
 
+  if (
+    typeStr.includes('health') ||
+    typeStr.includes('med') ||
+    typeStr.includes('pharm') ||
+    typeStr.includes('clinic') ||
+    typeStr.includes('doctor')
+  ) {
+    return 'medical';
+  }
   if (
     typeStr.includes('restaurant') ||
     typeStr.includes('food') ||
@@ -56,7 +72,8 @@ export const getShopArchetype = (shop) => {
     typeStr.includes('laundry') ||
     typeStr.includes('repair') ||
     typeStr.includes('clean') ||
-    typeStr.includes('mechanic')
+    typeStr.includes('mechanic') ||
+    typeStr.includes('contractor')
   ) {
     return 'service';
   }
@@ -102,6 +119,14 @@ const TYPE_CONFIG = {
     sectionPlaceholder: 'e.g. Biryani & Rice, Starters & Fry, Gravies, Beverages',
     addTitle: 'Add Dish / Beverage to Menu',
   },
+  medical: {
+    label: 'Pharmacy & Healthcare Item',
+    icon: '💊',
+    defaultUnit: 'strip',
+    unitOptions: ['strip', 'bottle', 'piece', 'box', 'pack', 'tube'],
+    sectionPlaceholder: 'e.g. Prescription Drugs, OTC & First Aid, Baby Care, Wellness',
+    addTitle: 'Add Medicine / Healthcare Product',
+  },
   product: {
     label: 'Retail / Physical Product',
     icon: '🛒',
@@ -137,36 +162,76 @@ const AddProductModal = ({
   onSuccess,
   shop,
   editingItem = null,
-  width = 600,
+  width = 650,
 }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
-  const [showTypeOverride, setShowTypeOverride] = useState(false);
+  const [categoriesList, setCategoriesList] = useState([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-  // Derive shop's default listing type
+  // Multi-category permission check
+  const isMultiCategoryAllowed = Boolean(shop?.allow_multi_category);
+
+  // Derive default shop archetype and category
   const storeArchetype = getShopArchetype(shop);
   const defaultListingType = getListingTypeFromArchetype(storeArchetype);
 
-  // Current active listing type in modal
+  // Current active listing type
   const [currentType, setCurrentType] = useState(defaultListingType);
 
-  // Sync modal state when opened or editingItem changes
+  // Fetch all categories with form_schema if multi-category is allowed
+  useEffect(() => {
+    if (open) {
+      netWorkCall(apiConfig.my_categories, 'GET', null, false)
+        .then((res) => {
+          if (res?.data && Array.isArray(res.data)) {
+            setCategoriesList(res.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [open]);
+
+  // Determine active category record
+  const activeCategory = useMemo(() => {
+    if (selectedCategoryId) {
+      const found = categoriesList.find((c) => c.id === selectedCategoryId);
+      if (found) return found;
+    }
+    if (shop?.shopCategory) {
+      // Find full category with schema if present in categoriesList
+      const matchInList = categoriesList.find((c) => c.id === shop.shopCategory.id);
+      return matchInList || shop.shopCategory;
+    }
+    return null;
+  }, [selectedCategoryId, shop, categoriesList]);
+
+  // Form schema defined by Platform Admin for this category
+  const dynamicFields = useMemo(() => {
+    if (activeCategory?.form_schema && Array.isArray(activeCategory.form_schema)) {
+      return activeCategory.form_schema;
+    }
+    return [];
+  }, [activeCategory]);
+
+  // Sync form values on open/edit
   useEffect(() => {
     if (open) {
       if (editingItem) {
         const itemType = editingItem.listing_type || defaultListingType;
         setCurrentType(itemType);
+        setSelectedCategoryId(editingItem.metadata?.category_id || shop?.category_id || null);
+
         form.setFieldsValue({
           ...editingItem,
           metadata: editingItem.metadata || {},
         });
-        setShowTypeOverride(itemType !== defaultListingType);
       } else {
         form.resetFields();
         setCurrentType(defaultListingType);
-        setShowTypeOverride(false);
+        setSelectedCategoryId(shop?.category_id || null);
 
-        const config = TYPE_CONFIG[defaultListingType] || TYPE_CONFIG.product;
+        const config = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
         form.setFieldsValue({
           listing_type: defaultListingType,
           unit: config.defaultUnit,
@@ -182,15 +247,7 @@ const AddProductModal = ({
         });
       }
     }
-  }, [open, editingItem, shop]);
-
-  const handleTypeChange = (newType) => {
-    setCurrentType(newType);
-    form.setFieldsValue({
-      listing_type: newType,
-      unit: TYPE_CONFIG[newType]?.defaultUnit || 'piece',
-    });
-  };
+  }, [open, editingItem, shop, defaultListingType, storeArchetype]);
 
   const handleFinish = async (values) => {
     if (!shop?.id) {
@@ -207,6 +264,8 @@ const AddProductModal = ({
         metadata: {
           ...(editingItem?.metadata || {}),
           ...(values.metadata || {}),
+          category_id: selectedCategoryId || shop?.category_id || null,
+          category_name: activeCategory?.name || shop?.shopCategory?.name || null,
         },
       };
 
@@ -247,10 +306,12 @@ const AddProductModal = ({
     }
   };
 
-  const currentConfig = TYPE_CONFIG[currentType] || TYPE_CONFIG.product;
+  const currentConfig = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
   const modalTitle = editingItem
     ? `Edit ${editingItem.name || 'Listing'}`
-    : currentConfig.addTitle;
+    : `Add Item — ${shop?.shop_name || 'Store'}`;
+
+  const categoryDisplayName = activeCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'General Store';
 
   return (
     <Modal
@@ -265,22 +326,22 @@ const AddProductModal = ({
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        style={{ marginTop: 12 }}
+        style={{ marginTop: 8 }}
       >
-        {/* Smart Category Type Section (Auto-inherited from store) */}
+        {/* Category Header Banner: Fixed vs Multi-Category */}
         <div
           style={{
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
+            background: isMultiCategoryAllowed ? '#f5f3ff' : '#f8fafc',
+            border: isMultiCategoryAllowed ? '1px solid #ddd6fe' : '1px solid #e2e8f0',
             borderRadius: 12,
             padding: '10px 14px',
             marginBottom: 16,
           }}
         >
-          <Flex justify="space-between" align="center">
+          <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
             <div>
-              <Text type="secondary" style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase' }}>
-                Item Category Type
+              <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+                Store Business Category
               </Text>
               <div
                 style={{
@@ -293,48 +354,36 @@ const AddProductModal = ({
                   marginTop: 2,
                 }}
               >
-                <span>
-                  {currentConfig.icon} {currentConfig.label}
-                </span>
+                <span>{categoryDisplayName}</span>
                 <Tag
-                  color={currentType === defaultListingType ? 'cyan' : 'orange'}
+                  color={isMultiCategoryAllowed ? 'purple' : 'default'}
+                  icon={isMultiCategoryAllowed ? <UnlockOutlined /> : <LockOutlined />}
                   style={{ fontSize: 10, padding: '0 6px', borderRadius: 4, margin: 0, fontWeight: 600 }}
                 >
-                  {currentType === defaultListingType
-                    ? `Auto-set from ${shop?.shop_name || 'Store'}`
-                    : 'Custom Override'}
+                  {isMultiCategoryAllowed ? 'Multi-Category Store' : 'Fixed to Store Category'}
                 </Tag>
               </div>
             </div>
 
-            <Button
-              type="link"
-              size="small"
-              onClick={() => setShowTypeOverride(!showTypeOverride)}
-              style={{ fontWeight: 600, fontSize: 12, color: '#4f46e5', padding: 0 }}
-            >
-              {showTypeOverride ? 'Hide Options' : 'Change Type'}
-            </Button>
+            {/* If shop opted into multi-category, allow selecting a different category */}
+            {isMultiCategoryAllowed && categoriesList.length > 0 && (
+              <div style={{ minWidth: 200 }}>
+                <Select
+                  size="small"
+                  value={selectedCategoryId || shop?.category_id}
+                  style={{ width: '100%' }}
+                  placeholder="Select Category for Item"
+                  onChange={(newCatId) => setSelectedCategoryId(newCatId)}
+                >
+                  {categoriesList.map((c) => (
+                    <Option key={c.id} value={c.id}>
+                      {c.name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            )}
           </Flex>
-
-          {showTypeOverride && (
-            <div style={{ marginTop: 12, paddingTop: 10, borderTop: '1px dashed #cbd5e1' }}>
-              <Text type="secondary" style={{ fontSize: 11, display: 'block', marginBottom: 6 }}>
-                Need to add a different item type (e.g. cross-domain offering)? Select below:
-              </Text>
-              <Segmented
-                block
-                value={currentType}
-                onChange={handleTypeChange}
-                options={[
-                  { label: '🛒 Product', value: 'product' },
-                  { label: '🍽️ Food Dish', value: 'food' },
-                  { label: '🔧 Service', value: 'service' },
-                  { label: '🏍️ Rental', value: 'rental' },
-                ]}
-              />
-            </div>
-          )}
         </div>
 
         {/* Hidden field for form binding */}
@@ -346,23 +395,27 @@ const AddProductModal = ({
         <Form.Item
           name="name"
           label={
-            currentType === 'food'
+            storeArchetype === 'food'
               ? 'Dish / Beverage Name'
-              : currentType === 'service'
+              : storeArchetype === 'service'
               ? 'Service Package Title'
-              : currentType === 'rental'
+              : storeArchetype === 'rental'
               ? 'Asset / Equipment Name'
+              : storeArchetype === 'medical'
+              ? 'Medicine / Healthcare Product Name'
               : 'Product Name'
           }
           rules={[{ required: true, message: 'Please enter item name' }]}
         >
           <Input
             placeholder={
-              currentType === 'food'
+              storeArchetype === 'medical'
+                ? 'e.g. Paracetamol 500mg (Strip of 10 Tablets)'
+                : storeArchetype === 'food'
                 ? 'e.g. Chicken Dum Biryani (Family Pack)'
-                : currentType === 'service'
+                : storeArchetype === 'service'
                 ? 'e.g. Split AC Deep Jet Cleaning & Service'
-                : currentType === 'rental'
+                : storeArchetype === 'rental'
                 ? 'e.g. Royal Enfield Hunter 350 (Daily)'
                 : 'e.g. India Gate Basmati Rice 5kg'
             }
@@ -430,57 +483,191 @@ const AddProductModal = ({
           </Col>
         </Row>
 
-        {/* Conditional Archetype-Specific Fields */}
-        {currentType === 'food' && (
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'food_type']} label="Dietary Tag" initialValue="veg">
-                <Radio.Group>
-                  <Radio.Button value="veg">🟢 Pure Veg</Radio.Button>
-                  <Radio.Button value="non-veg">🔴 Non-Veg</Radio.Button>
-                </Radio.Group>
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'prep_time_mins']} label="Prep Time (Mins)" initialValue={15}>
-                <InputNumber style={{ width: '100%' }} min={5} step={5} />
-              </Form.Item>
-            </Col>
-          </Row>
-        )}
+        {/* ========================================================================= */}
+        {/* DYNAMIC SCHEMA FIELDS (Configured by Platform Admin for this Category)    */}
+        {/* ========================================================================= */}
+        {dynamicFields.length > 0 ? (
+          <div
+            style={{
+              background: '#f8fafc',
+              padding: '14px 16px',
+              borderRadius: 12,
+              border: '1px solid #e2e8f0',
+              marginBottom: 16,
+            }}
+          >
+            <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
+              <AppstoreOutlined style={{ color: '#4f46e5' }} />
+              <Text strong style={{ fontSize: 13, color: '#1e293b' }}>
+                {categoryDisplayName} Specific Specifications
+              </Text>
+            </Flex>
 
-        {currentType === 'rental' && (
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'security_deposit']} label="Refundable Deposit (₹)">
-                <InputNumber style={{ width: '100%' }} min={0} placeholder="1000" />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'min_rental_days']} label="Min Rental Period (Days)" initialValue={1}>
-                <InputNumber style={{ width: '100%' }} min={1} />
-              </Form.Item>
-            </Col>
-          </Row>
-        )}
+            <Row gutter={[12, 0]}>
+              {dynamicFields.map((field) => {
+                const rules = field.required
+                  ? [{ required: true, message: `Please provide ${field.label}` }]
+                  : [];
 
-        {currentType === 'service' && (
-          <Row gutter={12}>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'duration_mins']} label="Typical Duration (Mins)" initialValue={45}>
-                <InputNumber style={{ width: '100%' }} min={15} step={15} />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item name={['metadata', 'service_mode']} label="Service Mode" initialValue="both">
-                <Select>
-                  <Option value="both">Both Available</Option>
-                  <Option value="doorstep">Doorstep / Home Visit</Option>
-                  <Option value="at_center">At Center / Shop</Option>
-                </Select>
-              </Form.Item>
-            </Col>
-          </Row>
+                return (
+                  <Col
+                    xs={24}
+                    sm={field.type === 'textarea' ? 24 : 12}
+                    key={field.key}
+                  >
+                    {field.type === 'select' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                        initialValue={field.defaultValue || (field.options?.[0] || undefined)}
+                      >
+                        <Select placeholder={`Select ${field.label}`}>
+                          {field.options?.map((opt) => (
+                            <Option key={opt} value={opt}>
+                              {opt}
+                            </Option>
+                          ))}
+                        </Select>
+                      </Form.Item>
+                    )}
+
+                    {field.type === 'radio' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                        initialValue={field.defaultValue || field.options?.[0]}
+                      >
+                        <Radio.Group>
+                          {field.options?.map((opt) => (
+                            <Radio.Button key={opt} value={opt}>
+                              {opt}
+                            </Radio.Button>
+                          ))}
+                        </Radio.Group>
+                      </Form.Item>
+                    )}
+
+                    {field.type === 'boolean' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        valuePropName="checked"
+                        initialValue={Boolean(field.defaultValue)}
+                      >
+                        <Switch checkedChildren="Yes" unCheckedChildren="No" />
+                      </Form.Item>
+                    )}
+
+                    {field.type === 'number' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                        initialValue={field.defaultValue}
+                      >
+                        <InputNumber
+                          style={{ width: '100%' }}
+                          placeholder={field.placeholder || `Enter ${field.label}`}
+                        />
+                      </Form.Item>
+                    )}
+
+                    {field.type === 'date' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                      >
+                        <Input type="date" style={{ width: '100%' }} />
+                      </Form.Item>
+                    )}
+
+                    {field.type === 'textarea' && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                      >
+                        <Input.TextArea
+                          rows={2}
+                          placeholder={field.placeholder || `Enter ${field.label}`}
+                        />
+                      </Form.Item>
+                    )}
+
+                    {(!field.type || field.type === 'text') && (
+                      <Form.Item
+                        name={['metadata', field.key]}
+                        label={field.label}
+                        rules={rules}
+                      >
+                        <Input
+                          placeholder={field.placeholder || `Enter ${field.label}`}
+                        />
+                      </Form.Item>
+                    )}
+                  </Col>
+                );
+              })}
+            </Row>
+          </div>
+        ) : (
+          /* Backward-compatibility fallback for classic types when schema not yet generated */
+          <>
+            {currentType === 'food' && (
+              <Row gutter={12}>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'food_type']} label="Dietary Tag" initialValue="veg">
+                    <Radio.Group>
+                      <Radio.Button value="veg">🟢 Pure Veg</Radio.Button>
+                      <Radio.Button value="non-veg">🔴 Non-Veg</Radio.Button>
+                    </Radio.Group>
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'prep_time_mins']} label="Prep Time (Mins)" initialValue={15}>
+                    <InputNumber style={{ width: '100%' }} min={5} step={5} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            )}
+
+            {currentType === 'rental' && (
+              <Row gutter={12}>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'security_deposit']} label="Refundable Deposit (₹)">
+                    <InputNumber style={{ width: '100%' }} min={0} placeholder="1000" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'min_rental_days']} label="Min Rental Period (Days)" initialValue={1}>
+                    <InputNumber style={{ width: '100%' }} min={1} />
+                  </Form.Item>
+                </Col>
+              </Row>
+            )}
+
+            {currentType === 'service' && (
+              <Row gutter={12}>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'duration_mins']} label="Typical Duration (Mins)" initialValue={45}>
+                    <InputNumber style={{ width: '100%' }} min={15} step={15} />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item name={['metadata', 'service_mode']} label="Service Mode" initialValue="both">
+                    <Select>
+                      <Option value="both">Both Available</Option>
+                      <Option value="doorstep">Doorstep / Home Visit</Option>
+                      <Option value="at_center">At Center / Shop</Option>
+                    </Select>
+                  </Form.Item>
+                </Col>
+              </Row>
+            )}
+          </>
         )}
 
         {/* Description / Scope */}
@@ -488,11 +675,13 @@ const AddProductModal = ({
           <Input.TextArea
             rows={2}
             placeholder={
-              currentType === 'food'
+              storeArchetype === 'medical'
+                ? 'Usage directions, storage instructions, precautions...'
+                : storeArchetype === 'food'
                 ? 'Portion size, ingredients, allergen info...'
-                : currentType === 'service'
+                : storeArchetype === 'service'
                 ? 'Scope of service, warranty, parts included...'
-                : currentType === 'rental'
+                : storeArchetype === 'rental'
                 ? 'Rental terms, included accessories, fuel policy...'
                 : 'Specifications, brand, volume or packaging details...'
             }
@@ -519,16 +708,14 @@ const AddProductModal = ({
               initialValue={true}
               noStyle
             >
-              <Checkbox>Allow Quote Requests & Direct Negotiation via Chat</Checkbox>
+              <Checkbox>Allow Direct Chat Enquiry / Quote Request</Checkbox>
             </Form.Item>
           </Space>
         </div>
 
-        {/* Action Buttons */}
-        <Flex justify="flex-end" gap={8}>
-          <Button onClick={onClose} disabled={submitting}>
-            Cancel
-          </Button>
+        {/* Submit Buttons */}
+        <Flex justify="end" gap={10}>
+          <Button onClick={onClose}>Cancel</Button>
           <Button
             type="primary"
             htmlType="submit"
@@ -536,10 +723,10 @@ const AddProductModal = ({
             style={{
               fontWeight: 700,
               background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              border: 'none',
+              borderColor: 'transparent',
             }}
           >
-            {editingItem ? 'Update Listing' : 'Save to Catalog'}
+            {editingItem ? 'Save Changes' : 'Add to Store Catalog'}
           </Button>
         </Flex>
       </Form>
@@ -557,4 +744,3 @@ AddProductModal.propTypes = {
 };
 
 export default AddProductModal;
-

@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllCategories, updateCategoryStatus, editCategory, deleteCategory } = require('./category');
+const { getAllCategories, updateCategoryStatus, editCategory, updateCategoryFormSchema, deleteCategory } = require('./category');
 const { getAllSubCategories, updateSubCategoryStatus, editSubCategory, deleteSubCategory } = require('./subcategory');
 const uploadFiles = require('./aws');
 const { authMiddleware } = require('../../auth');
@@ -19,6 +19,7 @@ router.use(authMiddleware);
 router.post('/categories', getAllCategories);
 router.put('/categories/status', updateCategoryStatus);
 router.post('/categories/create', editCategory);
+router.put('/categories/form_schema', updateCategoryFormSchema);
 router.delete('/categories', deleteCategory)
 
 

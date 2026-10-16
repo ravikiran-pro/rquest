@@ -16,6 +16,10 @@ module.exports = (sequelize) => {
     is_active:{
       type: Sequelize.BOOLEAN,
       defaultValue: true
+    },
+    form_schema: {
+      type: Sequelize.JSONB,
+      defaultValue: [],
     }
   });
 
