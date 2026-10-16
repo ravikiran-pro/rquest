@@ -179,7 +179,7 @@ const LoginScreen = () => {
                     size="large"
                     className="btn-auth-submit"
                   >
-                    <span>Log in to Neighborhood Hub</span>
+                    <span>Log in</span>
                     <ArrowRightOutlined />
                   </Button>
                 </Form.Item>
@@ -187,26 +187,8 @@ const LoginScreen = () => {
                 <div className="auth-switch-row">
                   <span>Don&apos;t have an account yet?</span>
                   <Link to={Routes.register} className="auth-switch-link">
-                    Create Account (₹0)
+                    Create Account
                   </Link>
-                </div>
-
-                <div className="auth-trust-footer">
-                  <div className="auth-trust-shield">
-                    <SafetyCertificateOutlined style={{ color: '#10b981' }} />
-                    <span>256-Bit Secure Direct Session • Zero Spam Guarantee</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    <Link to={Routes.landing} className="auth-back-link">
-                      <ArrowLeftOutlined style={{ fontSize: 11 }} />
-                      <span>Back to Homepage</span>
-                    </Link>
-                    <span style={{ color: '#cbd5e1' }}>•</span>
-                    <Link to={Routes.client} className="auth-back-link">
-                      <ShopOutlined style={{ fontSize: 11 }} />
-                      <span>Register Store (₹0)</span>
-                    </Link>
-                  </div>
                 </div>
               </Form>
             </div>

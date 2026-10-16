@@ -35,16 +35,41 @@ app.use(express.json());
 // Serve API requests from the router
 app.use('/api/v1', router);
 
-// Serve app production bundle
-app.use(express.static('dist/app'));
+// Serve app production bundle with optimal cache headers
+app.use(
+  express.static('dist/app', {
+    setHeaders: (res, filePath) => {
+      // Ensure HTML, service worker, and manifest files are NEVER cached by browsers or CDNs
+      if (
+        filePath.endsWith('.html') ||
+        filePath.endsWith('sw.js') ||
+        filePath.endsWith('registerSW.js') ||
+        filePath.endsWith('manifest.webmanifest')
+      ) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+      } else if (filePath.includes(path.sep + 'assets' + path.sep) || filePath.includes('/assets/')) {
+        // Hashed bundle assets can safely be cached for 1 year
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  })
+);
 
 // Serve static SEO landing page if explicitly requested
 app.get(['/seo', '/landing-page'], (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'app/landing.html'));
 });
 
 // Handle client routing, return all requests to the app
 app.get('*', (_req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
   res.sendFile(path.join(__dirname, 'app/index.html'));
 });
 

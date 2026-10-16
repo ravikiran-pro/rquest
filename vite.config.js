@@ -13,6 +13,7 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      registerType: 'autoUpdate',
       manifest: {
         name: 'Rquest',
         short_name: 'Rquest',
@@ -27,6 +28,9 @@ export default defineConfig({
       },
       workbox: {
         navigateFallbackAllowlist: [/^\/.*$/],
+        cleanupOutdatedCaches: true,
+        clientsClaim: true,
+        skipWaiting: true,
       },
       devOptions: {
         enabled: true,

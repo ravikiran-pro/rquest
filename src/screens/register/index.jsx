@@ -1,12 +1,10 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Form, Input, Button, message } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
   PhoneOutlined,
   ArrowRightOutlined,
-  ArrowLeftOutlined,
-  SafetyCertificateOutlined,
   ShopOutlined,
   ShoppingOutlined,
 } from '@ant-design/icons';
@@ -162,7 +160,7 @@ const RegisterScreen = () => {
 
               <h2 className="auth-card-title">Create Your Free Account</h2>
               <p className="auth-card-subtitle">
-                Join thousands of local neighbors and merchants trading directly without middleman markups.
+                Join thousands of local neighbors and merchants in your Neighborhood
               </p>
 
               <Form
@@ -189,7 +187,6 @@ const RegisterScreen = () => {
                       </div>
                     </div>
                     <div className="auth-role-label">Shopper / Neighbor</div>
-                    <div className="auth-role-desc">Buy at 100% physical counter prices with ₹0 markup</div>
                   </div>
 
                   <div
@@ -205,7 +202,7 @@ const RegisterScreen = () => {
                       </div>
                     </div>
                     <div className="auth-role-label">Store Owner / Merchant</div>
-                    <div className="auth-role-desc">0% commission, direct UPI cashflow, ₹199/mo SaaS</div>
+                    <div className="auth-role-desc">0% commission, direct UPI cashflow</div>
                   </div>
                 </div>
 
@@ -268,26 +265,8 @@ const RegisterScreen = () => {
                 <div className="auth-switch-row">
                   <span>Already have an account?</span>
                   <Link to={Routes.login} className="auth-switch-link">
-                    Sign in here
+                    Sign in
                   </Link>
-                </div>
-
-                <div className="auth-trust-footer">
-                  <div className="auth-trust-shield">
-                    <SafetyCertificateOutlined style={{ color: '#10b981' }} />
-                    <span>256-Bit Encrypted Direct Session • Zero Spam Guarantee</span>
-                  </div>
-                  <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                    <Link to={Routes.landing} className="auth-back-link">
-                      <ArrowLeftOutlined style={{ fontSize: 11 }} />
-                      <span>Back to Homepage</span>
-                    </Link>
-                    <span style={{ color: '#cbd5e1' }}>•</span>
-                    <Link to={Routes.client} className="auth-back-link">
-                      <ShopOutlined style={{ fontSize: 11 }} />
-                      <span>Store Registration Portal</span>
-                    </Link>
-                  </div>
                 </div>
               </Form>
             </div>
