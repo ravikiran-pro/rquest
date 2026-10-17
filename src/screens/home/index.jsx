@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   Input,
   Button,
@@ -12,22 +12,37 @@ import {
   Card,
   Flex,
   Grid,
-  Space,
   Modal,
   message,
   Select,
 } from 'antd';
 import {
-  CloseOutlined,
   SearchOutlined,
   EnvironmentOutlined,
   ShopOutlined,
   ShoppingCartOutlined,
   AimOutlined,
-  PlusOutlined,
-  HomeOutlined,
+  AppstoreOutlined,
+  BarsOutlined,
+  AudioOutlined,
+  CameraOutlined,
+  ThunderboltOutlined,
+  CompassOutlined,
 } from '@ant-design/icons';
-import { LeafletComponent, ShopCard, AddressModal } from '../../app/components';
+import {
+  LeafletComponent,
+  ShopCard,
+  ShopTableView,
+  AddressModal,
+  SearchFilterBar,
+  DEFAULT_FILTERS,
+  applySearchFilters,
+  VoiceSearchModal,
+  ImageSearchModal,
+  AiSearchModal,
+  AiRecommendationCard,
+  TrustBanner,
+} from '../../app/components';
 import {
   getLocationName,
   getPreciseUserLocation,
@@ -40,28 +55,55 @@ import { useHistory, useLocation } from 'react-router-dom';
 
 const { Title, Text, Paragraph } = Typography;
 
-const CATEGORY_CHIPS = [
-  { id: 'all', label: 'All Businesses', icon: '🏪' },
-  { id: 'Provision Store', label: 'Groceries & Marts', icon: '🛒' },
-  { id: 'Restaurants', label: 'Food & Dining', icon: '🍽️' },
-  { id: 'Technicians', label: 'Services & Technicians', icon: '🔧' },
-  { id: 'Dress Shop', label: 'Fashion & Boutique', icon: '👗' },
-  { id: 'Rentals', label: 'Rentals & Equipment', icon: '📦' },
-];
-
 const HomeScreen = () => {
   const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
 
   const { user_data } = useGlobalStore((state) => state);
   const { addItem, openCart } = useCartStore((state) => state);
 
   const [searchText, setSearchText] = useState('');
   const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
-  const [activeCategory, setActiveCategory] = useState('all');
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [searchError, setSearchError] = useState('');
+
+  // View Mode: 'grid' or 'list' (persisted in localStorage)
+  const [viewMode, setViewMode] = useState(() => {
+    try {
+      return localStorage.getItem('rquest_view_mode') || 'grid';
+    } catch (e) {
+      return 'grid';
+    }
+  });
+
+  const handleViewModeChange = (mode) => {
+    setViewMode(mode);
+    try {
+      localStorage.setItem('rquest_view_mode', mode);
+    } catch (e) {
+      // Ignore storage write error
+    }
+  };
+
+  // Smart Search Modals (Voice, Visual/Image, AI Prompt Search)
+  const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [isAiModalOpen, setIsAiModalOpen] = useState(false);
+
+  const handleAiApply = (aiData) => {
+    if (aiData.keyword) {
+      setSearchText(aiData.keyword);
+    }
+    setFilters((prev) => ({
+      ...prev,
+      ...(aiData.category ? { categories: [aiData.category] } : {}),
+      ...(aiData.maxDistance ? { maxDistance: aiData.maxDistance } : {}),
+      ...(aiData.maxPrice ? { maxPrice: aiData.maxPrice } : {}),
+      ...(aiData.onlyAvailable ? { onlyAvailable: true } : {}),
+    }));
+    message.success(`Smart search configured for "${aiData.keyword || 'listings'}"`);
+  };
 
   useEffect(() => {
     if (location.search) {
@@ -72,7 +114,10 @@ const HomeScreen = () => {
         setSearchText(qParam);
       }
       if (catParam) {
-        setActiveCategory(catParam);
+        setFilters((prev) => ({
+          ...prev,
+          categories: [catParam],
+        }));
       }
     }
   }, [location.search]);
@@ -91,7 +136,9 @@ const HomeScreen = () => {
           }
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore storage read error
+    }
     return null;
   };
 
@@ -163,7 +210,9 @@ const HomeScreen = () => {
         'rquest_user_location',
         JSON.stringify({ coords, name })
       );
-    } catch (e) {}
+    } catch (e) {
+      // Ignore storage write error
+    }
   };
 
   const handleSearch = (value) => {
@@ -270,15 +319,8 @@ const HomeScreen = () => {
 
           const response = await netWorkCall(apiConfig.shops_search, 'POST', body, false);
           if (!isCancelled && response?.data) {
-            let shops = response.data;
-            if (activeCategory !== 'all') {
-              shops = shops.filter((s) => {
-                const type = (s.shop_type || s.shopCategory?.name || '').toLowerCase();
-                return type.includes(activeCategory.toLowerCase());
-              });
-            }
-            setSearchMarkers(shops);
-            setSearchError(shops.length === 0 ? 'No matching stores found nearby' : '');
+            setSearchMarkers(response.data);
+            setSearchError(response.data.length === 0 ? 'No matching stores found nearby' : '');
           }
         } else {
           // Search items & services
@@ -301,12 +343,20 @@ const HomeScreen = () => {
       }
     };
 
-
     performSearch();
     return () => {
       isCancelled = true;
     };
-  }, [markerLocation, searchText, searchMode, activeCategory]);
+  }, [markerLocation, searchText, searchMode]);
+
+  // Reactive filtered and sorted results using applySearchFilters
+  const filteredShops = useMemo(() => {
+    return applySearchFilters(searchMarkers, filters, 'shops');
+  }, [searchMarkers, filters]);
+
+  const filteredItems = useMemo(() => {
+    return applySearchFilters(itemListings, filters, 'items');
+  }, [itemListings, filters]);
 
   return (
     <div style={{ minHeight: '100%', background: '#f8fafc', paddingBottom: 80 }}>
@@ -407,6 +457,18 @@ const HomeScreen = () => {
                   onChange={(e) => handleSearch(e.target.value)}
                   onPressEnter={() => handleSearch(searchText)}
                   prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 18 }} />}
+                  suffix={
+                    <AudioOutlined
+                      style={{
+                        color: '#6366f1',
+                        cursor: 'pointer',
+                        fontSize: 17,
+                        padding: '4px',
+                      }}
+                      title="Voice Search"
+                      onClick={() => setIsVoiceModalOpen(true)}
+                    />
+                  }
                 />
 
                 <Button
@@ -421,6 +483,69 @@ const HomeScreen = () => {
                   onClick={() => handleSearch(searchText)}
                 >
                   Search
+                </Button>
+              </Flex>
+
+              {/* Other search opton temporary disabled */}
+              <Flex
+                gap={8}
+                align="center"
+                justify="center"
+                wrap="wrap"
+                style={{
+                  paddingTop: 6,
+                  borderTop: '1px dashed #f1f5f9',
+                }}
+              >
+                <Button
+                  size="small"
+                  icon={<AudioOutlined style={{ color: '#ef4444' }} />}
+                  onClick={() => setIsVoiceModalOpen(true)}
+                  style={{
+                    borderRadius: 9999,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    height: 28,
+                    borderColor: '#fca5a5',
+                    background: '#fff1f2',
+                    color: '#991b1b',
+                  }}
+                >
+                  Voice Search
+                </Button>
+
+                <Button
+                  size="small"
+                  icon={<CameraOutlined style={{ color: '#0284c7' }} />}
+                  onClick={() => setIsImageModalOpen(true)}
+                  style={{
+                    borderRadius: 9999,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    height: 28,
+                    borderColor: '#bae6fd',
+                    background: '#f0f9ff',
+                    color: '#0369a1',
+                  }}
+                >
+                  Image Search
+                </Button>
+
+                <Button
+                  size="small"
+                  icon={<ThunderboltOutlined style={{ color: '#7c3aed' }} />}
+                  onClick={() => setIsAiModalOpen(true)}
+                  style={{
+                    borderRadius: 9999,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    height: 28,
+                    borderColor: '#ddd6fe',
+                    background: '#f5f3ff',
+                    color: '#6d28d9',
+                  }}
+                >
+                  AI Smart Search
                 </Button>
               </Flex>
             </Flex>
@@ -539,43 +664,6 @@ const HomeScreen = () => {
               </Button>
             </Flex>
           </Flex>
-
-          {/* Category Filter Pills using Ant Design CheckableTag */}
-          {searchMode === 'shops' && (
-            <div
-              className="horizontal-scroll-container"
-              style={{
-                width: '100%',
-                marginTop: 16,
-                padding: '2px 0',
-                justifyContent: screens.xs ? 'flex-start' : 'center',
-                gap: 6,
-              }}
-            >
-              {CATEGORY_CHIPS.map((cat) => (
-                <Tag.CheckableTag
-                  key={cat.id}
-                  checked={activeCategory === cat.id}
-                  onChange={() => setActiveCategory(cat.id)}
-                  style={{
-                    fontSize: screens.xs ? 12 : 13,
-                    padding: screens.xs ? '5px 12px' : '6px 16px',
-                    borderRadius: 20,
-                    lineHeight: '20px',
-                    fontWeight: 600,
-                    flexShrink: 0,
-                    border: '1px solid #e2e8f0',
-                    background: activeCategory === cat.id ? '#4f46e5' : '#ffffff',
-                    color: activeCategory === cat.id ? '#ffffff' : '#475569',
-                    boxShadow: activeCategory === cat.id ? '0 2px 8px rgba(79, 70, 229, 0.25)' : 'none',
-                    marginRight: 0,
-                  }}
-                >
-                  <span style={{ marginRight: 4 }}>{cat.icon}</span> {cat.label}
-                </Tag.CheckableTag>
-              ))}
-            </div>
-          )}
         </Flex>
       </div>
 
@@ -584,9 +672,21 @@ const HomeScreen = () => {
         style={{
           maxWidth: 1200,
           margin: '0 auto',
-          padding: screens.xs ? '18px 12px' : screens.md ? '24px 20px' : '32px 24px',
+          padding: screens.xs ? '14px 12px' : screens.md ? '22px 20px' : '28px 24px',
         }}
       >
+        {/* Modern E-Commerce Hyperlocal Filter System */}
+        <SearchFilterBar
+          searchMode={searchMode}
+          filters={filters}
+          onFilterChange={setFilters}
+          onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+          totalResults={searchMode === 'shops' ? filteredShops.length : filteredItems.length}
+          rawCount={searchMode === 'shops' ? searchMarkers.length : itemListings.length}
+          viewMode={viewMode}
+          onViewModeChange={handleViewModeChange}
+        />
+
         {loading ? (
           <Flex justify="center" align="center" style={{ minHeight: '40vh' }}>
             <Spin size="large" tip="Finding nearby listings..." />
@@ -594,42 +694,105 @@ const HomeScreen = () => {
         ) : searchMode === 'shops' ? (
           /* SHOPS VIEW */
           <div>
-            <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-              <Title
-                level={4}
-                style={{
-                  margin: 0,
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  fontSize: screens.xs ? 16 : 18,
-                }}
-              >
-                Nearby Stores & Service Providers{' '}
-                <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-                  ({searchMarkers.length})
-                </Text>
-              </Title>
+            <Flex justify="space-between" align="center" wrap="wrap" gap={10} style={{ marginBottom: 16 }}>
+              <div>
+                <Title
+                  level={4}
+                  style={{
+                    margin: 0,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontSize: screens.xs ? 15 : 18,
+                  }}
+                >
+                  {searchText ? `"${searchText}" near you` : 'Nearby Stores & Outlets'}{' '}
+                  <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                    ({filteredShops.length} found)
+                  </Text>
+                </Title>
+              </div>
+
+              <Flex align="center" gap={8}>
+                <Button
+                  icon={<CompassOutlined />}
+                  onClick={handleOpenModal}
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    fontSize: screens.xs ? 12 : 13,
+                    height: screens.xs ? 32 : 36,
+                    color: '#4f46e5',
+                    borderColor: '#c7d2fe',
+                    background: '#eef2ff',
+                  }}
+                >
+                  Map View
+                </Button>
+
+                {/* View Mode Switcher */}
+                <Segmented
+                  size={screens.xs ? 'small' : 'middle'}
+                  value={viewMode}
+                  onChange={handleViewModeChange}
+                  options={[
+                    { value: 'grid', icon: <AppstoreOutlined />, label: screens.xs ? undefined : 'Grid' },
+                    { value: 'list', icon: <BarsOutlined />, label: screens.xs ? undefined : 'List' },
+                  ]}
+                  style={{ fontWeight: 600, background: '#f1f5f9' }}
+                />
+              </Flex>
             </Flex>
 
-            {searchMarkers.length === 0 ? (
+            {/* AI Recommendation Highlight Card */}
+            {/* {filteredShops.length > 0 && (
+              <AiRecommendationCard
+                topResult={filteredShops[0]}
+                searchMode="shops"
+                onClick={() => history.push(`/shop/${filteredShops[0].id}`)}
+              />
+            )} */}
+
+            {filteredShops.length === 0 ? (
               <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={searchError || 'No stores found within this area'}
+                  description={
+                    searchMarkers.length > 0
+                      ? 'No stores match your selected filters (e.g. radius or category)'
+                      : searchError || 'No stores found within this area'
+                  }
                 >
-                  <Button type="primary" onClick={handleOpenModal} style={{ borderRadius: 8, fontWeight: 700 }}>
-                    Adjust Location on Map
-                  </Button>
+                  {searchMarkers.length > 0 ? (
+                    <Button
+                      type="primary"
+                      onClick={() => setFilters(DEFAULT_FILTERS)}
+                      style={{ borderRadius: 8, fontWeight: 700 }}
+                    >
+                      Clear Active Filters
+                    </Button>
+                  ) : (
+                    <Button type="primary" onClick={handleOpenModal} style={{ borderRadius: 8, fontWeight: 700 }}>
+                      Adjust Location on Map
+                    </Button>
+                  )}
                 </Empty>
               </Card>
+            ) : viewMode === 'list' ? (
+              /* LIST VIEW FOR SHOPS - Inspiration Data Table on Desktop, Native Cards on Mobile */
+              <ShopTableView
+                items={filteredShops}
+                searchMode="shops"
+                onOpenMap={handleOpenModal}
+              />
             ) : (
-              /* Perfect 1/2/3 grid alignment across Mobile, Tab, and Desktop */
+              /* GRID VIEW FOR SHOPS (Perfect 1/2/3 grid alignment across Mobile, Tab, and Desktop) */
               <Row gutter={screens.xs ? [12, 12] : screens.md ? [16, 16] : [24, 24]}>
-                {searchMarkers.map((shop) => (
+                {filteredShops.map((shop) => (
                   <Col xs={24} sm={12} md={12} lg={8} key={shop.id}>
                     <ShopCard
                       shopDetails={shop}
                       isChat={user_data?.user_id ? true : false}
+                      viewMode="grid"
                     />
                   </Col>
                 ))}
@@ -639,37 +802,103 @@ const HomeScreen = () => {
         ) : (
           /* ITEMS & SERVICES VIEW */
           <div>
-            <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-              <Title
-                level={4}
-                style={{
-                  margin: 0,
-                  fontWeight: 700,
-                  color: '#0f172a',
-                  fontSize: screens.xs ? 16 : 18,
-                }}
-              >
-                Matching Products & Services{' '}
-                <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-                  ({itemListings.length})
-                </Text>
-              </Title>
+            <Flex justify="space-between" align="center" wrap="wrap" gap={10} style={{ marginBottom: 16 }}>
+              <div>
+                <Title
+                  level={4}
+                  style={{
+                    margin: 0,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontSize: screens.xs ? 15 : 18,
+                  }}
+                >
+                  {searchText ? `"${searchText}" near you` : 'Matching Products & Services'}{' '}
+                  <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
+                    ({filteredItems.length} found)
+                  </Text>
+                </Title>
+              </div>
+
+              <Flex align="center" gap={8}>
+                <Button
+                  icon={<CompassOutlined />}
+                  onClick={handleOpenModal}
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    fontSize: screens.xs ? 12 : 13,
+                    height: screens.xs ? 32 : 36,
+                    color: '#4f46e5',
+                    borderColor: '#c7d2fe',
+                    background: '#eef2ff',
+                  }}
+                >
+                  Map View
+                </Button>
+
+                {/* View Mode Switcher */}
+                <Segmented
+                  size={screens.xs ? 'small' : 'middle'}
+                  value={viewMode}
+                  onChange={handleViewModeChange}
+                  options={[
+                    { value: 'grid', icon: <AppstoreOutlined />, label: screens.xs ? undefined : 'Grid' },
+                    { value: 'list', icon: <BarsOutlined />, label: screens.xs ? undefined : 'List' },
+                  ]}
+                  style={{ fontWeight: 600, background: '#f1f5f9' }}
+                />
+              </Flex>
             </Flex>
 
-            {itemListings.length === 0 ? (
+            {/* AI Recommendation Highlight Card */}
+            {/* {filteredItems.length > 0 && (
+              <AiRecommendationCard
+                topResult={filteredItems[0]}
+                searchMode="items"
+                onClick={() => {
+                  addItem(filteredItems[0].shop, filteredItems[0]);
+                  openCart();
+                }}
+              />
+            )} */}
+
+            {filteredItems.length === 0 ? (
               <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={searchError || 'No matching items found'}
+                  description={
+                    itemListings.length > 0
+                      ? 'No products match your selected filters (e.g. price range or radius)'
+                      : searchError || 'No matching items found'
+                  }
                 >
-                  <Button type="primary" onClick={() => setSearchMode('shops')} style={{ borderRadius: 8, fontWeight: 700 }}>
-                    Browse All Stores Instead
-                  </Button>
+                  {itemListings.length > 0 ? (
+                    <Button
+                      type="primary"
+                      onClick={() => setFilters(DEFAULT_FILTERS)}
+                      style={{ borderRadius: 8, fontWeight: 700 }}
+                    >
+                      Clear Active Filters
+                    </Button>
+                  ) : (
+                    <Button type="primary" onClick={() => setSearchMode('shops')} style={{ borderRadius: 8, fontWeight: 700 }}>
+                      Browse All Stores Instead
+                    </Button>
+                  )}
                 </Empty>
               </Card>
+            ) : viewMode === 'list' ? (
+              /* LIST VIEW FOR ITEMS & SERVICES - Table View on Desktop, Native Cards on Mobile */
+              <ShopTableView
+                items={filteredItems}
+                searchMode="items"
+                onOpenMap={handleOpenModal}
+              />
             ) : (
+              /* GRID VIEW FOR ITEMS & SERVICES */
               <Row gutter={screens.xs ? [12, 12] : screens.md ? [16, 16] : [24, 24]}>
-                {itemListings.map((item) => (
+                {filteredItems.map((item) => (
                   <Col xs={24} sm={12} md={12} lg={8} key={item.id}>
                     <Card
                       hoverable
@@ -803,6 +1032,9 @@ const HomeScreen = () => {
             )}
           </div>
         )}
+
+        {/* Verified Trust Banner matching screenshot */}
+        <TrustBanner />
       </div>
 
       {/* Full View Map Modal */}
@@ -835,7 +1067,7 @@ const HomeScreen = () => {
           markerLocation={markerLocation}
           setMarkerLocation={setMarkerLocation}
           updateMarker={updateMarker}
-          searchMarkers={searchMarkers}
+          searchMarkers={searchMode === 'shops' ? filteredShops : searchMarkers}
           position={position}
           setPosition={setPosition}
           onClose={handleCloseModal}
@@ -851,6 +1083,33 @@ const HomeScreen = () => {
           userProfile={user_data}
         />
       )}
+
+      {/* Voice Search Recognition Modal */}
+      <VoiceSearchModal
+        open={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onSearch={(query) => {
+          setSearchText(query);
+          handleSearch(query);
+        }}
+      />
+
+      {/* Visual Image Search Modal */}
+      <ImageSearchModal
+        open={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        onSearch={(query) => {
+          setSearchText(query);
+          handleSearch(query);
+        }}
+      />
+
+      {/* AI Smart Search Natural Language Parsing Modal */}
+      <AiSearchModal
+        open={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onAiApply={handleAiApply}
+      />
     </div>
   );
 };

@@ -1,0 +1,447 @@
+/* ==========================================================================
+   Rquest Profile & Onboarding - Modern Minimalist Light & Cool Theme
+   Mobile-First, High Contrast, Accessible, Zero-Jank Touch UX
+   ========================================================================== */
+
+/* Page Container */
+.profile-page-shell {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 24px 20px 80px;
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .profile-page-shell {
+    padding: 14px 12px 70px;
+  }
+}
+
+/* Light & Cool Card Standards */
+.profile-clean-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 4px 14px -2px rgba(15, 23, 42, 0.03) !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 18px;
+  overflow: hidden;
+}
+
+/* Hero Header Card */
+.profile-hero-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 18px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04) !important;
+  margin-bottom: 18px;
+}
+
+.profile-avatar-cool {
+  background: #f1f5f9 !important;
+  color: #1e293b !important;
+  border: 2px solid #e2e8f0 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+  flex-shrink: 0;
+}
+
+.profile-avatar-merchant {
+  background: #f5f3ff !important;
+  color: #6d28d9 !important;
+  border: 2px solid #ddd6fe !important;
+}
+
+/* Role Pills */
+.profile-role-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  border: 1px solid transparent;
+}
+
+.profile-role-badge.buyer {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+.profile-role-badge.merchant {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+/* Quick Metrics Row */
+.profile-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 18px;
+}
+
+@media (max-width: 640px) {
+  .profile-metrics-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .profile-metrics-grid .metric-col-full {
+    grid-column: span 2;
+  }
+}
+
+.profile-metric-box {
+  background: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: all 0.2s ease;
+}
+
+.profile-metric-box:hover {
+  background: #f1f5f9;
+  border-color: #e2e8f0;
+}
+
+.profile-metric-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #64748b;
+  margin-bottom: 2px;
+}
+
+.profile-metric-value {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+/* ==========================================================================
+   Interactive Setup Guide & Focus Mode
+   ========================================================================== */
+.setup-guide-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 4px solid #4f46e5 !important;
+  border-radius: 16px !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+  margin-bottom: 20px;
+  transition: all 0.25s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.setup-guide-card.completed {
+  border-left-color: #10b981 !important;
+  background: #ffffff !important;
+}
+
+.setup-guide-card.interactive-focused {
+  border-color: #818cf8 !important;
+  border-left-color: #4f46e5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12), 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* Focus Alert Capsule */
+.setup-focus-banner {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.setup-focus-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.setup-focus-beacon {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25);
+  animation: pulseBeacon 2s infinite;
+  flex-shrink: 0;
+}
+
+@keyframes pulseBeacon {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0.4); }
+  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(79, 70, 229, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(79, 70, 229, 0); }
+}
+
+/* Checklist Pills */
+.setup-checklist-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.setup-check-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+  border: 1px solid transparent;
+}
+
+.setup-check-chip.done {
+  background: #f0fdf4;
+  color: #15803d;
+  border-color: #dcfce7;
+  cursor: default;
+}
+
+.setup-check-chip.pending {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.setup-check-chip.pending:hover {
+  background: #f8fafc;
+  border-color: #4f46e5;
+  color: #4f46e5;
+  transform: translateY(-1px);
+}
+
+.setup-check-chip.active-focus {
+  background: #eef2ff;
+  border-color: #818cf8;
+  color: #4338ca;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+.setup-point-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.setup-check-chip.pending:hover .setup-point-tag {
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+/* Setup Progress Bar Customization */
+.setup-progress-wrap {
+  margin: 10px 0 14px;
+}
+
+.setup-progress-wrap .ant-progress-bg {
+  background: #4f46e5 !important;
+  border-radius: 9999px !important;
+}
+
+.setup-guide-card.completed .setup-progress-wrap .ant-progress-bg {
+  background: #10b981 !important;
+}
+
+/* ==========================================================================
+   Tabs & Content Areas (Light & Mobile-First)
+   ========================================================================== */
+.profile-tabs-card .ant-tabs-nav {
+  margin-bottom: 20px !important;
+}
+
+.profile-tabs-card .ant-tabs-tab {
+  padding: 10px 16px !important;
+  font-weight: 700 !important;
+  font-size: 14px !important;
+  color: #64748b !important;
+}
+
+.profile-tabs-card .ant-tabs-tab-active .ant-tabs-tab-btn {
+  color: #0f172a !important;
+}
+
+.profile-tabs-card .ant-tabs-ink-bar {
+  background: #0f172a !important;
+  height: 2.5px !important;
+  border-radius: 2px !important;
+}
+
+@media (max-width: 640px) {
+  .profile-tabs-card .ant-tabs-tab {
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ==========================================================================
+   Interactive Onboarding Assistant Modal (Mobile-Optimized)
+   ========================================================================== */
+.onboarding-sheet-modal .ant-modal-content {
+  border-radius: 20px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.15) !important;
+}
+
+.onboarding-sheet-header {
+  padding: 24px 24px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #f1f5f9;
+  text-align: center;
+}
+
+.onboarding-sheet-body {
+  padding: 20px 24px 28px;
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 640px) {
+  .onboarding-sheet-modal .ant-modal-content {
+    border-radius: 16px !important;
+  }
+  .onboarding-sheet-header {
+    padding: 18px 16px 12px;
+  }
+  .onboarding-sheet-body {
+    padding: 16px 16px 20px;
+    max-height: 78vh;
+  }
+}
+
+/* Step Bar Customization */
+.onboarding-step-pill-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.onboarding-step-pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 700;
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.onboarding-step-pill.active {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.onboarding-step-pill.completed {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #bbf7d0;
+}
+
+/* Interactive Category Interest Chips (User Onboarding) */
+.category-interest-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin: 14px 0 20px;
+}
+
+@media (max-width: 480px) {
+  .category-interest-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.category-interest-card {
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid #e2e8f0;
+  background: #ffffff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.category-interest-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.category-interest-card.selected {
+  border-color: #4f46e5;
+  background: #f8fafc;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+.category-interest-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.category-interest-name {
+  font-weight: 700;
+  font-size: 13px;
+  color: #0f172a;
+}
+
+.category-interest-desc {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+/* Live Profile Summary Preview */
+.live-profile-preview {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+/* Sticky Action Footer on Mobile */
+.onboarding-actions-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+@media (max-width: 480px) {
+  .onboarding-actions-footer {
+    flex-direction: column-reverse;
+  }
+  .onboarding-actions-footer .ant-btn {
+    width: 100% !important;
+    height: 46px !important;
+  }
+}
+

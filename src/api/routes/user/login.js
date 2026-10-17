@@ -18,6 +18,12 @@ const login = async (req, res) => {
       }
 
       if (!user) {
+        user = await users.findOne({
+          where: { email: identifier },
+        });
+      }
+
+      if (!user) {
         return res.status(401).json({
           success: false,
           error: 'User not found',
@@ -58,7 +64,7 @@ const login = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: error.message || error,
-      message: 'Password Authentication Failed',
+      message: error.message || 'Login failed due to an internal server error',
     });
   }
 };

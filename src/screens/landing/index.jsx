@@ -373,7 +373,13 @@ export default function LandingScreen() {
   const [comparisonFilter, setComparisonFilter] = useState('all');
 
   // Floating Live In-Store Chat Notification State (matches In-App Chat UI/UX)
-  const [chatMinimized, setChatMinimized] = useState(false);
+  // On mobile (< 768px), default to minimized so it does not block the screen or hero content
+  const [chatMinimized, setChatMinimized] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return window.innerWidth <= 768;
+    }
+    return false;
+  });
   const [chatDismissed, setChatDismissed] = useState(false);
   const [chatInputText, setChatInputText] = useState('');
   const [isStoreTyping, setIsStoreTyping] = useState(false);
@@ -731,7 +737,7 @@ export default function LandingScreen() {
                   onClick={() => setExperienceMode('merchant')}
                 >
                   <span className="mode-btn-icon">🏪</span>
-                  <span>Store Owner Hub (0% Cut)</span>
+                  <span>Store Owner Hub</span>
                 </button>
                 <button
                   type="button"
@@ -1907,34 +1913,30 @@ export default function LandingScreen() {
           onTouchEnd={handleTouchEnd}
         >
           {chatMinimized ? (
-            <div className="rquest-chat-minimized-capsule" onClick={() => setChatMinimized(false)}>
+            <div
+              className="rquest-chat-minimized-capsule"
+              onClick={() => setChatMinimized(false)}
+              role="button"
+              tabIndex={0}
+              title="Tap to expand live tracking & store chat"
+            >
               <div className="mini-avatar">
                 <span>SK</span>
                 <span className="mini-badge-count">1</span>
               </div>
               <div className="mini-content">
-                <div className="mini-name">Sri Krishna Provisions &amp; Dairy</div>
+                <div className="mini-name">Sri Krishna Provisions</div>
                 <div className="mini-preview">
-                  {deliveryStep === 3
-                    ? '🛵 Runner Ravi is 180m away (ETA 4m)'
-                    : deliveryStep === 4
-                    ? '🔒 Counter PIN 4812 Verified'
-                    : chatMessages[chatMessages.length - 1]?.text || '"Atta & Milk ready at counter! PIN 4812"'}
+                  {deliveryStep === 4
+                    ? '🔒 PIN 4812 Verified'
+                    : deliveryStep === 3
+                    ? '🛵 Runner 180m away • ETA 4m'
+                    : '💬 Live Counter Chat & Stock'}
                 </div>
               </div>
-              <button
-                type="button"
-                className="mini-open-btn"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setChatMinimized(false);
-                }}
-              >
+              <div className="mini-action-pill">
                 <span>Track &amp; Reply</span>
-                <ArrowRightOutlined style={{ fontSize: 10 }} />
-              </button>
-              <div className="mobile-capsule-swipe-hint">
-                <span>↑ Tap or swipe up</span>
+                <span className="mini-pill-icon">↑</span>
               </div>
             </div>
           ) : (
@@ -1947,7 +1949,7 @@ export default function LandingScreen() {
               >
                 <div className="mobile-drag-pill-bar" />
                 <div className="mobile-swipe-instruction">
-                  <span>↔ Swipe sideways for Track/Chat • Swipe down to minimize</span>
+                  <span>Swipe down or tap to minimize</span>
                 </div>
               </div>
 

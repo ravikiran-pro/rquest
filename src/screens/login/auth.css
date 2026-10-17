@@ -519,17 +519,29 @@
 /* Tablets & Medium Screens (< 992px) */
 @media (max-width: 992px) {
   .auth-split-grid {
-    grid-template-columns: 1fr;
-    gap: 36px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .auth-form-col {
+    order: 1;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .auth-showcase-col {
+    order: 2;
     align-items: center;
     text-align: center;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
   }
 
   .auth-showcase-desc {
-    max-width: 600px;
+    max-width: 480px;
   }
 
   .auth-chips-row {
@@ -544,43 +556,90 @@
 /* Mobile Screens (< 768px) */
 @media (max-width: 768px) {
   .auth-page-wrapper {
-    padding: 20px 14px 40px;
+    padding: 16px 14px 32px;
+    align-items: flex-start;
+  }
+
+  .auth-container {
+    width: 100%;
+  }
+
+  .auth-split-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .auth-form-col {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
   }
 
   .auth-card {
-    padding: 28px 18px;
+    padding: 22px 16px;
     border-radius: 20px;
-    box-shadow: 0 10px 28px -6px rgba(15, 23, 42, 0.08);
-  }
-
-  .auth-showcase-title {
-    font-size: clamp(1.8rem, 7vw, 2.3rem);
-  }
-
-  .auth-showcase-desc {
-    font-size: 14px;
+    box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.08);
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
   }
 
   .auth-card-title {
     font-size: 20px;
+    margin-bottom: 4px;
   }
 
   .auth-card-subtitle {
     font-size: 13px;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
+    line-height: 1.45;
   }
 
   .auth-role-picker {
     grid-template-columns: 1fr;
     gap: 8px;
+    margin-bottom: 16px;
   }
 
-  .auth-deck-canvas {
-    max-height: 180px;
+  .auth-role-card {
+    padding: 10px 12px;
   }
 
-  .auth-deck-canvas svg {
-    max-height: 180px;
+  /* On mobile, hide the giant decorative illustrations and duplicate titles so the user gets straight to the form */
+  .auth-showcase-col {
+    order: 2;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 4px;
+  }
+
+  .auth-showcase-badge,
+  .auth-showcase-title,
+  .auth-showcase-desc,
+  .auth-illustration-deck,
+  .auth-quote-card {
+    display: none !important;
+  }
+
+  .auth-chips-row {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 4px;
+    flex-wrap: wrap;
+  }
+
+  .auth-chip-pill {
+    padding: 5px 10px;
+    font-size: 11px;
+    border-radius: 8px;
+  }
+
+  /* Prevent background ambient glow from creating horizontal scrollbars or GPU lag */
+  .auth-ambient-glow,
+  .auth-ambient-glow-right {
+    display: none;
   }
 }
 

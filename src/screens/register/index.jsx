@@ -122,7 +122,7 @@ const RegisterScreen = () => {
               </div>
               <div className="auth-chip-pill">
                 <span className="auth-chip-dot blue" />
-                <span>💬 In-Store WebSocket Chat</span>
+                <span>💬 In-Store Chat</span>
               </div>
               <div className="auth-chip-pill">
                 <span className="auth-chip-dot purple" />
@@ -257,7 +257,7 @@ const RegisterScreen = () => {
                     size="large"
                     className="btn-auth-submit"
                   >
-                    <span>{selectedRole === MERCHANT_ROLE_ID ? 'Launch Merchant Account (₹0)' : 'Create Free Shopper Account'}</span>
+                    <span>{selectedRole === MERCHANT_ROLE_ID ? 'Launch Merchant Account' : 'Create Free Shopper Account'}</span>
                     <ArrowRightOutlined />
                   </Button>
                 </Form.Item>

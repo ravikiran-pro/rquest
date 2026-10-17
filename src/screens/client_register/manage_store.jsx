@@ -547,49 +547,157 @@ const ManageStore = ({
       key: 'status',
       render: (_, record) => {
         const statusColors = {
+          placed: 'blue',
           pending: 'warning',
+          order_prepare: 'processing',
+          preparing: 'processing',
           accepted: 'processing',
+          ready_for_pickup: 'cyan',
+          open_to_delivery: 'purple',
+          out_for_delivery: 'geekblue',
           completed: 'success',
           cancelled: 'error',
         };
-        return <Tag color={statusColors[record.status] || 'default'}>{record.status}</Tag>;
+        const statusLabels = {
+          placed: '📋 Order Placed',
+          pending: '⏳ Pending',
+          order_prepare: '🍳 Order Prepare',
+          preparing: '🍳 Preparing',
+          accepted: '✅ Accepted',
+          ready_for_pickup: '🛍️ Ready for Pickup',
+          open_to_delivery: '🚚 Open to Delivery',
+          out_for_delivery: '🛵 Out for Delivery',
+          completed: '🎉 Completed',
+          cancelled: '❌ Cancelled',
+        };
+        return (
+          <Tag color={statusColors[record.status] || 'default'} style={{ fontWeight: 600 }}>
+            {statusLabels[record.status] || record.status}
+          </Tag>
+        );
       },
     },
     {
       title: 'Update Action',
       key: 'action',
-      render: (_, record) => (
-        <Space>
-          {record.status === 'pending' && (
-            <Button
-              type="primary"
-              size="small"
-              onClick={() => handleUpdateOrderStatus(record.id, 'accepted')}
-            >
-              Accept
-            </Button>
-          )}
-          {record.status === 'accepted' && (
-            <Button
-              type="primary"
-              size="small"
-              style={{ background: '#10b981', borderColor: '#10b981' }}
-              onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
-            >
-              Mark Completed
-            </Button>
-          )}
-          {record.status !== 'completed' && record.status !== 'cancelled' && (
-            <Button
-              size="small"
-              danger
-              onClick={() => handleUpdateOrderStatus(record.id, 'cancelled')}
-            >
-              Reject
-            </Button>
-          )}
-        </Space>
-      ),
+      render: (_, record) => {
+        const isSelfPickup = record.order_type === 'pickup';
+        const isDelivery = record.order_type === 'delivery';
+
+        return (
+          <Space wrap size={[6, 6]}>
+            {/* If Placed or Pending: Start Preparation */}
+            {(record.status === 'placed' || record.status === 'pending') && (
+              <Button
+                type="primary"
+                size="small"
+                style={{ background: '#3b82f6', borderColor: '#3b82f6', fontWeight: 600 }}
+                onClick={() => handleUpdateOrderStatus(record.id, 'order_prepare')}
+              >
+                🍳 Order Prepare
+              </Button>
+            )}
+
+            {/* If Order Prepare / Preparing / Accepted */}
+            {(record.status === 'order_prepare' ||
+              record.status === 'preparing' ||
+              record.status === 'accepted') && (
+              <>
+                {/* Self-Pickup or Service: Move to Ready for Pickup */}
+                {isSelfPickup && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{ background: '#0891b2', borderColor: '#0891b2', fontWeight: 600 }}
+                    onClick={() => handleUpdateOrderStatus(record.id, 'ready_for_pickup')}
+                  >
+                    🛍️ Ready for Pickup
+                  </Button>
+                )}
+
+                {/* Delivery: Move to Open to Delivery (captured for runner board) */}
+                {isDelivery && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{ background: '#7c3aed', borderColor: '#7c3aed', fontWeight: 600 }}
+                    onClick={() => handleUpdateOrderStatus(record.id, 'open_to_delivery')}
+                  >
+                    🚚 Move to Open to Delivery
+                  </Button>
+                )}
+
+                {/* Service or Direct Completion */}
+                {!isDelivery && (
+                  <Button
+                    type="primary"
+                    size="small"
+                    style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                    onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
+                  >
+                    Mark Completed
+                  </Button>
+                )}
+
+                {/* Option to revert/set back to Placed */}
+                <Button
+                  size="small"
+                  onClick={() => handleUpdateOrderStatus(record.id, 'placed')}
+                >
+                  ↩️ Order Placed
+                </Button>
+              </>
+            )}
+
+            {/* If Ready for Pickup: Mark Completed */}
+            {record.status === 'ready_for_pickup' && (
+              <Button
+                type="primary"
+                size="small"
+                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
+              >
+                ✅ Mark Handed Over & Completed
+              </Button>
+            )}
+
+            {/* If Open to Delivery */}
+            {record.status === 'open_to_delivery' && (
+              <Button
+                type="primary"
+                size="small"
+                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
+              >
+                ✅ Mark Delivered / Completed
+              </Button>
+            )}
+
+            {/* If Out for Delivery */}
+            {record.status === 'out_for_delivery' && (
+              <Button
+                type="primary"
+                size="small"
+                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
+              >
+                ✅ Mark Delivered & Completed
+              </Button>
+            )}
+
+            {/* Reject / Cancel */}
+            {record.status !== 'completed' && record.status !== 'cancelled' && (
+              <Button
+                size="small"
+                danger
+                onClick={() => handleUpdateOrderStatus(record.id, 'cancelled')}
+              >
+                Reject
+              </Button>
+            )}
+          </Space>
+        );
+      },
     },
   ];
 

@@ -21,7 +21,7 @@ import {
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, CartDrawer, ErrorBoundary } from '../components';
 import { useChatStore, useGlobalStore, useCartStore, chatSocket } from '../../app/services';
-import { apiConfig, netWorkCall } from '../utils';
+import { apiConfig, netWorkCall, checkUserRole, storageKeys } from '../utils';
 import { Avatar, Badge, message, notification } from 'antd';
 import { MessageFilled, CloseOutlined } from '@ant-design/icons';
 import PrivateRoute from './privateroute';
@@ -60,6 +60,10 @@ export default function AppRoutes() {
   const { isChat, unreadTotal, handleChatOpen, handleChatClose } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const isCartOpen = useCartStore((state) => state.isOpen);
+  const { isMerchant } = checkUserRole(user_data);
+  const isLoggedIn = !!(
+    user_data?.user_id && sessionStorage?.getItem(storageKeys.auth_token)
+  );
 
   const handleClose = () => {
     setdrawer(false);
@@ -134,13 +138,25 @@ export default function AppRoutes() {
       <div style={{ minHeight: 'calc(100vh - 64px)', overflowX: 'hidden' }}>
         <Switch>
           <Route exact path={routes.landing}>
-            <LandingScreen />
+            {isLoggedIn ? (
+              <Redirect to={isMerchant ? routes.client : routes.app} />
+            ) : (
+              <LandingScreen />
+            )}
           </Route>
           <Route path="/landing">
-            <LandingScreen />
+            {isLoggedIn ? (
+              <Redirect to={isMerchant ? routes.client : routes.app} />
+            ) : (
+              <LandingScreen />
+            )}
           </Route>
           <Route path={routes.login}>
-            <LoginScreen />
+            {isLoggedIn ? (
+              <Redirect to={isMerchant ? routes.client : routes.app} />
+            ) : (
+              <LoginScreen />
+            )}
           </Route>
           <Route path={routes.app}>
             <HomeScreen />
@@ -158,7 +174,11 @@ export default function AppRoutes() {
           <PrivateRoute path={routes.client} component={ClientRegister} />
           <PrivateRoute path={routes.clientShop} component={ClientRegister} />
           <Route path={routes.register}>
-            <RegisterScreen />
+            {isLoggedIn ? (
+              <Redirect to={isMerchant ? routes.client : routes.app} />
+            ) : (
+              <RegisterScreen />
+            )}
           </Route>
           <Redirect to={routes.landing} />
         </Switch>

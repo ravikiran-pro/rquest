@@ -1,5 +1,5 @@
 const express = require('express');
-const { orders, order_items, shops, users, shop_listings } = require('../../models');
+const { orders, order_items, shops, users, shop_listings, chats } = require('../../models');
 const { authMiddleware } = require('../../auth');
 
 const router = express.Router();
@@ -57,7 +57,7 @@ router.post('/', async (req, res) => {
       customer_id: user_id,
       shop_id,
       order_type,
-      status: 'pending',
+      status: 'placed',
       total_amount: totalAmount,
       platform_fee: parsedPlatformFee,
       delivery_fee: parsedDeliveryFee,
@@ -74,6 +74,35 @@ router.post('/', async (req, res) => {
       order_id: newOrder.id,
     }));
     await order_items.bulkCreate(itemsToInsert);
+
+    // Automated chat notification to shop owner on self-pickup order or service booking
+    if (shop.owner_id) {
+      try {
+        const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+        const isSelfPickup = order_type === 'pickup';
+        const isService = order_type === 'service' || items.some((i) => i.listing_type === 'service');
+
+        let alertMessage = '';
+        if (isSelfPickup) {
+          alertMessage = `📦 New Self-Pickup Order #${orderNumber} Placed!\n• Items: ${itemsSummary}\n• Total Amount: ₹${totalAmount}\n• Customer Phone: ${customer_phone || 'Provided in order'}\n• Payment Mode: ${payment_mode === 'direct_upi' ? 'Direct UPI' : 'Pay at Counter'}\n👉 Please start preparing this order and mark "Order Prepare".`;
+        } else if (isService) {
+          alertMessage = `🛠️ New Service Booking #${orderNumber} Placed!\n• Service: ${itemsSummary}\n• Total Amount: ₹${totalAmount}\n• Customer Phone: ${customer_phone || 'Provided in order'}\n👉 Please review and mark "Order Prepare" to confirm schedule.`;
+        } else {
+          alertMessage = `🚚 New Delivery Order #${orderNumber} Placed!\n• Items: ${itemsSummary}\n• Total Amount: ₹${totalAmount}\n• Delivery Address: ${delivery_address || 'Customer Address'}\n• Customer Phone: ${customer_phone || 'Provided in order'}\n👉 Please confirm and move to "Open to Delivery".`;
+        }
+
+        await chats.create({
+          sender_id: user_id,
+          receiver_id: shop.owner_id,
+          shop_id: shop.id,
+          message: alertMessage,
+          is_read: false,
+          is_deleted: false,
+        });
+      } catch (chatError) {
+        console.warn('Could not auto-create chat notification for order:', chatError);
+      }
+    }
 
     const createdOrder = await orders.findByPk(newOrder.id, {
       include: [
@@ -141,7 +170,7 @@ router.get('/shop/:shop_id', async (req, res) => {
   }
 });
 
-// 4. Update order status (Merchant accepts, packs, readies, or completes)
+// 4. Update order status (Merchant accepts, packs, readies, moves to open to delivery, or completes)
 router.put('/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
@@ -149,9 +178,13 @@ router.put('/:id/status', async (req, res) => {
 
     const validStatuses = [
       'pending',
+      'placed',
+      'order_prepare',
+      'preparing',
       'accepted',
       'packed',
       'ready_for_pickup',
+      'open_to_delivery',
       'out_for_delivery',
       'completed',
       'cancelled',
@@ -160,15 +193,56 @@ router.put('/:id/status', async (req, res) => {
       return res.status(400).json({ error: `Invalid status. Must be one of: ${validStatuses.join(', ')}` });
     }
 
-    const order = await orders.findByPk(id);
+    const order = await orders.findByPk(id, {
+      include: [
+        { model: shops, as: 'shop' },
+        { model: order_items, as: 'items' },
+      ],
+    });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    const previousStatus = order.status;
     order.status = status;
     if (shop_upi_id) order.shop_upi_id = shop_upi_id;
     if (delivery_notes) order.delivery_notes = delivery_notes;
     await order.save();
+
+    // Auto-notify customer in chat on status change
+    if (previousStatus !== status && order.customer_id && order.shop?.owner_id) {
+      try {
+        let statusMsg = '';
+        if (status === 'order_prepare' || status === 'preparing') {
+          statusMsg = `👨‍🍳 Store Update: Your order #${order.order_number} status is now "Order Prepare". The shop is preparing your items!`;
+        } else if (status === 'ready_for_pickup') {
+          statusMsg = `✅ Store Update: Your order #${order.order_number} is packed & READY FOR PICKUP at the store counter!`;
+        } else if (status === 'open_to_delivery') {
+          statusMsg = `🚚 Store Update: Your order #${order.order_number} has been confirmed & moved to "Open to Delivery"! A delivery partner will claim and dispatch soon.`;
+        } else if (status === 'out_for_delivery') {
+          statusMsg = `🛵 Store Update: Your order #${order.order_number} is out for delivery!`;
+        } else if (status === 'completed') {
+          statusMsg = `🎉 Store Update: Order #${order.order_number} has been completed! Thank you for ordering local.`;
+        } else if (status === 'cancelled') {
+          statusMsg = `❌ Store Update: Order #${order.order_number} was cancelled by the merchant.`;
+        } else if (status === 'placed') {
+          statusMsg = `📋 Store Update: Order #${order.order_number} marked as Order Placed.`;
+        }
+
+        if (statusMsg) {
+          await chats.create({
+            sender_id: order.shop.owner_id,
+            receiver_id: order.customer_id,
+            shop_id: order.shop_id,
+            message: statusMsg,
+            is_read: false,
+            is_deleted: false,
+          });
+        }
+      } catch (chatError) {
+        console.warn('Could not auto-create chat status notification:', chatError);
+      }
+    }
 
     res.status(200).json({
       success: true,
@@ -187,12 +261,12 @@ router.get('/delivery/feed', async (req, res) => {
     const { user_id } = req.headers;
     const { Op } = require('sequelize');
 
-    // Return delivery orders that are accepted/packed/ready and either unassigned OR assigned to this driver
+    // Return delivery orders that are open_to_delivery, accepted, packed, ready and either unassigned OR assigned to this driver
     const deliveryOrders = await orders.findAll({
       where: {
         order_type: 'delivery',
         status: {
-          [Op.in]: ['accepted', 'packed', 'ready_for_pickup', 'out_for_delivery'],
+          [Op.in]: ['open_to_delivery', 'accepted', 'packed', 'ready_for_pickup', 'out_for_delivery'],
         },
         [Op.or]: [
           { delivery_partner_id: null },

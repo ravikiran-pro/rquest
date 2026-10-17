@@ -33,8 +33,9 @@ import {
   PhoneOutlined,
   LockOutlined,
   ThunderboltFilled,
+  MessageOutlined,
 } from '@ant-design/icons';
-import { useCartStore, useGlobalStore } from '../../services';
+import { useCartStore, useGlobalStore, useChatStore } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storageKeys, SOCKET } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
@@ -42,11 +43,40 @@ import { AddressModal } from '../profile';
 
 const { Text, Title } = Typography;
 
+const PREBUILT_QUERIES = [
+  {
+    icon: '📦',
+    label: 'In stock & fresh?',
+    text: 'Hi! Is this item available in stock and fresh for immediate dispatch / pickup?',
+  },
+  {
+    icon: '⏱️',
+    label: 'Preparation time?',
+    text: 'Hi! How long will it take to prepare and pack this order?',
+  },
+  {
+    icon: '📍',
+    label: 'Delivery feasibility?',
+    text: 'Can you deliver to my location landmark? What is the delivery timeline?',
+  },
+  {
+    icon: '💳',
+    label: 'Pay UPI on counter?',
+    text: 'Can I pay directly via GPay / PhonePe UPI QR code upon arrival / pickup?',
+  },
+  {
+    icon: '🛠️',
+    label: 'Service inspection / Quote?',
+    text: 'Hi, I need an inspection or quote estimate before confirming this service booking.',
+  },
+];
+
 const CartDrawer = () => {
   const history = useHistory();
   const { cart, isCartOpen, closeCart, updateQuantity, removeItem, clearCart } =
     useCartStore((state) => state);
   const { user_data, update_user_data } = useGlobalStore((state) => state);
+  const { handleChatOpen } = useChatStore((state) => state);
 
   const [orderType, setOrderType] = useState('delivery');
   const [paymentMode, setPaymentMode] = useState('direct_upi');
@@ -55,6 +85,11 @@ const CartDrawer = () => {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
+
+  // Pre-built query / Chat with owner states
+  const [querySending, setQuerySending] = useState(false);
+  const [showCustomQuery, setShowCustomQuery] = useState(false);
+  const [customQueryText, setCustomQueryText] = useState('');
 
   // Authentication modal state for guest checkout
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
@@ -257,6 +292,7 @@ const CartDrawer = () => {
           unit_price: i.unit_price,
           quantity: i.quantity,
           subtotal: i.unit_price * i.quantity,
+          listing_type: i.listing_type || 'product',
         })),
       };
 
@@ -279,6 +315,67 @@ const CartDrawer = () => {
       message.error('Failed to submit order. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSendPrebuiltInquiry = async (queryText) => {
+    if (!queryText || !queryText.trim()) {
+      message.error('Please enter or select a question');
+      return;
+    }
+
+    if (!user_data?.user_id) {
+      message.info('Please log in to chat directly with the store owner');
+      setIsOnboardingModalOpen(true);
+      return;
+    }
+
+    let targetOwnerId = cart.owner_id;
+    if (!targetOwnerId && cart.shop_id) {
+      try {
+        const shopDetails = await netWorkCall(`${apiConfig.shops}/${cart.shop_id}/details`, 'GET', null, false);
+        targetOwnerId = shopDetails?.data?.owner_id;
+      } catch (err) {
+        console.error('Error fetching shop details for chat:', err);
+      }
+    }
+
+    if (!targetOwnerId) {
+      message.warning('Store owner details unavailable. You can place the order directly!');
+      return;
+    }
+
+    setQuerySending(queryText === customQueryText ? 'custom' : queryText);
+    try {
+      const itemsSummary = cart.items.map((i) => `${i.quantity}x ${i.item_name}`).join(', ');
+      const messageContent = itemsSummary
+        ? `💬 Customer Pre-order Inquiry regarding [${itemsSummary}]:\n\n"${queryText.trim()}"`
+        : `💬 Customer Pre-order Inquiry:\n\n"${queryText.trim()}"`;
+
+      await netWorkCall(
+        apiConfig.chat_create,
+        'POST',
+        JSON.stringify({
+          sender_id: user_data.user_id,
+          receiver_id: targetOwnerId,
+          shop_id: cart.shop_id,
+          message: messageContent,
+          username: user_data.username || 'Customer',
+        }),
+        true
+      );
+
+      message.success('Inquiry sent to store owner!');
+      setShowCustomQuery(false);
+      setCustomQueryText('');
+      closeCart();
+      handleChatOpen(targetOwnerId, cart.shop_id, { shop_name: cart.shop_name });
+    } catch (err) {
+      console.error('Failed to send inquiry to chat:', err);
+      closeCart();
+      handleChatOpen(targetOwnerId, cart.shop_id, { shop_name: cart.shop_name });
+    } finally {
+      setQuerySending(false);
     }
   };
 
@@ -892,9 +989,105 @@ const CartDrawer = () => {
                 <span style={{ color: '#4f46e5' }}>₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
+
+            {/* Quick Inquiry / Chat Instead of Immediate Order */}
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%)',
+                padding: '12px 14px',
+                borderRadius: 12,
+                border: '1px solid #bae6fd',
+                marginBottom: 16,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  marginBottom: 6,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <MessageOutlined style={{ color: '#0284c7', fontSize: 15 }} />
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                    Have a Query Before Ordering?
+                  </span>
+                </div>
+                <Tag color="cyan" style={{ borderRadius: 6, fontWeight: 700, margin: 0, fontSize: 10 }}>
+                  Pre-built Chat
+                </Tag>
+              </div>
+
+              <div style={{ fontSize: 11, color: '#475569', marginBottom: 8 }}>
+                Select a 1-tap question or send a quick inquiry directly to the store owner:
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
+                {PREBUILT_QUERIES.map((q, idx) => (
+                  <Button
+                    key={idx}
+                    size="small"
+                    loading={querySending === q.text}
+                    disabled={loading || !!querySending}
+                    onClick={() => handleSendPrebuiltInquiry(q.text)}
+                    style={{
+                      borderRadius: 16,
+                      fontSize: 11,
+                      fontWeight: 600,
+                      background: '#ffffff',
+                      borderColor: '#cbd5e1',
+                      color: '#1e293b',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    <span>{q.icon}</span>
+                    <span>{q.label}</span>
+                  </Button>
+                ))}
+              </div>
+
+              {showCustomQuery ? (
+                <div style={{ marginTop: 8 }}>
+                  <Input.TextArea
+                    rows={2}
+                    placeholder="Type your question for the store owner..."
+                    value={customQueryText}
+                    onChange={(e) => setCustomQueryText(e.target.value)}
+                    style={{ borderRadius: 8, fontSize: 12, marginBottom: 6 }}
+                  />
+                  <Flex gap={8} justify="flex-end">
+                    <Button size="small" onClick={() => setShowCustomQuery(false)}>
+                      Cancel
+                    </Button>
+                    <Button
+                      type="primary"
+                      size="small"
+                      loading={querySending === 'custom'}
+                      onClick={() => handleSendPrebuiltInquiry(customQueryText)}
+                      style={{ background: '#0284c7', borderColor: '#0284c7', borderRadius: 6 }}
+                    >
+                      Send Query
+                    </Button>
+                  </Flex>
+                </div>
+              ) : (
+                <Button
+                  type="link"
+                  size="small"
+                  onClick={() => setShowCustomQuery(true)}
+                  style={{ padding: 0, fontSize: 11, color: '#0284c7', fontWeight: 600 }}
+                >
+                  ✏️ Type a custom question for this store...
+                </Button>
+              )}
+            </div>
           </div>
 
-          {/* Place Order CTA */}
+          {/* Place Order CTA & Quick Chat */}
           <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
             <Button
               type="primary"
@@ -906,9 +1099,25 @@ const CartDrawer = () => {
                 height: 48,
                 fontSize: 15,
                 fontWeight: 600,
+                marginBottom: 8,
               }}
             >
               Place Order (₹{finalTotal.toFixed(0)})
+            </Button>
+            <Button
+              block
+              icon={<MessageOutlined />}
+              onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
+              style={{
+                borderRadius: 8,
+                fontSize: 13,
+                fontWeight: 600,
+                color: '#0284c7',
+                borderColor: '#bae6fd',
+                background: '#f0f9ff',
+              }}
+            >
+              💬 Inquire with Store Owner Instead
             </Button>
           </div>
         </div>

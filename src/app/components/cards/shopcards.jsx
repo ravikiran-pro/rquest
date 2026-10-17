@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import { Card, Button, Typography, Tag, Tooltip, Flex, Grid } from 'antd';
 import {
   EditOutlined,
@@ -20,6 +21,7 @@ const ShopCard = ({
   isChatDisabled = false,
   isEdit = false,
   handleEdit = () => null,
+  viewMode = 'grid',
 }) => {
   const history = useHistory();
   const screens = Grid.useBreakpoint();
@@ -60,6 +62,222 @@ const ShopCard = ({
           `${shop_name} ${address}`
         )}`
       : null);
+
+  if (viewMode === 'list') {
+    return (
+      <Card
+        hoverable
+        onClick={!isEdit ? goToStore : undefined}
+        style={{
+          width: '100%',
+          borderRadius: 14,
+          border: '1px solid #e2e8f0',
+          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+          cursor: isEdit ? 'default' : 'pointer',
+          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          overflow: 'hidden',
+        }}
+        styles={{
+          body: {
+            padding: screens.xs ? 12 : '14px 18px',
+          },
+        }}
+      >
+        <Flex
+          align={screens.xs ? 'start' : 'center'}
+          justify="space-between"
+          gap={screens.xs ? 10 : 16}
+          wrap={screens.xs ? 'wrap' : 'nowrap'}
+        >
+          {/* Left: Thumbnail + Main info */}
+          <Flex gap={12} align="center" style={{ flex: 1, minWidth: 0 }}>
+            <div
+              style={{
+                width: screens.xs ? 64 : 76,
+                height: screens.xs ? 64 : 76,
+                borderRadius: 12,
+                background: '#f1f5f9',
+                overflow: 'hidden',
+                flexShrink: 0,
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <img
+                src={
+                  img_url ||
+                  'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
+                }
+                alt={shop_name}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+              />
+            </div>
+
+            <Flex vertical flex={1} style={{ minWidth: 0 }}>
+              <Flex align="center" gap={8} wrap="wrap">
+                <Title
+                  level={5}
+                  ellipsis={{ rows: 1 }}
+                  style={{
+                    margin: 0,
+                    fontWeight: 700,
+                    color: '#0f172a',
+                    fontSize: screens.xs ? 15 : 16,
+                  }}
+                >
+                  {shop_name}
+                </Title>
+
+                {isOwnShop && (
+                  <Tag color="green" style={{ fontSize: 10, padding: '0 6px', fontWeight: 700, margin: 0 }}>
+                    My Store
+                  </Tag>
+                )}
+
+                {categoryName && (
+                  <Tag color="indigo" style={{ fontSize: 10, padding: '0 6px', fontWeight: 600, margin: 0 }}>
+                    {categoryName}
+                  </Tag>
+                )}
+
+                <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
+                  <StarFilled style={{ fontSize: 12 }} />
+                  <span>{rating || 5}.0</span>
+                </Flex>
+              </Flex>
+
+              <Flex
+                align="center"
+                gap={6}
+                style={{
+                  marginTop: 4,
+                  fontSize: 12,
+                  color: '#64748b',
+                  whiteSpace: 'nowrap',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                }}
+              >
+                <EnvironmentOutlined style={{ color: '#4f46e5', flexShrink: 0 }} />
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {area || 'Local'}
+                </span>
+                {distance !== undefined && distance !== null && (
+                  <span style={{ fontWeight: 700, color: '#10b981', flexShrink: 0 }}>
+                    • {distanceConvertor(distance)} km
+                  </span>
+                )}
+              </Flex>
+
+              {address && (
+                <Text
+                  type="secondary"
+                  ellipsis={{ rows: 1 }}
+                  style={{
+                    fontSize: 12,
+                    color: '#94a3b8',
+                    marginTop: 2,
+                    maxWidth: 520,
+                  }}
+                >
+                  {address}
+                </Text>
+              )}
+            </Flex>
+          </Flex>
+
+          {/* Right: Actions */}
+          <Flex
+            gap={8}
+            align="center"
+            style={{
+              width: screens.xs ? '100%' : 'auto',
+              justifyContent: screens.xs ? 'stretch' : 'flex-end',
+              flexShrink: 0,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {isEdit ? (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => handleEdit()}
+                style={{ borderRadius: 8, fontWeight: 600, height: 38, flex: screens.xs ? 1 : 'none' }}
+              >
+                Manage
+              </Button>
+            ) : isOwnShop ? (
+              <>
+                <Button
+                  type="default"
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    height: 38,
+                    flex: screens.xs ? 1 : 'none',
+                  }}
+                  onClick={goToStore}
+                >
+                  Preview Store <ArrowRightOutlined style={{ fontSize: 11 }} />
+                </Button>
+                <Button
+                  type="primary"
+                  icon={<EditOutlined />}
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    height: 38,
+                    background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                    border: 'none',
+                  }}
+                  onClick={() => history.push(`/client_register?shop_id=${id}`)}
+                >
+                  Manage
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button
+                  type="primary"
+                  style={{
+                    borderRadius: 8,
+                    fontWeight: 600,
+                    height: 38,
+                    flex: screens.xs ? 1 : 'none',
+                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  }}
+                  onClick={goToStore}
+                >
+                  Visit Store <ArrowRightOutlined style={{ fontSize: 11 }} />
+                </Button>
+
+                {!isChatDisabled && (
+                  <Tooltip title={!isChat ? 'Login to chat' : 'Direct chat with owner'}>
+                    <Button
+                      icon={<MessageOutlined />}
+                      style={{ borderRadius: 8, height: 38, width: 38 }}
+                      disabled={!isChat}
+                      onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
+                    />
+                  </Tooltip>
+                )}
+
+                {directionsUrl && (
+                  <Button
+                    icon={<CompassOutlined />}
+                    href={directionsUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ borderRadius: 8, height: 38, width: 38 }}
+                    title="Get Directions"
+                  />
+                )}
+              </>
+            )}
+          </Flex>
+        </Flex>
+      </Card>
+    );
+  }
 
   return (
     <Card
@@ -306,6 +524,32 @@ const ShopCard = ({
       </Flex>
     </Card>
   );
+};
+
+ShopCard.propTypes = {
+  shopDetails: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    shop_name: PropTypes.string,
+    address: PropTypes.string,
+    area: PropTypes.string,
+    rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    shop_type: PropTypes.string,
+    directions: PropTypes.string,
+    img_url: PropTypes.string,
+    distance: PropTypes.number,
+    owner_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    shopCategory: PropTypes.shape({
+      name: PropTypes.string,
+    }),
+    shopSubCategory: PropTypes.shape({
+      name: PropTypes.string,
+    }),
+  }).isRequired,
+  isChat: PropTypes.bool,
+  isChatDisabled: PropTypes.bool,
+  isEdit: PropTypes.bool,
+  handleEdit: PropTypes.func,
+  viewMode: PropTypes.oneOf(['grid', 'list']),
 };
 
 export default ShopCard;

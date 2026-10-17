@@ -55,6 +55,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   const currentPath = location.pathname;
 
+  const logoDestination = !isLoggedIn
+    ? Routes.landing
+    : isMerchant
+    ? Routes.client
+    : Routes.app;
+
   // Dropdown items for desktop user profile capsule
   const userMenuItems = [
     {
@@ -76,40 +82,59 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       ),
     },
     { type: 'divider' },
-    {
-      key: 'home',
-      icon: <HomeOutlined />,
-      label: 'Home Page',
-      onClick: () => history.push(Routes.landing),
-    },
-    {
-      key: 'explore',
-      icon: <CompassOutlined />,
-      label: 'Explore Market (App)',
-      onClick: () => history.push(Routes.app),
-    },
+    ...(isMerchant
+      ? [
+          {
+            key: 'merchant',
+            icon: <ShopOutlined style={{ color: '#4f46e5' }} />,
+            label: (
+              <span style={{ color: '#4f46e5', fontWeight: 700 }}>
+                Merchant Studio
+              </span>
+            ),
+            onClick: () => history.push(Routes.client),
+          },
+          {
+            key: 'orders',
+            icon: <OrderedListOutlined />,
+            label: 'Store Orders & Quotes',
+            onClick: () => history.push(Routes.orders),
+          },
+        ]
+      : [
+          {
+            key: 'explore',
+            icon: <CompassOutlined />,
+            label: 'Explore Marketplace',
+            onClick: () => history.push(Routes.app),
+          },
+          {
+            key: 'orders',
+            icon: <OrderedListOutlined />,
+            label: 'My Orders & Quotes',
+            onClick: () => history.push(Routes.orders),
+          },
+        ]),
     {
       key: 'profile',
       icon: <UserOutlined />,
-      label: 'My Profile & Addresses',
+      label: isMerchant ? 'Store & Profile Details' : 'My Profile & Addresses',
       onClick: () => history.push(Routes.profile),
     },
-    {
-      key: 'orders',
-      icon: <OrderedListOutlined />,
-      label: 'My Orders & Quotes',
-      onClick: () => history.push(Routes.orders),
-    },
-    {
-      key: 'delivery-portal',
-      icon: <CarOutlined style={{ color: '#10b981' }} />,
-      label: (
-        <span style={{ color: '#047857', fontWeight: 600 }}>
-          Delivery Portal
-        </span>
-      ),
-      onClick: () => history.push(Routes.deliveryPortal),
-    },
+    ...(!isMerchant
+      ? [
+          {
+            key: 'delivery-portal',
+            icon: <CarOutlined style={{ color: '#10b981' }} />,
+            label: (
+              <span style={{ color: '#047857', fontWeight: 600 }}>
+                Delivery Portal
+              </span>
+            ),
+            onClick: () => history.push(Routes.deliveryPortal),
+          },
+        ]
+      : []),
     {
       key: 'chat',
       icon: <MessageOutlined />,
@@ -124,28 +149,17 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
     ...(isMerchant
       ? [
           {
-            key: 'merchant',
-            icon: <ShopOutlined style={{ color: '#4f46e5' }} />,
+            key: 'explore-shopper-view',
+            icon: <CompassOutlined style={{ color: '#64748b' }} />,
             label: (
-              <span style={{ color: '#4f46e5', fontWeight: 600 }}>
-                Merchant Hub (Manage Shops)
+              <span style={{ color: '#64748b', fontSize: 13 }}>
+                Preview Marketplace (Shopper View)
               </span>
             ),
-            onClick: () => history.push(Routes.client),
+            onClick: () => history.push(Routes.app),
           },
         ]
-      : [
-          {
-            key: 'partner',
-            icon: <ShopOutlined style={{ color: '#059669' }} />,
-            label: (
-              <span style={{ color: '#059669', fontWeight: 600 }}>
-                Sell on Rquest (Register Shop)
-              </span>
-            ),
-            onClick: () => history.push(Routes.client),
-          },
-        ]),
+      : []),
     ...(user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin'
       ? [
           {
@@ -172,8 +186,8 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   return (
     <header className="navBar">
-      {/* Brand Logo */}
-      <Link to={Routes.landing} className="navbar-brand">
+      {/* Brand Logo - Navigates dynamically based on role */}
+      <Link to={logoDestination} className="navbar-brand">
         <div className="navbar-logo-icon">R</div>
         <div className="navbar-brand-text">
           <span className="navbar-brand-name">Rquest</span>
@@ -183,96 +197,127 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
       {/* Desktop Navigation Links (≥ 992px) */}
       <nav className="navbar-desktop-nav">
-        <Link to={Routes.landing}>
-          <Button
-            type="text"
-            icon={<HomeOutlined />}
-            className={`nav-item-btn ${currentPath === Routes.landing ? 'active' : ''}`}
-          >
-            Home
-          </Button>
-        </Link>
-
-        <Link to={Routes.app}>
-          <Button
-            type="text"
-            icon={<CompassOutlined />}
-            className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
-          >
-            Explore App
-          </Button>
-        </Link>
-
-        {isLoggedIn && (
-          <Link to={Routes.orders}>
-            <Button
-              type="text"
-              icon={<OrderedListOutlined />}
-              className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
-            >
-              My Orders
-            </Button>
-          </Link>
-        )}
-
-        {isLoggedIn && isMerchant && (
-          <Link to={Routes.client}>
-            <Button
-              type="text"
-              icon={<ShopOutlined />}
-              className={`nav-item-btn ${currentPath.startsWith('/client') ? 'active' : ''}`}
-              style={{ color: '#4f46e5' }}
-            >
-              Merchant Hub
-            </Button>
-          </Link>
-        )}
-
+        {/* Guest: Show Home, Explore App, Sell with Us */}
         {!isLoggedIn && (
-          <Link to={Routes.client}>
-            <Button
-              type="text"
-              icon={<ShopOutlined />}
-              className="nav-item-btn"
-              style={{ color: '#059669' }}
-            >
-              Sell with Us
-            </Button>
-          </Link>
+          <>
+            <Link to={Routes.landing}>
+              <Button
+                type="text"
+                icon={<HomeOutlined />}
+                className={`nav-item-btn ${currentPath === Routes.landing ? 'active' : ''}`}
+              >
+                Home
+              </Button>
+            </Link>
+
+            <Link to={Routes.app}>
+              <Button
+                type="text"
+                icon={<CompassOutlined />}
+                className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+              >
+                Explore App
+              </Button>
+            </Link>
+
+            <Link to={Routes.client}>
+              <Button
+                type="text"
+                icon={<ShopOutlined />}
+                className="nav-item-btn"
+                style={{ color: '#059669' }}
+              >
+                Sell with Us
+              </Button>
+            </Link>
+          </>
+        )}
+
+        {/* Customer Logged In: Show Explore App, My Orders (Home and Seller links hidden) */}
+        {isLoggedIn && !isMerchant && (
+          <>
+            <Link to={Routes.app}>
+              <Button
+                type="text"
+                icon={<CompassOutlined />}
+                className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+              >
+                Explore App
+              </Button>
+            </Link>
+
+            <Link to={Routes.orders}>
+              <Button
+                type="text"
+                icon={<OrderedListOutlined />}
+                className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
+              >
+                My Orders
+              </Button>
+            </Link>
+          </>
+        )}
+
+        {/* Merchant Logged In: Show Merchant Studio, Store Orders (Home and Buyer explore hidden) */}
+        {isLoggedIn && isMerchant && (
+          <>
+            <Link to={Routes.client}>
+              <Button
+                type="text"
+                icon={<ShopOutlined />}
+                className={`nav-item-btn ${currentPath.startsWith('/client') ? 'active' : ''}`}
+                style={{ color: '#4f46e5', fontWeight: 700 }}
+              >
+                Merchant Studio
+              </Button>
+            </Link>
+
+            <Link to={Routes.orders}>
+              <Button
+                type="text"
+                icon={<OrderedListOutlined />}
+                className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
+              >
+                Store Orders
+              </Button>
+            </Link>
+          </>
         )}
       </nav>
 
       {/* Right Actions Container: Cart, Profile/Auth, Hamburger */}
       <Flex align="center" gap={screens.xs ? 6 : 10}>
-        {/* Cart Button: ALWAYS visible on ALL viewports (Mobile, Tab, Desktop) */}
-        <Tooltip
-          title={
-            cartItemCount > 0
-              ? `${cartItemCount} item${cartItemCount > 1 ? 's' : ''} in cart (${cart.shop_name || 'Cart'})`
-              : 'Your cart is empty'
-          }
-        >
-          <Badge
-            count={cartItemCount}
-            offset={[-2, 4]}
-            color="#4f46e5"
-            size={screens.xs ? 'small' : 'default'}
+        {/* Cart Button: Visible for shoppers and guests; hidden for shop owners */}
+        {(!isLoggedIn || !isMerchant) && (
+          <Tooltip
+            title={
+              cartItemCount > 0
+                ? `${cartItemCount} item${cartItemCount > 1 ? 's' : ''} in cart (${cart.shop_name || 'Cart'})`
+                : 'Your cart is empty'
+            }
           >
-            <Button
-              shape="circle"
-              size={screens.xs ? 'middle' : 'large'}
-              icon={<ShoppingCartOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
-              onClick={openCart}
-              style={{
-                border: '1px solid #e2e8f0',
-                color: cartItemCount > 0 ? '#4f46e5' : '#64748b',
-                background: cartItemCount > 0 ? '#eef2ff' : '#ffffff',
-                boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(79, 70, 229, 0.2)' : 'none',
-              }}
-              aria-label="View Shopping Cart"
-            />
-          </Badge>
-        </Tooltip>
+            <Badge
+              count={cartItemCount}
+              offset={[-2, 4]}
+              color="#4f46e5"
+              size={screens.xs ? 'small' : 'default'}
+            >
+              <Button
+                shape="circle"
+                size={screens.xs ? 'middle' : 'large'}
+                icon={<ShoppingCartOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
+                onClick={openCart}
+                style={{
+                  border: '1px solid #e2e8f0',
+                  color: cartItemCount > 0 ? '#4f46e5' : '#64748b',
+                  background: cartItemCount > 0 ? '#eef2ff' : '#ffffff',
+                  boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(79, 70, 229, 0.2)' : 'none',
+                }}
+                aria-label="View Shopping Cart"
+              />
+            </Badge>
+          </Tooltip>
+        )}
 
         {/* Desktop / Tab User Profile & Auth (Screen md and up) */}
         {!isMobile && (

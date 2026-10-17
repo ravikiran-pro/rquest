@@ -50,10 +50,10 @@ const AddressCard = ({
       style={{
         borderRadius: 14,
         border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-        background: isSelected ? '#faf5ff' : '#ffffff',
+        background: isSelected ? '#f8fafc' : '#ffffff',
         boxShadow: isSelected
-          ? '0 4px 16px rgba(79, 70, 229, 0.12)'
-          : '0 2px 6px rgba(15, 23, 42, 0.04)',
+          ? '0 4px 14px rgba(79, 70, 229, 0.08)'
+          : '0 1px 3px rgba(15, 23, 42, 0.04)',
         transition: 'all 0.2s ease',
         cursor: isSelectable ? 'pointer' : 'default',
         position: 'relative',

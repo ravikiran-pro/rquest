@@ -8,7 +8,7 @@ import {
   SafetyCertificateOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
-import { netWorkCall, storageKeys } from '../../app/utils/helper';
+import { netWorkCall, storageKeys, checkUserRole } from '../../app/utils/helper';
 import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
 import Routes from '../../app/routes/routes';
@@ -40,8 +40,12 @@ const LoginScreen = () => {
           sessionStorage.setItem(storageKeys.auth_token, res.token);
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
-          message.success('Logged in successfully!');
-          history.push(Routes.home);
+          const { isMerchant } = checkUserRole(res.user_data);
+          if (isMerchant) {
+            history.push(Routes.client);
+          } else {
+            history.push(Routes.app);
+          }
         } else {
           message.error(res.message || 'Login failed. Please check credentials.');
         }

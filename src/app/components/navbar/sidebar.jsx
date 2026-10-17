@@ -185,10 +185,10 @@ const SideBar = ({ open, handleClose }) => {
           }}
         >
           <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a', marginBottom: 2 }}>
-            Welcome to Rquest 👋
+            Welcome to Rquest
           </div>
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
-            Sign in to track orders, direct message sellers, and get neighborhood deals.
+            Sign in to track orders,  neighborhood sellers and deals.
           </Text>
           <Flex gap={8}>
             <Button
@@ -219,45 +219,93 @@ const SideBar = ({ open, handleClose }) => {
 
       {/* Navigation List Menu */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        {/* Home Page */}
-        <Button
-          type="text"
-          icon={<HomeOutlined style={{ fontSize: 17 }} />}
-          className={`drawer-nav-item ${currentPath === Routes.landing ? 'active' : ''}`}
-          onClick={() => handleNavigate(Routes.landing)}
-        >
-          <span style={{ flex: 1, textAlign: 'left' }}>Home</span>
-          <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-        </Button>
+        {/* Home Page: Only for unauthenticated guests */}
+        {!isLoggedIn && (
+          <Button
+            type="text"
+            icon={<HomeOutlined style={{ fontSize: 17 }} />}
+            className={`drawer-nav-item ${currentPath === Routes.landing ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.landing)}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>Home</span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+          </Button>
+        )}
 
-        {/* Explore Market */}
-        <Button
-          type="text"
-          icon={<CompassOutlined style={{ fontSize: 17 }} />}
-          className={`drawer-nav-item ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
-          onClick={() => handleNavigate(Routes.app)}
-        >
-          <span style={{ flex: 1, textAlign: 'left' }}>Explore Market (App)</span>
-          <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-        </Button>
+        {/* Customer or Guest: Explore Market */}
+        {(!isLoggedIn || !isMerchant) && (
+          <Button
+            type="text"
+            icon={<CompassOutlined style={{ fontSize: 17 }} />}
+            className={`drawer-nav-item ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.app)}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>Explore Market</span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+          </Button>
+        )}
 
-        {/* My Cart Item with Live Counter */}
-        <Button
-          type="text"
-          icon={<ShoppingCartOutlined style={{ fontSize: 17 }} />}
-          className="drawer-nav-item"
-          onClick={handleCartClick}
-        >
-          <span style={{ flex: 1, textAlign: 'left' }}>My Shopping Cart</span>
-          {cartItemCount > 0 ? (
-            <Badge
-              count={`${cartItemCount} item${cartItemCount > 1 ? 's' : ''}`}
-              style={{ backgroundColor: '#4f46e5', fontWeight: 700, fontSize: 11 }}
-            />
-          ) : (
-            <span style={{ fontSize: 12, color: '#94a3b8' }}>Empty</span>
-          )}
-        </Button>
+        {/* Merchant: Merchant Studio */}
+        {isLoggedIn && isMerchant && (
+          <Button
+            type="text"
+            icon={<ShopOutlined style={{ fontSize: 17, color: '#4f46e5' }} />}
+            className={`drawer-nav-item ${currentPath.startsWith('/client') ? 'active' : ''}`}
+            style={{ color: '#4f46e5' }}
+            onClick={() => handleNavigate(Routes.client)}
+          >
+            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
+              Merchant Studio (My Stores)
+            </span>
+            <span
+              style={{
+                fontSize: 10,
+                background: '#ede9fe',
+                color: '#6d28d9',
+                padding: '1px 6px',
+                borderRadius: 9999,
+                fontWeight: 700,
+              }}
+            >
+              Manage
+            </span>
+          </Button>
+        )}
+
+        {/* Cart Item with Live Counter: Only for customers or guests */}
+        {(!isLoggedIn || !isMerchant) && (
+          <Button
+            type="text"
+            icon={<ShoppingCartOutlined style={{ fontSize: 17 }} />}
+            className="drawer-nav-item"
+            onClick={handleCartClick}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>My Shopping Cart</span>
+            {cartItemCount > 0 ? (
+              <Badge
+                count={`${cartItemCount} item${cartItemCount > 1 ? 's' : ''}`}
+                style={{ backgroundColor: '#4f46e5', fontWeight: 700, fontSize: 11 }}
+              />
+            ) : (
+              <span style={{ fontSize: 12, color: '#94a3b8' }}>Empty</span>
+            )}
+          </Button>
+        )}
+
+        {/* Orders (Customer & Merchant) */}
+        {isLoggedIn && (
+          <Button
+            type="text"
+            icon={<OrderedListOutlined style={{ fontSize: 17 }} />}
+            className={`drawer-nav-item ${currentPath === Routes.orders ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.orders)}
+          >
+            <span style={{ flex: 1, textAlign: 'left' }}>
+              {isMerchant ? 'Store Orders & Quotes' : 'My Orders & Quotes'}
+            </span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+          </Button>
+        )}
 
         {/* My Profile & Addresses (for logged-in users) */}
         {isLoggedIn && (
@@ -267,26 +315,15 @@ const SideBar = ({ open, handleClose }) => {
             className={`drawer-nav-item ${currentPath === Routes.profile ? 'active' : ''}`}
             onClick={() => handleNavigate(Routes.profile)}
           >
-            <span style={{ flex: 1, textAlign: 'left' }}>My Profile & Addresses</span>
+            <span style={{ flex: 1, textAlign: 'left' }}>
+              {isMerchant ? 'Store & Profile Details' : 'My Profile & Addresses'}
+            </span>
             <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
           </Button>
         )}
 
-        {/* My Orders (for logged-in users) */}
-        {isLoggedIn && (
-          <Button
-            type="text"
-            icon={<OrderedListOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.orders ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.orders)}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>My Orders & Quotes</span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Delivery Partner Task Board */}
-        {isLoggedIn && (
+        {/* Delivery Partner Task Board (Customer/Driver) */}
+        {isLoggedIn && !isMerchant && (
           <Button
             type="text"
             icon={<CarOutlined style={{ fontSize: 17, color: '#10b981' }} />}
@@ -316,35 +353,23 @@ const SideBar = ({ open, handleClose }) => {
           </Button>
         )}
 
-        {/* Role-Specific Sections */}
+        {/* Merchant: Preview Marketplace (Shopper View) */}
         {isLoggedIn && isMerchant && (
           <Button
             type="text"
-            icon={<ShopOutlined style={{ fontSize: 17, color: '#4f46e5' }} />}
-            className={`drawer-nav-item ${currentPath.startsWith('/client') ? 'active' : ''}`}
-            style={{ color: '#4f46e5' }}
-            onClick={() => handleNavigate(Routes.client)}
+            icon={<CompassOutlined style={{ fontSize: 17, color: '#64748b' }} />}
+            className="drawer-nav-item"
+            onClick={() => handleNavigate(Routes.app)}
           >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
-              Merchant Hub (My Stores)
+            <span style={{ flex: 1, textAlign: 'left', color: '#64748b', fontSize: 13 }}>
+              Preview Market (Shopper View)
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                background: '#ede9fe',
-                color: '#6d28d9',
-                padding: '1px 6px',
-                borderRadius: 9999,
-                fontWeight: 700,
-              }}
-            >
-              Manage
-            </span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
           </Button>
         )}
 
-        {/* Partner with us / Register shop (if Customer or Guest) */}
-        {(!isLoggedIn || !isMerchant) && (
+        {/* Sell with Us (ONLY for unauthenticated guests) */}
+        {!isLoggedIn && (
           <Button
             type="text"
             icon={<ShopOutlined style={{ fontSize: 17, color: '#059669' }} />}
@@ -353,20 +378,9 @@ const SideBar = ({ open, handleClose }) => {
             onClick={() => handleNavigate(Routes.client)}
           >
             <span style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>
-              Sell on Rquest (Register Shop)
+              Sell on Rquest
             </span>
-            <span
-              style={{
-                fontSize: 10,
-                background: '#ecfdf5',
-                color: '#047857',
-                padding: '1px 6px',
-                borderRadius: 9999,
-                fontWeight: 700,
-              }}
-            >
-              0% Fee
-            </span>
+            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
           </Button>
         )}
 

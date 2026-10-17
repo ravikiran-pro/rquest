@@ -7,6 +7,7 @@ const useCartStore = create(
       cart: {
         shop_id: null,
         shop_name: '',
+        owner_id: null,
         items: [],
       },
       isCartOpen: false,
@@ -17,7 +18,7 @@ const useCartStore = create(
       addItem: (shop, item) => {
         const { cart } = get();
         // If cart belongs to a different shop, reset cart to new shop
-        const isSameShop = cart.shop_id === shop.id;
+        const isSameShop = cart.shop_id === shop?.id;
         let items = isSameShop ? [...cart.items] : [];
 
         const existingIndex = items.findIndex((i) => i.listing_id === item.id);
@@ -31,13 +32,15 @@ const useCartStore = create(
             quantity: 1,
             unit: item.unit || 'piece',
             img_url: item.img_url || '',
+            listing_type: item.listing_type || 'product',
           });
         }
 
         set({
           cart: {
-            shop_id: shop.id,
-            shop_name: shop.shop_name,
+            shop_id: shop?.id,
+            shop_name: shop?.shop_name,
+            owner_id: shop?.owner_id || (isSameShop ? cart.owner_id : null),
             items,
           },
         });

@@ -431,8 +431,22 @@ const AddressModal = ({
             <Checkbox>Set as default address for future orders & quick search</Checkbox>
           </Form.Item>
 
-          <Flex justify="flex-end" gap={10} style={{ marginTop: 12 }}>
-            <Button onClick={onClose} disabled={saving}>
+          <Flex
+            justify="flex-end"
+            gap={10}
+            style={{ marginTop: 16 }}
+            wrap={isMobile ? 'wrap' : 'nowrap'}
+          >
+            <Button
+              onClick={onClose}
+              disabled={saving}
+              style={{
+                borderRadius: 8,
+                fontWeight: 600,
+                flex: isMobile ? 1 : 'none',
+                height: isMobile ? 42 : 'auto',
+              }}
+            >
               Cancel
             </Button>
             <Button
@@ -441,10 +455,13 @@ const AddressModal = ({
               loading={saving}
               icon={<CheckOutlined />}
               style={{
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                border: 'none',
+                background: '#0f172a',
+                borderColor: '#0f172a',
+                borderRadius: 8,
                 fontWeight: 700,
                 padding: '0 24px',
+                flex: isMobile ? 1 : 'none',
+                height: isMobile ? 42 : 'auto',
               }}
             >
               {initialData ? 'Update Address' : 'Save Address'}
