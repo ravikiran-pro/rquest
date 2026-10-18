@@ -218,7 +218,16 @@ router.get('/search', async (req, res) => {
           // Sort by proximity to user
           mapped.sort((a, b) => a.dist - b.dist);
 
-          const responseData = { success: true, data: mapped, source: 'locationiq' };
+          const seen = new Set();
+          const unique = [];
+          for (const item of mapped) {
+            if (item.display_name && !seen.has(item.display_name)) {
+              seen.add(item.display_name);
+              unique.push(item);
+            }
+          }
+
+          const responseData = { success: true, data: unique, source: 'locationiq' };
           cache.set(key, responseData);
           return res.json(responseData);
         }

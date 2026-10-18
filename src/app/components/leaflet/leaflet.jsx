@@ -126,6 +126,7 @@ const LeafletComponent = (props) => {
   const [currentAddress, setCurrentAddress] = useState('');
   const [searchOptions, setSearchOptions] = useState([]);
   const [searchingLoc, setSearchingLoc] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Resolve address when position changes
   useEffect(() => {
@@ -166,6 +167,11 @@ const LeafletComponent = (props) => {
       const clean = sanitizeCoords(coords);
       setPosition(clean);
       updateMarker(clean);
+      const name = await getLocationName(clean[0], clean[1]);
+      if (name) {
+        setCurrentAddress(name);
+        setSearchQuery(name);
+      }
     } catch (err) {
       console.error('Locate me failed:', err);
     } finally {
@@ -176,6 +182,7 @@ const LeafletComponent = (props) => {
   const searchTimeoutRef = React.useRef(null);
 
   const handleAddressSearch = (val) => {
+    setSearchQuery(val);
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
@@ -192,7 +199,8 @@ const LeafletComponent = (props) => {
         const results = await searchLocations(val, currentCoords[0], currentCoords[1]);
         setSearchOptions(
           results.map((r, i) => ({
-            value: `${r.lat},${r.lon}_${i}`,
+            value: r.display_name || r.name,
+            key: `loc-${r.lat}-${r.lon}-${i}`,
             label: (
               <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
@@ -213,6 +221,8 @@ const LeafletComponent = (props) => {
             ),
             coords: [parseFloat(r.lat), parseFloat(r.lon)],
             name: r.name,
+            display_name: r.display_name,
+            raw: r,
           }))
         );
       } catch (err) {
@@ -223,11 +233,20 @@ const LeafletComponent = (props) => {
     }, 280);
   };
 
-  const handleAddressSelect = (_value, option) => {
-    if (option?.coords && Array.isArray(option.coords)) {
-      const clean = sanitizeCoords(option.coords);
+  const handleAddressSelect = (value, option) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    const coords =
+      option?.coords ||
+      (option?.raw ? [parseFloat(option.raw.lat), parseFloat(option.raw.lon)] : null);
+    if (coords && Array.isArray(coords)) {
+      const clean = sanitizeCoords(coords);
       setPosition(clean);
       updateMarker(clean);
+      const chosenText = option?.name || option?.display_name || value || '';
+      setSearchQuery(chosenText);
+      setCurrentAddress(option?.display_name || chosenText);
       setSearchOptions([]);
     }
   };
@@ -280,6 +299,11 @@ const LeafletComponent = (props) => {
                 style={{ width: '100%' }}
                 className='address-search'
                 options={searchOptions}
+                value={searchQuery}
+                onChange={(val) => {
+                  setSearchQuery(val);
+                  if (!val) setSearchOptions([]);
+                }}
                 onSearch={handleAddressSearch}
                 onSelect={handleAddressSelect}
                 placeholder="Search area..."
@@ -413,6 +437,11 @@ const LeafletComponent = (props) => {
                 style={{ flex: 1 }}
                 className='address-search'
                 options={searchOptions}
+                value={searchQuery}
+                onChange={(val) => {
+                  setSearchQuery(val);
+                  if (!val) setSearchOptions([]);
+                }}
                 onSearch={handleAddressSearch}
                 onSelect={handleAddressSelect}
                 placeholder="Search area ..."

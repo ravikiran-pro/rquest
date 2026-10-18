@@ -44,6 +44,7 @@ const AddressModal = ({
   const [detectingGps, setDetectingGps] = useState(false);
   const [searchingArea, setSearchingArea] = useState(false);
   const [searchOptions, setSearchOptions] = useState([]);
+  const [searchLocalityValue, setSearchLocalityValue] = useState('');
   const localityTimeoutRef = useRef(null);
   const [coords, setCoords] = useState(
     initialData?.latitude && initialData?.longitude
@@ -56,6 +57,7 @@ const AddressModal = ({
     if (open) {
       if (initialData) {
         setCoords([Number(initialData.latitude), Number(initialData.longitude)]);
+        setSearchLocalityValue(initialData.formatted_address || initialData.street_area || '');
         form.setFieldsValue({
           label: initialData.label || 'Home',
           recipient_name: initialData.recipient_name || '',
@@ -71,6 +73,7 @@ const AddressModal = ({
         });
       } else {
         form.resetFields();
+        setSearchLocalityValue('');
         form.setFieldsValue({
           label: 'Home',
           recipient_name: userProfile?.username || '',
@@ -97,6 +100,7 @@ const AddressModal = ({
             street_area: form.getFieldValue('street_area') || name,
             formatted_address: name,
           });
+          setSearchLocalityValue(name);
           message.success('Detected location applied');
         }
       }
@@ -108,6 +112,7 @@ const AddressModal = ({
   };
 
   const handleSearchLocality = (val) => {
+    setSearchLocalityValue(val);
     if (localityTimeoutRef.current) {
       clearTimeout(localityTimeoutRef.current);
     }
@@ -122,7 +127,8 @@ const AddressModal = ({
         const results = await searchLocations(val, coords?.[0], coords?.[1]);
         setSearchOptions(
           results.map((r, i) => ({
-            value: `${r.lat},${r.lon}_${i}`,
+            value: r.display_name || r.name,
+            key: `loc-${r.lat}-${r.lon}-${i}`,
             label: (
               <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
@@ -140,7 +146,10 @@ const AddressModal = ({
     }, 280);
   };
 
-  const handleSelectLocality = (_val, option) => {
+  const handleSelectLocality = (val, option) => {
+    if (localityTimeoutRef.current) {
+      clearTimeout(localityTimeoutRef.current);
+    }
     if (option?.raw) {
       const { lat, lon, name, display_name } = option.raw;
       const newCoords = [parseFloat(lat), parseFloat(lon)];
@@ -149,6 +158,8 @@ const AddressModal = ({
         street_area: name || form.getFieldValue('street_area'),
         formatted_address: display_name,
       });
+      const chosenText = display_name || name || val || '';
+      setSearchLocalityValue(chosenText);
       setSearchOptions([]);
     }
   };
@@ -162,6 +173,7 @@ const AddressModal = ({
             street_area: form.getFieldValue('street_area') || name,
             formatted_address: name,
           });
+          setSearchLocalityValue(name);
         }
       });
     }
@@ -335,6 +347,11 @@ const AddressModal = ({
               style={{ width: '100%' }}
               className='address-search'
               options={searchOptions}
+              value={searchLocalityValue}
+              onChange={(val) => {
+                setSearchLocalityValue(val);
+                if (!val) setSearchOptions([]);
+              }}
               onSearch={handleSearchLocality}
               onSelect={handleSelectLocality}
               placeholder="Search locality (e.g. Koramangala 4th Block, Indiranagar)..."
