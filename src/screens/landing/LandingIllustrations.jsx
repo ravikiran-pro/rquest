@@ -597,12 +597,9 @@ export function LeftCornerFlank({ className = '' }) {
           <circle cx="40" cy="115" r="1.5" />
         </g>
 
-        {/* Technical Coordinate Stamp */}
-        <g transform="rotate(-90 28 200)">
-          <text x="28" y="200" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing="2" fontFamily="monospace">
-            RQ // LOCAL 0% CUT
-          </text>
-        </g>
+        {/* Technical Guide Track & Crosshair */}
+        <line x1="25" y1="145" x2="25" y2="255" stroke="#10b981" strokeWidth="1.5" strokeDasharray="3 4" opacity="0.35" />
+        <line x1="18" y1="200" x2="32" y2="200" stroke="#10b981" strokeWidth="1.5" opacity="0.4" />
 
         {/* Dynamic Glowing Target Ring */}
         <circle cx="25" cy="285" r="12" stroke="#10b981" strokeWidth="1" strokeDasharray="2 3" opacity="0.7" />
@@ -638,12 +635,9 @@ export function RightCornerFlank({ className = '' }) {
           <circle cx="40" cy="115" r="1.5" />
         </g>
 
-        {/* Technical Coordinate Stamp */}
-        <g transform="rotate(90 32 200)">
-          <text x="32" y="200" fill="#64748b" fontSize="9" fontWeight="800" letterSpacing="2" fontFamily="monospace">
-            RADAR // PIN 4812
-          </text>
-        </g>
+        {/* Technical Guide Track & Crosshair */}
+        <line x1="35" y1="145" x2="35" y2="255" stroke="#3b82f6" strokeWidth="1.5" strokeDasharray="3 4" opacity="0.35" />
+        <line x1="28" y1="200" x2="42" y2="200" stroke="#3b82f6" strokeWidth="1.5" opacity="0.4" />
 
         {/* Dynamic Glowing Target Ring */}
         <circle cx="35" cy="285" r="12" stroke="#3b82f6" strokeWidth="1" strokeDasharray="2 3" opacity="0.7" />

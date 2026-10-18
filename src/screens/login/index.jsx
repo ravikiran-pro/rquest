@@ -40,8 +40,10 @@ const LoginScreen = () => {
           sessionStorage.setItem(storageKeys.auth_token, res.token);
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
-          const { isMerchant } = checkUserRole(res.user_data);
-          if (isMerchant) {
+          const { isAdmin, isMerchant } = checkUserRole(res.user_data);
+          if (isAdmin) {
+            history.push(Routes.admin);
+          } else if (isMerchant) {
             history.push(Routes.client);
           } else {
             history.push(Routes.app);

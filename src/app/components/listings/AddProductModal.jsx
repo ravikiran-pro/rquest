@@ -20,8 +20,6 @@ import {
   Divider,
 } from 'antd';
 import {
-  LockOutlined,
-  UnlockOutlined,
   AppstoreOutlined,
   CheckCircleOutlined,
 } from '@ant-design/icons';
@@ -169,8 +167,6 @@ const AddProductModal = ({
   const [categoriesList, setCategoriesList] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
-  // Multi-category permission check
-  const isMultiCategoryAllowed = Boolean(shop?.allow_multi_category);
 
   // Derive default shop archetype and category
   const storeArchetype = getShopArchetype(shop);
@@ -206,13 +202,17 @@ const AddProductModal = ({
     return null;
   }, [selectedCategoryId, shop, categoriesList]);
 
-  // Form schema defined by Platform Admin for this category
+  // Form schema: prioritize specific shop override, then fall back to standard category schema
+  const isCustomShopForm = Boolean(shop?.form_schema && Array.isArray(shop.form_schema) && shop.form_schema.length > 0);
   const dynamicFields = useMemo(() => {
+    if (isCustomShopForm) {
+      return shop.form_schema;
+    }
     if (activeCategory?.form_schema && Array.isArray(activeCategory.form_schema)) {
       return activeCategory.form_schema;
     }
     return [];
-  }, [activeCategory]);
+  }, [shop, activeCategory, isCustomShopForm]);
 
   // Sync form values on open/edit
   useEffect(() => {
@@ -320,6 +320,7 @@ const AddProductModal = ({
       onCancel={onClose}
       footer={null}
       width={width}
+      style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
       destroyOnClose
     >
       <Form
@@ -328,11 +329,11 @@ const AddProductModal = ({
         onFinish={handleFinish}
         style={{ marginTop: 8 }}
       >
-        {/* Category Header Banner: Fixed vs Multi-Category */}
+        {/* Store Business Category Badge */}
         <div
           style={{
-            background: isMultiCategoryAllowed ? '#f5f3ff' : '#f8fafc',
-            border: isMultiCategoryAllowed ? '1px solid #ddd6fe' : '1px solid #e2e8f0',
+            background: '#f8fafc',
+            border: '1px solid #e2e8f0',
             borderRadius: 12,
             padding: '10px 14px',
             marginBottom: 16,
@@ -346,43 +347,23 @@ const AddProductModal = ({
               <div
                 style={{
                   fontWeight: 700,
-                  fontSize: 13,
+                  fontSize: 14,
                   color: '#0f172a',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: 6,
+                  gap: 8,
                   marginTop: 2,
                 }}
               >
                 <span>{categoryDisplayName}</span>
                 <Tag
-                  color={isMultiCategoryAllowed ? 'purple' : 'default'}
-                  icon={isMultiCategoryAllowed ? <UnlockOutlined /> : <LockOutlined />}
-                  style={{ fontSize: 10, padding: '0 6px', borderRadius: 4, margin: 0, fontWeight: 600 }}
+                  color={storeArchetype === 'service' || storeArchetype === 'wellness' ? 'blue' : 'green'}
+                  style={{ fontSize: 11, padding: '1px 8px', borderRadius: 6, margin: 0, fontWeight: 600 }}
                 >
-                  {isMultiCategoryAllowed ? 'Multi-Category Store' : 'Fixed to Store Category'}
+                  {storeArchetype === 'service' || storeArchetype === 'wellness' ? 'Service Business' : 'Product Store'}
                 </Tag>
               </div>
             </div>
-
-            {/* If shop opted into multi-category, allow selecting a different category */}
-            {isMultiCategoryAllowed && categoriesList.length > 0 && (
-              <div style={{ minWidth: 200 }}>
-                <Select
-                  size="small"
-                  value={selectedCategoryId || shop?.category_id}
-                  style={{ width: '100%' }}
-                  placeholder="Select Category for Item"
-                  onChange={(newCatId) => setSelectedCategoryId(newCatId)}
-                >
-                  {categoriesList.map((c) => (
-                    <Option key={c.id} value={c.id}>
-                      {c.name}
-                    </Option>
-                  ))}
-                </Select>
-              </div>
-            )}
           </Flex>
         </div>
 
@@ -432,8 +413,8 @@ const AddProductModal = ({
         </Form.Item>
 
         {/* Price & MRP */}
-        <Row gutter={12}>
-          <Col span={12}>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={12}>
             <Form.Item
               name="price"
               label="Selling Price (₹)"
@@ -449,7 +430,7 @@ const AddProductModal = ({
               />
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item name="mrp" label="Standard Rate / MRP (₹)">
               <InputNumber
                 style={{ width: '100%' }}
@@ -464,8 +445,8 @@ const AddProductModal = ({
         </Row>
 
         {/* Unit & Image */}
-        <Row gutter={12}>
-          <Col span={12}>
+        <Row gutter={[12, 12]}>
+          <Col xs={24} sm={12}>
             <Form.Item name="unit" label="Unit / Basis" rules={[{ required: true }]}>
               <Select>
                 {currentConfig.unitOptions.map((opt) => (
@@ -476,7 +457,7 @@ const AddProductModal = ({
               </Select>
             </Form.Item>
           </Col>
-          <Col span={12}>
+          <Col xs={24} sm={12}>
             <Form.Item name="img_url" label="Image URL">
               <Input placeholder="https://images.unsplash.com/..." />
             </Form.Item>
@@ -499,7 +480,7 @@ const AddProductModal = ({
             <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
               <AppstoreOutlined style={{ color: '#4f46e5' }} />
               <Text strong style={{ fontSize: 13, color: '#1e293b' }}>
-                {categoryDisplayName} Specific Specifications
+                {isCustomShopForm ? `${shop?.shop_name || 'Store'} Custom Specifications` : `${categoryDisplayName} Specifications`}
               </Text>
             </Flex>
 
@@ -617,8 +598,8 @@ const AddProductModal = ({
           /* Backward-compatibility fallback for classic types when schema not yet generated */
           <>
             {currentType === 'food' && (
-              <Row gutter={12}>
-                <Col span={12}>
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'food_type']} label="Dietary Tag" initialValue="veg">
                     <Radio.Group>
                       <Radio.Button value="veg">🟢 Pure Veg</Radio.Button>
@@ -626,7 +607,7 @@ const AddProductModal = ({
                     </Radio.Group>
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'prep_time_mins']} label="Prep Time (Mins)" initialValue={15}>
                     <InputNumber style={{ width: '100%' }} min={5} step={5} />
                   </Form.Item>
@@ -635,13 +616,13 @@ const AddProductModal = ({
             )}
 
             {currentType === 'rental' && (
-              <Row gutter={12}>
-                <Col span={12}>
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'security_deposit']} label="Refundable Deposit (₹)">
                     <InputNumber style={{ width: '100%' }} min={0} placeholder="1000" />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'min_rental_days']} label="Min Rental Period (Days)" initialValue={1}>
                     <InputNumber style={{ width: '100%' }} min={1} />
                   </Form.Item>
@@ -650,13 +631,13 @@ const AddProductModal = ({
             )}
 
             {currentType === 'service' && (
-              <Row gutter={12}>
-                <Col span={12}>
+              <Row gutter={[12, 12]}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'duration_mins']} label="Typical Duration (Mins)" initialValue={45}>
                     <InputNumber style={{ width: '100%' }} min={15} step={15} />
                   </Form.Item>
                 </Col>
-                <Col span={12}>
+                <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'service_mode']} label="Service Mode" initialValue="both">
                     <Select>
                       <Option value="both">Both Available</Option>

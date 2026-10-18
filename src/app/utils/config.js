@@ -36,6 +36,8 @@ export const apiConfig = {
   master_categories_create: 'master/categories/create',
   master_categories_schema: 'master/categories/form_schema',
   master_categories_delete: 'master/categories',
+  master_shops: 'master/shops',
+  master_shops_schema: 'master/shops/form_schema',
   shop_update: 'shops',
   shop_delete: 'shops',
 

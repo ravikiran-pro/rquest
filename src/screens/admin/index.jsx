@@ -1,32 +1,17 @@
 import React, { useState } from 'react';
 import Category from './category';
+import ShopsManager from './shops_manager';
 import { Col, Row, Tabs, Card, Typography, Tag, Flex } from 'antd';
-import { AppstoreOutlined, TagsOutlined, ShoppingOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
-import SubCategory from './subcategory';
-import Products from './products';
+import { AppstoreOutlined, ShopOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import './index.css';
 
 const { Title, Text } = Typography;
 
 const Admin = () => {
   const [activeKey, setActiveKey] = useState('1');
-  const [CategoryId, setCategoryId] = useState(null);
-  const [subCategoryId, setSubCategoryId] = useState(null);
 
   const onChange = (key) => {
     setActiveKey(key);
-    setCategoryId(null);
-    setSubCategoryId(null);
-  };
-
-  const handleSubCategory = (row) => {
-    setCategoryId(row?.id);
-    setActiveKey('2');
-  };
-
-  const handleProducts = (row) => {
-    setSubCategoryId(row?.id);
-    setActiveKey('3');
   };
 
   const items = [
@@ -34,28 +19,19 @@ const Admin = () => {
       key: '1',
       label: (
         <span style={{ fontWeight: 600, fontSize: 14 }}>
-          <AppstoreOutlined /> Categories & Product Form Config
+          <AppstoreOutlined /> Standard Business Categories & Forms
         </span>
       ),
-      children: <Category handleSubCategory={handleSubCategory} />,
+      children: <Category />,
     },
     {
       key: '2',
       label: (
         <span style={{ fontWeight: 600, fontSize: 14 }}>
-          <TagsOutlined /> Sub-Categories
+          <ShopOutlined /> Registered Stores & Custom Form Overrides
         </span>
       ),
-      children: <SubCategory category_id={CategoryId} handleProducts={handleProducts} />,
-    },
-    {
-      key: '3',
-      label: (
-        <span style={{ fontWeight: 600, fontSize: 14 }}>
-          <ShoppingOutlined /> Master Products Library
-        </span>
-      ),
-      children: <Products category_id={CategoryId} sub_category_id={subCategoryId} />,
+      children: <ShopsManager />,
     },
   ];
 
@@ -81,7 +57,7 @@ const Admin = () => {
               </Tag>
             </Flex>
             <Text type="secondary" style={{ fontSize: 13, marginTop: 4, display: 'block' }}>
-              Configure master categories, customize dynamic product forms schemas per domain, and manage global catalog.
+              Manage standard business categories, define default product form schemas, and configure custom form overrides for specific shops.
             </Text>
           </div>
         </Flex>

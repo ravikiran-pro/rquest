@@ -2271,6 +2271,10 @@
   transition: transform 0.3s ease;
 }
 
+.rquest-app-chat-overlay.chat-entrance-active {
+  animation: none;
+}
+
 .rquest-app-chat-overlay:hover,
 .rquest-app-chat-overlay:focus-within {
   animation-play-state: paused;
@@ -2280,6 +2284,275 @@
   0% { transform: translateY(0px); }
   50% { transform: translateY(-7px); }
   100% { transform: translateY(0px); }
+}
+
+/* Entrance Animations & Visual Interaction Effects */
+.rquest-floating-hud-wrapper.hud-entrance-effect {
+  animation: rquestChatSpringIn 0.75s cubic-bezier(0.16, 1, 0.3, 1) both, chatEntranceHalo 2.6s ease-out 0.15s;
+}
+
+@keyframes rquestChatSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateY(48px) scale(0.92);
+    filter: blur(10px);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-8px) scale(1.02);
+    filter: blur(0px);
+  }
+  80% {
+    transform: translateY(3px) scale(0.995);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes chatEntranceHalo {
+  0% {
+    filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0.8));
+  }
+  40% {
+    filter: drop-shadow(0 0 26px rgba(16, 185, 129, 0.45));
+  }
+  100% {
+    filter: drop-shadow(0 0 0 rgba(16, 185, 129, 0));
+  }
+}
+
+.rquest-chat-minimized-capsule.capsule-entrance-effect {
+  animation: capsuleSpringIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both, capsuleEntranceHalo 2.6s ease-out 0.15s;
+}
+
+@keyframes capsuleSpringIn {
+  0% {
+    opacity: 0;
+    transform: translateY(42px) scale(0.88);
+    filter: blur(8px);
+  }
+  65% {
+    opacity: 1;
+    transform: translateY(-6px) scale(1.03);
+    filter: blur(0px);
+  }
+  85% {
+    transform: translateY(2px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px) scale(1);
+    filter: blur(0px);
+  }
+}
+
+@keyframes capsuleEntranceHalo {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.8), 0 16px 36px rgba(0, 0, 0, 0.4);
+    border-color: #10b981;
+  }
+  40% {
+    box-shadow: 0 0 28px 6px rgba(16, 185, 129, 0.55), 0 20px 44px rgba(0, 0, 0, 0.5);
+    border-color: #34d399;
+  }
+  100% {
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+}
+
+/* Avatar Radar Ping Effect */
+.mini-avatar.entrance-ping::before,
+.rquest-avatar-circle.entrance-ping::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border-radius: 50%;
+  border: 2px solid #10b981;
+  animation: avatarRadarPulse 2s cubic-bezier(0.1, 0.4, 0.2, 1) infinite;
+  pointer-events: none;
+}
+
+@keyframes avatarRadarPulse {
+  0% {
+    transform: scale(0.85);
+    opacity: 0.95;
+  }
+  70% {
+    transform: scale(1.75);
+    opacity: 0.15;
+  }
+  100% {
+    transform: scale(2.1);
+    opacity: 0;
+  }
+}
+
+/* Badge Bounce & Ping */
+.mini-badge-count.entrance-bounce-badge {
+  animation: badgeSpringEntrance 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.35s both, badgeAttentionPulse 2s ease-in-out infinite 1s;
+}
+
+@keyframes badgeSpringEntrance {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.4);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes badgeAttentionPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 8px 3px rgba(239, 68, 68, 0.5);
+  }
+}
+
+/* Shimmer Light Sweep on Entrance */
+.rquest-chat-header-match,
+.rquest-chat-minimized-capsule {
+  position: relative;
+  overflow: hidden;
+}
+
+.rquest-chat-minimized-capsule::after,
+.rquest-chat-header-match::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -150%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.14) 50%, transparent 100%);
+  transform: skewX(-20deg);
+  pointer-events: none;
+}
+
+.rquest-chat-minimized-capsule.capsule-entrance-effect::after,
+.rquest-floating-hud-wrapper.hud-entrance-effect .rquest-chat-header-match::after {
+  animation: lightSweep 1.8s ease-in-out 0.4s forwards;
+}
+
+@keyframes lightSweep {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 200%;
+  }
+}
+
+/* Arrival Ribbons & Cues */
+.desktop-chat-arrival-ribbon {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  background: linear-gradient(135deg, rgba(6, 78, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35), 0 0 16px rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-radius: 12px;
+  padding: 6px 12px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #f0fdf4;
+  animation: ribbonSlideDown 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes ribbonSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.arrival-ribbon-sparkle {
+  color: #34d399;
+  font-size: 13px;
+  animation: sparkleTwinkle 1.5s ease-in-out infinite;
+}
+
+@keyframes sparkleTwinkle {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.25); opacity: 1; color: #6ee7b7; }
+}
+
+.arrival-ribbon-tag {
+  background: rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border: 1px solid rgba(16, 185, 129, 0.45);
+  font-size: 9.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+
+.capsule-arrival-pill {
+  position: absolute;
+  top: -12px;
+  left: 20px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  color: #ffffff;
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  animation: pillPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  pointer-events: none;
+  z-index: 10;
+}
+
+@keyframes pillPop {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.arrival-live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #ffffff;
+  animation: dotBlink 1.2s infinite;
+}
+
+@keyframes dotBlink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
 }
 
 /* Minimized Capsule (Matches In-App Quick Launcher) */
@@ -4593,21 +4866,6 @@
   /* --------------------------------------------------------------------------
      D. Mobile Interactive Chat & Tracking HUD (Touch Gestures & Views)
      -------------------------------------------------------------------------- */
-  .rquest-app-chat-overlay.hud-auto-entered {
-    animation: hudMobileSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-  }
-
-  @keyframes hudMobileSlideUp {
-    from {
-      opacity: 0;
-      transform: translateY(40px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
   .rquest-app-chat-overlay {
     bottom: 14px;
     right: 14px;
@@ -4616,7 +4874,14 @@
     max-width: min(440px, calc(100vw - 28px));
     margin: 0 auto;
     touch-action: pan-y;
-    animation: none !important;
+    animation: none;
+  }
+
+  .rquest-app-chat-overlay .capsule-arrival-pill {
+    top: -10px;
+    left: 14px;
+    font-size: 8.5px;
+    padding: 1px 7px;
   }
 
   .rquest-chat-minimized-capsule {

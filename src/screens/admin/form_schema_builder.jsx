@@ -107,17 +107,29 @@ const FormSchemaBuilderModal = ({
   open,
   onClose,
   category,
+  shop,
   onSuccess,
 }) => {
+  const isShopTarget = !!shop;
+  const targetName = isShopTarget ? shop?.shop_name : category?.name;
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (open && category) {
-      const existing = Array.isArray(category.form_schema) ? category.form_schema : [];
-      setFields(JSON.parse(JSON.stringify(existing)));
+    if (open) {
+      if (isShopTarget && shop) {
+        const existing = Array.isArray(shop.form_schema) && shop.form_schema.length > 0
+          ? shop.form_schema
+          : Array.isArray(shop.shopCategory?.form_schema)
+          ? shop.shopCategory.form_schema
+          : [];
+        setFields(JSON.parse(JSON.stringify(existing)));
+      } else if (category) {
+        const existing = Array.isArray(category.form_schema) ? category.form_schema : [];
+        setFields(JSON.parse(JSON.stringify(existing)));
+      }
     }
-  }, [open, category]);
+  }, [open, category, shop, isShopTarget]);
 
   const handleAddField = () => {
     const newField = {
@@ -179,22 +191,43 @@ const FormSchemaBuilderModal = ({
     }
   };
 
+  const handleResetToCategoryDefault = () => {
+    if (isShopTarget && shop?.shopCategory?.form_schema) {
+      setFields(JSON.parse(JSON.stringify(shop.shopCategory.form_schema)));
+      message.info('Reverted to default category schema');
+    } else {
+      setFields([]);
+      message.info('Cleared custom fields');
+    }
+  };
+
   const handleSave = async () => {
-    if (!category?.id) return;
+    if (isShopTarget && !shop?.id) return;
+    if (!isShopTarget && !category?.id) return;
+
     setSaving(true);
     try {
+      const endpoint = isShopTarget
+        ? apiConfig.master_shops_schema
+        : apiConfig.master_categories_schema;
+
+      const payload = isShopTarget
+        ? { shop_id: shop.id, form_schema: fields }
+        : { category_id: category.id, form_schema: fields };
+
       const res = await netWorkCall(
-        apiConfig.master_categories_schema,
+        endpoint,
         'PUT',
-        JSON.stringify({
-          category_id: category.id,
-          form_schema: fields,
-        }),
+        JSON.stringify(payload),
         true
       );
 
       if (res?.success) {
-        message.success(`Form configuration saved for ${category.name}`);
+        message.success(
+          isShopTarget
+            ? `Custom form saved for ${shop.shop_name}`
+            : `Form configuration saved for ${category.name}`
+        );
         onSuccess?.();
         onClose();
       } else {
@@ -327,7 +360,11 @@ const FormSchemaBuilderModal = ({
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <SettingOutlined style={{ color: '#4f46e5' }} />
-          <span>Product Form Configuration — {category?.name || 'Category'}</span>
+          <span>
+            {isShopTarget
+              ? `Custom Product Form — Store: ${shop?.shop_name || 'Shop'}`
+              : `Product Form Configuration — Category: ${category?.name || 'Category'}`}
+          </span>
         </div>
       }
       open={open}
@@ -337,6 +374,17 @@ const FormSchemaBuilderModal = ({
         <Button key="cancel" onClick={onClose}>
           Cancel
         </Button>,
+        ...(isShopTarget
+          ? [
+              <Button
+                key="reset"
+                onClick={handleResetToCategoryDefault}
+                style={{ borderRadius: 6 }}
+              >
+                Reset to Standard Category Default
+              </Button>,
+            ]
+          : []),
         <Button
           key="save"
           type="primary"
@@ -345,19 +393,29 @@ const FormSchemaBuilderModal = ({
           onClick={handleSave}
           style={{ background: '#4f46e5', borderColor: '#4f46e5' }}
         >
-          Save Form Schema ({fields.length} Fields)
+          {isShopTarget
+            ? `Save Shop Override (${fields.length} Fields)`
+            : `Save Form Schema (${fields.length} Fields)`}
         </Button>,
       ]}
       destroyOnClose
     >
       <Alert
-        message="Dynamic Schema Builder"
+        message={isShopTarget ? 'Store-Specific Form Override' : 'Standard Category Schema'}
         description={
           <div>
-            Fields defined here will automatically appear on the <strong>Add/Edit Product Form</strong> for all shops belonging to <strong>{category?.name}</strong>. Values are automatically stored inside each listing's <code>metadata</code> JSON.
+            {isShopTarget ? (
+              <>
+                Fields defined here will apply <strong>only to {shop?.shop_name}</strong>. If empty or cleared, this store will use standard <strong>{shop?.shopCategory?.name || shop?.shop_type || 'Category'}</strong> fields.
+              </>
+            ) : (
+              <>
+                Fields defined here will automatically appear on the <strong>Add/Edit Product Form</strong> for all shops belonging to <strong>{category?.name}</strong>. Values are automatically stored inside each listing's <code>metadata</code> JSON.
+              </>
+            )}
           </div>
         }
-        type="info"
+        type={isShopTarget ? 'warning' : 'info'}
         showIcon
         style={{ marginBottom: 16, borderRadius: 10 }}
       />
@@ -387,7 +445,6 @@ const FormSchemaBuilderModal = ({
         </Text>
         <Button
           type="primary"
-          icon={<PlusOutlined />}
           onClick={handleAddField}
           style={{ borderRadius: 6, fontWeight: 600 }}
         >

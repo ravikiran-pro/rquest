@@ -1,6 +1,7 @@
 const express = require('express');
 const { getAllCategories, updateCategoryStatus, editCategory, updateCategoryFormSchema, deleteCategory } = require('./category');
 const { getAllSubCategories, updateSubCategoryStatus, editSubCategory, deleteSubCategory } = require('./subcategory');
+const { getAllMasterShops, updateShopFormSchema } = require('./shops');
 const uploadFiles = require('./aws');
 const { authMiddleware } = require('../../auth');
 const multer = require('multer');
@@ -33,7 +34,9 @@ router.delete('/sub_categories', deleteSubCategory)
 router.post('/products', getAllProducts);
 router.put('/products/status', updateProductsStatus);
 router.post('/products/create', editProducts);
-router.delete('/products', deleteProducts)
+router.delete('/products', deleteProducts);
 
+router.post('/shops', getAllMasterShops);
+router.put('/shops/form_schema', updateShopFormSchema);
 
 module.exports = router;

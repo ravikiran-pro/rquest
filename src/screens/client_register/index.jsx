@@ -50,6 +50,7 @@ const STORE_CATEGORIES = [
     desc: 'Daily essentials, packaged goods, staples & provisions',
     shop_type: 'Provision Store',
     category_id: null,
+    category_id: 0,
     defaultImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
     starters: [
       { name: 'Chakki Atta Flour (5kg)', price: 235, mrp: 260, unit: 'pack', listing_type: 'product' },
@@ -92,6 +93,7 @@ const STORE_CATEGORIES = [
     desc: 'Electricians, plumbers, AC service, appliance repair',
     shop_type: 'Hardawers and tools',
     category_id: null,
+    category_id: 4,
     defaultImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
     starters: [
       { name: 'Doorstep Inspection & Safety Check', price: 199, unit: 'visit', listing_type: 'service' },
@@ -105,6 +107,7 @@ const STORE_CATEGORIES = [
     desc: 'Hair styling, grooming, spa & wellness services',
     shop_type: 'Small business',
     category_id: null,
+    category_id: 14,
     defaultImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&auto=format&fit=crop&q=80',
     starters: [
       { name: 'Men’s Haircut & Styling', price: 150, unit: 'session', listing_type: 'service' },
@@ -118,6 +121,7 @@ const STORE_CATEGORIES = [
     desc: 'Clothing, footwear, stationery, gifts & home goods',
     shop_type: 'Small business',
     category_id: null,
+    category_id: 12,
     defaultImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
     starters: [
       { name: 'Cotton Round-Neck T-Shirt', price: 399, mrp: 599, unit: 'piece', listing_type: 'product' },

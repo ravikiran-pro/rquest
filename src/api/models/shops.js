@@ -63,6 +63,10 @@ module.exports = (sequelize) => {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
       },
+      form_schema: {
+        type: DataTypes.JSONB,
+        defaultValue: [],
+      },
     },
     {
       timestamps: true,
@@ -70,6 +74,10 @@ module.exports = (sequelize) => {
   );
 
   Shop.associate = (models) => {
+    Shop.belongsTo(models.users, {
+      foreignKey: 'owner_id',
+      as: 'owner',
+    });
     Shop.hasMany(models.chats, { foreignKey: 'shop_id', as: 'shopChats' });
     Shop.belongsTo(models.categories, {
       foreignKey: 'category_id',

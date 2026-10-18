@@ -120,6 +120,10 @@ const createShops = async (req, res) => {
         shopDetails.allow_multi_category !== undefined
           ? Boolean(shopDetails.allow_multi_category)
           : (existingShop ? existingShop.allow_multi_category : false),
+      form_schema:
+        shopDetails.form_schema !== undefined
+          ? shopDetails.form_schema
+          : (existingShop && existingShop.form_schema ? existingShop.form_schema : []),
       directions:
         shopDetails.directions ||
         `https://www.google.com/maps/@${latitude},${longitude}`,
@@ -138,14 +142,17 @@ const createShops = async (req, res) => {
     } else {
       createdShop = await shops.create(payload);
 
-      await users.update(
-        { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
-        {
-          where: {
-            id: user_id,
-          },
-        }
-      );
+      // Only update user role to client/merchant if not already an admin
+      if (req.headers?.role_id !== 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9') {
+        await users.update(
+          { role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' },
+          {
+            where: {
+              id: user_id,
+            },
+          }
+        );
+      }
     }
 
     return res.status(201).json({ success: true, data: createdShop });

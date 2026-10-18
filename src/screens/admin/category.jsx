@@ -47,7 +47,6 @@ const Category = ({
         },
         { key: "is_active", title: "Active" },
         { key: "action", title: "Action" },
-        { key: "menu", title: "Sub Category", onClick: (data) => handleSubCategory(data) },
     ];
 
     const handleDelete = async (record) => {

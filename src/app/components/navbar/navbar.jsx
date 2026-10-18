@@ -42,7 +42,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isMerchant, role } = checkUserRole(user_data);
+  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
@@ -57,6 +57,8 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   const logoDestination = !isLoggedIn
     ? Routes.landing
+    : isAdmin
+    ? Routes.admin
     : isMerchant
     ? Routes.client
     : Routes.app;
@@ -72,7 +74,22 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             {user_data?.username || 'Account'}
           </div>
           <div style={{ marginTop: 4 }}>
-            {isMerchant ? (
+            {isAdmin ? (
+              <span
+                className="role-pill role-pill-admin"
+                style={{
+                  background: '#fee2e2',
+                  color: '#b91c1c',
+                  border: '1px solid #fecaca',
+                  fontWeight: 700,
+                  fontSize: 11,
+                  padding: '2px 8px',
+                  borderRadius: 6,
+                }}
+              >
+                Super Admin
+              </span>
+            ) : isMerchant ? (
               <span className="role-pill role-pill-merchant">Shop Owner</span>
             ) : (
               <span className="role-pill role-pill-user">Customer</span>
@@ -160,7 +177,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           },
         ]
       : []),
-    ...(user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin'
+    ...(isAdmin || user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin' || user_data?.username === 'root'
       ? [
           {
             key: 'admin-console',

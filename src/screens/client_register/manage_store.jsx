@@ -21,6 +21,14 @@ import {
   Spin,
   Row,
   Col,
+  Drawer,
+  Divider,
+  Avatar,
+  Tooltip,
+  Grid,
+  Badge,
+  Steps,
+  Alert,
 } from 'antd';
 import {
   PlusOutlined,
@@ -36,10 +44,25 @@ import {
   SettingOutlined,
   LockOutlined,
   UnlockOutlined,
+  PhoneOutlined,
+  MessageOutlined,
+  EnvironmentOutlined,
+  ClockCircleOutlined,
+  CheckCircleOutlined,
+  CloseCircleOutlined,
+  SyncOutlined,
+  CheckCircleFilled,
+  CarOutlined,
+  ThunderboltFilled,
+  UserOutlined,
+  CopyOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
 import { AddProductModal } from '../../app/components';
+import { useChatStore } from '../../app/services';
+import './client_register.css';
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -52,7 +75,13 @@ const ManageStore = ({
   onRefreshShop,
 }) => {
   const history = useHistory();
+  const screens = Grid.useBreakpoint();
+  const { handleChatOpen } = useChatStore((state) => state);
   const [activeTab, setActiveTab] = useState('catalog');
+
+  // Order Details Sidebar Drawer state
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isOrderDrawerOpen, setIsOrderDrawerOpen] = useState(false);
 
   // Listings state
   const [listings, setListings] = useState([]);
@@ -71,10 +100,6 @@ const ManageStore = ({
   const [orders, setOrders] = useState([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
 
-  // Quotes state
-  const [quotes, setQuotes] = useState([]);
-  const [quotesLoading, setQuotesLoading] = useState(false);
-
   // Shop Settings state
   const [shopSettings, setShopSettings] = useState({
     shop_name: shop?.shop_name || '',
@@ -83,7 +108,6 @@ const ManageStore = ({
     mobile_number: shop?.mobile_number || '',
     website: shop?.website || '',
     img_url: shop?.img_url || '',
-    allow_multi_category: Boolean(shop?.allow_multi_category),
   });
   const [savingSettings, setSavingSettings] = useState(false);
   const [deletingShop, setDeletingShop] = useState(false);
@@ -97,7 +121,6 @@ const ManageStore = ({
         mobile_number: shop.mobile_number || '',
         website: shop.website || '',
         img_url: shop.img_url || '',
-        allow_multi_category: Boolean(shop.allow_multi_category),
       });
     }
   }, [shop]);
@@ -199,6 +222,8 @@ const ManageStore = ({
     return 'product';
   }, [shop]);
 
+  const isServiceStore = storeArchetype === 'service' || storeArchetype === 'wellness';
+
   const fetchListings = async () => {
     if (!shop?.id) return;
     setListingsLoading(true);
@@ -227,7 +252,7 @@ const ManageStore = ({
         `${apiConfig.orders_shop}/${shop.id}`,
         'GET',
         null,
-        false
+        true
       );
       if (res?.data) {
         setOrders(res.data);
@@ -236,26 +261,6 @@ const ManageStore = ({
       console.error(err);
     } finally {
       setOrdersLoading(false);
-    }
-  };
-
-  const fetchQuotes = async () => {
-    if (!shop?.id) return;
-    setQuotesLoading(true);
-    try {
-      const res = await netWorkCall(
-        `${apiConfig.quotes_shop}/${shop.id}`,
-        'GET',
-        null,
-        false
-      );
-      if (res?.data) {
-        setQuotes(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setQuotesLoading(false);
     }
   };
 
@@ -278,7 +283,6 @@ const ManageStore = ({
   useEffect(() => {
     fetchListings();
     fetchOrders();
-    fetchQuotes();
   }, [shop?.id]);
 
   const handleOpenAddModal = () => {
@@ -359,32 +363,73 @@ const ManageStore = ({
       const res = await netWorkCall(
         `${apiConfig.orders_status}/${orderId}/status`,
         'PUT',
-        JSON.stringify({ status: newStatus })
+        JSON.stringify({ status: newStatus }),
+        true
       );
       if (res?.success) {
         message.success(`Order marked as ${newStatus}`);
         fetchOrders();
+        setSelectedOrder((prev) =>
+          prev && prev.id === orderId ? { ...prev, status: newStatus } : prev
+        );
       }
     } catch (err) {
       console.error(err);
     }
   };
 
-  // Update Quote Status
-  const handleUpdateQuoteStatus = async (quoteId, newStatus) => {
-    try {
-      const res = await netWorkCall(
-        `${apiConfig.quotes_status}/${quoteId}/status`,
-        'PUT',
-        JSON.stringify({ status: newStatus })
-      );
-      if (res?.success) {
-        message.success(`Quote updated`);
-        fetchQuotes();
-      }
-    } catch (err) {
-      console.error(err);
+  const handleCopyOrderId = (id) => {
+    if (navigator?.clipboard?.writeText) {
+      navigator.clipboard.writeText(id);
+      message.success('Order ID copied to clipboard');
     }
+  };
+
+  const getOrderStatusStep = (order) => {
+    if (!order) return { step: 0, items: [] };
+    const type = order.order_type || 'delivery';
+    const status = order.status || 'placed';
+
+    if (type === 'pickup') {
+      const items = [
+        { title: 'Placed', description: 'Order received' },
+        { title: 'Preparing', description: 'Packing items' },
+        { title: 'Ready', description: 'Counter pickup' },
+        { title: 'Completed', description: 'Handed over' },
+      ];
+      let step = 0;
+      if (status === 'order_prepare' || status === 'preparing' || status === 'accepted') step = 1;
+      else if (status === 'ready_for_pickup') step = 2;
+      else if (status === 'completed') step = 3;
+      return { step, items };
+    }
+
+    if (type === 'service') {
+      const items = [
+        { title: 'Booked', description: 'Request received' },
+        { title: 'In Progress', description: 'Service ongoing' },
+        { title: 'Completed', description: 'Service fulfilled' },
+      ];
+      let step = 0;
+      if (status === 'order_prepare' || status === 'preparing' || status === 'accepted') step = 1;
+      else if (status === 'completed') step = 2;
+      return { step, items };
+    }
+
+    // Default: delivery
+    const items = [
+      { title: 'Placed', description: 'Order received' },
+      { title: 'Preparing', description: 'Packing items' },
+      { title: 'Open to Delivery', description: 'Fleet dispatch' },
+      { title: 'Out for Delivery', description: 'On the way' },
+      { title: 'Delivered', description: 'Order completed' },
+    ];
+    let step = 0;
+    if (status === 'order_prepare' || status === 'preparing' || status === 'accepted') step = 1;
+    else if (status === 'open_to_delivery') step = 2;
+    else if (status === 'out_for_delivery') step = 3;
+    else if (status === 'completed') step = 4;
+    return { step, items };
   };
 
   const listingColumns = [
@@ -392,6 +437,7 @@ const ManageStore = ({
       title: 'Item / Service',
       dataIndex: 'name',
       key: 'name',
+      width: 250,
       render: (name, record) => (
         <Flex align="center" gap={10}>
           {record.img_url ? (
@@ -443,6 +489,7 @@ const ManageStore = ({
     {
       title: 'Price / Unit',
       key: 'price',
+      width: 130,
       render: (_, record) => (
         <div>
           <span style={{ fontWeight: 800, color: '#4f46e5' }}>₹{record.price}</span>
@@ -458,6 +505,7 @@ const ManageStore = ({
     {
       title: 'In Stock',
       key: 'is_available',
+      width: 95,
       render: (_, record) => (
         <Switch
           checked={record.is_available}
@@ -468,6 +516,7 @@ const ManageStore = ({
     {
       title: 'Actions',
       key: 'actions',
+      width: 105,
       render: (_, record) => (
         <Space>
           <Button
@@ -493,9 +542,19 @@ const ManageStore = ({
       title: 'Order ID',
       dataIndex: 'order_number',
       key: 'order_number',
+      width: 120,
       render: (val, record) => (
         <div>
-          <div style={{ fontWeight: 700, color: '#0f172a' }}>#{val}</div>
+          <Button
+            type="link"
+            onClick={() => {
+              setSelectedOrder(record);
+              setIsOrderDrawerOpen(true);
+            }}
+            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: '#4f46e5' }}
+          >
+            #{val}
+          </Button>
           <div style={{ fontSize: 11, color: '#64748b' }}>
             {new Date(record.createdAt).toLocaleDateString([], {
               month: 'short',
@@ -508,18 +567,34 @@ const ManageStore = ({
       ),
     },
     {
+      title: 'Type',
+      dataIndex: 'order_type',
+      key: 'order_type',
+      width: 100,
+      render: (type) => (
+        <Tag
+          color={type === 'delivery' ? 'purple' : type === 'service' ? 'cyan' : 'blue'}
+          style={{ borderRadius: 6, fontWeight: 700, fontSize: 11 }}
+        >
+          {type === 'delivery' ? '🚚 Delivery' : type === 'service' ? '🛠️ Service' : '🛍️ Pickup'}
+        </Tag>
+      ),
+    },
+    {
       title: 'Customer',
       key: 'customer',
+      width: 140,
       render: (_, record) => (
         <div>
           <div style={{ fontWeight: 600 }}>{record.customer?.username || 'Customer'}</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>{record.customer?.mobile}</div>
+          <div style={{ fontSize: 12, color: '#64748b' }}>{record.customer_phone || record.customer?.mobile}</div>
         </div>
       ),
     },
     {
       title: 'Items',
       key: 'items',
+      width: 150,
       render: (_, record) => (
         <div>
           {record.items?.map((it, idx) => (
@@ -533,6 +608,7 @@ const ManageStore = ({
     {
       title: 'Amount',
       key: 'amount',
+      width: 110,
       render: (_, record) => (
         <div>
           <span style={{ fontWeight: 800, color: '#0f172a' }}>₹{record.total_amount}</span>
@@ -545,6 +621,7 @@ const ManageStore = ({
     {
       title: 'Status',
       key: 'status',
+      width: 150,
       render: (_, record) => {
         const statusColors = {
           placed: 'blue',
@@ -580,12 +657,25 @@ const ManageStore = ({
     {
       title: 'Update Action',
       key: 'action',
+      width: 160,
       render: (_, record) => {
         const isSelfPickup = record.order_type === 'pickup';
         const isDelivery = record.order_type === 'delivery';
 
         return (
           <Space wrap size={[6, 6]}>
+            <Button
+              size="small"
+              icon={<EyeOutlined />}
+              onClick={() => {
+                setSelectedOrder(record);
+                setIsOrderDrawerOpen(true);
+              }}
+              style={{ borderRadius: 6, fontWeight: 600, color: '#4f46e5', borderColor: '#c7d2fe', background: '#eef2ff' }}
+            >
+              Details
+            </Button>
+
             {/* If Placed or Pending: Start Preparation */}
             {(record.status === 'placed' || record.status === 'pending') && (
               <Button
@@ -603,7 +693,7 @@ const ManageStore = ({
               record.status === 'preparing' ||
               record.status === 'accepted') && (
               <>
-                {/* Self-Pickup or Service: Move to Ready for Pickup */}
+                {/* Self-Pickup: Move to Ready for Pickup */}
                 {isSelfPickup && (
                   <Button
                     type="primary"
@@ -615,7 +705,7 @@ const ManageStore = ({
                   </Button>
                 )}
 
-                {/* Delivery: Move to Open to Delivery (captured for runner board) */}
+                {/* Delivery: Move to Open to Delivery */}
                 {isDelivery && (
                   <Button
                     type="primary"
@@ -644,7 +734,7 @@ const ManageStore = ({
                   size="small"
                   onClick={() => handleUpdateOrderStatus(record.id, 'placed')}
                 >
-                  ↩️ Order Placed
+                  ↩️ Placed
                 </Button>
               </>
             )}
@@ -657,7 +747,7 @@ const ManageStore = ({
                 style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Mark Handed Over & Completed
+                ✅ Hand Over
               </Button>
             )}
 
@@ -669,7 +759,7 @@ const ManageStore = ({
                 style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Mark Delivered / Completed
+                ✅ Delivered
               </Button>
             )}
 
@@ -681,7 +771,7 @@ const ManageStore = ({
                 style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Mark Delivered & Completed
+                ✅ Delivered
               </Button>
             )}
 
@@ -701,72 +791,95 @@ const ManageStore = ({
     },
   ];
 
-  // Dynamic titles tailored to the store archetype
-  const catalogTabLabel = {
-    food: `🍽️ Food Menu & Dishes (${listings.length})`,
-    product: `🛒 Products & Inventory (${listings.length})`,
-    service: `🔧 Services & Rate Card (${listings.length})`,
-    wellness: `💆 Treatments & Sessions (${listings.length})`,
-    rental: `🏍️ Rental Fleet & Assets (${listings.length})`,
-  }[storeArchetype] || `Catalog & Offerings (${listings.length})`;
+  // Dynamic titles tailored to Product vs Service store
+  const catalogTabLabel = isServiceStore
+    ? `🔧 Services & Packages (${listings.length})`
+    : storeArchetype === 'food'
+    ? `🍽️ Food Menu & Dishes (${listings.length})`
+    : `🛒 Products & Inventory (${listings.length})`;
 
-  const addItemButtonLabel = {
-    food: '+ Add Dish / Beverage',
-    product: '+ Add Product',
-    service: '+ Add Service Package',
-    wellness: '+ Add Treatment',
-    rental: '+ Add Rental Asset',
-  }[storeArchetype] || '+ Add Item / Service';
+  const catalogTitle = isServiceStore
+    ? 'Services & Rate Card'
+    : storeArchetype === 'food'
+    ? 'Food Menu & Dishes'
+    : 'Products & Stock Inventory';
+
+  const catalogDesc = isServiceStore
+    ? 'Fixed-price technician services, home maintenance, and inspection packages offered by your business.'
+    : storeArchetype === 'food'
+    ? 'Manage ready-to-eat dishes, beverages, and daily food items for direct ordering.'
+    : 'Manage retail products, stock availability, and unit pricing for local customers.';
+
+  const addItemButtonLabel = isServiceStore
+    ? '+ Add Service Package'
+    : storeArchetype === 'food'
+    ? '+ Add Dish / Beverage'
+    : '+ Add Product';
+
+  const ordersTabLabel = isServiceStore
+    ? `🛠️ Service Bookings (${orders.length})`
+    : `📦 Customer Orders (${orders.length})`;
+
+  const ordersTitle = isServiceStore
+    ? 'Direct Service Bookings'
+    : 'Direct Customer Orders';
+
+  const ordersDesc = isServiceStore
+    ? 'Service appointments and technician requests placed directly with your business.'
+    : 'Orders placed directly with your store. Fulfill via direct pickup counter or delivery.';
 
   return (
-    <div style={{ width: '100%', maxWidth: 1140, margin: '0 auto', padding: '20px 16px' }}>
+    <div className="manage-store-container">
       {/* Top Header & Store Switcher */}
-      <div
-        style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: 16,
-          marginBottom: 20,
-        }}
-      >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Button
-            icon={<ArrowLeftOutlined />}
-            onClick={onClose}
-            style={{ borderRadius: 8 }}
-          >
-            All Stores
-          </Button>
-          <div>
-            <Title level={4} style={{ margin: 0, fontWeight: 800 }}>
+      <div className="manage-store-header">
+        <div className="manage-store-header-left">
+          <div className="manage-store-nav-group">
+            <Button
+              icon={<ArrowLeftOutlined />}
+              onClick={onClose}
+              className="manage-store-back-btn"
+            >
+              All Stores
+            </Button>
+
+            {/* Mobile-only Live Storefront button for instant access */}
+            <Button
+              type="primary"
+              icon={<EyeOutlined />}
+              onClick={() => history.push(`/shop/${shop.id}`)}
+              className="manage-store-live-btn-mobile"
+            >
+              Live Storefront
+            </Button>
+          </div>
+
+          <div className="manage-store-info">
+            <Title level={4} className="manage-store-title">
               {shop.shop_name}
             </Title>
-            <Flex align="center" gap={8} style={{ marginTop: 2 }}>
+            <div className="manage-store-meta">
               <Text type="secondary" style={{ fontSize: 13 }}>
                 {shop.area} • {shop.shopCategory?.name || shop.shop_type || 'Store Outlet'}
               </Text>
               <Tag
-                color={shop.allow_multi_category ? 'purple' : 'default'}
-                icon={shop.allow_multi_category ? <UnlockOutlined /> : <LockOutlined />}
-                style={{ fontSize: 10, margin: 0, borderRadius: 4 }}
+                color={isServiceStore ? 'blue' : 'green'}
+                style={{ fontSize: 11, margin: 0, borderRadius: 4, fontWeight: 700 }}
               >
-                {shop.allow_multi_category ? 'Multi-Category' : 'Fixed Category'}
+                {isServiceStore ? '🔧 Service Business' : '🛒 Product Store'}
               </Tag>
-            </Flex>
+            </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+        <div className="manage-store-header-right">
           {allShops?.length > 1 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <Text strong style={{ fontSize: 12 }}>
+            <div className="manage-store-outlet-switcher">
+              <Text strong className="manage-store-outlet-switcher-label">
                 Switch Outlet:
               </Text>
               <Select
                 value={shop.id}
-                style={{ width: 220 }}
+                className="manage-store-outlet-select"
                 onChange={(newId) => {
                   const target = allShops.find((s) => s.id === newId);
                   if (target) onSwitchShop(target);
@@ -785,6 +898,7 @@ const ManageStore = ({
             type="primary"
             icon={<EyeOutlined />}
             onClick={() => history.push(`/shop/${shop.id}`)}
+            className="manage-store-live-btn-desktop"
             style={{ fontWeight: 600, borderRadius: 8 }}
           >
             Live Storefront
@@ -794,12 +908,8 @@ const ManageStore = ({
 
       {/* Main Management Tabs */}
       <Card
-        style={{
-          borderRadius: 16,
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
-        }}
-        bodyStyle={{ padding: 20 }}
+        className="manage-store-main-card"
+        styles={{ body: { padding: screens.xs ? '14px 12px' : 20 } }}
       >
         <Tabs
           activeKey={activeTab}
@@ -808,53 +918,35 @@ const ManageStore = ({
             {
               key: 'catalog',
               label: (
-                <span style={{ fontWeight: 700, fontSize: 15 }}>
-                  <ShopOutlined /> {catalogTabLabel}
+                <span className="manage-store-tab-label" style={{ fontWeight: 700, fontSize: 15 }}>
+                  {catalogTabLabel}
                 </span>
               ),
               children: (
                 <div>
-                  <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 16 }}>
+                  <div className="manage-store-tab-header">
                     <div>
                       <Title level={5} style={{ margin: 0 }}>
-                        {storeArchetype === 'food'
-                          ? 'Manage Restaurant Dishes & Menus'
-                          : storeArchetype === 'service'
-                          ? 'Manage Service Rate Cards & Visiting Fees'
-                          : storeArchetype === 'rental'
-                          ? 'Manage Rental Fleet & Security Deposits'
-                          : 'Manage Products & Stock'}
+                        {catalogTitle}
                       </Title>
                       <Text type="secondary" style={{ fontSize: 13 }}>
-                        Items listed here appear directly on your customer storefront.
+                        {catalogDesc}
                       </Text>
                     </div>
 
-                    <Space>
-                      {storeArchetype === 'product' && (
-                        <Button
-                          icon={<ImportOutlined />}
-                          onClick={() => {
-                            fetchMasterProducts();
-                            setIsImportModalOpen(true);
-                          }}
-                        >
-                          Import Master Catalog
-                        </Button>
-                      )}
-                      <Button
-                        type="primary"
-                        onClick={handleOpenAddModal}
-                        style={{
-                          borderRadius: 8,
-                          fontWeight: 700,
-                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                        }}
-                      >
-                        {addItemButtonLabel}
-                      </Button>
-                    </Space>
-                  </Flex>
+                    <Button
+                      type="primary"
+                      onClick={handleOpenAddModal}
+                      className="manage-store-add-item-btn"
+                      style={{
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      }}
+                    >
+                      {addItemButtonLabel}
+                    </Button>
+                  </div>
 
                   <Table
                     columns={listingColumns}
@@ -871,17 +963,17 @@ const ManageStore = ({
               key: 'orders',
               label: (
                 <span style={{ fontWeight: 700, fontSize: 15 }}>
-                  <ShoppingCartOutlined /> Incoming Orders ({orders.length})
+                  {ordersTabLabel}
                 </span>
               ),
               children: (
                 <div>
                   <div style={{ marginBottom: 16 }}>
                     <Title level={5} style={{ margin: 0 }}>
-                      Direct Customer Orders
+                      {ordersTitle}
                     </Title>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      Orders placed directly with your store. Fulfill via direct pickup or delivery.
+                      Click on any order to open the full transaction & delivery tracker sidebar.
                     </Text>
                   </div>
 
@@ -892,74 +984,15 @@ const ManageStore = ({
                     loading={ordersLoading}
                     scroll={{ x: 'max-content' }}
                     pagination={{ pageSize: 8 }}
+                    onRow={(record) => ({
+                      onClick: (e) => {
+                        if (e.target.closest('button') || e.target.closest('.ant-btn')) return;
+                        setSelectedOrder(record);
+                        setIsOrderDrawerOpen(true);
+                      },
+                      style: { cursor: 'pointer' },
+                    })}
                   />
-                </div>
-              ),
-            },
-            {
-              key: 'quotes',
-              label: (
-                <span style={{ fontWeight: 700, fontSize: 15 }}>
-                  <FileDoneOutlined /> Service Quotes ({quotes.length})
-                </span>
-              ),
-              children: (
-                <div>
-                  <div style={{ marginBottom: 16 }}>
-                    <Title level={5} style={{ margin: 0 }}>
-                      Service Quote Requests (RFQs)
-                    </Title>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
-                      Requests from customers for technical services, repairs, and custom rates.
-                    </Text>
-                  </div>
-
-                  <Spin spinning={quotesLoading}>
-                    {quotes.length === 0 ? (
-                      <Empty description="No service quote requests yet" />
-                    ) : (
-                      <Space direction="vertical" style={{ width: '100%' }}>
-                        {quotes.map((q) => (
-                          <Card key={q.id} style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}>
-                            <Flex justify="space-between" align="start">
-                              <div>
-                                <div style={{ fontWeight: 700, fontSize: 15 }}>{q.service_title}</div>
-                                <div style={{ fontSize: 12, color: '#64748b' }}>
-                                  Customer: {q.customer?.username} ({q.customer?.mobile}) •{' '}
-                                  {new Date(q.createdAt).toLocaleDateString()}
-                                </div>
-                                <p style={{ margin: '8px 0', fontSize: 13 }}>{q.service_description}</p>
-                                {q.status === 'pending' && (
-                                  <Space style={{ marginTop: 8 }}>
-                                    <Button
-                                      size="small"
-                                      type="primary"
-                                      onClick={() => handleUpdateQuoteStatus(q.id, 'quoted')}
-                                    >
-                                      Accept & Quote
-                                    </Button>
-                                    <Button
-                                      size="small"
-                                      danger
-                                      onClick={() => handleUpdateQuoteStatus(q.id, 'rejected')}
-                                    >
-                                      Decline
-                                    </Button>
-                                  </Space>
-                                )}
-                              </div>
-                              <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: 18, fontWeight: 800, color: '#4f46e5' }}>
-                                  ₹{q.estimated_amount}
-                                </div>
-                                <Tag color="purple">{q.status}</Tag>
-                              </div>
-                            </Flex>
-                          </Card>
-                        ))}
-                      </Space>
-                    )}
-                  </Spin>
                 </div>
               ),
             },
@@ -974,10 +1007,10 @@ const ManageStore = ({
                 <div style={{ maxWidth: 700 }}>
                   <div style={{ marginBottom: 20 }}>
                     <Title level={5} style={{ margin: 0 }}>
-                      Store Information & Category Preferences
+                      Store Information & Business Profile
                     </Title>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      Update your storefront profile, location information, and enable multi-category catalog expansion.
+                      Update your storefront profile, location information, and customer contact details.
                     </Text>
                   </div>
 
@@ -994,8 +1027,8 @@ const ManageStore = ({
                       />
                     </div>
 
-                    <Row gutter={16} style={{ marginBottom: 16 }}>
-                      <Col span={12}>
+                    <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
+                      <Col xs={24} sm={12}>
                         <Text strong style={{ display: 'block', marginBottom: 4 }}>
                           Area / Locality:
                         </Text>
@@ -1006,7 +1039,7 @@ const ManageStore = ({
                           }
                         />
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} sm={12}>
                         <Text strong style={{ display: 'block', marginBottom: 4 }}>
                           Contact Phone:
                         </Text>
@@ -1032,8 +1065,8 @@ const ManageStore = ({
                       />
                     </div>
 
-                    <Row gutter={16} style={{ marginBottom: 20 }}>
-                      <Col span={12}>
+                    <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
+                      <Col xs={24} sm={12}>
                         <Text strong style={{ display: 'block', marginBottom: 4 }}>
                           Website / Social:
                         </Text>
@@ -1045,7 +1078,7 @@ const ManageStore = ({
                           }
                         />
                       </Col>
-                      <Col span={12}>
+                      <Col xs={24} sm={12}>
                         <Text strong style={{ display: 'block', marginBottom: 4 }}>
                           Storefront Banner / Image URL:
                         </Text>
@@ -1059,7 +1092,7 @@ const ManageStore = ({
                       </Col>
                     </Row>
 
-                    {/* Multi-category switch */}
+                    {/* Business Operating Mode */}
                     <div
                       style={{
                         background: '#f8fafc',
@@ -1069,24 +1102,24 @@ const ManageStore = ({
                         marginBottom: 20,
                       }}
                     >
-                      <Flex justify="space-between" align="center">
-                        <div style={{ maxWidth: '80%' }}>
+                      <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
+                        <div>
                           <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {shopSettings.allow_multi_category ? <UnlockOutlined style={{ color: '#7c3aed' }} /> : <LockOutlined style={{ color: '#64748b' }} />}
-                            Allow Multiple Categories (Hybrid Store)
+                            {isServiceStore ? <ToolOutlined style={{ color: '#0284c7' , marginRight: 4 }} /> : <ShopOutlined style={{ color: '#16a34a', marginRight: 4}} />}
+                            Business Operating Mode
                           </Text>
                           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
-                            {shopSettings.allow_multi_category
-                              ? 'Enabled — You can add products spanning different domain categories (e.g. food + pharmacy + rentals).'
-                              : 'Disabled (Default) — Your product catalog is strictly locked to your registered shop category for consistency.'}
+                            {isServiceStore
+                              ? 'Configured as a Service Business — Catalog is streamlined for service packages, rate cards, and appointment bookings.'
+                              : 'Configured as a Product Store — Catalog is streamlined for retail items, in-stock inventory, and order fulfillment.'}
                           </Text>
                         </div>
-                        <Switch
-                          checked={shopSettings.allow_multi_category}
-                          onChange={(checked) =>
-                            setShopSettings((prev) => ({ ...prev, allow_multi_category: checked }))
-                          }
-                        />
+                        <Tag
+                          color={isServiceStore ? 'blue' : 'green'}
+                          style={{ fontWeight: 700, padding: '4px 10px', borderRadius: 6, fontSize: 12 }}
+                        >
+                          {isServiceStore ? 'Service Category' : 'Product Category'}
+                        </Tag>
                       </Flex>
                     </div>
 
@@ -1099,6 +1132,8 @@ const ManageStore = ({
                         borderColor: '#4f46e5',
                         fontWeight: 700,
                         borderRadius: 8,
+                        width: screens.xs ? '100%' : 'auto',
+                        height: screens.xs ? 42 : 'auto',
                       }}
                     >
                       Save Store Settings
@@ -1109,7 +1144,7 @@ const ManageStore = ({
                   <Card
                     style={{
                       borderRadius: 12,
-                      border: '1px solid #fee2e2',
+                      border: '1px solid #fee2e8',
                       background: '#fff5f5',
                     }}
                   >
@@ -1131,7 +1166,7 @@ const ManageStore = ({
                         okButtonProps={{ danger: true, loading: deletingShop }}
                         onConfirm={handleDeleteShop}
                       >
-                        <Button danger type="primary">
+                        <Button danger type="primary" style={{ width: screens.xs ? '100%' : 'auto' }}>
                           Delete Store Outlet
                         </Button>
                       </Popconfirm>
@@ -1159,48 +1194,524 @@ const ManageStore = ({
         editingItem={editingItem}
       />
 
-      {/* Import from Master Products Modal */}
-      <Modal
-        title="Import from Standard Product Catalog"
-        open={isImportModalOpen}
-        onCancel={() => setIsImportModalOpen(false)}
-        onOk={handleImportMaster}
-        confirmLoading={importLoading}
-        okText="Import to Store"
+      {/* Comprehensive Order Details Sidebar Drawer */}
+      <Drawer
+        open={isOrderDrawerOpen}
+        onClose={() => setIsOrderDrawerOpen(false)}
+        width={screens.md ? 540 : '100%'}
+        title={
+          selectedOrder ? (
+            <Flex justify="space-between" align="center" style={{ width: '100%', paddingRight: 12 }}>
+              <div>
+                <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                  Order #{selectedOrder.order_number || selectedOrder.id?.slice(0, 8)}
+                </span>
+                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500, marginTop: 2 }}>
+                  {selectedOrder.createdAt &&
+                    new Date(selectedOrder.createdAt).toLocaleString([], {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                </div>
+              </div>
+              <Tag
+                color={
+                  selectedOrder.order_type === 'delivery'
+                    ? 'purple'
+                    : selectedOrder.order_type === 'service'
+                    ? 'cyan'
+                    : 'blue'
+                }
+                style={{
+                  borderRadius: 6,
+                  fontWeight: 700,
+                  fontSize: 12,
+                  padding: '2px 10px',
+                  margin: 0,
+                }}
+              >
+                {selectedOrder.order_type === 'delivery'
+                  ? '🚚 Delivery'
+                  : selectedOrder.order_type === 'service'
+                  ? '🛠️ Service'
+                  : '🛍️ Self-Pickup'}
+              </Tag>
+            </Flex>
+          ) : (
+            'Order Details'
+          )
+        }
       >
-        <div style={{ marginBottom: 16 }}>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 8 }}>
-            Choose a standard catalog product pre-populated with image and description, and set your
-            store selling price.
-          </Text>
+        {selectedOrder && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Cancellation Banner */}
+            {selectedOrder.status === 'cancelled' && (
+              <Alert
+                message="Order Cancelled"
+                description="This order was cancelled and is no longer active for fulfillment."
+                type="error"
+                showIcon
+                style={{ borderRadius: 10 }}
+              />
+            )}
 
-          <div style={{ marginBottom: 12 }}>
-            <Text strong>Select Master Product:</Text>
-            <Select
-              style={{ width: '100%', marginTop: 6 }}
-              placeholder="Search or select master product"
-              onChange={(id) => setSelectedMasterId(id)}
-              value={selectedMasterId}
+            {/* Stepper Progress & Fulfillment Controls */}
+            {selectedOrder.status !== 'cancelled' && (
+              <Card
+                style={{
+                  borderRadius: 12,
+                  border: '1px solid #e2e8f0',
+                  background: '#f8fafc',
+                }}
+                bodyStyle={{ padding: '16px 12px' }}
+              >
+                <Steps
+                  size="small"
+                  direction={screens.xs ? 'vertical' : 'horizontal'}
+                  current={getOrderStatusStep(selectedOrder).step}
+                  items={getOrderStatusStep(selectedOrder).items}
+                  style={{ marginBottom: 16 }}
+                />
+
+                {/* Primary Action Button Based on Current Status */}
+                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+                  <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
+                    <Text strong style={{ fontSize: 13, color: '#334155' }}>
+                      Fulfillment Action:
+                    </Text>
+                    <Space wrap size={[6, 6]}>
+                      {(selectedOrder.status === 'placed' || selectedOrder.status === 'pending') && (
+                        <>
+                          <Button
+                            type="primary"
+                            style={{
+                              background: '#3b82f6',
+                              borderColor: '#3b82f6',
+                              fontWeight: 700,
+                              borderRadius: 8,
+                            }}
+                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'order_prepare')}
+                          >
+                            🍳 Start Preparing (Order Prepare)
+                          </Button>
+                          <Button
+                            danger
+                            style={{ borderRadius: 8 }}
+                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'cancelled')}
+                          >
+                            Reject
+                          </Button>
+                        </>
+                      )}
+
+                      {(selectedOrder.status === 'order_prepare' ||
+                        selectedOrder.status === 'preparing' ||
+                        selectedOrder.status === 'accepted') && (
+                        <>
+                          {selectedOrder.order_type === 'pickup' && (
+                            <Button
+                              type="primary"
+                              style={{
+                                background: '#0891b2',
+                                borderColor: '#0891b2',
+                                fontWeight: 700,
+                                borderRadius: 8,
+                              }}
+                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'ready_for_pickup')}
+                            >
+                              🛍️ Ready for Counter Pickup
+                            </Button>
+                          )}
+
+                          {selectedOrder.order_type === 'delivery' && (
+                            <Button
+                              type="primary"
+                              style={{
+                                background: '#7c3aed',
+                                borderColor: '#7c3aed',
+                                fontWeight: 700,
+                                borderRadius: 8,
+                              }}
+                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'open_to_delivery')}
+                            >
+                              🚚 Move to Open to Delivery
+                            </Button>
+                          )}
+
+                          {selectedOrder.order_type === 'service' && (
+                            <Button
+                              type="primary"
+                              style={{
+                                background: '#10b981',
+                                borderColor: '#10b981',
+                                fontWeight: 700,
+                                borderRadius: 8,
+                              }}
+                              onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
+                            >
+                              ✅ Mark Service Completed
+                            </Button>
+                          )}
+
+                          <Button
+                            size="small"
+                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'placed')}
+                            style={{ borderRadius: 6 }}
+                          >
+                            ↩️ Revert to Placed
+                          </Button>
+                        </>
+                      )}
+
+                      {selectedOrder.status === 'ready_for_pickup' && (
+                        <Button
+                          type="primary"
+                          style={{
+                            background: '#10b981',
+                            borderColor: '#10b981',
+                            fontWeight: 700,
+                            borderRadius: 8,
+                          }}
+                          onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
+                        >
+                          ✅ Hand Over to Customer (Complete)
+                        </Button>
+                      )}
+
+                      {selectedOrder.status === 'open_to_delivery' && (
+                        <>
+                          <Button
+                            type="primary"
+                            style={{
+                              background: '#2563eb',
+                              borderColor: '#2563eb',
+                              fontWeight: 700,
+                              borderRadius: 8,
+                            }}
+                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'out_for_delivery')}
+                          >
+                            🛵 Mark Out for Delivery
+                          </Button>
+                          <Button
+                            style={{
+                              background: '#10b981',
+                              borderColor: '#10b981',
+                              color: '#fff',
+                              fontWeight: 700,
+                              borderRadius: 8,
+                            }}
+                            onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
+                          >
+                            ✅ Mark Delivered
+                          </Button>
+                        </>
+                      )}
+
+                      {selectedOrder.status === 'out_for_delivery' && (
+                        <Button
+                          type="primary"
+                          style={{
+                            background: '#10b981',
+                            borderColor: '#10b981',
+                            fontWeight: 700,
+                            borderRadius: 8,
+                          }}
+                          onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
+                        >
+                          ✅ Confirm Delivered & Complete
+                        </Button>
+                      )}
+
+                      {selectedOrder.status === 'completed' && (
+                        <Tag
+                          color="success"
+                          icon={<CheckCircleFilled />}
+                          style={{ fontSize: 13, padding: '4px 12px', borderRadius: 8 }}
+                        >
+                          Order Completed & Fulfilled
+                        </Tag>
+                      )}
+                    </Space>
+                  </Flex>
+                </div>
+              </Card>
+            )}
+
+            {/* Open to Delivery Platform Fleet Notice */}
+            {selectedOrder.order_type === 'delivery' &&
+              selectedOrder.status === 'open_to_delivery' && (
+                <div
+                  style={{
+                    background: '#faf5ff',
+                    border: '1px solid #e9d5ff',
+                    borderRadius: 10,
+                    padding: '12px 14px',
+                  }}
+                >
+                  <Flex gap={8} align="flex-start">
+                    <CarOutlined style={{ color: '#7c3aed', fontSize: 18, marginTop: 2 }} />
+                    <div>
+                      <Text strong style={{ color: '#6b21a8', display: 'block' }}>
+                        Captured in Open-to-Delivery Pool
+                      </Text>
+                      <Text style={{ fontSize: 12, color: '#7e22ce' }}>
+                        This order is open for dispatch. Platform admin can assign delivery fleet, or you can mark it &quot;Out for Delivery&quot; when your courier picks it up.
+                      </Text>
+                    </div>
+                  </Flex>
+                </div>
+              )}
+
+            {/* Customer Details & Actions */}
+            <Card
+              title={
+                <span style={{ fontSize: 14, fontWeight: 700 }}>
+                  <UserOutlined style={{ marginRight: 6, color: '#4f46e5' }} /> Customer Information
+                </span>
+              }
+              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              bodyStyle={{ padding: 16 }}
             >
-              {masterProducts.map((p) => (
-                <Option key={p.id} value={p.id}>
-                  {p.name} - Standard MRP: ₹{p.price}
-                </Option>
-              ))}
-            </Select>
-          </div>
+              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+                <Flex align="center" gap={12}>
+                  <Avatar
+                    size={46}
+                    style={{
+                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      fontWeight: 700,
+                      fontSize: 18,
+                    }}
+                  >
+                    {(selectedOrder.customer?.username || 'C')[0]?.toUpperCase()}
+                  </Avatar>
+                  <div>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                      {selectedOrder.customer?.username || 'Guest Customer'}
+                    </div>
+                    <div style={{ fontSize: 13, color: '#64748b' }}>
+                      {selectedOrder.customer_phone || selectedOrder.customer?.mobile || 'No phone recorded'}
+                    </div>
+                  </div>
+                </Flex>
 
-          <div>
-            <Text strong>Your Store Selling Price (₹):</Text>
-            <InputNumber
-              style={{ width: '100%', marginTop: 6 }}
-              placeholder="Enter your local store price"
-              value={importPrice}
-              onChange={(val) => setImportPrice(val)}
-            />
+                <Flex gap={8}>
+                  {(selectedOrder.customer_phone || selectedOrder.customer?.mobile) && (
+                    <Button
+                      icon={<PhoneOutlined />}
+                      href={`tel:${selectedOrder.customer_phone || selectedOrder.customer?.mobile}`}
+                      style={{ borderRadius: 8, fontWeight: 600 }}
+                    >
+                      Call
+                    </Button>
+                  )}
+                  <Button
+                    type="primary"
+                    icon={<MessageOutlined />}
+                    style={{
+                      borderRadius: 8,
+                      fontWeight: 600,
+                      background: '#4f46e5',
+                      borderColor: '#4f46e5',
+                    }}
+                    onClick={() => {
+                      const customerId = selectedOrder.customer_id || selectedOrder.customer?.id || selectedOrder.user_id;
+                      handleChatOpen(customerId, shop.id, {
+                        customer_name: selectedOrder.customer?.username,
+                        order_number: selectedOrder.order_number,
+                      });
+                    }}
+                  >
+                    Chat
+                  </Button>
+                </Flex>
+              </Flex>
+
+              {/* Delivery Address if present */}
+              {selectedOrder.delivery_address && (
+                <div
+                  style={{
+                    marginTop: 14,
+                    paddingTop: 12,
+                    borderTop: '1px solid #f1f5f9',
+                  }}
+                >
+                  <Flex gap={8} align="flex-start">
+                    <EnvironmentOutlined style={{ color: '#ef4444', fontSize: 16, marginTop: 2 }} />
+                    <div>
+                      <Text strong style={{ fontSize: 12, color: '#64748b', textTransform: 'uppercase' }}>
+                        Delivery Address
+                      </Text>
+                      <div style={{ fontSize: 13, color: '#1e293b', marginTop: 2 }}>
+                        {selectedOrder.delivery_address}
+                      </div>
+                    </div>
+                  </Flex>
+                </div>
+              )}
+
+              {/* Customer Notes if present */}
+              {selectedOrder.notes && (
+                <div
+                  style={{
+                    marginTop: 10,
+                    padding: '8px 12px',
+                    borderRadius: 8,
+                    background: '#fefce8',
+                    border: '1px solid #fef08a',
+                  }}
+                >
+                  <Text style={{ fontSize: 12, color: '#854d0e' }}>
+                    <strong>Note:</strong> {selectedOrder.notes}
+                  </Text>
+                </div>
+              )}
+            </Card>
+
+            {/* Items Ordered List */}
+            <Card
+              title={
+                <span style={{ fontSize: 14, fontWeight: 700 }}>
+                  <ShoppingCartOutlined style={{ marginRight: 6, color: '#10b981' }} /> Order Items ({selectedOrder.items?.length || 0})
+                </span>
+              }
+              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              bodyStyle={{ padding: 16 }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {selectedOrder.items?.map((item, idx) => (
+                  <Flex
+                    key={idx}
+                    justify="space-between"
+                    align="center"
+                    style={{
+                      paddingBottom: idx === selectedOrder.items.length - 1 ? 0 : 10,
+                      borderBottom: idx === selectedOrder.items.length - 1 ? 'none' : '1px solid #f1f5f9',
+                    }}
+                  >
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                        {item.item_name}
+                      </div>
+                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                        {item.quantity} x ₹{item.unit_price}
+                      </div>
+                    </div>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: '#0f172a' }}>
+                      ₹{item.subtotal || (item.quantity * item.unit_price)}
+                    </div>
+                  </Flex>
+                ))}
+              </div>
+            </Card>
+
+            {/* Bill Breakdown & Payment Mode */}
+            <Card
+              title={
+                <span style={{ fontSize: 14, fontWeight: 700 }}>
+                  <ThunderboltFilled style={{ marginRight: 6, color: '#f59e0b' }} /> Payment & Transaction Breakdown
+                </span>
+              }
+              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              bodyStyle={{ padding: 16 }}
+            >
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <Flex justify="space-between" align="center">
+                  <Text type="secondary" style={{ fontSize: 13 }}>Items Subtotal</Text>
+                  <Text strong style={{ fontSize: 13 }}>
+                    ₹{(
+                      Number(selectedOrder.total_amount || 0) -
+                      Number(selectedOrder.delivery_fee || 0) -
+                      Number(selectedOrder.platform_fee || 0)
+                    ).toFixed(2)}
+                  </Text>
+                </Flex>
+
+                <Flex justify="space-between" align="center">
+                  <Text type="secondary" style={{ fontSize: 13 }}>Delivery Fee</Text>
+                  <Text strong style={{ fontSize: 13 }}>
+                    ₹{Number(selectedOrder.delivery_fee || 0).toFixed(2)}
+                  </Text>
+                </Flex>
+
+                <Flex justify="space-between" align="center">
+                  <Text type="secondary" style={{ fontSize: 13 }}>Platform Fee</Text>
+                  <Text strong style={{ fontSize: 13, color: '#16a34a' }}>
+                    {Number(selectedOrder.platform_fee || 0) > 0 ? `₹${selectedOrder.platform_fee}` : 'FREE (₹0)'}
+                  </Text>
+                </Flex>
+
+                <Divider style={{ margin: '8px 0' }} />
+
+                <Flex justify="space-between" align="center">
+                  <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                    Total Transaction Value
+                  </span>
+                  <span style={{ fontWeight: 800, fontSize: 18, color: '#4f46e5' }}>
+                    ₹{Number(selectedOrder.total_amount || 0).toFixed(2)}
+                  </span>
+                </Flex>
+
+                <div
+                  style={{
+                    marginTop: 8,
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    background: selectedOrder.payment_mode === 'direct_upi' ? '#ecfdf5' : '#fffbeb',
+                    border: selectedOrder.payment_mode === 'direct_upi' ? '1px solid #a7f3d0' : '1px solid #fde68a',
+                  }}
+                >
+                  <Flex justify="space-between" align="center">
+                    <div>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>
+                        Payment Method
+                      </div>
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#047857' }}>
+                        {selectedOrder.payment_mode === 'direct_upi'
+                          ? '⚡ Direct Store UPI (Zero Commission)'
+                          : '💵 Cash on Delivery / Counter Pickup'}
+                      </div>
+                    </div>
+                    {selectedOrder.shop_upi_id && (
+                      <Tag color="green" style={{ margin: 0, fontWeight: 600 }}>
+                        UPI: {selectedOrder.shop_upi_id}
+                      </Tag>
+                    )}
+                  </Flex>
+                </div>
+              </div>
+            </Card>
+
+            {/* Audit Info / Order ID */}
+            <div
+              style={{
+                padding: '10px 14px',
+                borderRadius: 8,
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+              }}
+            >
+              <Text type="secondary" style={{ fontSize: 12 }}>
+                Ref ID: {selectedOrder.id}
+              </Text>
+              <Button
+                type="text"
+                size="small"
+                icon={<CopyOutlined />}
+                onClick={() => handleCopyOrderId(selectedOrder.order_number || selectedOrder.id)}
+                style={{ fontSize: 12, color: '#64748b' }}
+              >
+                Copy ID
+              </Button>
+            </div>
           </div>
-        </div>
-      </Modal>
+        )}
+      </Drawer>
     </div>
   );
 };

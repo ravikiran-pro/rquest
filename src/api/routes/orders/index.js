@@ -3,6 +3,31 @@ const { orders, order_items, shops, users, shop_listings, chats } = require('../
 const { authMiddleware } = require('../../auth');
 
 const router = express.Router();
+
+// 3. Get shop's incoming orders (Merchant side - resilient for store dashboard)
+router.get('/shop/:shop_id', async (req, res) => {
+  try {
+    const { shop_id } = req.params;
+    const shopOrders = await orders.findAll({
+      where: { shop_id },
+      include: [
+        { model: order_items, as: 'items' },
+        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: users, as: 'delivery_partner', attributes: ['id', 'username', 'mobile'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: shopOrders,
+    });
+  } catch (err) {
+    console.error('Error fetching shop orders:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 router.use(authMiddleware);
 
 // 1. Create a new direct order
@@ -142,30 +167,6 @@ router.get('/user', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching user orders:', err);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
-
-// 3. Get shop's incoming orders (Merchant side)
-router.get('/shop/:shop_id', async (req, res) => {
-  try {
-    const { shop_id } = req.params;
-    const shopOrders = await orders.findAll({
-      where: { shop_id },
-      include: [
-        { model: order_items, as: 'items' },
-        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
-        { model: users, as: 'delivery_partner', attributes: ['id', 'username', 'mobile'] },
-      ],
-      order: [['createdAt', 'DESC']],
-    });
-
-    res.status(200).json({
-      success: true,
-      data: shopOrders,
-    });
-  } catch (err) {
-    console.error('Error fetching shop orders:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

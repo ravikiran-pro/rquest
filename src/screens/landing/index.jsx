@@ -373,7 +373,8 @@ export default function LandingScreen() {
   const [comparisonFilter, setComparisonFilter] = useState('all');
 
   // Floating Live In-Store Chat Notification State (matches In-App Chat UI/UX)
-  // On mobile (< 768px), default to minimized so it does not block the screen or hero content
+  // Responsive mode: Desktop = full chat, Mobile = closed/minimized capsule as of now
+  const userInteractedChatRef = useRef(false);
   const [chatMinimized, setChatMinimized] = useState(() => {
     if (typeof window !== 'undefined') {
       return window.innerWidth <= 768;
@@ -381,22 +382,92 @@ export default function LandingScreen() {
     return false;
   });
   const [chatDismissed, setChatDismissed] = useState(false);
+  const [chatLoaded, setChatLoaded] = useState(false);
+  const [chatEntranceActive, setChatEntranceActive] = useState(false);
+  const [showArrivalBadge, setShowArrivalBadge] = useState(false);
   const [chatInputText, setChatInputText] = useState('');
   const [isStoreTyping, setIsStoreTyping] = useState(false);
   const chatScrollRef = useRef(null);
 
   // Mobile HUD Tab State ('tracker' | 'chat') & Touch Gestures
   const [mobileHudTab, setMobileHudTab] = useState('chat');
-  const [hudAutoEntered, setHudAutoEntered] = useState(false);
   const touchStartRef = useRef(null);
 
-  // Smooth entrance notification for mobile users
+  // Delayed entrance with visual UI/UX interaction effects (soundbox chime + spring pop + ambient glow)
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setHudAutoEntered(true);
-    }, 600);
-    return () => clearTimeout(timer);
+    // 1. Initial responsive check
+    if (typeof window !== 'undefined') {
+      setChatMinimized(window.innerWidth <= 768);
+    }
+
+    let entranceTimer = null;
+    let badgeTimer = null;
+
+    // 2. Delayed appearance (1800ms) instead of loading immediately on page load
+    const loadTimer = setTimeout(() => {
+      setChatLoaded(true);
+      setChatEntranceActive(true);
+      setShowArrivalBadge(true);
+
+      // Play gentle ambient soundbox chime (Web Audio API - fails silently if autoplay restricted)
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          if (ctx.state !== 'suspended') {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(523.25, ctx.currentTime); // C5
+            osc.frequency.exponentialRampToValueAtTime(783.99, ctx.currentTime + 0.15); // G5
+            gain.gain.setValueAtTime(0.04, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.38);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.38);
+          }
+        }
+      } catch (err) {
+        // Silent fallback for browser policies
+      }
+
+      // Settle entrance glow after 2.8s
+      entranceTimer = setTimeout(() => {
+        setChatEntranceActive(false);
+      }, 2800);
+
+      // Settle arrival badge after 6s
+      badgeTimer = setTimeout(() => {
+        setShowArrivalBadge(false);
+      }, 6000);
+    }, 1800);
+
+    // Responsive screen width listener (switches unless user manually toggled)
+    const handleResize = () => {
+      if (!userInteractedChatRef.current && typeof window !== 'undefined') {
+        setChatMinimized(window.innerWidth <= 768);
+      }
+    };
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      clearTimeout(loadTimer);
+      if (entranceTimer) clearTimeout(entranceTimer);
+      if (badgeTimer) clearTimeout(badgeTimer);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
+
+  const handleOpenChat = () => {
+    userInteractedChatRef.current = true;
+    setChatMinimized(false);
+  };
+
+  const handleMinimizeChat = () => {
+    userInteractedChatRef.current = true;
+    setChatMinimized(true);
+  };
 
   // Touch Swipe Gesture Handler (Swipe down to minimize, swipe left/right to toggle Tracker/Chat)
   const handleTouchStart = (e) => {
@@ -427,8 +498,10 @@ export default function LandingScreen() {
 
     // Vertical swipe down: minimize to capsule
     if (deltaY > 50 && Math.abs(deltaY) > Math.abs(deltaX) * 1.1) {
+      userInteractedChatRef.current = true;
       setChatMinimized(true);
     } else if (chatMinimized && deltaY < -40) {
+      userInteractedChatRef.current = true;
       setChatMinimized(false);
     }
 
@@ -1903,9 +1976,9 @@ export default function LandingScreen() {
       {/* ------------------------------------------------------------------
           7. Interactive Live Order Request & Delivery Track Island + Chat
           ------------------------------------------------------------------ */}
-      {!chatDismissed && (
+      {!chatDismissed && chatLoaded && (
         <div
-          className={`rquest-app-chat-overlay ${chatMinimized ? 'minimized' : ''} ${hudAutoEntered ? 'hud-auto-entered' : ''}`}
+          className={`rquest-app-chat-overlay ${chatMinimized ? 'minimized' : ''} ${chatEntranceActive ? 'chat-entrance-active' : ''}`}
           style={{
             transform: `translate3d(0, ${Math.sin((scrollProgress || 0) * 0.12) * 6}px, 0)`,
           }}
@@ -1914,15 +1987,21 @@ export default function LandingScreen() {
         >
           {chatMinimized ? (
             <div
-              className="rquest-chat-minimized-capsule"
-              onClick={() => setChatMinimized(false)}
+              className={`rquest-chat-minimized-capsule ${chatEntranceActive ? 'capsule-entrance-effect' : ''}`}
+              onClick={handleOpenChat}
               role="button"
               tabIndex={0}
               title="Tap to expand live tracking & store chat"
             >
-              <div className="mini-avatar">
+              {showArrivalBadge && (
+                <div className="capsule-arrival-pill">
+                  <span className="arrival-live-dot" />
+                  <span>Live Store Ready</span>
+                </div>
+              )}
+              <div className={`mini-avatar ${chatEntranceActive ? 'entrance-ping' : ''}`}>
                 <span>SK</span>
-                <span className="mini-badge-count">1</span>
+                <span className={`mini-badge-count ${chatEntranceActive ? 'entrance-bounce-badge' : ''}`}>1</span>
               </div>
               <div className="mini-content">
                 <div className="mini-name">Sri Krishna Provisions</div>
@@ -1940,11 +2019,18 @@ export default function LandingScreen() {
               </div>
             </div>
           ) : (
-            <div className="rquest-floating-hud-wrapper">
+            <div className={`rquest-floating-hud-wrapper ${chatEntranceActive ? 'hud-entrance-effect' : ''}`}>
+              {showArrivalBadge && (
+                <div className="desktop-chat-arrival-ribbon">
+                  <span className="arrival-ribbon-sparkle">⚡</span>
+                  <span>Live Direct Counter Negotiation • Order #RQ-4812</span>
+                  <span className="arrival-ribbon-tag">Active</span>
+                </div>
+              )}
               {/* Mobile Drag Header Pill & Swipe Instructions */}
               <div
                 className="mobile-hud-drag-header"
-                onClick={() => setChatMinimized(true)}
+                onClick={handleMinimizeChat}
                 title="Tap or swipe down to minimize"
               >
                 <div className="mobile-drag-pill-bar" />
@@ -2061,7 +2147,7 @@ export default function LandingScreen() {
                 {/* Conversation Header */}
                 <div className="rquest-chat-header-match">
                   <div className="rquest-header-partner-info">
-                    <div className="rquest-avatar-circle">
+                    <div className={`rquest-avatar-circle ${chatEntranceActive ? 'entrance-ping' : ''}`}>
                       <span>SK</span>
                       <span className="rquest-avatar-status-dot available" />
                     </div>
@@ -2095,7 +2181,7 @@ export default function LandingScreen() {
                       type="button"
                       className="rquest-header-btn"
                       title="Minimize"
-                      onClick={() => setChatMinimized(true)}
+                      onClick={handleMinimizeChat}
                     >
                       <MinusOutlined />
                     </button>
@@ -2252,14 +2338,6 @@ export default function LandingScreen() {
                   >
                     <SendOutlined />
                   </button>
-                </div>
-
-                {/* Footer App Switcher */}
-                <div className="rquest-chat-footer-action">
-                  <Link to={Routes.app} className="btn-chat-app-link">
-                    <span>Launch Full In-App Chat in Marketplace</span>
-                    <ArrowRightOutlined style={{ fontSize: 11 }} />
-                  </Link>
                 </div>
               </div>
             </div>
