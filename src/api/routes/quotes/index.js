@@ -57,6 +57,90 @@ router.get('/user', async (req, res) => {
   }
 });
 
+// 2b. Get all service quotes across all shops owned by the user (Merchant / Shop Owner view)
+router.get('/owner', async (req, res) => {
+  try {
+    const { user_id } = req.headers;
+    const { Op } = require('sequelize');
+
+    const myShops = await shops.findAll({
+      where: { owner_id: user_id },
+      attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'],
+    });
+
+    const shopIds = myShops.map((s) => s.id);
+    if (shopIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        shops: [],
+      });
+    }
+
+    const { shop_id, status } = req.query;
+    const where = {};
+    if (shop_id && shop_id !== 'all' && shopIds.includes(shop_id)) {
+      where.shop_id = shop_id;
+    } else {
+      where.shop_id = { [Op.in]: shopIds };
+    }
+
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const shopQuotes = await quotes.findAll({
+      where,
+      include: [
+        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: shopQuotes,
+      shops: myShops,
+    });
+  } catch (err) {
+    console.error('Error fetching merchant quotes:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// 2c. Get all service quotes across all shops for Platform Admin
+router.get('/admin/all', async (req, res) => {
+  try {
+    const { role_id, username } = req.headers;
+
+    const isAdmin =
+      role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
+      username === 'admin' ||
+      username === 'root';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Platform Super Admin access required' });
+    }
+
+    const allQuotes = await quotes.findAll({
+      include: [
+        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: allQuotes,
+    });
+  } catch (err) {
+    console.error('Error fetching admin quotes:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
 // 3. Get shop quotes (Merchant view)
 router.get('/shop/:shop_id', async (req, res) => {
   try {

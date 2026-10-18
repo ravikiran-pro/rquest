@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import Category from './category';
 import ShopsManager from './shops_manager';
+import AdminOrdersAccounts from './orders_accounts';
 import { Col, Row, Tabs, Card, Typography, Tag, Flex } from 'antd';
-import { AppstoreOutlined, ShopOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
+import {
+  AppstoreOutlined,
+  ShopOutlined,
+  SafetyCertificateOutlined,
+  DatabaseOutlined,
+} from '@ant-design/icons';
 import './index.css';
 
 const { Title, Text } = Typography;
@@ -32,6 +38,15 @@ const Admin = () => {
         </span>
       ),
       children: <ShopsManager />,
+    },
+    {
+      key: '3',
+      label: (
+        <span style={{ fontWeight: 600, fontSize: 14 }}>
+          <DatabaseOutlined /> All Platform Orders, Accounts & Backup
+        </span>
+      ),
+      children: <AdminOrdersAccounts />,
     },
   ];
 

@@ -14,6 +14,7 @@ router.get('/shop/:shop_id', async (req, res) => {
         { model: order_items, as: 'items' },
         { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
         { model: users, as: 'delivery_partner', attributes: ['id', 'username', 'mobile'] },
+        { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'] },
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -167,6 +168,174 @@ router.get('/user', async (req, res) => {
     });
   } catch (err) {
     console.error('Error fetching user orders:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// 2b. Get all customer orders across all shops owned by the user (Merchant / Shop Owner view)
+router.get('/owner', async (req, res) => {
+  try {
+    const { user_id } = req.headers;
+    const { Op } = require('sequelize');
+
+    const myShops = await shops.findAll({
+      where: { owner_id: user_id },
+      attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'],
+    });
+
+    const shopIds = myShops.map((s) => s.id);
+    if (shopIds.length === 0) {
+      return res.status(200).json({
+        success: true,
+        data: [],
+        shops: [],
+      });
+    }
+
+    const { shop_id, status } = req.query;
+    const where = {};
+    if (shop_id && shop_id !== 'all' && shopIds.includes(shop_id)) {
+      where.shop_id = shop_id;
+    } else {
+      where.shop_id = { [Op.in]: shopIds };
+    }
+
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    const storeOrders = await orders.findAll({
+      where,
+      include: [
+        { model: order_items, as: 'items' },
+        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: users, as: 'delivery_partner', attributes: ['id', 'username', 'mobile'] },
+        { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url'] },
+      ],
+      order: [['createdAt', 'DESC']],
+    });
+
+    res.status(200).json({
+      success: true,
+      data: storeOrders,
+      shops: myShops,
+    });
+  } catch (err) {
+    console.error('Error fetching merchant store orders:', err);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// 2c. Get all orders across all shops for Platform Admin (Backup, Accounts & Auditing)
+router.get('/admin/all', async (req, res) => {
+  try {
+    const { role_id, username } = req.headers;
+    const { Op } = require('sequelize');
+
+    const isAdmin =
+      role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
+      username === 'admin' ||
+      username === 'root';
+
+    if (!isAdmin) {
+      return res.status(403).json({ error: 'Platform Super Admin access required' });
+    }
+
+    const { shop_id, status, search, startDate, endDate, limit, offset } = req.query;
+
+    const where = {};
+    if (shop_id && shop_id !== 'all') {
+      where.shop_id = shop_id;
+    }
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt[Op.gte] = new Date(startDate);
+      if (endDate) where.createdAt[Op.lte] = new Date(endDate);
+    }
+    if (search && search.trim()) {
+      const q = `%${search.trim()}%`;
+      const likeOp = Op.iLike || Op.like;
+      where[Op.or] = [
+        { order_number: { [likeOp]: q } },
+        { customer_phone: { [likeOp]: q } },
+        { delivery_address: { [likeOp]: q } },
+      ];
+    }
+
+    const queryOptions = {
+      where,
+      include: [
+        { model: order_items, as: 'items' },
+        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: users, as: 'delivery_partner', attributes: ['id', 'username', 'mobile'] },
+        {
+          model: shops,
+          as: 'shop',
+          attributes: ['id', 'shop_name', 'mobile_number', 'address', 'img_url', 'owner_id'],
+          include: [
+            { model: users, as: 'owner', attributes: ['id', 'username', 'mobile'] },
+          ],
+        },
+      ],
+      order: [['createdAt', 'DESC']],
+    };
+
+    if (limit && parseInt(limit) > 0) {
+      queryOptions.limit = parseInt(limit);
+      queryOptions.offset = offset ? parseInt(offset) : 0;
+    }
+
+    const allOrders = await orders.findAll(queryOptions);
+
+    // Compute platform accounting & accounts metrics
+    let totalGMV = 0;
+    let totalPlatformFees = 0;
+    let totalDeliveryFees = 0;
+    const statusCounts = {
+      all: allOrders.length,
+      placed: 0,
+      order_prepare: 0,
+      preparing: 0,
+      accepted: 0,
+      packed: 0,
+      ready_for_pickup: 0,
+      open_to_delivery: 0,
+      out_for_delivery: 0,
+      completed: 0,
+      cancelled: 0,
+    };
+
+    allOrders.forEach((ord) => {
+      const amt = parseFloat(ord.total_amount) || 0;
+      const pFee = parseFloat(ord.platform_fee) || 0;
+      const dFee = parseFloat(ord.delivery_fee) || 0;
+      totalGMV += amt;
+      totalPlatformFees += pFee;
+      totalDeliveryFees += dFee;
+      if (statusCounts[ord.status] !== undefined) {
+        statusCounts[ord.status]++;
+      }
+    });
+
+    const accounts = {
+      totalOrders: allOrders.length,
+      totalGMV: Math.round(totalGMV * 100) / 100,
+      totalPlatformFees: Math.round(totalPlatformFees * 100) / 100,
+      totalDeliveryFees: Math.round(totalDeliveryFees * 100) / 100,
+      netStorePayouts: Math.round((totalGMV - totalPlatformFees) * 100) / 100,
+      statusCounts,
+    };
+
+    res.status(200).json({
+      success: true,
+      data: allOrders,
+      accounts,
+    });
+  } catch (err) {
+    console.error('Error fetching admin platform orders:', err);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });

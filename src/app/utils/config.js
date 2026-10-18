@@ -65,6 +65,8 @@ export const apiConfig = {
   orders_create: 'orders',
   orders_user: 'orders/user',
   orders_shop: 'orders/shop',
+  orders_owner: 'orders/owner',
+  orders_admin: 'orders/admin/all',
   orders_status: 'orders',
   orders_delivery_feed: 'orders/delivery/feed',
   orders_claim_delivery: 'orders',
@@ -73,6 +75,8 @@ export const apiConfig = {
   quotes_create: 'quotes',
   quotes_user: 'quotes/user',
   quotes_shop: 'quotes/shop',
+  quotes_owner: 'quotes/owner',
+  quotes_admin: 'quotes/admin/all',
   quotes_status: 'quotes',
 
   user_profile: 'user/profile',
