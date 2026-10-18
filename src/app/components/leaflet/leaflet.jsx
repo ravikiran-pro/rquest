@@ -173,44 +173,54 @@ const LeafletComponent = (props) => {
     }
   };
 
-  const handleAddressSearch = async (val) => {
+  const searchTimeoutRef = React.useRef(null);
+
+  const handleAddressSearch = (val) => {
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+
     if (!val || val.trim().length < 2) {
       setSearchOptions([]);
+      setSearchingLoc(false);
       return;
     }
+
     setSearchingLoc(true);
-    try {
-      const results = await searchLocations(val);
-      setSearchOptions(
-        results.map((r, i) => ({
-          value: `${r.lat},${r.lon}_${i}`,
-          label: (
-            <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
-              <div
-                style={{
-                  fontSize: 11,
-                  color: '#64748b',
-                  whiteSpace: 'normal',
-                  lineHeight: 1.3,
-                  maxHeight: 36,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {r.display_name}
+    searchTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(val, currentCoords[0], currentCoords[1]);
+        setSearchOptions(
+          results.map((r, i) => ({
+            value: `${r.lat},${r.lon}_${i}`,
+            label: (
+              <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
+                <div
+                  style={{
+                    fontSize: 11,
+                    color: '#64748b',
+                    whiteSpace: 'normal',
+                    lineHeight: 1.3,
+                    maxHeight: 36,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {r.display_name}
+                </div>
               </div>
-            </div>
-          ),
-          coords: [parseFloat(r.lat), parseFloat(r.lon)],
-          name: r.name,
-        }))
-      );
-    } catch (err) {
-      console.error('Error during location search:', err);
-    } finally {
-      setSearchingLoc(false);
-    }
+            ),
+            coords: [parseFloat(r.lat), parseFloat(r.lon)],
+            name: r.name,
+          }))
+        );
+      } catch (err) {
+        console.error('Error during location search:', err);
+      } finally {
+        setSearchingLoc(false);
+      }
+    }, 280);
   };
 
   const handleAddressSelect = (_value, option) => {

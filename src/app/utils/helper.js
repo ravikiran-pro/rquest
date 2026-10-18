@@ -181,13 +181,15 @@ const getLocationName = async (lat, lng) => {
   }
 };
 
-const searchLocations = async (query) => {
+const searchLocations = async (query, lat = null, lon = null) => {
   if (!query || query.trim().length < 2) return [];
 
   try {
-    const res = await fetch(
-      `${config.api_url}/api/v1/location/search?q=${encodeURIComponent(query.trim())}`
-    );
+    let url = `${config.api_url}/api/v1/location/search?q=${encodeURIComponent(query.trim())}`;
+    if (lat && lon && !isNaN(Number(lat)) && !isNaN(Number(lon))) {
+      url += `&lat=${lat}&lon=${lon}`;
+    }
+    const res = await fetch(url);
     if (res.ok) {
       const data = await res.json();
       if (data?.data) {
