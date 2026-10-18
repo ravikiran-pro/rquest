@@ -49,7 +49,6 @@ const STORE_CATEGORIES = [
     icon: <ShoppingOutlined />,
     desc: 'Daily essentials, packaged goods, staples & provisions',
     shop_type: 'Provision Store',
-    category_id: null,
     category_id: 0,
     defaultImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
     starters: [
@@ -92,7 +91,6 @@ const STORE_CATEGORIES = [
     icon: <ToolOutlined />,
     desc: 'Electricians, plumbers, AC service, appliance repair',
     shop_type: 'Hardawers and tools',
-    category_id: null,
     category_id: 4,
     defaultImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
     starters: [
@@ -106,7 +104,6 @@ const STORE_CATEGORIES = [
     icon: <SmileOutlined />,
     desc: 'Hair styling, grooming, spa & wellness services',
     shop_type: 'Small business',
-    category_id: null,
     category_id: 14,
     defaultImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&auto=format&fit=crop&q=80',
     starters: [
@@ -120,7 +117,6 @@ const STORE_CATEGORIES = [
     icon: <ShopOutlined />,
     desc: 'Clothing, footwear, stationery, gifts & home goods',
     shop_type: 'Small business',
-    category_id: null,
     category_id: 12,
     defaultImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
     starters: [
@@ -291,7 +287,7 @@ const ClientRegister = () => {
         website: onboardingData.website ? onboardingData.website.trim() : '',
         directions: onboardingData.directions || `https://www.google.com/maps/@${position[0]},${position[1]}`,
         img_url: onboardingData.img_url || activeCat?.defaultImage,
-        category_id: activeCat?.category_id || null,
+        category_id: activeCat?.category_id !== undefined && activeCat?.category_id !== null ? activeCat.category_id : null,
         sub_category_id: null,
         allow_multi_category: false,
         latitude: position[0],

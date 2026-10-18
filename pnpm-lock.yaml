@@ -134,6 +134,9 @@ importers:
       vite-plugin-pwa:
         specifier: ^0.17.4
         version: 0.17.5(vite@5.4.21(@types/node@26.6.4)(terser@5.51.2))(workbox-build@7.4.1)(workbox-window@7.4.1)
+      workbox-window:
+        specifier: ^7.4.1
+        version: 7.4.1
       zustand:
         specifier: ^4.4.7
         version: 4.5.7(@types/react@19.3.0)(react@17.0.2)
