@@ -161,29 +161,66 @@ router.get('/search', async (req, res) => {
     const locationIqKey = process.env.LOCATIONIQ_API_KEY || process.env.VITE_LOCATIONIQ_API_KEY;
     if (locationIqKey) {
       try {
-        let liqUrl = `https://api.locationiq.com/v1/autocomplete?key=${locationIqKey}&q=${encodeURIComponent(
-          query
-        )}&countrycodes=in&limit=8&format=json`;
+        const numLat = lat && !isNaN(Number(lat)) ? parseFloat(lat) : 12.9631025;
+        const numLon = targetLon && !isNaN(Number(targetLon)) ? parseFloat(targetLon) : 80.25476;
 
-        if (lat && targetLon && !isNaN(Number(lat)) && !isNaN(Number(targetLon))) {
-          liqUrl += `&proximity=${Number(lat).toFixed(4)},${Number(targetLon).toFixed(4)}`;
+        let results = [];
+
+        // 1. Regional search bounded to ~150km around user location / anchor
+        const delta = 1.4;
+        const minLon = (numLon - delta).toFixed(4);
+        const maxLat = (numLat + delta).toFixed(4);
+        const maxLon = (numLon + delta).toFixed(4);
+        const minLat = (numLat - delta).toFixed(4);
+
+        const localUrl = `https://api.locationiq.com/v1/autocomplete?key=${locationIqKey}&q=${encodeURIComponent(
+          query
+        )}&viewbox=${minLon},${maxLat},${maxLon},${minLat}&bounded=1&countrycodes=in&limit=8&format=json`;
+
+        const localRes = await fetch(localUrl, { signal: AbortSignal.timeout?.(4000) });
+        if (localRes.ok) {
+          const localData = await localRes.json();
+          if (Array.isArray(localData) && localData.length > 0) {
+            results = localData;
+          }
         }
 
-        const liqRes = await fetch(liqUrl, { signal: AbortSignal.timeout?.(5000) });
-        if (liqRes.ok) {
-          const liqData = await liqRes.json();
-          if (Array.isArray(liqData)) {
-            const results = liqData.map((item) => ({
+        // 2. Fallback to nationwide search if no local results
+        if (results.length === 0) {
+          const nationalUrl = `https://api.locationiq.com/v1/autocomplete?key=${locationIqKey}&q=${encodeURIComponent(
+            query
+          )}&countrycodes=in&limit=8&format=json`;
+
+          const natRes = await fetch(nationalUrl, { signal: AbortSignal.timeout?.(4000) });
+          if (natRes.ok) {
+            const natData = await natRes.json();
+            if (Array.isArray(natData)) {
+              results = natData;
+            }
+          }
+        }
+
+        if (results.length > 0) {
+          const mapped = results.map((item) => {
+            const itemLat = parseFloat(item.lat);
+            const itemLon = parseFloat(item.lon);
+            const dist = Math.hypot(itemLat - numLat, itemLon - numLon);
+            return {
               name: item.display_place || (item.display_name ? item.display_name.split(',')[0].trim() : item.name),
               display_name: item.display_name,
-              lat: parseFloat(item.lat),
-              lon: parseFloat(item.lon),
+              lat: itemLat,
+              lon: itemLon,
+              dist,
               source: 'locationiq',
-            }));
-            const responseData = { success: true, data: results, source: 'locationiq' };
-            cache.set(key, responseData);
-            return res.json(responseData);
-          }
+            };
+          });
+
+          // Sort by proximity to user
+          mapped.sort((a, b) => a.dist - b.dist);
+
+          const responseData = { success: true, data: mapped, source: 'locationiq' };
+          cache.set(key, responseData);
+          return res.json(responseData);
         }
       } catch (liqError) {
         console.warn('LocationIQ search autocomplete fallback to secondary:', liqError);

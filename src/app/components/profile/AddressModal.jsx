@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   Modal,
@@ -44,6 +44,7 @@ const AddressModal = ({
   const [detectingGps, setDetectingGps] = useState(false);
   const [searchingArea, setSearchingArea] = useState(false);
   const [searchOptions, setSearchOptions] = useState([]);
+  const localityTimeoutRef = useRef(null);
   const [coords, setCoords] = useState(
     initialData?.latitude && initialData?.longitude
       ? [Number(initialData.latitude), Number(initialData.longitude)]
@@ -106,31 +107,37 @@ const AddressModal = ({
     }
   };
 
-  const handleSearchLocality = async (val) => {
+  const handleSearchLocality = (val) => {
+    if (localityTimeoutRef.current) {
+      clearTimeout(localityTimeoutRef.current);
+    }
     if (!val || val.trim().length < 2) {
       setSearchOptions([]);
+      setSearchingArea(false);
       return;
     }
     setSearchingArea(true);
-    try {
-      const results = await searchLocations(val);
-      setSearchOptions(
-        results.map((r, i) => ({
-          value: `${r.lat},${r.lon}_${i}`,
-          label: (
-            <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
-              <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
-              <div style={{ fontSize: 11, color: '#64748b' }}>{r.display_name}</div>
-            </div>
-          ),
-          raw: r,
-        }))
-      );
-    } catch (err) {
-      console.error('Locality search error:', err);
-    } finally {
-      setSearchingArea(false);
-    }
+    localityTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(val, coords?.[0], coords?.[1]);
+        setSearchOptions(
+          results.map((r, i) => ({
+            value: `${r.lat},${r.lon}_${i}`,
+            label: (
+              <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>{r.display_name}</div>
+              </div>
+            ),
+            raw: r,
+          }))
+        );
+      } catch (err) {
+        console.error('Locality search error:', err);
+      } finally {
+        setSearchingArea(false);
+      }
+    }, 280);
   };
 
   const handleSelectLocality = (_val, option) => {
