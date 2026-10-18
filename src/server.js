@@ -74,6 +74,16 @@ app.get('*', (_req, res) => {
   res.sendFile(path.join(__dirname, 'app/index.html'));
 });
 
-server.listen(PORT, () => {
+server.listen(PORT, async () => {
   console.log(`Server listening at http://localhost:${PORT}`);
+  try {
+    const db = require('./api/models');
+    if (db && db.sequelize) {
+      await db.sequelize.query('ALTER TABLE "shops" ADD COLUMN IF NOT EXISTS "form_schema" JSONB DEFAULT \'[]\'::jsonb;');
+      await db.sequelize.query('ALTER TABLE "shops" ADD COLUMN IF NOT EXISTS "allow_multi_category" BOOLEAN DEFAULT false;');
+      await db.sequelize.query('ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "form_schema" JSONB DEFAULT \'[]\'::jsonb;');
+    }
+  } catch (dbErr) {
+    console.warn('DB self-heal check:', dbErr.message);
+  }
 });
