@@ -457,18 +457,18 @@ const HomeScreen = () => {
                   onChange={(e) => handleSearch(e.target.value)}
                   onPressEnter={() => handleSearch(searchText)}
                   prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 18 }} />}
-                  suffix={
-                    <AudioOutlined
-                      style={{
-                        color: '#6366f1',
-                        cursor: 'pointer',
-                        fontSize: 17,
-                        padding: '4px',
-                      }}
-                      title="Voice Search"
-                      onClick={() => setIsVoiceModalOpen(true)}
-                    />
-                  }
+                  // suffix={
+                  //   <AudioOutlined
+                  //     style={{
+                  //       color: '#6366f1',
+                  //       cursor: 'pointer',
+                  //       fontSize: 17,
+                  //       padding: '4px',
+                  //     }}
+                  //     title="Voice Search"
+                  //     onClick={() => setIsVoiceModalOpen(true)}
+                  //   />
+                  // }
                 />
 
                 <Button
@@ -487,7 +487,7 @@ const HomeScreen = () => {
               </Flex>
 
               {/* Other search opton temporary disabled */}
-              <Flex
+              {/* <Flex
                 gap={8}
                 align="center"
                 justify="center"
@@ -547,7 +547,7 @@ const HomeScreen = () => {
                 >
                   AI Smart Search
                 </Button>
-              </Flex>
+              </Flex> */}
             </Flex>
           </Card>
 
