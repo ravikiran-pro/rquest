@@ -5,6 +5,7 @@ import {
   Switch,
   Redirect,
   useLocation,
+  useHistory,
 } from 'react-router-dom';
 import { default as routes } from './routes';
 import {
@@ -20,7 +21,14 @@ import {
   AdminScreen,
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, CartDrawer, ErrorBoundary } from '../components';
-import { useChatStore, useGlobalStore, useCartStore, chatSocket } from '../../app/services';
+import {
+  useChatStore,
+  useGlobalStore,
+  useCartStore,
+  chatSocket,
+  displayPushNotification,
+  subscribeToPushNotifications,
+} from '../../app/services';
 import { apiConfig, netWorkCall, checkUserRole, storageKeys } from '../utils';
 import { Avatar, Badge, message, notification } from 'antd';
 import { MessageFilled, CloseOutlined } from '@ant-design/icons';
@@ -51,6 +59,29 @@ function RouteChangeHandler() {
       }
     }
   }, [location.pathname, isChat, handleChatClose]);
+
+  return null;
+}
+
+function PushNotificationHandler() {
+  const history = useHistory();
+  const { user_data } = useGlobalStore((state) => state);
+
+  useEffect(() => {
+    if (!user_data?.user_id) return;
+
+    // Auto-subscribe to web push if permission was previously granted
+    if ('Notification' in window && Notification.permission === 'granted') {
+      subscribeToPushNotifications(user_data).catch(() => {});
+    }
+
+    // Listen to real-time push notifications (register, order place, order status change)
+    const unsub = chatSocket.onPushNotification((notifData) => {
+      displayPushNotification(notifData, history);
+    });
+
+    return () => unsub();
+  }, [user_data, history]);
 
   return null;
 }
@@ -129,6 +160,7 @@ export default function AppRoutes() {
   return (
     <Router>
       <RouteChangeHandler />
+      <PushNotificationHandler />
       <NavBar open={drawer} handleOpen={handleOpen} handleClose={handleClose} />
       <SideBar
         open={drawer}

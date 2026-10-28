@@ -164,6 +164,7 @@
 /* Conversation List & Items */
 .rquest-chat-app .cs-conversation-list {
   background-color: #ffffff;
+  width: 100%;
 }
 
 .rquest-chat-app .cs-conversation {
@@ -172,6 +173,11 @@
   padding: 12px 14px;
   transition: all 0.15s ease;
   cursor: pointer;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 .rquest-chat-app .cs-conversation:hover {
@@ -183,10 +189,34 @@
   border-left: 3.5px solid #4f46e5;
 }
 
+.rquest-chat-app .cs-conversation > .cs-avatar {
+  margin-right: 12px !important;
+  flex-shrink: 0 !important;
+}
+
+.rquest-chat-app .cs-conversation__content {
+  display: flex !important;
+  flex-direction: column !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  overflow: hidden !important;
+  margin-right: 0 !important;
+}
+
 .rquest-chat-app .cs-conversation__name {
   font-weight: 700;
   font-size: 13.5px;
   color: #0f172a;
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.rquest-chat-app .cs-conversation__info {
+  width: 100% !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
 }
 
 /* Custom Conversation Content Layout */
@@ -195,6 +225,7 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
+  gap: 8px;
 }
 
 .rquest-conv-name {
@@ -204,6 +235,8 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .rquest-conv-time {
@@ -496,6 +529,105 @@
   box-shadow: 0 5px 14px rgba(79, 70, 229, 0.4);
 }
 
+/* Direct Typing Quick Replies Bar */
+.rquest-chat-quick-replies {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px 4px 16px;
+  background: #ffffff;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+
+.rquest-chat-quick-replies::-webkit-scrollbar {
+  display: none;
+}
+
+.rquest-quick-pill {
+  border-radius: 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  font-size: 11.5px;
+  font-weight: 500;
+  padding: 3px 10px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.15s ease;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.rquest-quick-pill:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+  color: #4338ca;
+  transform: translateY(-1px);
+}
+
+/* Real-Time Live Direct Typing Animations */
+@keyframes rquestTypingBounce {
+  0%, 80%, 100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.rquest-typing-dots-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.rquest-typing-dots-bubble .dot {
+  width: 4.5px;
+  height: 4.5px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  display: inline-block;
+  animation: rquestTypingBounce 1.2s infinite ease-in-out both;
+}
+
+.rquest-typing-dots-bubble .dot-1 {
+  animation-delay: -0.32s;
+}
+
+.rquest-typing-dots-bubble .dot-2 {
+  animation-delay: -0.16s;
+}
+
+.rquest-typing-dots-bubble .dot-3 {
+  animation-delay: 0s;
+}
+
+/* Header Live Typing Indicator */
+.rquest-header-typing-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+/* Conversation List Live Typing Item */
+.rquest-conv-live-typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 12px;
+}
+
 /* Standalone Close Button (shown on welcome pane) */
 .rquest-standalone-close-btn {
   position: absolute;
@@ -667,10 +799,22 @@
   }
 
   .rquest-chat-sidebar-pane,
-  .rquest-chat-app .cs-sidebar {
+  .rquest-chat-app .cs-sidebar,
+  .rquest-chat-app .cs-sidebar.cs-sidebar--left,
+  .cs-main-container--responsive > .cs-sidebar.cs-sidebar--left {
     width: 100% !important;
     min-width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: 100% !important;
     border-right: none !important;
+  }
+
+  .rquest-chat-app .cs-conversation-list,
+  .cs-main-container--responsive > .cs-conversation-list {
+    width: 100% !important;
+    min-width: 100% !important;
+    max-width: 100% !important;
+    flex-basis: auto !important;
   }
 
   .rquest-chat-main-pane {
@@ -680,6 +824,59 @@
 
   .rquest-mobile-hidden {
     display: none !important;
+  }
+
+  /* Force conversation item and content to always display on mobile */
+  .rquest-chat-app .cs-conversation,
+  .cs-main-container--responsive .cs-conversation-list .cs-conversation,
+  .cs-main-container--responsive .cs-sidebar .cs-conversation-list .cs-conversation {
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    width: 100% !important;
+    padding: 12px 14px !important;
+    box-sizing: border-box !important;
+  }
+
+  .rquest-chat-app .cs-conversation > .cs-avatar,
+  .cs-main-container--responsive .cs-conversation-list .cs-conversation > .cs-avatar,
+  .cs-main-container--responsive .cs-sidebar .cs-conversation-list .cs-conversation > .cs-avatar {
+    margin-right: 12px !important;
+    flex-shrink: 0 !important;
+  }
+
+  .rquest-chat-app .cs-conversation__content,
+  .rquest-chat-app .cs-conversation-list .cs-conversation__content,
+  .rquest-chat-app .cs-sidebar .cs-conversation-list .cs-conversation__content,
+  .cs-main-container--responsive .cs-conversation-list .cs-conversation__content,
+  .cs-main-container--responsive .cs-sidebar .cs-conversation-list .cs-conversation__content {
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 1 auto !important;
+    min-width: 0 !important;
+    width: 100% !important;
+    overflow: hidden !important;
+    margin-right: 0 !important;
+  }
+
+  .rquest-chat-app .cs-conversation__name,
+  .rquest-conv-name {
+    display: block !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    max-width: calc(100vw - 160px) !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .rquest-conv-snippet {
+    max-width: calc(100vw - 160px) !important;
+    font-size: 12px !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
   }
 }
 

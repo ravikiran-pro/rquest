@@ -22,6 +22,7 @@ import {
 import {
   AppstoreOutlined,
   CheckCircleOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 
@@ -161,6 +162,7 @@ const AddProductModal = ({
   shop,
   editingItem = null,
   width = 650,
+  onOpenImportCsv = null,
 }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
@@ -364,6 +366,25 @@ const AddProductModal = ({
                 </Tag>
               </div>
             </div>
+            {!editingItem && onOpenImportCsv && (
+              <Button
+                icon={<UploadOutlined />}
+                size="small"
+                onClick={() => {
+                  onClose();
+                  onOpenImportCsv();
+                }}
+                style={{
+                  borderRadius: 6,
+                  fontWeight: 600,
+                  fontSize: 12,
+                  borderColor: '#4f46e5',
+                  color: '#4f46e5',
+                }}
+              >
+                Import via CSV
+              </Button>
+            )}
           </Flex>
         </div>
 

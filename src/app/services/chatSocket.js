@@ -35,25 +35,25 @@ class ChatSocketService {
   /**
    * Start typing notification with debouncing
    */
-  startTyping({ receiver_id, shop_id, username }) {
+  startTyping({ receiver_id, shop_id, username, sender_id }) {
     if (!receiver_id) return;
     SOCKET.emit('typing_start', {
       receiver_id,
       shop_id,
       username: username || this.currentUser?.username,
-      sender_id: this.currentUser?.user_id || this.currentUser?.id,
+      sender_id: sender_id || this.currentUser?.user_id || this.currentUser?.id,
     });
   }
 
   /**
    * Stop typing notification
    */
-  stopTyping({ receiver_id, shop_id }) {
+  stopTyping({ receiver_id, shop_id, sender_id }) {
     if (!receiver_id) return;
     SOCKET.emit('typing_stop', {
       receiver_id,
       shop_id,
-      sender_id: this.currentUser?.user_id || this.currentUser?.id,
+      sender_id: sender_id || this.currentUser?.user_id || this.currentUser?.id,
     });
   }
 
@@ -130,6 +130,14 @@ class ChatSocketService {
   onMessageDeleted(callback) {
     SOCKET.on('message_deleted', callback);
     return () => SOCKET.off('message_deleted', callback);
+  }
+
+  /**
+   * Listen for real-time push notifications (register, order place, status change)
+   */
+  onPushNotification(callback) {
+    SOCKET.on('push_notification', callback);
+    return () => SOCKET.off('push_notification', callback);
   }
 }
 

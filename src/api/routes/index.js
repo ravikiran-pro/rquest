@@ -7,6 +7,7 @@ const listingsRouter = require('./listings');
 const ordersRouter = require('./orders');
 const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
+const notificationsRouter = require('./notifications');
 const { authMiddleware } = require('../auth');
 
 const router = express.Router();
@@ -18,6 +19,7 @@ router.use('/master', masterRouter);
 router.use('/listings', listingsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
+router.use('/notifications', notificationsRouter);
 
 router.use(authMiddleware);
 

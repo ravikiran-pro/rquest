@@ -112,6 +112,7 @@ function ChatApp() {
   });
 
   const [isTyping, setIsTyping] = useState(false);
+  const [typingUsers, setTypingUsers] = useState({});
   const [isChatLoading, setIsChatLoading] = useState(true);
   const [isMobileView, setIsMobileView] = useState(() =>
     typeof window !== 'undefined' ? window.innerWidth <= 768 : false
@@ -121,6 +122,7 @@ function ChatApp() {
   const isMountedRef = useRef(true);
   const typingTimeoutRef = useRef(null);
   const receiverTypingResetRef = useRef(null);
+  const composerInputRef = useRef(null);
 
   // Track mounted status to prevent React state update on unmounted component
   useEffect(() => {
@@ -131,6 +133,37 @@ function ChatApp() {
       if (receiverTypingResetRef.current) clearTimeout(receiverTypingResetRef.current);
     };
   }, []);
+
+  // Direct typing: Automatically direct focus to composer input when opening/switching conversations
+  useEffect(() => {
+    if (selectedChat) {
+      const focusTimer = setTimeout(() => {
+        composerInputRef.current?.focus();
+      }, 60);
+      return () => clearTimeout(focusTimer);
+    }
+  }, [selectedChat]);
+
+  // Direct typing: Type-anywhere handler to instantly capture keystrokes into chat composer
+  useEffect(() => {
+    const handleDirectTypingKey = (e) => {
+      if (!selectedChat) return;
+      const activeEl = document.activeElement;
+      const isInputActive =
+        activeEl &&
+        (activeEl.tagName === 'INPUT' ||
+          activeEl.tagName === 'TEXTAREA' ||
+          activeEl.isContentEditable);
+      if (isInputActive) return;
+
+      if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
+
+      composerInputRef.current?.focus();
+    };
+
+    window.addEventListener('keydown', handleDirectTypingKey);
+    return () => window.removeEventListener('keydown', handleDirectTypingKey);
+  }, [selectedChat]);
 
   // Sync archivedChats to localStorage
   useEffect(() => {
@@ -574,17 +607,27 @@ function ChatApp() {
     });
 
     const unsubTyping = chatSocket.onTyping((typingData) => {
-      if (!isMountedRef.current) return;
-      if (typingData.sender_id === selectedChat) {
-        setIsTyping(Boolean(typingData.isTyping));
+      if (!isMountedRef.current || !typingData) return;
+      const senderId = String(typingData.sender_id);
+      const isTypingNow = Boolean(typingData.isTyping);
+
+      setTypingUsers((prev) => ({
+        ...prev,
+        [senderId]: isTypingNow,
+      }));
+
+      if (String(selectedChat) === senderId) {
+        setIsTyping(isTypingNow);
 
         if (receiverTypingResetRef.current) {
           clearTimeout(receiverTypingResetRef.current);
         }
-        if (typingData.isTyping) {
+        if (isTypingNow) {
           receiverTypingResetRef.current = setTimeout(() => {
-            setIsTyping(false);
-            if (isMountedRef.current) setIsTyping(false);
+            if (isMountedRef.current) {
+              setIsTyping(false);
+              setTypingUsers((prev) => ({ ...prev, [senderId]: false }));
+            }
           }, 3500);
         }
       }
@@ -663,6 +706,7 @@ function ChatApp() {
       chatSocket.stopTyping({
         receiver_id: selectedChat,
         shop_id: currentShopId,
+        sender_id: user_data?.user_id,
       });
       if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
       return;
@@ -672,6 +716,7 @@ function ChatApp() {
       receiver_id: selectedChat,
       shop_id: currentShopId,
       username: user_data?.username,
+      sender_id: user_data?.user_id,
     });
 
     if (typingTimeoutRef.current) {
@@ -681,14 +726,9 @@ function ChatApp() {
       chatSocket.stopTyping({
         receiver_id: selectedChat,
         shop_id: currentShopId,
+        sender_id: user_data?.user_id,
       });
-      if (isMountedRef.current) {
-        chatSocket.stopTyping({
-          receiver_id: selectedChat,
-          shop_id: currentShopId,
-        });
-      }
-    }, 1500);
+    }, 1800);
   };
 
   // Build sorted, filtered unified conversation list
@@ -862,7 +902,7 @@ function ChatApp() {
   return (
     <div className="rquest-chat-overlay">
       <div className="rquest-chat-app">
-        <MainContainer responsive>
+        <MainContainer responsive={false}>
           {/* Left Sidebar Pane (Kept in DOM to eliminate mobile unmounting crashes) */}
           <div
             className={`rquest-chat-sidebar-pane ${
@@ -1053,7 +1093,16 @@ function ChatApp() {
                           info={
                             <div className="rquest-conv-body">
                               <div className="rquest-conv-snippet">
-                                {item.lastMsg ? (
+                                {typingUsers[item.partnerId] ? (
+                                  <span className="rquest-conv-live-typing">
+                                    <span className="rquest-typing-dots-bubble">
+                                      <span className="dot dot-1" />
+                                      <span className="dot dot-2" />
+                                      <span className="dot dot-3" />
+                                    </span>
+                                    <span>typing...</span>
+                                  </span>
+                                ) : item.lastMsg ? (
                                   item.lastMsg.is_deleted ? (
                                     <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>
                                       🚫 This message was deleted
@@ -1148,20 +1197,31 @@ function ChatApp() {
                       </div>
                     }
                     info={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
-                        <span
-                          style={{
-                            display: 'inline-block',
-                            width: 7,
-                            height: 7,
-                            borderRadius: '50%',
-                            backgroundColor: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8',
-                          }}
-                        />
-                        <span style={{ color: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8', fontWeight: 500 }}>
-                          {activePartnerInfo.isOnline ? 'Active now' : 'Offline'}
-                        </span>
-                      </div>
+                      isTyping ? (
+                        <div className="rquest-header-typing-status animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
+                          <span className="rquest-typing-dots-bubble">
+                            <span className="dot dot-1" />
+                            <span className="dot dot-2" />
+                            <span className="dot dot-3" />
+                          </span>
+                          <span style={{ color: '#4f46e5', fontWeight: 600 }}>typing...</span>
+                        </div>
+                      ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
+                          <span
+                            style={{
+                              display: 'inline-block',
+                              width: 7,
+                              height: 7,
+                              borderRadius: '50%',
+                              backgroundColor: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8',
+                            }}
+                          />
+                          <span style={{ color: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8', fontWeight: 500 }}>
+                            {activePartnerInfo.isOnline ? 'Active now' : 'Offline'}
+                          </span>
+                        </div>
+                      )
                     }
                   />
                   <ConversationHeader.Actions>
@@ -1318,9 +1378,40 @@ function ChatApp() {
                   )}
                 </MessageList>
 
-                {/* Modern Chat Message Composer */}
+                {/* 1-Click Direct Typing Quick Replies */}
+                <div className="rquest-chat-quick-replies">
+                  {(user_data?.role === 'customer'
+                    ? [
+                        '👋 Hi, is this available?',
+                        '🕒 What are your store hours?',
+                        '📍 Do you deliver to my location?',
+                        '📦 Can I pick this up today?',
+                      ]
+                    : [
+                        '✅ Yes, this is currently in stock!',
+                        '📦 Preparing your order now.',
+                        '🚚 Out for delivery.',
+                        '🙏 Thank you for contacting us!',
+                      ]
+                  ).map((quickText, qIdx) => (
+                    <button
+                      key={qIdx}
+                      type="button"
+                      className="rquest-quick-pill"
+                      onClick={() => {
+                        handleSendMessage(quickText);
+                        composerInputRef.current?.focus();
+                      }}
+                    >
+                      {quickText}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Modern Chat Message Composer with Direct Typing */}
                 <div className="rquest-chat-composer">
                   <input
+                    ref={composerInputRef}
                     type="text"
                     className="rquest-chat-input-field"
                     placeholder="Type a message... (Press Enter to send)"
@@ -1338,7 +1429,6 @@ function ChatApp() {
                         }
                       }
                     }}
-                    autoFocus
                   />
                   <button
                     type="button"

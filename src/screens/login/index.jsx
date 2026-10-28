@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { netWorkCall, storageKeys, checkUserRole } from '../../app/utils/helper';
 import { useHistory, Link } from 'react-router-dom';
-import { useGlobalStore } from '../../app/services';
+import { useGlobalStore, subscribeToPushNotifications } from '../../app/services';
 import Routes from '../../app/routes/routes';
 import { apiConfig, SOCKET } from '../../app/utils';
 import {
@@ -28,18 +28,28 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
 
   const onFinish = async (values) => {
-    if (values.mobile && values.password) {
+    const identifier = (values.identifier || values.username || values.mobile || '').trim();
+    if (identifier && values.password) {
       setLoading(true);
       try {
         const body = JSON.stringify({
-          mobile: values.mobile,
+          identifier: identifier,
+          mobile: identifier,
+          username: identifier,
           password: values.password,
         });
         const res = await netWorkCall(apiConfig.login, 'POST', body);
         if (res.success === true) {
           sessionStorage.setItem(storageKeys.auth_token, res.token);
+          localStorage.setItem(storageKeys.auth_token, res.token);
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
+
+          // Auto-subscribe to push notifications if permission already granted
+          if ('Notification' in window && Notification.permission === 'granted') {
+            subscribeToPushNotifications(res.user_data).catch(() => {});
+          }
+
           const { isAdmin, isMerchant } = checkUserRole(res.user_data);
           if (isAdmin) {
             history.push(Routes.admin);

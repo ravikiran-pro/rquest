@@ -1,4 +1,5 @@
 const { shops, users, shop_listings } = require('../../models');
+const { sendPushNotification } = require('../../services/notificationService');
 
 async function parseGoogleMapsUrl(googleMapsUrl) {
   let latitude = null,
@@ -152,6 +153,23 @@ const createShops = async (req, res) => {
             },
           }
         );
+      }
+
+      // Dispatch Push Notification for Store Registration
+      try {
+        await sendPushNotification({
+          userId: user_id,
+          title: '🏪 Store Launched on Rquest!',
+          body: `Congratulations! ${createdShop.shop_name} is now registered. You can now build your catalog and receive zero-commission orders!`,
+          type: 'account_register',
+          data: {
+            shop_id: createdShop.id,
+            shop_name: createdShop.shop_name,
+            url: '/client',
+          },
+        });
+      } catch (notifErr) {
+        console.warn('Failed to send shop creation push notification:', notifErr.message);
       }
     }
 

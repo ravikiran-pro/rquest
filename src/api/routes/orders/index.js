@@ -1,6 +1,10 @@
 const express = require('express');
 const { orders, order_items, shops, users, shop_listings, chats } = require('../../models');
 const { authMiddleware } = require('../../auth');
+const {
+  sendPushNotification,
+  getOrderStatusNotification,
+} = require('../../services/notificationService');
 
 const router = express.Router();
 
@@ -136,6 +140,55 @@ router.post('/', async (req, res) => {
         { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'latitude', 'longitude'] },
       ],
     });
+
+    // 1. Dispatch Push Notification to Customer
+    try {
+      const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+      await sendPushNotification({
+        userId: user_id,
+        title: `🛍️ Order Placed! #${orderNumber}`,
+        body: `Your order for ${itemsSummary} (₹${totalAmount}) at ${shop.shop_name} has been placed successfully!`,
+        type: 'order_placed',
+        data: {
+          orderId: newOrder.id,
+          orderNumber,
+          shopId: shop.id,
+          shopName: shop.shop_name,
+          totalAmount,
+          orderType: order_type,
+          url: '/orders',
+        },
+      });
+    } catch (customerPushErr) {
+      console.warn('Customer order push failed:', customerPushErr.message);
+    }
+
+    // 2. Dispatch Push Notification to Merchant / Shop Owner
+    if (shop.owner_id) {
+      try {
+        const isSelfPickup = order_type === 'pickup';
+        const isService = order_type === 'service';
+        const orderTypeLabel = isSelfPickup ? 'Self-Pickup' : isService ? 'Service' : 'Delivery';
+        const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+        await sendPushNotification({
+          userId: shop.owner_id,
+          title: `🔔 New ${orderTypeLabel} Order #${orderNumber}!`,
+          body: `New ${orderTypeLabel} order received for ₹${totalAmount} (${itemsSummary}) from ${customer_phone || 'Customer'}.`,
+          type: 'order_placed',
+          data: {
+            orderId: newOrder.id,
+            orderNumber,
+            shopId: shop.id,
+            shopName: shop.shop_name,
+            totalAmount,
+            orderType: order_type,
+            url: '/client',
+          },
+        });
+      } catch (merchantPushErr) {
+        console.warn('Merchant order push failed:', merchantPushErr.message);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -414,6 +467,30 @@ router.put('/:id/status', async (req, res) => {
       }
     }
 
+    // Dispatch Push Notification to Customer on Order Status Change
+    if (previousStatus !== status && order.customer_id) {
+      try {
+        const notifInfo = getOrderStatusNotification(status, order.order_number, order.shop?.shop_name);
+        await sendPushNotification({
+          userId: order.customer_id,
+          title: notifInfo.title,
+          body: notifInfo.body,
+          type: 'order_status_change',
+          data: {
+            orderId: order.id,
+            orderNumber: order.order_number,
+            status,
+            previousStatus,
+            shopId: order.shop_id,
+            shopName: order.shop?.shop_name,
+            url: '/orders',
+          },
+        });
+      } catch (statusPushErr) {
+        console.warn('Status change push notification failed:', statusPushErr.message);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: `Order status updated to ${status}`,
@@ -491,6 +568,40 @@ router.put('/:id/claim-delivery', async (req, res) => {
       ],
     });
 
+    // Dispatch Push Notifications for Claim Delivery
+    try {
+      if (updated.customer_id) {
+        await sendPushNotification({
+          userId: updated.customer_id,
+          title: `🛵 Delivery Partner Claimed #${updated.order_number}!`,
+          body: `A delivery partner has claimed your order #${updated.order_number} and is en route to ${updated.shop?.shop_name || 'the store'}.`,
+          type: 'order_status_change',
+          data: {
+            orderId: updated.id,
+            orderNumber: updated.order_number,
+            status: updated.status,
+            url: '/orders',
+          },
+        });
+      }
+      if (updated.shop?.owner_id) {
+        await sendPushNotification({
+          userId: updated.shop.owner_id,
+          title: `🛵 Delivery Partner Assigned #${updated.order_number}`,
+          body: `A delivery partner has claimed order #${updated.order_number} for delivery.`,
+          type: 'order_status_change',
+          data: {
+            orderId: updated.id,
+            orderNumber: updated.order_number,
+            status: updated.status,
+            url: '/client',
+          },
+        });
+      }
+    } catch (claimPushErr) {
+      console.warn('Claim delivery push notification failed:', claimPushErr.message);
+    }
+
     res.status(200).json({
       success: true,
       message: 'Delivery claimed successfully',
@@ -517,6 +628,26 @@ router.put('/:id/switch-to-pickup', async (req, res) => {
     order.delivery_partner_id = null;
     order.delivery_fee = 0.0;
     await order.save();
+
+    // Dispatch Push Notification to Merchant on Switch to Pickup
+    try {
+      const shopObj = await shops.findByPk(order.shop_id);
+      if (shopObj?.owner_id) {
+        await sendPushNotification({
+          userId: shopObj.owner_id,
+          title: `📦 Order #${order.order_number} Switched to Self-Pickup`,
+          body: `Customer switched order #${order.order_number} to Counter Self-Pickup.`,
+          type: 'order_status_change',
+          data: {
+            orderId: order.id,
+            orderNumber: order.order_number,
+            url: '/client',
+          },
+        });
+      }
+    } catch (switchPushErr) {
+      console.warn('Switch pickup push notification failed:', switchPushErr.message);
+    }
 
     res.status(200).json({
       success: true,

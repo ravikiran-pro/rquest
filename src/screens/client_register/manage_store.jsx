@@ -57,10 +57,11 @@ import {
   UserOutlined,
   CopyOutlined,
   ToolOutlined,
+  UploadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
-import { AddProductModal } from '../../app/components';
+import { AddProductModal, ImportProductCsvModal } from '../../app/components';
 import { useChatStore } from '../../app/services';
 import './client_register.css';
 
@@ -88,6 +89,7 @@ const ManageStore = ({
   const [listingsLoading, setListingsLoading] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
 
   // Master import state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -934,18 +936,34 @@ const ManageStore = ({
                       </Text>
                     </div>
 
-                    <Button
-                      type="primary"
-                      onClick={handleOpenAddModal}
-                      className="manage-store-add-item-btn"
-                      style={{
-                        borderRadius: 8,
-                        fontWeight: 700,
-                        background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                      }}
-                    >
-                      {addItemButtonLabel}
-                    </Button>
+                    <Space wrap>
+                      {/* <Button
+                        icon={<UploadOutlined />}
+                        onClick={() => setIsImportCsvOpen(true)}
+                        className="manage-store-import-csv-btn"
+                        style={{
+                          borderRadius: 8,
+                          fontWeight: 600,
+                          borderColor: '#4f46e5',
+                          color: '#4f46e5',
+                          background: '#ffffff',
+                        }}
+                      >
+                        Import CSV
+                      </Button> */}
+                      <Button
+                        type="primary"
+                        onClick={handleOpenAddModal}
+                        className="manage-store-add-item-btn"
+                        style={{
+                          borderRadius: 8,
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                        }}
+                      >
+                        {addItemButtonLabel}
+                      </Button>
+                    </Space>
                   </div>
 
                   <Table
@@ -1190,8 +1208,20 @@ const ManageStore = ({
           fetchListings();
           onRefreshShop?.();
         }}
+        onOpenImportCsv={() => setIsImportCsvOpen(true)}
         shop={shop}
         editingItem={editingItem}
+      />
+
+      {/* Dynamic CSV Product Import Modal with Confirmation Table */}
+      <ImportProductCsvModal
+        open={isImportCsvOpen}
+        onClose={() => setIsImportCsvOpen(false)}
+        shop={shop}
+        onSuccess={() => {
+          fetchListings();
+          onRefreshShop?.();
+        }}
       />
 
       {/* Comprehensive Order Details Sidebar Drawer */}

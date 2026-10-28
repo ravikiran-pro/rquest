@@ -35,7 +35,7 @@ import {
   ThunderboltFilled,
   MessageOutlined,
 } from '@ant-design/icons';
-import { useCartStore, useGlobalStore, useChatStore } from '../../services';
+import { useCartStore, useGlobalStore, useChatStore, subscribeToPushNotifications, requestPushPermission } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storageKeys, SOCKET } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
@@ -188,11 +188,14 @@ const CartDrawer = () => {
   const handleLoginSubmit = async (values) => {
     setAuthLoading(true);
     try {
+      const identifier = (values.identifier || values.username || values.mobile || '').trim();
       const res = await netWorkCall(
         apiConfig.login,
         'POST',
         JSON.stringify({
-          mobile: values.mobile?.trim(),
+          identifier,
+          mobile: identifier,
+          username: identifier,
           password: values.password?.trim(),
         })
       );
@@ -201,9 +204,15 @@ const CartDrawer = () => {
         localStorage.setItem(storageKeys.auth_token, res.token);
         update_user_data(res.user_data);
         SOCKET.emit('connect_user', res.user_data);
+
+        // Auto-subscribe to push notifications if permission already granted
+        if ('Notification' in window && Notification.permission === 'granted') {
+          subscribeToPushNotifications(res.user_data).catch(() => {});
+        }
+
         message.success('Logged in successfully!');
         setIsOnboardingModalOpen(false);
-        setPhone(res.user_data.mobile || values.mobile);
+        setPhone(res.user_data.mobile || identifier);
         fetchSavedAddresses();
       } else {
         message.error(res?.message || 'Login failed. Please check credentials.');
@@ -234,6 +243,12 @@ const CartDrawer = () => {
         localStorage.setItem(storageKeys.auth_token, res.token);
         update_user_data(res.user_data);
         SOCKET.emit('connect_user', res.user_data);
+
+        // Request push notification permission upon registration
+        if ('Notification' in window) {
+          requestPushPermission(res.user_data).catch(() => {});
+        }
+
         message.success('Account created!');
         setIsOnboardingModalOpen(false);
         setPhone(res.user_data.mobile || values.mobile);

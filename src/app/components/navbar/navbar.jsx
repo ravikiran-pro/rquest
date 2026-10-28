@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Routes from '../../routes/routes';
 import { Link, useHistory, useLocation } from 'react-router-dom';
-import { storageKeys, checkUserRole } from '../../utils';
+import { storageKeys, checkUserRole, netWorkCall, apiConfig } from '../../utils';
 import {
   Avatar,
   Button,
@@ -10,8 +10,15 @@ import {
   Dropdown,
   Flex,
   Grid,
+  message,
 } from 'antd';
-import { useGlobalStore, useCartStore, useChatStore } from '../../services';
+import {
+  useGlobalStore,
+  useCartStore,
+  useChatStore,
+  chatSocket,
+  requestPushPermission,
+} from '../../services';
 import './index.css';
 import {
   MenuOutlined,
@@ -27,6 +34,7 @@ import {
   CompassOutlined,
   CarOutlined,
   SafetyCertificateOutlined,
+  BellOutlined,
 } from '@ant-design/icons';
 
 const Navbar = ({ open, handleOpen, handleClose }) => {
@@ -46,6 +54,55 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
+
+  const [notificationsList, setNotificationsList] = useState([]);
+  const [unreadNotifCount, setUnreadNotifCount] = useState(0);
+  const [isPushEnabled, setIsPushEnabled] = useState(
+    typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted'
+  );
+
+  const loadNotifications = async () => {
+    if (!user_data?.user_id) return;
+    try {
+      const res = await netWorkCall(apiConfig.notifications_list, 'GET', null, true);
+      if (res?.success && Array.isArray(res?.data)) {
+        setNotificationsList(res.data);
+        setUnreadNotifCount(res.unreadCount || res.data.filter((n) => !n.is_read).length);
+      }
+    } catch (e) {}
+  };
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadNotifications();
+    }
+  }, [isLoggedIn, user_data?.user_id]);
+
+  useEffect(() => {
+    const unsub = chatSocket.onPushNotification(() => {
+      setUnreadNotifCount((prev) => prev + 1);
+      loadNotifications();
+    });
+    return () => unsub();
+  }, []);
+
+  const handleEnablePush = async () => {
+    const perm = await requestPushPermission(user_data);
+    if (perm === 'granted') {
+      setIsPushEnabled(true);
+      message.success('Push notifications enabled!');
+    } else if (perm === 'denied') {
+      message.warning('Notification permission was blocked in browser settings.');
+    }
+  };
+
+  const handleMarkAllRead = async () => {
+    try {
+      await netWorkCall(apiConfig.notifications_read_all, 'PUT', null, true);
+      setUnreadNotifCount(0);
+      setNotificationsList((prev) => prev.map((n) => ({ ...n, is_read: true })));
+    } catch (e) {}
+  };
 
   const logout = () => {
     update_user_data({});
@@ -334,6 +391,134 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
               />
             </Badge>
           </Tooltip>
+        )}
+
+        {/* Notification Bell with Badge and Push Prompt */}
+        {isLoggedIn && (
+          <Dropdown
+            trigger={['click']}
+            placement="bottomRight"
+            dropdownRender={() => (
+              <div
+                style={{
+                  width: 320,
+                  maxWidth: '90vw',
+                  background: '#ffffff',
+                  borderRadius: 12,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
+                  border: '1px solid #e2e8f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderBottom: '1px solid #f1f5f9',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f8fafc',
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: '#4f46e5' }} />}
+                  </span>
+                  {unreadNotifCount > 0 && (
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={handleMarkAllRead}
+                      style={{ padding: 0, fontSize: 11, height: 'auto', color: '#4f46e5' }}
+                    >
+                      Mark all read
+                    </Button>
+                  )}
+                </div>
+
+                {!isPushEnabled && (
+                  <div
+                    style={{
+                      padding: '8px 14px',
+                      background: '#eef2ff',
+                      borderBottom: '1px solid #e0e7ff',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ fontSize: 11, color: '#3730a3', fontWeight: 500 }}>
+                      Receive OS & order alerts
+                    </span>
+                    <Button
+                      size="small"
+                      type="primary"
+                      onClick={handleEnablePush}
+                      style={{
+                        fontSize: 11,
+                        height: 24,
+                        padding: '0 8px',
+                        borderRadius: 6,
+                        background: '#4f46e5',
+                        borderColor: '#4f46e5',
+                      }}
+                    >
+                      Enable Push
+                    </Button>
+                  </div>
+                )}
+
+                <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                  {notificationsList.length === 0 ? (
+                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+                      No notifications yet
+                    </div>
+                  ) : (
+                    notificationsList.slice(0, 10).map((item) => (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          if (item.data?.url) history.push(item.data.url);
+                          else if (item.type === 'order_status_change' || item.type === 'order_placed') history.push(Routes.orders);
+                        }}
+                        style={{
+                          padding: '10px 14px',
+                          borderBottom: '1px solid #f1f5f9',
+                          cursor: 'pointer',
+                          background: item.is_read ? '#ffffff' : '#f8fafc',
+                        }}
+                      >
+                        <div style={{ fontWeight: item.is_read ? 500 : 700, fontSize: 12, color: '#0f172a' }}>
+                          {item.title}
+                        </div>
+                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: '15px' }}>
+                          {item.body}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          >
+            <Badge
+              count={unreadNotifCount}
+              offset={[-2, 4]}
+              color="#ef4444"
+              size={screens.xs ? 'small' : 'default'}
+            >
+              <Button
+                shape="circle"
+                size={screens.xs ? 'middle' : 'large'}
+                icon={<BellOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
+                style={{
+                  border: '1px solid #e2e8f0',
+                  color: unreadNotifCount > 0 ? '#4f46e5' : '#64748b',
+                  background: unreadNotifCount > 0 ? '#eef2ff' : '#ffffff',
+                }}
+                aria-label="Notifications"
+              />
+            </Badge>
+          </Dropdown>
         )}
 
         {/* Desktop / Tab User Profile & Auth (Screen md and up) */}

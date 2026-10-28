@@ -178,6 +178,125 @@ router.post('/', async (req, res) => {
   }
 });
 
+// 3b. Bulk Create Listings (CSV Import)
+router.post('/bulk', async (req, res) => {
+  try {
+    const { shop_id, items } = req.body;
+
+    if (!shop_id) {
+      return res.status(400).json({ error: 'Shop ID is required', success: false });
+    }
+
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return res.status(400).json({ error: 'Items array cannot be empty', success: false });
+    }
+
+    const shopRecord = await shops.findByPk(shop_id, {
+      include: [{ model: categories, as: 'shopCategory', attributes: ['name'] }],
+    });
+
+    if (!shopRecord) {
+      return res.status(404).json({ error: 'Shop not found', success: false });
+    }
+
+    const typeStr = (
+      (shopRecord?.shop_type || '') +
+      ' ' +
+      (shopRecord?.shopCategory?.name || '')
+    ).toLowerCase();
+
+    let defaultType = 'product';
+    if (
+      typeStr.includes('restaurant') ||
+      typeStr.includes('food') ||
+      typeStr.includes('bakery') ||
+      typeStr.includes('cafe') ||
+      typeStr.includes('biri')
+    ) {
+      defaultType = 'food';
+    } else if (typeStr.includes('rental') || typeStr.includes('bike')) {
+      defaultType = 'rental';
+    } else if (
+      typeStr.includes('electric') ||
+      typeStr.includes('plumb') ||
+      typeStr.includes('service') ||
+      typeStr.includes('salon') ||
+      typeStr.includes('spa')
+    ) {
+      defaultType = 'service';
+    }
+
+    const validItems = [];
+    for (const item of items) {
+      if (!item || !item.name || item.name.toString().trim() === '') {
+        continue;
+      }
+      const priceVal = parseFloat(item.price);
+      if (isNaN(priceVal) || priceVal < 0) {
+        continue;
+      }
+
+      const meta = typeof item.metadata === 'object' && item.metadata !== null ? { ...item.metadata } : {};
+      if (item.section && !meta.section) {
+        meta.section = item.section.toString().trim();
+      }
+
+      // Also copy any custom CSV attributes directly into metadata
+      const standardKeys = [
+        'shop_id',
+        'master_product_id',
+        'listing_type',
+        'name',
+        'description',
+        'price',
+        'mrp',
+        'unit',
+        'is_available',
+        'img_url',
+        'metadata',
+      ];
+      for (const k of Object.keys(item)) {
+        if (!standardKeys.includes(k) && meta[k] === undefined) {
+          meta[k] = item[k];
+        }
+      }
+
+      validItems.push({
+        shop_id,
+        master_product_id: item.master_product_id || null,
+        listing_type: item.listing_type || defaultType,
+        name: item.name.toString().trim(),
+        description: item.description ? item.description.toString().trim() : '',
+        price: priceVal,
+        mrp: item.mrp && !isNaN(parseFloat(item.mrp)) ? parseFloat(item.mrp) : null,
+        unit: item.unit ? item.unit.toString().trim() : 'piece',
+        is_available: item.is_available !== undefined ? Boolean(item.is_available) : true,
+        metadata: meta,
+        img_url: item.img_url ? item.img_url.toString().trim() : null,
+      });
+    }
+
+    if (validItems.length === 0) {
+      return res.status(400).json({
+        error: 'No valid items found to import. Each item requires a name and a valid non-negative price.',
+        success: false,
+      });
+    }
+
+    const createdListings = await shop_listings.bulkCreate(validItems);
+
+    res.status(201).json({
+      success: true,
+      message: `Successfully imported ${createdListings.length} products to store catalog`,
+      count: createdListings.length,
+      data: createdListings,
+    });
+  } catch (err) {
+    console.error('Error in bulk listings import:', err);
+    res.status(500).json({ error: 'Internal Server Error', success: false });
+  }
+});
+
 // 4. Update a listing
 router.put('/:id', async (req, res) => {
   try {

@@ -58,6 +58,7 @@ export const apiConfig = {
   listings_by_shop: 'listings/shop',
   listings_search: 'listings/search',
   listings_create: 'listings',
+  listings_bulk_create: 'listings/bulk',
   listings_update: 'listings',
   listings_delete: 'listings',
   listings_import_master: 'listings/import-master',
@@ -81,6 +82,13 @@ export const apiConfig = {
 
   user_profile: 'user/profile',
   user_addresses: 'user/addresses',
+
+  notifications_vapid_key: 'notifications/vapid-key',
+  notifications_subscribe: 'notifications/subscribe',
+  notifications_unsubscribe: 'notifications/unsubscribe',
+  notifications_list: 'notifications',
+  notifications_read_all: 'notifications/read-all',
+  notifications_test: 'notifications/test',
 };
 
 export const SOCKET = io(config.api_url);

@@ -8,3 +8,5 @@ dist-ssr
 .env
 dev-dist
 .pem
+backups/
+*.sql

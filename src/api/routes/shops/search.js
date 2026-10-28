@@ -110,6 +110,7 @@ const getMyShops = async (req, res) => {
         'updatedAt',
         'id',
         'owner_id',
+        'form_schema',
       ],
       include: [
         {

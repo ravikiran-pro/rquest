@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../app/utils';
 import { useHistory, Link } from 'react-router-dom';
-import { useGlobalStore } from '../../app/services';
+import { useGlobalStore, requestPushPermission } from '../../app/services';
 import Routes from '../../app/routes/routes';
 import {
   HeroStreetIllustration,
@@ -49,8 +49,15 @@ const RegisterScreen = () => {
         const res = await netWorkCall(apiConfig.register, 'POST', body);
         if (res.success === true) {
           sessionStorage.setItem(storageKeys.auth_token, res.token);
+          localStorage.setItem(storageKeys.auth_token, res.token);
           update_user_data(res.user_data);
           SOCKET.emit('connect_user', res.user_data);
+
+          // Prompt & register for push notifications on account creation
+          if ('Notification' in window) {
+            requestPushPermission(res.user_data).catch(() => {});
+          }
+
           message.success('Account created! Welcome to Rquest.');
           const isMerchant =
             values.userRole === MERCHANT_ROLE_ID ||
