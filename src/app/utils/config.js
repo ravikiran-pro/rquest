@@ -18,6 +18,8 @@ export const apiConfig = {
   track_ip: '/user/trace_ip',
   location_reverse: 'location/reverse',
   location_search: 'location/search',
+  location_place_details: 'location/place-details',
+  location_geocode: 'location/geocode',
   my_shops: 'shops/my_shops',
   my_categories: 'shops/my_categories',
   register_shop: 'shops/client_register',

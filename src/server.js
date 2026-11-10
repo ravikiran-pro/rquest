@@ -58,14 +58,6 @@ app.use(
   })
 );
 
-// Serve static SEO landing page if explicitly requested
-app.get(['/seo', '/landing-page'], (_req, res) => {
-  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
-  res.setHeader('Pragma', 'no-cache');
-  res.setHeader('Expires', '0');
-  res.sendFile(path.join(__dirname, 'app/landing.html'));
-});
-
 // Handle client routing, return all requests to the app
 app.get('*', (_req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');

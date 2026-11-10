@@ -12,6 +12,7 @@ import {
   UserOutlined,
   StarOutlined,
 } from '@ant-design/icons';
+import { colors, radii } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -48,11 +49,11 @@ const AddressCard = ({
       hoverable={isSelectable}
       onClick={isSelectable ? () => onSelect(address) : undefined}
       style={{
-        borderRadius: 14,
-        border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-        background: isSelected ? '#f8fafc' : '#ffffff',
+        borderRadius: radii.xl,
+        border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+        background: isSelected ? colors.primaryLight : '#ffffff',
         boxShadow: isSelected
-          ? '0 4px 14px rgba(79, 70, 229, 0.08)'
+          ? '0 4px 14px rgba(11, 45, 107, 0.08)'
           : '0 1px 3px rgba(15, 23, 42, 0.04)',
         transition: 'all 0.2s ease',
         cursor: isSelectable ? 'pointer' : 'default',
@@ -119,7 +120,7 @@ const AddressCard = ({
             <Button
               type="text"
               size="small"
-              icon={<EditOutlined style={{ color: '#4f46e5' }} />}
+              icon={<EditOutlined style={{ color: colors.primary }} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onEdit(address);
@@ -206,7 +207,7 @@ const AddressCard = ({
               fontWeight: 600,
               fontSize: 12,
               ...(isSelected
-                ? { background: '#4f46e5', borderColor: '#4f46e5' }
+                ? { background: colors.primary, borderColor: colors.primary }
                 : {}),
             }}
           >

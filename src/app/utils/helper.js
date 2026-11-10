@@ -181,13 +181,21 @@ const getLocationName = async (lat, lng) => {
   }
 };
 
-const searchLocations = async (query, lat = null, lon = null) => {
+const createLocationSessionToken = () =>
+  typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
+    ? crypto.randomUUID()
+    : `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+
+const searchLocations = async (query, lat = null, lon = null, sessionToken = null) => {
   if (!query || query.trim().length < 2) return [];
 
   try {
     let url = `${config.api_url}/api/v1/location/search?q=${encodeURIComponent(query.trim())}`;
     if (lat && lon && !isNaN(Number(lat)) && !isNaN(Number(lon))) {
       url += `&lat=${lat}&lon=${lon}`;
+    }
+    if (sessionToken) {
+      url += `&sessionToken=${encodeURIComponent(sessionToken)}`;
     }
     const res = await fetch(url);
     if (res.ok) {
@@ -201,6 +209,47 @@ const searchLocations = async (query, lat = null, lon = null) => {
   }
 
   return [];
+};
+
+const getPlaceDetails = async (placeId, sessionToken = null) => {
+  if (!placeId) return null;
+
+  try {
+    let url = `${config.api_url}/api/v1/location/place-details?place_id=${encodeURIComponent(placeId)}`;
+    if (sessionToken) {
+      url += `&sessionToken=${encodeURIComponent(sessionToken)}`;
+    }
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.success && json?.data) {
+        return json.data;
+      }
+    }
+  } catch (err) {
+    console.error('Error in getPlaceDetails:', err);
+  }
+
+  return null;
+};
+
+const geocodeAddress = async (address) => {
+  if (!address || !address.trim()) return null;
+
+  try {
+    const url = `${config.api_url}/api/v1/location/geocode?address=${encodeURIComponent(address.trim())}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.success) {
+        return json;
+      }
+    }
+  } catch (err) {
+    console.error('Error in geocodeAddress:', err);
+  }
+
+  return null;
 };
 
 const getPreciseUserLocation = async (forceFresh = true) => {
@@ -276,5 +325,8 @@ export {
   checkUserRole,
   getLocationName,
   searchLocations,
+  getPlaceDetails,
+  geocodeAddress,
+  createLocationSessionToken,
   getPreciseUserLocation,
 };

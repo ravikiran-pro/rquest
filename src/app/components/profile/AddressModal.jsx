@@ -24,8 +24,17 @@ import {
   UserOutlined,
   PhoneOutlined,
 } from '@ant-design/icons';
-import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, searchLocations } from '../../utils';
+import {
+  netWorkCall,
+  apiConfig,
+  getPreciseUserLocation,
+  getLocationName,
+  searchLocations,
+  getPlaceDetails,
+  createLocationSessionToken,
+} from '../../utils';
 import LeafletComponent from '../leaflet/leaflet';
+import { colors, radii } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -46,6 +55,7 @@ const AddressModal = ({
   const [searchOptions, setSearchOptions] = useState([]);
   const [searchLocalityValue, setSearchLocalityValue] = useState('');
   const localityTimeoutRef = useRef(null);
+  const sessionTokenRef = useRef(createLocationSessionToken());
   const [coords, setCoords] = useState(
     initialData?.latitude && initialData?.longitude
       ? [Number(initialData.latitude), Number(initialData.longitude)]
@@ -124,15 +134,22 @@ const AddressModal = ({
     setSearchingArea(true);
     localityTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await searchLocations(val, coords?.[0], coords?.[1]);
+        const results = await searchLocations(
+          val,
+          coords?.[0],
+          coords?.[1],
+          sessionTokenRef.current
+        );
         setSearchOptions(
           results.map((r, i) => ({
             value: r.display_name || r.name,
-            key: `loc-${r.lat}-${r.lon}-${i}`,
+            key: `loc-${r.place_id || `${r.lat}-${r.lon}`}-${i}`,
             label: (
               <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
                 <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>{r.display_name}</div>
+                <div style={{ fontSize: 11, color: '#64748b' }}>
+                  {r.secondary_text || r.display_name}
+                </div>
               </div>
             ),
             raw: r,
@@ -146,22 +163,50 @@ const AddressModal = ({
     }, 280);
   };
 
-  const handleSelectLocality = (val, option) => {
+  const handleSelectLocality = async (val, option) => {
     if (localityTimeoutRef.current) {
       clearTimeout(localityTimeoutRef.current);
     }
-    if (option?.raw) {
-      const { lat, lon, name, display_name } = option.raw;
-      const newCoords = [parseFloat(lat), parseFloat(lon)];
-      setCoords(newCoords);
-      form.setFieldsValue({
-        street_area: name || form.getFieldValue('street_area'),
-        formatted_address: display_name,
-      });
-      const chosenText = display_name || name || val || '';
-      setSearchLocalityValue(chosenText);
-      setSearchOptions([]);
+    if (!option?.raw) return;
+
+    let { lat, lon, name, display_name, place_id, address_parts } = option.raw;
+
+    if (
+      (lat === undefined || lon === undefined || isNaN(Number(lat)) || isNaN(Number(lon))) &&
+      place_id
+    ) {
+      setSearchingArea(true);
+      try {
+        const details = await getPlaceDetails(place_id, sessionTokenRef.current);
+        sessionTokenRef.current = createLocationSessionToken();
+        if (details) {
+          lat = details.lat;
+          lon = details.lon;
+          name = details.name || name;
+          display_name = details.display_name || display_name;
+          address_parts = details.address_parts || address_parts;
+        }
+      } finally {
+        setSearchingArea(false);
+      }
     }
+
+    if (lat !== undefined && lon !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lon))) {
+      setCoords([parseFloat(lat), parseFloat(lon)]);
+    }
+
+    const fieldUpdates = {
+      street_area: name || form.getFieldValue('street_area'),
+      formatted_address: display_name,
+    };
+    if (address_parts?.city) fieldUpdates.city = address_parts.city;
+    if (address_parts?.state) fieldUpdates.state = address_parts.state;
+    if (address_parts?.pincode) fieldUpdates.pincode = address_parts.pincode;
+
+    form.setFieldsValue(fieldUpdates);
+    const chosenText = display_name || name || val || '';
+    setSearchLocalityValue(chosenText);
+    setSearchOptions([]);
   };
 
   const handleMapConfirm = (newCoords) => {
@@ -246,12 +291,12 @@ const AddressModal = ({
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 10,
-                background: '#eef2ff',
+                borderRadius: radii.md,
+                background: colors.primaryLight,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#4f46e5',
+                color: colors.primary,
                 fontSize: 18,
               }}
             >
@@ -302,8 +347,8 @@ const AddressModal = ({
           {/* Location Pinpoint & Map Assist */}
           <div
             style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: '#FAF7F2',
+              border: '1px solid #EAE4DA',
               borderRadius: 12,
               padding: '12px 14px',
               marginBottom: 16,
@@ -311,7 +356,7 @@ const AddressModal = ({
           >
             <Flex justify="space-between" align="center" style={{ marginBottom: 8 }} wrap="wrap" gap={8}>
               <div>
-                <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block' }}>
+                <Text strong style={{ fontSize: 13, color: '#1C1C19', display: 'block' }}>
                   Location Pinpoint (GPS)
                 </Text>
                 <Text type="secondary" style={{ fontSize: 11 }}>
@@ -479,9 +524,9 @@ const AddressModal = ({
               loading={saving}
               icon={<CheckOutlined />}
               style={{
-                background: '#0f172a',
-                borderColor: '#0f172a',
-                borderRadius: 8,
+                background: colors.primary,
+                borderColor: colors.primary,
+                borderRadius: radii.md,
                 fontWeight: 700,
                 padding: '0 24px',
                 flex: isMobile ? 1 : 'none',

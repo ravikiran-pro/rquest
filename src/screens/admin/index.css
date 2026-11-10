@@ -1,7 +1,10 @@
-.ant-pagination-item-link{
-    color: #fff !important;
+/* Platform Admin Console Styles */
+.admin-console-container {
+  font-family: var(--font-body);
 }
 
-.ant-pagination-item-link:hover{
-    color: #fff !important;
+.admin-header-title {
+  font-family: var(--font-headline);
+  font-weight: 800;
+  color: var(--color-text, #0f172a);
 }

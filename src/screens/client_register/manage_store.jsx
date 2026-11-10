@@ -8,61 +8,45 @@ import {
   Tag,
   Switch,
   Space,
-  Modal,
   Input,
-  InputNumber,
   Select,
   Typography,
   message,
   Popconfirm,
-  Empty,
-  Segmented,
   Flex,
-  Spin,
   Row,
   Col,
   Drawer,
   Divider,
   Avatar,
-  Tooltip,
   Grid,
-  Badge,
   Steps,
   Alert,
 } from 'antd';
 import {
-  PlusOutlined,
-  ImportOutlined,
   DeleteOutlined,
   EditOutlined,
   ShopOutlined,
   EyeOutlined,
   ArrowLeftOutlined,
   ShoppingCartOutlined,
-  FileDoneOutlined,
   FileTextOutlined,
   SettingOutlined,
-  LockOutlined,
-  UnlockOutlined,
   PhoneOutlined,
   MessageOutlined,
   EnvironmentOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  CloseCircleOutlined,
-  SyncOutlined,
   CheckCircleFilled,
   CarOutlined,
   ThunderboltFilled,
   UserOutlined,
   CopyOutlined,
   ToolOutlined,
-  UploadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
 import { AddProductModal, ImportProductCsvModal } from '../../app/components';
 import { useChatStore } from '../../app/services';
+import { colors, radii } from '../../app/styles/theme';
 import './client_register.css';
 
 const { Title, Text } = Typography;
@@ -90,13 +74,6 @@ const ManageStore = ({
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
-
-  // Master import state
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [masterProducts, setMasterProducts] = useState([]);
-  const [selectedMasterId, setSelectedMasterId] = useState(null);
-  const [importPrice, setImportPrice] = useState(null);
-  const [importLoading, setImportLoading] = useState(false);
 
   // Orders state
   const [orders, setOrders] = useState([]);
@@ -266,22 +243,6 @@ const ManageStore = ({
     }
   };
 
-  const fetchMasterProducts = async () => {
-    try {
-      const res = await netWorkCall(
-        apiConfig.master_products,
-        'POST',
-        JSON.stringify({ limit: 50, offset: 0 }),
-        false
-      );
-      if (res?.data) {
-        setMasterProducts(res.data);
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   useEffect(() => {
     fetchListings();
     fetchOrders();
@@ -323,39 +284,6 @@ const ManageStore = ({
       onRefreshShop?.();
     } catch (err) {
       console.error(err);
-    }
-  };
-
-  // Import Master Product
-  const handleImportMaster = async () => {
-    if (!selectedMasterId || !importPrice) {
-      message.error('Please select a product and enter selling price');
-      return;
-    }
-    setImportLoading(true);
-    try {
-      const res = await netWorkCall(
-        apiConfig.listings_import_master,
-        'POST',
-        JSON.stringify({
-          shop_id: shop.id,
-          master_product_id: selectedMasterId,
-          price: importPrice,
-        })
-      );
-      if (res?.success) {
-        message.success('Master product imported to your catalog');
-        setIsImportModalOpen(false);
-        setSelectedMasterId(null);
-        setImportPrice(null);
-        fetchListings();
-        onRefreshShop?.();
-      }
-    } catch (err) {
-      console.error(err);
-      message.error('Import failed');
-    } finally {
-      setImportLoading(false);
     }
   };
 
@@ -494,7 +422,7 @@ const ManageStore = ({
       width: 130,
       render: (_, record) => (
         <div>
-          <span style={{ fontWeight: 800, color: '#4f46e5' }}>₹{record.price}</span>
+          <span style={{ fontWeight: 800, color: colors.primary }}>₹{record.price}</span>
           <span style={{ fontSize: 12, color: '#64748b' }}> / {record.unit}</span>
           {record.mrp && record.mrp > record.price && (
             <div style={{ fontSize: 11, color: '#94a3b8', textDecoration: 'line-through' }}>
@@ -553,7 +481,7 @@ const ManageStore = ({
               setSelectedOrder(record);
               setIsOrderDrawerOpen(true);
             }}
-            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: '#4f46e5' }}
+            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary }}
           >
             #{val}
           </Button>
@@ -673,7 +601,7 @@ const ManageStore = ({
                 setSelectedOrder(record);
                 setIsOrderDrawerOpen(true);
               }}
-              style={{ borderRadius: 6, fontWeight: 600, color: '#4f46e5', borderColor: '#c7d2fe', background: '#eef2ff' }}
+              style={{ borderRadius: radii.sm, fontWeight: 600, color: colors.primary, borderColor: colors.border, background: colors.primaryLight }}
             >
               Details
             </Button>
@@ -712,7 +640,7 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
-                    style={{ background: '#7c3aed', borderColor: '#7c3aed', fontWeight: 600 }}
+                    style={{ background: colors.cobalt, borderColor: colors.cobalt, fontWeight: 600 }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'open_to_delivery')}
                   >
                     🚚 Move to Open to Delivery
@@ -937,28 +865,15 @@ const ManageStore = ({
                     </div>
 
                     <Space wrap>
-                      {/* <Button
-                        icon={<UploadOutlined />}
-                        onClick={() => setIsImportCsvOpen(true)}
-                        className="manage-store-import-csv-btn"
-                        style={{
-                          borderRadius: 8,
-                          fontWeight: 600,
-                          borderColor: '#4f46e5',
-                          color: '#4f46e5',
-                          background: '#ffffff',
-                        }}
-                      >
-                        Import CSV
-                      </Button> */}
                       <Button
                         type="primary"
                         onClick={handleOpenAddModal}
                         className="manage-store-add-item-btn"
                         style={{
-                          borderRadius: 8,
+                          borderRadius: radii.md,
                           fontWeight: 700,
-                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                          background: colors.primary,
+                          borderColor: colors.primary,
                         }}
                       >
                         {addItemButtonLabel}
@@ -991,7 +906,7 @@ const ManageStore = ({
                       {ordersTitle}
                     </Title>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      Click on any order to open the full transaction & delivery tracker sidebar.
+                      {ordersDesc} Click on any order to open the full transaction & delivery tracker sidebar.
                     </Text>
                   </div>
 
@@ -1113,8 +1028,8 @@ const ManageStore = ({
                     {/* Business Operating Mode */}
                     <div
                       style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
+                        background: '#FAF7F2',
+                        border: '1px solid #EAE4DA',
                         borderRadius: 10,
                         padding: '14px 16px',
                         marginBottom: 20,
@@ -1122,7 +1037,7 @@ const ManageStore = ({
                     >
                       <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
                         <div>
-                          <Text strong style={{ fontSize: 14, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <Text strong style={{ fontSize: 14, color: '#1C1C19', display: 'flex', alignItems: 'center', gap: 6 }}>
                             {isServiceStore ? <ToolOutlined style={{ color: '#0284c7' , marginRight: 4 }} /> : <ShopOutlined style={{ color: '#16a34a', marginRight: 4}} />}
                             Business Operating Mode
                           </Text>
@@ -1146,10 +1061,10 @@ const ManageStore = ({
                       loading={savingSettings}
                       onClick={handleSaveShopSettings}
                       style={{
-                        background: '#4f46e5',
-                        borderColor: '#4f46e5',
+                        background: colors.primary,
+                        borderColor: colors.primary,
                         fontWeight: 700,
-                        borderRadius: 8,
+                        borderRadius: radii.md,
                         width: screens.xs ? '100%' : 'auto',
                         height: screens.xs ? 42 : 'auto',
                       }}
@@ -1293,8 +1208,8 @@ const ManageStore = ({
               <Card
                 style={{
                   borderRadius: 12,
-                  border: '1px solid #e2e8f0',
-                  background: '#f8fafc',
+                  border: '1px solid #EAE4DA',
+                  background: '#FAF7F2',
                 }}
                 bodyStyle={{ padding: '16px 12px' }}
               >
@@ -1360,10 +1275,10 @@ const ManageStore = ({
                             <Button
                               type="primary"
                               style={{
-                                background: '#7c3aed',
-                                borderColor: '#7c3aed',
+                                background: colors.cobalt,
+                                borderColor: colors.cobalt,
                                 fontWeight: 700,
-                                borderRadius: 8,
+                                borderRadius: radii.md,
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'open_to_delivery')}
                             >
@@ -1475,19 +1390,19 @@ const ManageStore = ({
               selectedOrder.status === 'open_to_delivery' && (
                 <div
                   style={{
-                    background: '#faf5ff',
-                    border: '1px solid #e9d5ff',
-                    borderRadius: 10,
+                    background: colors.surfaceContainerLow,
+                    border: `1px solid ${colors.borderLight}`,
+                    borderRadius: radii.md,
                     padding: '12px 14px',
                   }}
                 >
                   <Flex gap={8} align="flex-start">
-                    <CarOutlined style={{ color: '#7c3aed', fontSize: 18, marginTop: 2 }} />
+                    <CarOutlined style={{ color: colors.cobalt, fontSize: 18, marginTop: 2 }} />
                     <div>
-                      <Text strong style={{ color: '#6b21a8', display: 'block' }}>
+                      <Text strong style={{ color: colors.primary, display: 'block' }}>
                         Captured in Open-to-Delivery Pool
                       </Text>
-                      <Text style={{ fontSize: 12, color: '#7e22ce' }}>
+                      <Text style={{ fontSize: 12, color: colors.textMuted }}>
                         This order is open for dispatch. Platform admin can assign delivery fleet, or you can mark it &quot;Out for Delivery&quot; when your courier picks it up.
                       </Text>
                     </div>
@@ -1499,10 +1414,10 @@ const ManageStore = ({
             <Card
               title={
                 <span style={{ fontSize: 14, fontWeight: 700 }}>
-                  <UserOutlined style={{ marginRight: 6, color: '#4f46e5' }} /> Customer Information
+                  <UserOutlined style={{ marginRight: 6, color: colors.primary }} /> Customer Information
                 </span>
               }
-              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
               bodyStyle={{ padding: 16 }}
             >
               <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
@@ -1510,7 +1425,7 @@ const ManageStore = ({
                   <Avatar
                     size={46}
                     style={{
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      background: colors.primary,
                       fontWeight: 700,
                       fontSize: 18,
                     }}
@@ -1541,10 +1456,10 @@ const ManageStore = ({
                     type="primary"
                     icon={<MessageOutlined />}
                     style={{
-                      borderRadius: 8,
+                      borderRadius: radii.md,
                       fontWeight: 600,
-                      background: '#4f46e5',
-                      borderColor: '#4f46e5',
+                      background: colors.primary,
+                      borderColor: colors.primary,
                     }}
                     onClick={() => {
                       const customerId = selectedOrder.customer_id || selectedOrder.customer?.id || selectedOrder.user_id;
@@ -1679,7 +1594,7 @@ const ManageStore = ({
                   <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
                     Total Transaction Value
                   </span>
-                  <span style={{ fontWeight: 800, fontSize: 18, color: '#4f46e5' }}>
+                  <span style={{ fontWeight: 800, fontSize: 18, color: colors.primary }}>
                     ₹{Number(selectedOrder.total_amount || 0).toFixed(2)}
                   </span>
                 </Flex>
@@ -1700,7 +1615,7 @@ const ManageStore = ({
                       </div>
                       <div style={{ fontWeight: 700, fontSize: 13, color: '#047857' }}>
                         {selectedOrder.payment_mode === 'direct_upi'
-                          ? '⚡ Direct Store UPI (Zero Commission)'
+                          ? '⚡ Direct Store UPI Payment'
                           : '💵 Cash on Delivery / Counter Pickup'}
                       </div>
                     </div>
@@ -1718,9 +1633,9 @@ const ManageStore = ({
             <div
               style={{
                 padding: '10px 14px',
-                borderRadius: 8,
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                borderRadius: 10,
+                background: '#FAF7F2',
+                border: '1px solid #EAE4DA',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
@@ -1751,6 +1666,10 @@ ManageStore.propTypes = {
     id: PropTypes.string,
     shop_name: PropTypes.string,
     area: PropTypes.string,
+    address: PropTypes.string,
+    mobile_number: PropTypes.string,
+    website: PropTypes.string,
+    img_url: PropTypes.string,
     shop_type: PropTypes.string,
     shopCategory: PropTypes.shape({
       name: PropTypes.string,

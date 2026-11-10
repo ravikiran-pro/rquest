@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Button, Typography, Flex, message } from 'antd';
 import { AudioOutlined, AudioMutedOutlined } from '@ant-design/icons';
+import { colors, radii } from '../../styles/theme';
 
 const { Title, Text } = Typography;
 
@@ -125,7 +126,7 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
             borderRadius: '50%',
             background: isListening
               ? 'linear-gradient(135deg, #ef4444 0%, #f43f5e 100%)'
-              : 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              : colors.primary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -134,7 +135,7 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
             cursor: 'pointer',
             boxShadow: isListening
               ? '0 0 0 12px rgba(239, 68, 68, 0.2)'
-              : '0 4px 16px rgba(79, 70, 229, 0.3)',
+              : '0 4px 16px rgba(11, 45, 107, 0.3)',
             transition: 'all 0.25s ease',
             margin: '12px 0',
           }}
@@ -176,9 +177,10 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
             disabled={!transcript.trim()}
             onClick={handleApply}
             style={{
-              borderRadius: 8,
+              borderRadius: radii.md,
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              background: colors.primary,
+              borderColor: colors.primary,
             }}
           >
             Search Now

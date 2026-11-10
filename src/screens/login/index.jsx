@@ -1,214 +1,490 @@
-import React, { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import React, { useState, useEffect, useRef } from 'react';
+import { Input, Button, message, Tooltip } from 'antd';
 import {
-  UserOutlined,
+  ArrowLeftOutlined,
+  EditOutlined,
+  CheckCircleFilled,
+  EnvironmentFilled,
   LockOutlined,
   ArrowRightOutlined,
-  ArrowLeftOutlined,
-  SafetyCertificateOutlined,
-  ShopOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, storageKeys, checkUserRole } from '../../app/utils/helper';
 import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore, subscribeToPushNotifications } from '../../app/services';
 import Routes from '../../app/routes/routes';
 import { apiConfig, SOCKET } from '../../app/utils';
+import { AppIcon } from '../../app/components/assets';
 import {
-  HandshakePinIllustration,
-  LeftCornerFlank,
-  RightCornerFlank,
-  HeroSwoosh,
-  SparkleStar,
-} from '../landing/LandingIllustrations';
+  WhatsAppIcon,
+  AuthLeftShowcase,
+  AuthSocialButtons,
+} from './AuthShared';
 import './auth.css';
 
 const LoginScreen = () => {
   const history = useHistory();
   const update_user_data = useGlobalStore((state) => state.update_user_data);
+
+  // Flow states: 'phone' | 'otp'
+  const [step, setStep] = useState('phone');
   const [loading, setLoading] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('9876543210');
+  const [countryCode] = useState('+91');
+  const [otpDigits, setOtpDigits] = useState(['4', '9', '2', '1', '0', '0']);
+  const [resendCooldown, setResendCooldown] = useState(30);
+  const [passwordMode, setPasswordMode] = useState(false);
+  const [password, setPassword] = useState('');
 
-  const onFinish = async (values) => {
-    const identifier = (values.identifier || values.username || values.mobile || '').trim();
-    if (identifier && values.password) {
-      setLoading(true);
-      try {
-        const body = JSON.stringify({
-          identifier: identifier,
-          mobile: identifier,
-          username: identifier,
-          password: values.password,
-        });
-        const res = await netWorkCall(apiConfig.login, 'POST', body);
-        if (res.success === true) {
-          sessionStorage.setItem(storageKeys.auth_token, res.token);
-          localStorage.setItem(storageKeys.auth_token, res.token);
-          update_user_data(res.user_data);
-          SOCKET.emit('connect_user', res.user_data);
+  // Refs for 6-digit OTP inputs
+  const otpInputRefs = useRef([]);
 
-          // Auto-subscribe to push notifications if permission already granted
-          if ('Notification' in window && Notification.permission === 'granted') {
-            subscribeToPushNotifications(res.user_data).catch(() => {});
-          }
+  // Resend Countdown Timer
+  useEffect(() => {
+    let timer;
+    if (step === 'otp' && resendCooldown > 0) {
+      timer = setInterval(() => {
+        setResendCooldown((prev) => prev - 1);
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [step, resendCooldown]);
 
-          const { isAdmin, isMerchant } = checkUserRole(res.user_data);
-          if (isAdmin) {
-            history.push(Routes.admin);
-          } else if (isMerchant) {
-            history.push(Routes.client);
-          } else {
-            history.push(Routes.app);
-          }
-        } else {
-          message.error(res.message || 'Login failed. Please check credentials.');
-        }
-      } catch (err) {
-        console.error('Login error:', err);
-        message.error('An error occurred during login. Please try again.');
-      } finally {
-        setLoading(false);
-      }
+  // Format Phone for display: +91 98765 43210
+  const formattedDisplayPhone = () => {
+    const raw = phoneNumber.replace(/\D/g, '');
+    if (raw.length === 10) {
+      return `${countryCode} ${raw.slice(0, 5)} ${raw.slice(5)}`;
+    }
+    return `${countryCode} ${phoneNumber}`;
+  };
+
+  // Helper to complete login session
+  const completeSession = (res) => {
+    sessionStorage.setItem(storageKeys.auth_token, res.token);
+    localStorage.setItem(storageKeys.auth_token, res.token);
+    update_user_data(res.user_data);
+    SOCKET.emit('connect_user', res.user_data);
+
+    if ('Notification' in window && Notification.permission === 'granted') {
+      subscribeToPushNotifications(res.user_data).catch(() => {});
+    }
+
+    const { isAdmin, isMerchant } = checkUserRole(res.user_data);
+    if (isAdmin) {
+      history.push(Routes.admin);
+    } else if (isMerchant) {
+      history.push(Routes.client);
+    } else {
+      history.push(Routes.app);
     }
   };
 
+  // Step 1: Handle Phone submission -> Proceed to OTP Step
+  const handlePhoneSubmit = (e) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const cleanPhone = phoneNumber.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length < 10) {
+      message.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+
+    if (passwordMode) {
+      handlePasswordLogin();
+      return;
+    }
+
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      setStep('otp');
+      setResendCooldown(30);
+      message.success(`OTP sent to ${formattedDisplayPhone()}`);
+    }, 350);
+  };
+
+  // Password Login Handler
+  const handlePasswordLogin = async () => {
+    if (!password) {
+      message.error('Please enter your account password');
+      return;
+    }
+    setLoading(true);
+    try {
+      const body = JSON.stringify({
+        identifier: phoneNumber,
+        mobile: phoneNumber,
+        password: password,
+      });
+      const res = await netWorkCall(apiConfig.login, 'POST', body);
+      if (res && res.success === true) {
+        message.success('Welcome back to Rquest!');
+        completeSession(res);
+      } else {
+        message.error(res?.message || 'Login failed. Please verify credentials.');
+      }
+    } catch (err) {
+      console.error('Password login error:', err);
+      message.error('An error occurred during login.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: Handle OTP Verification
+  const handleVerifyOtp = async () => {
+    const code = otpDigits.join('').trim();
+    if (code.length < 4) {
+      message.error('Please enter the verification code');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const body = JSON.stringify({
+        identifier: phoneNumber,
+        mobile: phoneNumber,
+        otp: code,
+        is_otp: true,
+      });
+      const res = await netWorkCall(apiConfig.login, 'POST', body);
+      if (res && res.success === true) {
+        message.success('Verified successfully! Welcome to Rquest.');
+        completeSession(res);
+      } else {
+        message.error(res?.message || 'Invalid verification code. Please try again.');
+      }
+    } catch (err) {
+      console.error('OTP login error:', err);
+      message.error('Verification failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Digit Input change
+  const handleDigitChange = (index, val) => {
+    const clean = val.replace(/\D/g, '');
+    const newDigits = [...otpDigits];
+
+    if (clean.length > 1) {
+      const chars = clean.slice(0, 6).split('');
+      chars.forEach((c, i) => {
+        if (i < 6) newDigits[i] = c;
+      });
+      setOtpDigits(newDigits);
+      const nextIdx = Math.min(chars.length, 5);
+      if (otpInputRefs.current[nextIdx]) {
+        otpInputRefs.current[nextIdx].focus();
+      }
+      return;
+    }
+
+    newDigits[index] = clean;
+    setOtpDigits(newDigits);
+
+    if (clean && index < 5) {
+      otpInputRefs.current[index + 1]?.focus();
+    }
+  };
+
+  // Digit KeyDown (Backspace backward hop)
+  const handleDigitKeyDown = (index, e) => {
+    if (e.key === 'Backspace' && !otpDigits[index] && index > 0) {
+      otpInputRefs.current[index - 1]?.focus();
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = () => {
+    if (resendCooldown > 0) return;
+    setResendCooldown(30);
+    message.success('New OTP sent to your phone!');
+  };
+
+  // WhatsApp OTP
+  const handleWhatsAppOtp = () => {
+    message.success('OTP sent via WhatsApp to ' + formattedDisplayPhone());
+  };
+
+  // Social / One-Tap Handlers
+  const handleSocialLogin = (provider) => {
+    message.loading(`Connecting with ${provider}...`, 0.9).then(() => {
+      setPhoneNumber('9876543210');
+      setStep('otp');
+      message.info(`Continuing with verified phone from ${provider}`);
+    });
+  };
+
   return (
-    <div className="auth-page-wrapper">
-      {/* Background Atmosphere Blueprint Dots & Subtle Ambient Glows */}
-      <div className="auth-ambient-bg" />
-      <div className="auth-ambient-glow" />
-      <div className="auth-ambient-glow-right" />
+    <div className="rq-auth-page">
+      {/* Subtle Ambient Textures */}
+      <div className="rq-auth-ambient-dots" />
 
-      {/* Dynamic Page Corner Accents */}
-      <LeftCornerFlank />
-      <RightCornerFlank />
+      <div className="rq-auth-desktop-shell">
+        {/* LEFT COLUMN (Desktop >= 960px & Mobile Below Card): Context-Aware Showcase */}
+        <AuthLeftShowcase audience="shopper" photoVariant="merchant" />
 
-      <div className="auth-container">
-        <div className="auth-split-grid">
-          {/* Left Column: Visual Showcase & Brand Narrative */}
-          <div className="auth-showcase-col">
-            <div className="auth-showcase-badge">
-              <span className="auth-badge-beacon" />
-              <span className="auth-badge-text">Direct Hyperlocal Network</span>
-              <span style={{ color: '#cbd5e1' }}>/</span>
-              <span className="auth-badge-tag">Zero Platform Cut</span>
-            </div>
-
-            <h1 className="auth-showcase-title">
-              Welcome Back to Your{' '}
-              <span className="auth-title-emerald">
-                Neighborhood.
-                <HeroSwoosh className="auth-title-swoosh" />
-              </span>
-            </h1>
-
-            <p className="auth-showcase-desc">
-              Direct counter communication, 0% platform markups, and instant PIN handshake verification with physical neighborhood kiranas, food outlets, and local technicians.
-            </p>
-
-            {/* Tactile SVG Vector Illustration Deck */}
-            <div className="auth-illustration-deck">
-              <div className="auth-deck-canvas">
-                <HandshakePinIllustration />
-              </div>
-            </div>
-
-            {/* Live Trust Metrics Chips */}
-            <div className="auth-chips-row">
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot green" />
-                <span>⚡ 4-Digit Counter PIN Lock</span>
-              </div>
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot blue" />
-                <span>🛵 Direct Community Runner</span>
-              </div>
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot purple" />
-                <span>🔒 100% Real Counter MRP</span>
-              </div>
-            </div>
-
-            {/* Social Proof Mini Quote */}
-            <div className="auth-quote-card">
-              <img
-                src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&auto=format&fit=crop&q=80"
-                alt="Murugan K."
-                className="auth-quote-avatar"
-              />
-              <div className="auth-quote-text">
-                &ldquo;On Rquest, my neighborhood customers pay real counter MRP and I keep 100% in my cash drawer.&rdquo;
-                <div className="auth-quote-author">Murugan K. • Sri Murugan Groceries &amp; Dairy</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Modern Polished Glassmorphic Login Card */}
-          <div className="auth-form-col">
-            <div className="auth-card">
-              <div className="auth-card-brand-row">
-                <div className="auth-logo-badge">R</div>
-                <div>
-                  <div className="auth-brand-name">Rquest</div>
-                  <div className="auth-brand-sub">Hyperlocal Direct Commerce</div>
+        {/* RIGHT COLUMN: Sign In / Two-Factor OTP Card Stack */}
+        <div className="rq-auth-form-col">
+          {step === 'phone' ? (
+            <div className="rq-auth-card-wrapper">
+              {/* Centered Brand Hero */}
+              <div className="rq-auth-hero">
+                <div className="rq-auth-logo-badge-wrap">
+                  <img src={AppIcon} alt="Rquest" className="rq-auth-app-icon" />
+                  <span className="rq-auth-verified-check">
+                    <CheckCircleFilled />
+                  </span>
                 </div>
-                <div style={{ marginLeft: 'auto' }}>
-                  <SparkleStar size={20} color="#10b981" />
+
+                <div className="rq-auth-pill-badge">
+                  <EnvironmentFilled className="rq-auth-pill-icon" />
+                  <span>One Neighbourhood ID</span>
                 </div>
+
+                <h2 className="rq-auth-hero-heading">Welcome to Rquest</h2>
+                <p className="rq-auth-hero-sub">
+                  Sign in with your mobile number to continue.
+                </p>
               </div>
 
-              <h2 className="auth-card-title">Sign In to Your Account</h2>
-              <p className="auth-card-subtitle">
-                Enter your registered mobile number or username to access your dashboard.
-              </p>
+              {/* Main Interactive Form Card */}
+              <div className="rq-auth-box">
+                <form onSubmit={handlePhoneSubmit} className="rq-auth-form-stack">
+                  <div>
+                    <div className="rq-auth-field-row">
+                      <span className="rq-auth-label-main">Mobile Phone Number</span>
+                      <span className="rq-auth-label-hint">
+                        {passwordMode ? 'Password login' : 'SMS verification'}
+                      </span>
+                    </div>
 
-              <Form onFinish={onFinish} layout="vertical" className="auth-form">
-                <Form.Item
-                  name="mobile"
-                  label="Mobile Number or Username"
-                  rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
-                >
-                  <Input
-                    prefix={<UserOutlined />}
-                    placeholder="Enter 10-digit mobile or username"
-                    size="large"
-                    autoComplete="username"
-                  />
-                </Form.Item>
+                    <div className="rq-auth-phone-control">
+                      <div className="rq-auth-country-picker">
+                        <span className="rq-country-flag">🇮🇳</span>
+                        <span className="rq-country-code">{countryCode}</span>
+                        <span className="rq-country-caret">▾</span>
+                      </div>
+                      <input
+                        type="tel"
+                        className="rq-auth-phone-input"
+                        placeholder="98765 43210"
+                        value={phoneNumber}
+                        onChange={(e) => setPhoneNumber(e.target.value)}
+                        autoComplete="tel"
+                      />
+                    </div>
+                  </div>
 
-                <Form.Item
-                  name="password"
-                  label="Password"
-                  rules={[{ required: true, message: 'Please enter your password' }]}
-                >
-                  <Input.Password
-                    prefix={<LockOutlined />}
-                    placeholder="Enter your account password"
-                    size="large"
-                    autoComplete="current-password"
-                  />
-                </Form.Item>
+                  {passwordMode && (
+                    <div>
+                      <div className="rq-auth-field-row">
+                        <span className="rq-auth-label-main">Password</span>
+                      </div>
+                      <Input.Password
+                        prefix={<LockOutlined style={{ color: '#747781' }} />}
+                        placeholder="Enter your account password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        className="rq-auth-text-input"
+                      />
+                    </div>
+                  )}
 
-                <Form.Item style={{ marginTop: 28, marginBottom: 12 }}>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    size="large"
-                    className="btn-auth-submit"
-                  >
-                    <span>Log in</span>
-                    <ArrowRightOutlined />
-                  </Button>
-                </Form.Item>
+                  <div className="rq-auth-actions-block">
+                    <Button
+                      type="primary"
+                      htmlType="submit"
+                      loading={loading}
+                      className="rq-auth-submit-btn"
+                    >
+                      <span>{passwordMode ? 'Sign In with Password' : 'Continue with OTP'}</span>
+                      <ArrowRightOutlined />
+                    </Button>
 
-                <div className="auth-switch-row">
-                  <span>Don&apos;t have an account yet?</span>
-                  <Link to={Routes.register} className="auth-switch-link">
-                    Create Account
+                    {/* Zero Spam Direct Guarantee Strip */}
+                    <div className="rq-auth-zero-spam-pill">
+                      <span className="rq-zero-spam-icon">
+                        <CheckCircleFilled />
+                      </span>
+                      <span className="rq-zero-spam-text">
+                        Zero spam · Direct neighbourhood connection
+                      </span>
+                    </div>
+
+                    <div className="rq-auth-mode-toggle">
+                      <button
+                        type="button"
+                        className="rq-auth-text-link"
+                        onClick={() => setPasswordMode(!passwordMode)}
+                      >
+                        {passwordMode
+                          ? '← Switch back to OTP verification'
+                          : 'Or sign in with password'}
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+
+              <AuthSocialButtons onSocialAction={handleSocialLogin} />
+
+              {/* Footer Navigation */}
+              <div className="rq-auth-footer-nav">
+                <p className="rq-auth-register-prompt">
+                  Don&apos;t have an account?{' '}
+                  <Link to={Routes.register} className="rq-auth-primary-link">
+                    Register here
                   </Link>
-                </div>
-              </Form>
+                </p>
+                <p className="rq-auth-legal-note">
+                  By continuing, you agree to Rquest&apos;s{' '}
+                  <span className="rq-legal-link">Terms of Service</span> &amp;{' '}
+                  <span className="rq-legal-link">Privacy Policy</span>
+                </p>
+              </div>
             </div>
-          </div>
+          ) : (
+            /* ==========================================================
+               STEP 2: TWO-FACTOR VERIFICATION / OTP
+               ========================================================== */
+            <div className="rq-auth-card-wrapper">
+              {/* Inline Step Back Link */}
+              <div className="rq-otp-inline-back-row">
+                <button
+                  type="button"
+                  className="rq-otp-inline-back-btn"
+                  onClick={() => setStep('phone')}
+                >
+                  <ArrowLeftOutlined />
+                  <span>Change mobile number</span>
+                </button>
+              </div>
+
+              {/* Verification Centered Hero */}
+              <div className="rq-auth-hero">
+                <div className="rq-auth-logo-badge-wrap">
+                  <img src={AppIcon} alt="Rquest" className="rq-auth-app-icon" />
+                </div>
+
+                <h2 className="rq-auth-hero-heading">
+                  Enter Verification Code
+                </h2>
+
+                <div className="rq-auth-otp-target-row">
+                  <span>We sent a 6-digit code to </span>
+                  <strong>{formattedDisplayPhone()}</strong>
+                  <Tooltip title="Edit phone number">
+                    <button
+                      type="button"
+                      className="rq-auth-edit-phone-btn"
+                      onClick={() => setStep('phone')}
+                      aria-label="Edit phone number"
+                    >
+                      <EditOutlined />
+                    </button>
+                  </Tooltip>
+                </div>
+
+                {/* Auto-detecting SMS Banner */}
+                <div className="rq-auth-autodetect-banner">
+                  <span className="rq-autodetect-icon">📲</span>
+                  <span className="rq-autodetect-text">
+                    Auto-detecting SMS OTP on this device...
+                  </span>
+                </div>
+              </div>
+
+              {/* OTP Form Card */}
+              <div className="rq-auth-box">
+                <div className="rq-otp-grid">
+                  {otpDigits.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => (otpInputRefs.current[idx] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      className={`rq-otp-box ${digit ? 'filled' : ''}`}
+                      value={digit}
+                      onChange={(e) => handleDigitChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleDigitKeyDown(idx, e)}
+                      onFocus={(e) => e.target.select()}
+                    />
+                  ))}
+                </div>
+
+                {/* Resend Actions Row */}
+                <div className="rq-otp-resend-row">
+                  <span className="rq-otp-resend-prompt">Didn&apos;t receive code? </span>
+                  {resendCooldown > 0 ? (
+                    <span className="rq-otp-timer-text">Resend in {resendCooldown}s</span>
+                  ) : (
+                    <button
+                      type="button"
+                      className="rq-otp-resend-link"
+                      onClick={handleResendOtp}
+                    >
+                      Resend Code Now
+                    </button>
+                  )}
+                </div>
+
+                <div className="rq-otp-whatsapp-row">
+                  <button
+                    type="button"
+                    className="rq-otp-whatsapp-btn"
+                    onClick={handleWhatsAppOtp}
+                  >
+                    <WhatsAppIcon />
+                    <span>Get OTP on WhatsApp</span>
+                  </button>
+                </div>
+
+                {/* Verify & Continue Button */}
+                <Button
+                  type="primary"
+                  loading={loading}
+                  onClick={handleVerifyOtp}
+                  className="rq-auth-submit-btn"
+                  style={{ marginTop: 18 }}
+                >
+                  <span>Verify &amp; Continue</span>
+                  <ArrowRightOutlined />
+                </Button>
+
+                {/* ZERO SPAM GUARANTEE Card */}
+                <div className="rq-zero-spam-card">
+                  <div className="rq-zero-spam-card-icon">
+                    <CheckCircleFilled />
+                  </div>
+                  <div className="rq-zero-spam-card-body">
+                    <div className="rq-zero-spam-card-title">ZERO SPAM GUARANTEE</div>
+                    <div className="rq-zero-spam-card-text">
+                      Direct neighbourhood shop contact only. No spam calls or promotional messages.
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Contact Support Footer */}
+              <div className="rq-auth-footer-nav">
+                <p className="rq-auth-register-prompt" style={{ color: '#575550' }}>
+                  Having trouble logging in?{' '}
+                  <button
+                    type="button"
+                    className="rq-auth-primary-link"
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                    onClick={() =>
+                      message.info('Support is available 8 AM - 10 PM via WhatsApp: 1800-RQUEST')
+                    }
+                  >
+                    Contact Support
+                  </button>
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

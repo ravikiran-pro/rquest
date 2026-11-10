@@ -65,7 +65,7 @@ const sendPushNotification = async ({
   body,
   type = 'general',
   data = {},
-  icon = '/images/logo.png',
+  icon = '/images/app-icon.png',
 }) => {
   if (!userId) {
     console.warn('[NotificationService] Missing userId for push notification');

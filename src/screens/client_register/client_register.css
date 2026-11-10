@@ -1,6 +1,7 @@
 /* ==========================================================================
    Merchant Store Onboarding & Outlets Hub - Clean Light Minimalist Style
    Mobile-First, Touch-Friendly, Native App Feel
+   Centralized with Rquest Design Tokens
    ========================================================================== */
 
 .merchant-page-shell {
@@ -33,9 +34,9 @@
 
 .store-category-card {
   padding: 14px 16px;
-  border-radius: 14px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border-radius: var(--radius-lg);
+  border: 1.5px solid var(--border-color);
+  background: var(--brand-surface);
   cursor: pointer;
   display: flex;
   align-items: flex-start;
@@ -45,45 +46,46 @@
 }
 
 .store-category-card:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--border-color-dark);
+  background: var(--brand-bg);
 }
 
 .store-category-card.selected {
-  border-color: #4f46e5;
-  background: #f8fafc;
-  box-shadow: 0 0 0 1px #4f46e5, 0 4px 12px rgba(79, 70, 229, 0.08);
+  border-color: var(--primary);
+  background: var(--brand-bg);
+  box-shadow: 0 0 0 1px var(--primary), 0 4px 12px rgba(79, 70, 229, 0.08);
 }
 
 .store-category-icon {
   width: 40px;
   height: 40px;
-  border-radius: 10px;
-  background: #f1f5f9;
+  border-radius: var(--radius-md);
+  background: #FAF7F2;
+  border: 1px solid #EAE4DA;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 20px;
-  color: #334155;
+  font-size: var(--font-size-2xl);
+  color: #5B3A29;
   flex-shrink: 0;
   transition: all 0.2s ease;
 }
 
 .store-category-card.selected .store-category-icon {
-  background: #eef2ff;
-  color: #4f46e5;
+  background: var(--primary-light);
+  color: var(--primary);
 }
 
 .store-category-title {
-  font-weight: 700;
-  font-size: 14px;
-  color: #0f172a;
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-base);
+  color: var(--text-main);
   margin-bottom: 2px;
 }
 
 .store-category-desc {
-  font-size: 12px;
-  color: #64748b;
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
   line-height: 1.35;
 }
 
@@ -103,9 +105,9 @@
 
 .toggle-option-card {
   padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #e2e8f0;
-  background: #ffffff;
+  border-radius: var(--radius-md);
+  border: 1.5px solid var(--border-color);
+  background: var(--brand-surface);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -116,31 +118,31 @@
 }
 
 .toggle-option-card:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--border-color-dark);
+  background: var(--brand-bg);
 }
 
 .toggle-option-card.active {
-  border-color: #4f46e5;
-  background: #f8fafc;
+  border-color: var(--primary);
+  background: var(--brand-bg);
 }
 
 .toggle-option-title {
-  font-weight: 600;
-  font-size: 13px;
-  color: #0f172a;
+  font-weight: var(--font-weight-semibold);
+  font-size: var(--font-size-sm);
+  color: var(--text-main);
 }
 
 .toggle-option-desc {
-  font-size: 11px;
-  color: #64748b;
+  font-size: var(--font-size-xs);
+  color: var(--text-muted);
 }
 
 /* Live Storefront Preview Card */
 .store-preview-card {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 16px;
+  background: var(--brand-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-xl);
   padding: 16px;
   margin-bottom: 20px;
 }
@@ -148,10 +150,10 @@
 .store-preview-media {
   width: 72px;
   height: 72px;
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid #e2e8f0;
+  border: 1px solid var(--border-color);
 }
 
 /* Onboarding Step Tracker */
@@ -166,18 +168,18 @@
 .store-step-dot {
   flex: 1;
   height: 4px;
-  background: #e2e8f0;
-  border-radius: 4px;
+  background: var(--border-color);
+  border-radius: var(--radius-xs);
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .store-step-dot.active {
-  background: #4f46e5;
+  background: var(--primary);
 }
 
 .store-step-dot.completed {
-  background: #10b981;
+  background: var(--success);
 }
 
 /* Floating / Sticky Mobile Navigation */
@@ -188,13 +190,13 @@
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  border-top: 1px solid var(--border-color-light);
 }
 
 @media (max-width: 480px) {
   .store-step-nav .ant-btn {
     height: 46px !important;
-    font-size: 14px !important;
+    font-size: var(--font-size-base) !important;
   }
 }
 
@@ -241,8 +243,8 @@
 }
 
 .manage-store-back-btn {
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-weight-semibold);
 }
 
 .manage-store-live-btn-mobile {
@@ -255,8 +257,8 @@
 
 .manage-store-title {
   margin: 0 !important;
-  font-weight: 800 !important;
-  color: #0f172a;
+  font-weight: var(--font-weight-extrabold) !important;
+  color: var(--text-main);
 }
 
 .manage-store-meta {
@@ -282,11 +284,11 @@
 }
 
 .manage-store-outlet-switcher-label {
-  font-size: 12px;
-  font-weight: 700;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
   white-space: nowrap !important;
   flex-shrink: 0;
-  color: #334155;
+  color: var(--text-main);
 }
 
 .manage-store-outlet-select {
@@ -296,8 +298,8 @@
 .manage-store-live-btn-desktop {
   display: inline-flex !important;
   align-items: center;
-  font-weight: 600;
-  border-radius: 8px;
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-sm);
 }
 
 /* Mobile Responsive Adjustments */
@@ -326,10 +328,10 @@
   .manage-store-live-btn-mobile {
     display: inline-flex !important;
     align-items: center;
-    font-weight: 600;
-    border-radius: 8px;
-    background: #4f46e5 !important;
-    border-color: #4f46e5 !important;
+    font-weight: var(--font-weight-semibold);
+    border-radius: var(--radius-sm);
+    background: var(--primary) !important;
+    border-color: var(--primary) !important;
   }
 
   .manage-store-info {
@@ -355,9 +357,9 @@
 
   .manage-store-outlet-switcher {
     width: 100%;
-    background: #f8fafc;
-    border: 1px solid #e2e8f0;
-    border-radius: 10px;
+    background: var(--brand-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
     padding: 8px 12px;
     box-sizing: border-box;
   }
@@ -371,9 +373,9 @@
 
 /* Manage Store Card and Tabs */
 .manage-store-main-card {
-  border-radius: 16px;
-  border: 1px solid #e2e8f0;
-  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--border-color);
+  box-shadow: var(--shadow-card);
 }
 
 .manage-store-main-card .ant-card-body {
@@ -391,7 +393,7 @@
 
 @media (max-width: 768px) {
   .manage-store-main-card {
-    border-radius: 12px;
+    border-radius: var(--radius-md);
   }
 
   .manage-store-main-card .ant-card-body {
@@ -399,7 +401,7 @@
   }
 
   .manage-store-tab-label {
-    font-size: 13px !important;
+    font-size: var(--font-size-sm) !important;
   }
 
   .manage-store-tab-header {
@@ -416,5 +418,3 @@
     justify-content: center;
   }
 }
-
-

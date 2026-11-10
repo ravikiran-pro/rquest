@@ -12,6 +12,7 @@ import {
 import { useChatStore, useGlobalStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
+import { colors, radii, shadows } from '../../styles';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -70,12 +71,13 @@ const ShopCard = ({
         onClick={!isEdit ? goToStore : undefined}
         style={{
           width: '100%',
-          borderRadius: 14,
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
+          borderRadius: radii.lg,
+          border: `1px solid ${colors.border}`,
+          boxShadow: shadows.card,
           cursor: isEdit ? 'default' : 'pointer',
           transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
           overflow: 'hidden',
+          background: colors.surface,
         }}
         styles={{
           body: {
@@ -157,7 +159,7 @@ const ShopCard = ({
                   textOverflow: 'ellipsis',
                 }}
               >
-                <EnvironmentOutlined style={{ color: '#4f46e5', flexShrink: 0 }} />
+                <EnvironmentOutlined style={{ color: colors.primary, flexShrink: 0 }} />
                 <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {area || 'Local'}
                 </span>
@@ -239,11 +241,12 @@ const ShopCard = ({
                 <Button
                   type="primary"
                   style={{
-                    borderRadius: 8,
+                    borderRadius: radii.md,
                     fontWeight: 600,
                     height: 38,
                     flex: screens.xs ? 1 : 'none',
-                    background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                    background: colors.primary,
+                    borderColor: colors.primary,
                   }}
                   onClick={goToStore}
                 >
@@ -286,12 +289,13 @@ const ShopCard = ({
       style={{
         width: '100%',
         height: '100%',
-        borderRadius: 16,
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
+        borderRadius: radii.lg,
+        border: `1px solid ${colors.border}`,
+        boxShadow: shadows.card,
         cursor: isEdit ? 'default' : 'pointer',
         transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
+        background: colors.surface,
       }}
       styles={{
         body: {
@@ -391,7 +395,7 @@ const ShopCard = ({
               textOverflow: 'ellipsis',
             }}
           >
-            <EnvironmentOutlined style={{ color: '#4f46e5', flexShrink: 0 }} />
+            <EnvironmentOutlined style={{ color: colors.primary, flexShrink: 0 }} />
             <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {area || 'Local'}
             </span>
@@ -488,10 +492,11 @@ const ShopCard = ({
               type="primary"
               style={{
                 flex: 1,
-                borderRadius: 8,
+                borderRadius: radii.md,
                 fontWeight: 600,
                 height: 38,
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                background: colors.primary,
+                borderColor: colors.primary,
               }}
               onClick={goToStore}
             >

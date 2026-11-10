@@ -2,8 +2,9 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Button, Typography, Flex, Input, Tag } from 'antd';
 import { ThunderboltOutlined, SendOutlined } from '@ant-design/icons';
+import { colors, radii } from '../../styles/theme';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 const AI_PROMPT_PRESETS = [
   'Plumber near me with visiting under ₹400',
@@ -98,8 +99,8 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
             style={{
               width: 44,
               height: 44,
-              borderRadius: 12,
-              background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+              borderRadius: radii.lg,
+              background: colors.primary,
               color: '#ffffff',
               display: 'flex',
               alignItems: 'center',
@@ -154,8 +155,8 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
                   fontSize: 12,
                   fontWeight: 500,
                   border: '1px solid #e2e8f0',
-                  background: prompt === p ? '#eef2ff' : '#f8fafc',
-                  color: prompt === p ? '#4f46e5' : '#334155',
+                  background: prompt === p ? colors.primaryLight : '#f8fafc',
+                  color: prompt === p ? colors.primary : '#334155',
                 }}
                 onClick={() => setPrompt(p)}
               >
@@ -166,7 +167,7 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
         </div>
 
         <Flex gap={10} style={{ marginTop: 8 }}>
-          <Button block onClick={onClose} style={{ borderRadius: 8 }}>
+          <Button block onClick={onClose} style={{ borderRadius: radii.md }}>
             Cancel
           </Button>
           <Button
@@ -176,9 +177,10 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
             disabled={!prompt.trim()}
             onClick={handleApply}
             style={{
-              borderRadius: 8,
+              borderRadius: radii.md,
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+              background: colors.primary,
+              borderColor: colors.primary,
             }}
           >
             Ask AI & Filter

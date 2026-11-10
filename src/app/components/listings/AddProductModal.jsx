@@ -17,14 +17,13 @@ import {
   Flex,
   message,
   Space,
-  Divider,
 } from 'antd';
 import {
   AppstoreOutlined,
-  CheckCircleOutlined,
   UploadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
+import { colors, radii } from '../../styles/theme';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -375,11 +374,11 @@ const AddProductModal = ({
                   onOpenImportCsv();
                 }}
                 style={{
-                  borderRadius: 6,
+                  borderRadius: radii.md,
                   fontWeight: 600,
                   fontSize: 12,
-                  borderColor: '#4f46e5',
-                  color: '#4f46e5',
+                  borderColor: colors.primary,
+                  color: colors.primary,
                 }}
               >
                 Import via CSV
@@ -499,7 +498,7 @@ const AddProductModal = ({
             }}
           >
             <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
-              <AppstoreOutlined style={{ color: '#4f46e5' }} />
+              <AppstoreOutlined style={{ color: colors.primary }} />
               <Text strong style={{ fontSize: 13, color: '#1e293b' }}>
                 {isCustomShopForm ? `${shop?.shop_name || 'Store'} Custom Specifications` : `${categoryDisplayName} Specifications`}
               </Text>
@@ -724,8 +723,9 @@ const AddProductModal = ({
             loading={submitting}
             style={{
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              borderColor: 'transparent',
+              background: colors.primary,
+              borderColor: colors.primary,
+              borderRadius: radii.md,
             }}
           >
             {editingItem ? 'Save Changes' : 'Add to Store Catalog'}
@@ -740,6 +740,7 @@ AddProductModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   onSuccess: PropTypes.func,
+  onOpenImportCsv: PropTypes.func,
   shop: PropTypes.object,
   editingItem: PropTypes.object,
   width: PropTypes.number,

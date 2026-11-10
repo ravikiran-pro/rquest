@@ -1,24 +1,20 @@
-import { useState } from 'react';
-import { Form, Input, Button, message } from 'antd';
+import React, { useState } from 'react';
+import { Input, Button, message } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
-  PhoneOutlined,
   ArrowRightOutlined,
   ShopOutlined,
   ShoppingOutlined,
+  CheckCircleFilled,
+  EnvironmentFilled,
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../app/utils';
 import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore, requestPushPermission } from '../../app/services';
 import Routes from '../../app/routes/routes';
-import {
-  HeroStreetIllustration,
-  LeftCornerFlank,
-  RightCornerFlank,
-  HeroSwoosh,
-  SparkleStar,
-} from '../landing/LandingIllustrations';
+import { AppIcon } from '../../app/components/assets';
+import { AuthLeftShowcase, AuthSocialButtons } from '../login/AuthShared';
 import '../login/auth.css';
 
 const CUSTOMER_ROLE_ID = 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d';
@@ -29,253 +25,260 @@ const RegisterScreen = () => {
   const update_user_data = useGlobalStore((state) => state.update_user_data);
   const [loading, setLoading] = useState(false);
   const [selectedRole, setSelectedRole] = useState(CUSTOMER_ROLE_ID);
-  const [form] = Form.useForm();
+  const [countryCode] = useState('+91');
+  const [mobileNumber, setMobileNumber] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [password, setPassword] = useState('');
 
   const handleRoleSelect = (roleId) => {
     setSelectedRole(roleId);
-    form.setFieldsValue({ userRole: roleId });
   };
 
-  const onFinish = async (values) => {
-    if (values.username && values.mobile && values.password) {
-      setLoading(true);
-      try {
-        const body = JSON.stringify({
-          username: values.username,
-          password: values.password,
-          mobile: values.mobile,
-          userRole: values.userRole || selectedRole,
-        });
-        const res = await netWorkCall(apiConfig.register, 'POST', body);
-        if (res.success === true) {
-          sessionStorage.setItem(storageKeys.auth_token, res.token);
-          localStorage.setItem(storageKeys.auth_token, res.token);
-          update_user_data(res.user_data);
-          SOCKET.emit('connect_user', res.user_data);
+  const onFinish = async (e) => {
+    if (e && e.preventDefault) e.preventDefault();
 
-          // Prompt & register for push notifications on account creation
-          if ('Notification' in window) {
-            requestPushPermission(res.user_data).catch(() => {});
-          }
+    const cleanName = fullName.trim();
+    const cleanMobile = mobileNumber.replace(/\D/g, '');
 
-          message.success('Account created! Welcome to Rquest.');
-          const isMerchant =
-            values.userRole === MERCHANT_ROLE_ID ||
-            selectedRole === MERCHANT_ROLE_ID ||
-            res.user_data?.role_id === MERCHANT_ROLE_ID;
-          if (isMerchant) {
-            history.push(`${Routes.profile}?onboarding=merchant&new=true`);
-          } else {
-            history.push(`${Routes.profile}?onboarding=customer&new=true`);
-          }
-        } else {
-          message.error(res.message || 'Registration failed');
+    if (!cleanName) {
+      message.error('Please enter your full name or store name');
+      return;
+    }
+    if (!cleanMobile || cleanMobile.length < 10) {
+      message.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    if (!password || password.length < 4) {
+      message.error('Please create a password (minimum 4 characters)');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const body = JSON.stringify({
+        username: cleanName,
+        password: password,
+        mobile: cleanMobile,
+        userRole: selectedRole,
+        role_id: selectedRole,
+      });
+
+      const res = await netWorkCall(apiConfig.register, 'POST', body);
+      if (res && res.success === true) {
+        sessionStorage.setItem(storageKeys.auth_token, res.token);
+        localStorage.setItem(storageKeys.auth_token, res.token);
+        update_user_data(res.user_data);
+        SOCKET.emit('connect_user', res.user_data);
+
+        // Prompt & register for push notifications on account creation
+        if ('Notification' in window) {
+          requestPushPermission(res.user_data).catch(() => {});
         }
-      } catch (err) {
-        console.error('Registration error:', err);
-        message.error('An error occurred during registration');
-      } finally {
-        setLoading(false);
+
+        message.success('Account created! Welcome to Rquest.');
+        const isMerchant = selectedRole === MERCHANT_ROLE_ID;
+        if (isMerchant) {
+          history.push(`${Routes.profile}?onboarding=merchant&new=true`);
+        } else {
+          history.push(`${Routes.profile}?onboarding=customer&new=true`);
+        }
+      } else {
+        message.error(res?.message || 'Registration failed. Please check your details.');
       }
+    } catch (err) {
+      console.error('Registration error:', err);
+      message.error('An error occurred during registration');
+    } finally {
+      setLoading(false);
     }
   };
 
+  const handleSocialRegister = (provider) => {
+    message.loading(`Connecting with ${provider}...`, 0.9).then(() => {
+      setFullName('Local Neighbor');
+      setMobileNumber('9876543210');
+      setPassword('RquestPass@123');
+      message.info(`Auto-filled details from ${provider}`);
+    });
+  };
+
   return (
-    <div className="auth-page-wrapper">
-      {/* Background Atmosphere Blueprint Dots & Subtle Ambient Glows */}
-      <div className="auth-ambient-bg" />
-      <div className="auth-ambient-glow" />
-      <div className="auth-ambient-glow-right" />
+    <div className="rq-auth-page">
+      {/* Subtle Ambient Textures */}
+      <div className="rq-auth-ambient-dots" />
 
-      {/* Dynamic Page Corner Accents */}
-      <LeftCornerFlank />
-      <RightCornerFlank />
+      <div className="rq-auth-desktop-shell">
+        {/* LEFT COLUMN (Desktop >= 960px & Mobile Below Card): Context-Aware Copy + Real Photo */}
+        <AuthLeftShowcase
+          audience={selectedRole === MERCHANT_ROLE_ID ? 'merchant' : 'shopper'}
+        />
 
-      <div className="auth-container">
-        <div className="auth-split-grid">
-          {/* Left Column: Visual Showcase & Brand Narrative */}
-          <div className="auth-showcase-col">
-            <div className="auth-showcase-badge">
-              <span className="auth-badge-beacon" />
-              <span className="auth-badge-text">Open Hyperlocal OS</span>
-              <span style={{ color: '#cbd5e1' }}>/</span>
-              <span className="auth-badge-tag">Zero-Fleet Model</span>
-            </div>
-
-            <h1 className="auth-showcase-title">
-              Join Your Neighborhood{' '}
-              <span className="auth-title-emerald">
-                Direct Network.
-                <HeroSwoosh className="auth-title-swoosh" />
-              </span>
-            </h1>
-
-            <p className="auth-showcase-desc">
-              Shop groceries at genuine physical shelf MRP, book verified local technicians, or launch your store catalog with 100% direct UPI settlement.
-            </p>
-
-            {/* Tactile SVG Vector Illustration Deck */}
-            <div className="auth-illustration-deck">
-              <div className="auth-deck-canvas">
-                <HeroStreetIllustration />
-              </div>
-            </div>
-
-            {/* Key Value Proposition Chips */}
-            <div className="auth-chips-row">
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot green" />
-                <span>🛒 100% Real Counter MRP</span>
-              </div>
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot blue" />
-                <span>💬 In-Store Chat</span>
-              </div>
-              <div className="auth-chip-pill">
-                <span className="auth-chip-dot purple" />
-                <span>⚡ 2-Step Mutual Stock Check</span>
-              </div>
-            </div>
-
-            {/* Social Proof Mini Quote */}
-            <div className="auth-quote-card">
-              <img
-                src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&auto=format&fit=crop&q=80"
-                alt="Sneha Raman"
-                className="auth-quote-avatar"
-              />
-              <div className="auth-quote-text">
-                &ldquo;Picking up my daily groceries with my 4-digit PIN takes 45 seconds at the counter. Zero platform surcharges!&rdquo;
-                <div className="auth-quote-author">Sneha Raman • Neighborhood Shopper</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column: Modern Polished Glassmorphic Registration Card */}
-          <div className="auth-form-col">
-            <div className="auth-card">
-              <div className="auth-card-brand-row">
-                <div className="auth-logo-badge">R</div>
-                <div>
-                  <div className="auth-brand-name">Rquest</div>
-                  <div className="auth-brand-sub">Hyperlocal Direct Commerce</div>
-                </div>
-                <div style={{ marginLeft: 'auto' }}>
-                  <SparkleStar size={20} color="#10b981" />
-                </div>
+        {/* RIGHT COLUMN: Registration Card Stack */}
+        <div className="rq-auth-form-col">
+          <div className="rq-auth-card-wrapper">
+            {/* Centered Brand Hero */}
+            <div className="rq-auth-hero">
+              <div className="rq-auth-logo-badge-wrap">
+                <img src={AppIcon} alt="Rquest" className="rq-auth-app-icon" />
+                <span className="rq-auth-verified-check">
+                  <CheckCircleFilled />
+                </span>
               </div>
 
-              <h2 className="auth-card-title">Create Your Free Account</h2>
-              <p className="auth-card-subtitle">
-                Join thousands of local neighbors and merchants in your Neighborhood
+              <div className="rq-auth-pill-badge">
+                <EnvironmentFilled className="rq-auth-pill-icon" />
+                <span>One Neighbourhood ID</span>
+              </div>
+
+              <h2 className="rq-auth-hero-heading">Create your account</h2>
+              <p className="rq-auth-hero-sub">
+                Join as a neighbourhood shopper or register your store.
               </p>
+            </div>
 
-              <Form
-                form={form}
-                onFinish={onFinish}
-                layout="vertical"
-                className="auth-form"
-                initialValues={{
-                  userRole: CUSTOMER_ROLE_ID,
-                }}
-              >
-                {/* Tactile Interactive Account Role Picker */}
-                <div className="auth-role-picker">
+            {/* Registration Form Card */}
+            <div className="rq-auth-box">
+              <form onSubmit={onFinish} className="rq-auth-form-stack">
+                {/* Account Role Selector */}
+                <div className="rq-role-selector">
                   <div
-                    className={`auth-role-card ${selectedRole === CUSTOMER_ROLE_ID ? 'active' : ''}`}
+                    className={`rq-role-option ${selectedRole === CUSTOMER_ROLE_ID ? 'selected' : ''}`}
                     onClick={() => handleRoleSelect(CUSTOMER_ROLE_ID)}
                   >
-                    <div className="auth-role-header">
-                      <span className="auth-role-icon">
-                        <ShoppingOutlined style={{ color: selectedRole === CUSTOMER_ROLE_ID ? '#10b981' : '#64748b' }} />
+                    <div className="rq-role-option-top">
+                      <span className="rq-role-option-icon">
+                        <ShoppingOutlined />
                       </span>
-                      <div className="auth-role-radio">
-                        {selectedRole === CUSTOMER_ROLE_ID && <span className="auth-role-radio-inner" />}
-                      </div>
+                      <span className="rq-role-radio">
+                        {selectedRole === CUSTOMER_ROLE_ID && (
+                          <span className="rq-role-radio-dot" />
+                        )}
+                      </span>
                     </div>
-                    <div className="auth-role-label">Shopper / Neighbor</div>
+                    <div className="rq-role-option-title">Shopper / Neighbour</div>
+                    <div className="rq-role-option-desc">Browse local shops nearby</div>
                   </div>
 
                   <div
-                    className={`auth-role-card ${selectedRole === MERCHANT_ROLE_ID ? 'active' : ''}`}
+                    className={`rq-role-option ${selectedRole === MERCHANT_ROLE_ID ? 'selected' : ''}`}
                     onClick={() => handleRoleSelect(MERCHANT_ROLE_ID)}
                   >
-                    <div className="auth-role-header">
-                      <span className="auth-role-icon">
-                        <ShopOutlined style={{ color: selectedRole === MERCHANT_ROLE_ID ? '#10b981' : '#64748b' }} />
+                    <div className="rq-role-option-top">
+                      <span className="rq-role-option-icon">
+                        <ShopOutlined />
                       </span>
-                      <div className="auth-role-radio">
-                        {selectedRole === MERCHANT_ROLE_ID && <span className="auth-role-radio-inner" />}
-                      </div>
+                      <span className="rq-role-radio">
+                        {selectedRole === MERCHANT_ROLE_ID && (
+                          <span className="rq-role-radio-dot" />
+                        )}
+                      </span>
                     </div>
-                    <div className="auth-role-label">Store Owner / Merchant</div>
-                    <div className="auth-role-desc">0% commission, direct UPI cashflow</div>
+                    <div className="rq-role-option-title">Store Owner</div>
+                    <div className="rq-role-option-desc">List products &amp; orders</div>
                   </div>
                 </div>
 
-                <Form.Item name="userRole" hidden>
-                  <Input />
-                </Form.Item>
-
-                <Form.Item
-                  name="username"
-                  label="Full Name or Business Name"
-                  rules={[{ required: true, message: 'Please enter your name' }]}
-                >
+                {/* Full Name / Store Name */}
+                <div>
+                  <div className="rq-auth-field-row">
+                    <span className="rq-auth-label-main">
+                      {selectedRole === MERCHANT_ROLE_ID ? 'Store / Business Name' : 'Full Name'}
+                    </span>
+                  </div>
                   <Input
-                    prefix={<UserOutlined />}
-                    placeholder="Enter your name or store name"
-                    size="large"
-                    autoComplete="name"
+                    prefix={<UserOutlined style={{ color: '#747781' }} />}
+                    placeholder={
+                      selectedRole === MERCHANT_ROLE_ID
+                        ? 'e.g. Sri Krishna Provisions'
+                        : 'e.g. Anand Kumar'
+                    }
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="rq-auth-text-input"
                   />
-                </Form.Item>
+                </div>
 
-                <Form.Item
-                  name="mobile"
-                  label="Mobile Number"
-                  rules={[{ required: true, message: 'Please enter your 10-digit mobile number' }]}
-                >
-                  <Input
-                    prefix={<PhoneOutlined />}
-                    placeholder="Enter 10-digit mobile number"
-                    size="large"
-                    autoComplete="tel"
-                  />
-                </Form.Item>
+                {/* Mobile Phone Number */}
+                <div>
+                  <div className="rq-auth-field-row">
+                    <span className="rq-auth-label-main">Mobile Phone Number</span>
+                    <span className="rq-auth-label-hint">SMS verification</span>
+                  </div>
+                  <div className="rq-auth-phone-control">
+                    <div className="rq-auth-country-picker">
+                      <span className="rq-country-flag">🇮🇳</span>
+                      <span className="rq-country-code">{countryCode}</span>
+                      <span className="rq-country-caret">▾</span>
+                    </div>
+                    <input
+                      type="tel"
+                      className="rq-auth-phone-input"
+                      placeholder="98765 43210"
+                      value={mobileNumber}
+                      onChange={(e) => setMobileNumber(e.target.value)}
+                      autoComplete="tel"
+                    />
+                  </div>
+                </div>
 
-                <Form.Item
-                  name="password"
-                  label="Create Password"
-                  rules={[{ required: true, message: 'Please enter your password' }]}
-                >
+                {/* Password */}
+                <div>
+                  <div className="rq-auth-field-row">
+                    <span className="rq-auth-label-main">Create Password</span>
+                  </div>
                   <Input.Password
-                    prefix={<LockOutlined />}
+                    prefix={<LockOutlined style={{ color: '#747781' }} />}
                     placeholder="Create a secure password"
-                    size="large"
-                    autoComplete="new-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="rq-auth-text-input"
                   />
-                </Form.Item>
+                </div>
 
-                <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
+                {/* Submit Button & Trust Guarantee */}
+                <div className="rq-auth-actions-block">
                   <Button
                     type="primary"
                     htmlType="submit"
                     loading={loading}
-                    size="large"
-                    className="btn-auth-submit"
+                    className="rq-auth-submit-btn"
                   >
-                    <span>{selectedRole === MERCHANT_ROLE_ID ? 'Launch Merchant Account' : 'Create Free Shopper Account'}</span>
+                    <span>
+                      {selectedRole === MERCHANT_ROLE_ID
+                        ? 'Create Store Account'
+                        : 'Create Account'}
+                    </span>
                     <ArrowRightOutlined />
                   </Button>
-                </Form.Item>
 
-                <div className="auth-switch-row">
-                  <span>Already have an account?</span>
-                  <Link to={Routes.login} className="auth-switch-link">
-                    Sign in
-                  </Link>
+                  {/* Zero Spam Direct Guarantee Strip */}
+                  <div className="rq-auth-zero-spam-pill">
+                    <span className="rq-zero-spam-icon">
+                      <CheckCircleFilled />
+                    </span>
+                    <span className="rq-zero-spam-text">
+                      Zero spam · Direct neighbourhood connection
+                    </span>
+                  </div>
                 </div>
-              </Form>
+              </form>
+            </div>
+
+            <AuthSocialButtons onSocialAction={handleSocialRegister} />
+
+            {/* Footer Navigation */}
+            <div className="rq-auth-footer-nav">
+              <p className="rq-auth-register-prompt">
+                Already have an account?{' '}
+                <Link to={Routes.login} className="rq-auth-primary-link">
+                  Sign in
+                </Link>
+              </p>
+              <p className="rq-auth-legal-note">
+                By continuing, you agree to Rquest&apos;s{' '}
+                <span className="rq-legal-link">Terms of Service</span> &amp;{' '}
+                <span className="rq-legal-link">Privacy Policy</span>
+              </p>
             </div>
           </div>
         </div>

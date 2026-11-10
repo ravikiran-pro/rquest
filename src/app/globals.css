@@ -1,33 +1,133 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');
 
 :root {
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
-  --primary-light: #eef2ff;
-  --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --brand-dark: #0f172a;
+  /* ========================================================================
+     Rquest Centralized Design System - "Neighborhood Commerce" (Stitch Theme)
+     ======================================================================== */
+
+  /* Primary Brand Palette - Maritime Navy & Cobalt */
+  --primary: #0B2D6B;
+  --primary-hover: #1a4a9c;
+  --primary-active: #001947;
+  --primary-container: #2e6fdb;
+  --primary-light: #E6F0FF;
+  --primary-gradient: linear-gradient(135deg, #0B2D6B 0%, #1a4a9c 100%);
+  --primary-gradient-alt: linear-gradient(90deg, #0B2D6B 0%, #2e6fdb 100%);
+
+  /* Secondary Accent Palette - Radiant Cobalt */
+  --secondary: #0159c5;
+  --secondary-hover: #004397;
+  --secondary-container: #5690fe;
+  --secondary-light: #d8e2ff;
+
+  /* Tertiary - Roasted Amber-Brown & Craft Accents */
+  --tertiary: #5B3A29;
+  --tertiary-hover: #472919;
+  --tertiary-container: #926a56;
+  --tertiary-fixed: #ffdbcb;
+  --on-tertiary-fixed: #2e1507;
+
+  /* Surface & Canvas System - Warm Tactile Parchment */
+  --surface: #ffffff;
+  --surface-container: #f1ede8;
+  --surface-container-low: #f7f3ee;
+  --surface-container-lowest: #ffffff;
+  --surface-container-high: #ebe8e3;
+  --surface-container-highest: #e6e2dd;
+
+  /* Layout & Surface Aliases */
+  --brand-dark: #0B2D6B;
   --brand-surface: #ffffff;
-  --brand-bg: #f8fafc;
-  --border-color: #e2e8f0;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --text-light: #94a3b8;
-  --success: #10b981;
-  --success-light: #ecfdf5;
-  --warning: #f59e0b;
-  --warning-light: #fffbeb;
-  --error: #ef4444;
-  --error-light: #fef2f2;
+  --brand-bg: #F8F4EF;
+  --brand-muted: #f1ede8;
+  --border-color: #ebe7e0;
+  --border-color-light: #f1ede8;
+  --border-color-dark: #c2c6d5;
+  --outline: #747781;
+  --outline-variant: #c2c6d5;
+  --text-main: #1c1c19;
+  --text-muted: #444650;
+  --text-light: #747781;
   --white: #ffffff;
-  
-  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 4px 12px -2px rgba(15, 23, 42, 0.08), 0 2px 6px -1px rgba(15, 23, 42, 0.04);
-  --shadow-lg: 0 12px 24px -4px rgba(15, 23, 42, 0.1), 0 4px 10px -2px rgba(15, 23, 42, 0.05);
-  --shadow-card: 0 2px 10px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02);
-  --radius-sm: 6px;
-  --radius-md: 10px;
-  --radius-lg: 16px;
+
+  /* Hyperlocal Badges & Status Chips */
+  --live-badge-bg: #ffdbcb;
+  --live-badge-text: #2e1507;
+  --verified-chip-bg: #E6F0FF;
+  --verified-chip-border: #d2e3fc;
+  --verified-chip-text: #0056bd;
+  --service-chip-bg: #f7ebe1;
+  --service-chip-border: #e8d5c8;
+  --service-chip-text: #5B3A29;
+  --star-gold: #926a56;
+
+  /* Functional / Semantic Feedback */
+  --success: #059669;
+  --success-hover: #047857;
+  --success-light: #ecfdf5;
+  --success-border: #a7f3d0;
+
+  --warning: #f59e0b;
+  --warning-hover: #d97706;
+  --warning-light: #fffbeb;
+  --warning-border: #fde68a;
+
+  --error: #ba1a1a;
+  --error-hover: #93000a;
+  --error-light: #ffdad6;
+  --error-border: #fecaca;
+
+  --info: #0056bd;
+  --info-hover: #004397;
+  --info-light: #E6F0FF;
+  --info-border: #d2e3fc;
+
+  /* Typography System */
+  --font-headline: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, monospace;
+
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 14px;
+  --font-size-md: 15px;
+  --font-size-lg: 16px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 20px;
+  --font-size-3xl: 24px;
+  --font-size-4xl: 30px;
+  --font-size-5xl: 36px;
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.25;
+  --line-height-snug: 1.375;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.625;
+
+  /* Border Radii System (Level 2) */
+  --radius-xs: 4px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
   --radius-full: 9999px;
+
+  /* Elevation Shadows (Tactile / Diffuse) */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 8px 24px -4px rgba(11, 45, 107, 0.08);
+  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.03);
+  --shadow-popover: 0 10px 25px -4px rgba(11, 45, 107, 0.12);
+  --shadow-primary: 0 2px 8px rgba(11, 45, 107, 0.18);
+  --shadow-ambient-glow: 0 8px 30px rgba(11, 45, 107, 0.08);
+  --shadow-nav: 0 -4px 16px rgba(11, 45, 107, 0.06);
 }
 
 * {
@@ -38,7 +138,7 @@ html,
 body {
   background-color: var(--brand-bg);
   margin: 0;
-  font-family: 'Plus Jakarta Sans', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: var(--font-sans);
   color: var(--text-main);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
@@ -47,7 +147,127 @@ body {
 }
 
 code {
-  font-family: 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, monospace;
+  font-family: var(--font-mono);
+}
+
+/* ==========================================================================
+   Centralized Typography & Utility Classes
+   ========================================================================== */
+.font-sans { font-family: var(--font-sans) !important; }
+.font-headline { font-family: var(--font-headline) !important; }
+.font-body { font-family: var(--font-body) !important; }
+.font-mono { font-family: var(--font-mono) !important; }
+
+.text-xs { font-size: var(--font-size-xs) !important; }
+.text-sm { font-size: var(--font-size-sm) !important; }
+.text-base { font-size: var(--font-size-base) !important; }
+.text-md { font-size: var(--font-size-md) !important; }
+.text-lg { font-size: var(--font-size-lg) !important; }
+.text-xl { font-size: var(--font-size-xl) !important; }
+.text-2xl { font-size: var(--font-size-2xl) !important; }
+.text-3xl { font-size: var(--font-size-3xl) !important; }
+
+.font-regular { font-weight: var(--font-weight-regular) !important; }
+.font-medium { font-weight: var(--font-weight-medium) !important; }
+.font-semibold { font-weight: var(--font-weight-semibold) !important; }
+.font-bold { font-weight: var(--font-weight-bold) !important; }
+.font-extrabold { font-weight: var(--font-weight-extrabold) !important; }
+
+.text-main { color: var(--text-main) !important; }
+.text-muted { color: var(--text-muted) !important; }
+.text-light { color: var(--text-light) !important; }
+.text-primary { color: var(--primary) !important; }
+.text-success { color: var(--success) !important; }
+.text-warning { color: var(--warning) !important; }
+.text-danger { color: var(--error) !important; }
+.text-white { color: var(--white) !important; }
+
+.bg-surface { background-color: var(--brand-surface) !important; }
+.bg-brand { background-color: var(--brand-bg) !important; }
+.bg-muted { background-color: var(--surface-container) !important; }
+.bg-primary-light { background-color: var(--primary-light) !important; }
+.bg-primary-gradient { background: var(--primary-gradient) !important; }
+
+.border-subtle { border: 1px solid var(--border-color) !important; }
+.border-primary { border: 1px solid var(--primary) !important; }
+
+/* Stitch Neighborhood Commerce Signature Badges & Containers */
+.badge-live {
+  background: var(--live-badge-bg) !important;
+  color: var(--live-badge-text) !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  padding: 2px 6px !important;
+  border-radius: var(--radius-xs) !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+}
+
+.chip-verified {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 10px !important;
+  border-radius: var(--radius-xs) !important;
+  background: var(--verified-chip-bg) !important;
+  border: 1px solid var(--verified-chip-border) !important;
+  color: var(--verified-chip-text) !important;
+  font-size: var(--font-size-xs) !important;
+  font-weight: 600 !important;
+}
+
+.chip-service {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 4px 10px !important;
+  border-radius: var(--radius-xs) !important;
+  background: var(--service-chip-bg) !important;
+  border: 1px solid var(--service-chip-border) !important;
+  color: var(--service-chip-text) !important;
+  font-size: var(--font-size-xs) !important;
+  font-weight: 600 !important;
+}
+
+.card-shelf {
+  background: var(--surface-container-low) !important;
+  border: 1px solid rgba(235, 231, 224, 0.6) !important;
+  border-radius: var(--radius-md) !important;
+  padding: 6px 10px !important;
+}
+
+.card-modern {
+  background: var(--brand-surface) !important;
+  border: 1px solid var(--border-color) !important;
+  border-radius: var(--radius-lg) !important;
+  box-shadow: var(--shadow-card) !important;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.app-route-shell {
+  min-height: calc(100vh - 64px);
+  overflow-x: hidden;
+}
+
+@media (max-width: 767px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+
+  .app-route-shell {
+    min-height: calc(100vh - 58px - 64px - env(safe-area-inset-bottom, 0px));
+    min-height: calc(100dvh - 58px - 64px - env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.card-interactive {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s ease;
+}
+
+.card-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md) !important;
+  border-color: var(--border-color-dark) !important;
 }
 
 /* Modern thin scrollbar */
@@ -61,12 +281,12 @@ code {
 }
 
 ::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--border-color-dark);
   border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
+  background-color: var(--outline);
 }
 
 /* Ant Design Global Polish */
@@ -90,7 +310,7 @@ code {
   background: var(--primary-hover) !important;
   border-color: var(--primary-hover) !important;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25) !important;
+  box-shadow: var(--shadow-primary) !important;
 }
 
 .ant-btn-default {
@@ -110,7 +330,7 @@ code {
 }
 
 .ant-input, .ant-input-affix-wrapper {
-  border-radius: var(--radius-md) !important;
+  border-radius: var(--radius-lg) !important;
   border-color: var(--border-color) !important;
   padding: 8px 14px !important;
   font-size: 14px !important;
@@ -119,7 +339,7 @@ code {
 
 .ant-input:focus, .ant-input-affix-wrapper:focus, .ant-input-affix-wrapper-focused {
   border-color: var(--primary) !important;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12) !important;
+  box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.12) !important;
 }
 
 .ant-card {
@@ -255,6 +475,14 @@ code {
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
+/* Hide floating chat icon on mobile devices (<= 768px) where bottom navigation bar / Chat menu already exists */
+@media (max-width: 768px) {
+  .rquest-chat-fab,
+  .chat-footer-icon {
+    display: none !important;
+  }
+}
+
 .rquest-chat-fab:hover,
 .chat-footer-icon:hover {
   transform: scale(1.08);
@@ -264,8 +492,8 @@ code {
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: var(--primary-gradient);
-  box-shadow: 0 10px 25px -4px rgba(79, 70, 229, 0.45), 0 4px 10px -2px rgba(79, 70, 229, 0.25);
+  background: var(--primary, #0B2D6B);
+  box-shadow: 0 10px 25px -4px rgba(11, 45, 107, 0.45), 0 4px 10px -2px rgba(11, 45, 107, 0.25);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,8 +508,8 @@ code {
 .chat-footer-icon .ant-avatar {
   width: 58px;
   height: 58px;
-  background: var(--primary-gradient) !important;
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.35);
+  background: var(--primary, #0B2D6B) !important;
+  box-shadow: 0 8px 24px rgba(11, 45, 107, 0.35);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -515,7 +743,7 @@ code {
 }
 
 .ant-message-info .ant-message-notice-content {
-  border-left: 4px solid #4f46e5 !important;
+  border-left: 4px solid var(--primary, #0B2D6B) !important;
 }
 
 @keyframes slideUpToast {

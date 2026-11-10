@@ -8,14 +8,9 @@ import {
   Input,
   Select,
   Checkbox,
-  Tag,
   Typography,
-  Card,
   Popconfirm,
   message,
-  Divider,
-  Row,
-  Col,
   Alert,
 } from 'antd';
 import {
@@ -28,8 +23,9 @@ import {
   SaveOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
+import { colors } from '../../app/styles/theme';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text, Paragraph } = Typography;
 const { Option } = Select;
 
 // Quick Domain Presets for 1-click schema generation
@@ -111,7 +107,6 @@ const FormSchemaBuilderModal = ({
   onSuccess,
 }) => {
   const isShopTarget = !!shop;
-  const targetName = isShopTarget ? shop?.shop_name : category?.name;
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
 
@@ -359,7 +354,7 @@ const FormSchemaBuilderModal = ({
     <Modal
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <SettingOutlined style={{ color: '#4f46e5' }} />
+          <SettingOutlined style={{ color: colors.primary }} />
           <span>
             {isShopTarget
               ? `Custom Product Form — Store: ${shop?.shop_name || 'Shop'}`
@@ -391,7 +386,7 @@ const FormSchemaBuilderModal = ({
           icon={<SaveOutlined />}
           loading={saving}
           onClick={handleSave}
-          style={{ background: '#4f46e5', borderColor: '#4f46e5' }}
+          style={{ background: colors.primary, borderColor: colors.primary }}
         >
           {isShopTarget
             ? `Save Shop Override (${fields.length} Fields)`
@@ -410,7 +405,7 @@ const FormSchemaBuilderModal = ({
               </>
             ) : (
               <>
-                Fields defined here will automatically appear on the <strong>Add/Edit Product Form</strong> for all shops belonging to <strong>{category?.name}</strong>. Values are automatically stored inside each listing's <code>metadata</code> JSON.
+                Fields defined here will automatically appear on the <strong>Add/Edit Product Form</strong> for all shops belonging to <strong>{category?.name}</strong>. Values are automatically stored inside each listing&apos;s <code>metadata</code> JSON.
               </>
             )}
           </div>
@@ -479,7 +474,21 @@ const FormSchemaBuilderModal = ({
 FormSchemaBuilderModal.propTypes = {
   open: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  category: PropTypes.object,
+  category: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    form_schema: PropTypes.array,
+  }),
+  shop: PropTypes.shape({
+    id: PropTypes.string,
+    shop_name: PropTypes.string,
+    shop_type: PropTypes.string,
+    form_schema: PropTypes.array,
+    shopCategory: PropTypes.shape({
+      name: PropTypes.string,
+      form_schema: PropTypes.array,
+    }),
+  }),
   onSuccess: PropTypes.func,
 };
 

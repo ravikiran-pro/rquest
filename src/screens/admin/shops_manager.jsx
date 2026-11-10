@@ -6,27 +6,20 @@ import {
   Tag,
   Space,
   Select,
-  Typography,
-  Card,
   Flex,
-  Tooltip,
   Avatar,
-  Badge,
 } from 'antd';
 import {
   ShopOutlined,
-  SearchOutlined,
   SettingOutlined,
   ReloadOutlined,
-  CheckCircleOutlined,
   BuildOutlined,
   EnvironmentOutlined,
   PhoneOutlined,
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
+import { colors, radii } from '../../app/styles/theme';
 import FormSchemaBuilderModal from './form_schema_builder';
-
-const { Text } = Typography;
 
 const ShopsManager = () => {
   const [shopsList, setShopsList] = useState([]);
@@ -115,7 +108,7 @@ const ShopsManager = () => {
             size={40}
             src={record.img_url}
             icon={<ShopOutlined />}
-            style={{ borderRadius: 8, background: '#e0e7ff', color: '#4f46e5' }}
+            style={{ borderRadius: radii.md, background: colors.primaryLight, color: colors.primary }}
           />
           <div>
             <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
@@ -191,10 +184,10 @@ const ShopsManager = () => {
             icon={<SettingOutlined />}
             onClick={() => handleOpenFormBuilder(record)}
             style={{
-              borderRadius: 6,
+              borderRadius: radii.sm || 6,
               fontWeight: 600,
-              background: hasCustom ? '#7c3aed' : undefined,
-              borderColor: hasCustom ? '#7c3aed' : undefined,
+              background: hasCustom ? colors.primary : undefined,
+              borderColor: hasCustom ? colors.primary : undefined,
               color: hasCustom ? '#fff' : undefined,
             }}
           >

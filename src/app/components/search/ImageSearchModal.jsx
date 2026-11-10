@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Button, Typography, Flex, Upload, message, Tag } from 'antd';
-import { CameraOutlined, UploadOutlined, FileImageOutlined } from '@ant-design/icons';
+import { CameraOutlined, FileImageOutlined } from '@ant-design/icons';
+import { colors, radii } from '../../styles/theme';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -14,14 +15,12 @@ const VISUAL_PRESETS = [
 ];
 
 const ImageSearchModal = ({ open, onClose, onSearch }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleFileChange = (info) => {
     const file = info.file?.originFileObj || info.file;
     if (file) {
-      setSelectedFile(file);
       const url = URL.createObjectURL(file);
       setPreviewUrl(url);
       // Auto-extract friendly name as fallback
@@ -57,9 +56,9 @@ const ImageSearchModal = ({ open, onClose, onSearch }) => {
           style={{
             width: 52,
             height: 52,
-            borderRadius: 14,
-            background: '#eef2ff',
-            color: '#4f46e5',
+            borderRadius: radii.lg,
+            background: colors.primaryLight,
+            color: colors.primary,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -156,9 +155,10 @@ const ImageSearchModal = ({ open, onClose, onSearch }) => {
             disabled={!previewUrl && !searchQuery}
             onClick={handleApply}
             style={{
-              borderRadius: 8,
+              borderRadius: radii.md,
               fontWeight: 700,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              background: colors.primary,
+              borderColor: colors.primary,
             }}
           >
             Find Matching Stores

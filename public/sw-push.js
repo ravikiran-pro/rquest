@@ -19,8 +19,8 @@ self.addEventListener('push', (event) => {
   const title = data.title || 'Rquest Notification';
   const options = {
     body: data.body || '',
-    icon: data.icon || '/images/logo.png',
-    badge: '/images/logo.png',
+    icon: data.icon || '/images/app-icon.png',
+    badge: '/images/app-icon.png',
     data: data.data || {},
     vibrate: [200, 100, 200],
     tag: (data.data && data.data.orderNumber) ? `order-${data.data.orderNumber}` : 'rquest-notification',

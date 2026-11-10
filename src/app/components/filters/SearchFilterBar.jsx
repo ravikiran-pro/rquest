@@ -36,6 +36,7 @@ import {
   SORT_OPTIONS,
   countActiveFilters,
 } from './filterUtils';
+import { colors, radii } from '../../styles/theme';
 import './SearchFilterBar.css';
 
 const { Text } = Typography;
@@ -100,7 +101,7 @@ const SearchFilterBar = ({
             >
               <span>{cat.icon}</span>
               <span style={{ flex: 1 }}>{cat.label}</span>
-              {isSelected && <CheckOutlined style={{ fontSize: 11, color: '#4f46e5' }} />}
+              {isSelected && <CheckOutlined style={{ fontSize: 11, color: colors.primary }} />}
             </div>
           );
         })}
@@ -130,7 +131,7 @@ const SearchFilterBar = ({
             <Text type="secondary" style={{ fontSize: 12 }}>
               Maximum Radius:
             </Text>
-            <Text strong style={{ color: '#4f46e5', fontSize: 14 }}>
+            <Text strong style={{ color: colors.primary, fontSize: 14 }}>
               {filters.maxDistance ? `${filters.maxDistance} km` : 'Unlimited / Any'}
             </Text>
           </Flex>
@@ -671,7 +672,7 @@ const SearchFilterBar = ({
         title={
           <Flex justify="space-between" align="center" style={{ width: '100%' }}>
             <Flex align="center" gap={8}>
-              <FilterOutlined style={{ color: '#4f46e5' }} />
+              <FilterOutlined style={{ color: colors.primary }} />
               <span style={{ fontWeight: 800, fontSize: 16 }}>All Filters & Sort</span>
               {activeCount > 0 && <span className="filter-badge">{activeCount}</span>}
             </Flex>
@@ -697,7 +698,7 @@ const SearchFilterBar = ({
             <div className="mobile-filter-section">
               <div className="mobile-section-header">
                 <span className="mobile-section-title">
-                  <AppstoreOutlined style={{ color: '#4f46e5' }} /> Display Layout
+                  <AppstoreOutlined style={{ color: colors.primary }} /> Display Layout
                 </span>
               </div>
               <Segmented
@@ -717,9 +718,9 @@ const SearchFilterBar = ({
           <div className="mobile-filter-section">
             <div className="mobile-section-header">
               <span className="mobile-section-title">
-                <EnvironmentOutlined style={{ color: '#4f46e5' }} /> Distance Radius
+                <EnvironmentOutlined style={{ color: colors.primary }} /> Distance Radius
               </span>
-              <Text strong style={{ color: '#4f46e5', fontSize: 13 }}>
+              <Text strong style={{ color: colors.primary, fontSize: 13 }}>
                 {filters.maxDistance ? `Within ${filters.maxDistance} km` : 'Any Distance'}
               </Text>
             </div>
@@ -753,7 +754,7 @@ const SearchFilterBar = ({
           <div className="mobile-filter-section">
             <div className="mobile-section-header">
               <span className="mobile-section-title">
-                <SwapOutlined style={{ color: '#4f46e5' }} /> Sort Order
+                <SwapOutlined style={{ color: colors.primary }} /> Sort Order
               </span>
             </div>
 
@@ -774,7 +775,7 @@ const SearchFilterBar = ({
           <div className="mobile-filter-section">
             <div className="mobile-section-header">
               <span className="mobile-section-title">
-                <AppstoreOutlined style={{ color: '#4f46e5' }} /> Business Category
+                <AppstoreOutlined style={{ color: colors.primary }} /> Business Category
               </span>
               {filters.categories?.length > 0 && (
                 <Button
@@ -799,7 +800,7 @@ const SearchFilterBar = ({
                   >
                     <span>{cat.icon}</span>
                     <span style={{ flex: 1 }}>{cat.label}</span>
-                    {isSelected && <CheckOutlined style={{ fontSize: 11, color: '#4f46e5' }} />}
+                    {isSelected && <CheckOutlined style={{ fontSize: 11, color: colors.primary }} />}
                   </div>
                 );
               })}
@@ -811,7 +812,7 @@ const SearchFilterBar = ({
             <div className="mobile-filter-section">
               <div className="mobile-section-header">
                 <span className="mobile-section-title">
-                  <DollarOutlined style={{ color: '#4f46e5' }} /> Price Range
+                  <DollarOutlined style={{ color: colors.primary }} /> Price Range
                 </span>
                 {(filters.minPrice !== null || filters.maxPrice !== null) && (
                   <Button
@@ -898,7 +899,7 @@ const SearchFilterBar = ({
             <div className="mobile-filter-section">
               <div className="mobile-section-header">
                 <span className="mobile-section-title">
-                  <ShopOutlined style={{ color: '#4f46e5' }} /> Item Domain
+                  <ShopOutlined style={{ color: colors.primary }} /> Item Domain
                 </span>
               </div>
 
@@ -985,11 +986,12 @@ const SearchFilterBar = ({
             type="primary"
             onClick={() => setIsDrawerOpen(false)}
             style={{
-              borderRadius: 10,
+              borderRadius: radii.md,
               fontWeight: 700,
               height: 42,
               flex: 2,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+              background: colors.primary,
+              borderColor: colors.primary,
             }}
           >
             Apply Filters ({totalResults} results)

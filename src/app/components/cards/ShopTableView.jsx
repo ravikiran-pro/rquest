@@ -10,6 +10,7 @@ import {
 import { useChatStore, useGlobalStore, useCartStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
+import { colors, radii } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -138,7 +139,7 @@ const ShopTableView = ({
                 type="link"
                 size="small"
                 onClick={() => onOpenMap && onOpenMap(item)}
-                style={{ padding: 0, fontSize: 12, fontWeight: 600, color: '#4f46e5' }}
+                style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.primary }}
               >
                 View on Map
               </Button>
@@ -152,8 +153,8 @@ const ShopTableView = ({
             display: 'grid',
             gridTemplateColumns: 'repeat(4, 1fr)',
             gap: 6,
-            background: '#f8fafc',
-            borderRadius: 10,
+            background: colors.surfaceContainerLow || '#f8fafc',
+            borderRadius: radii.md,
             padding: '8px 10px',
             margin: '12px 0',
             textAlign: 'center',
@@ -161,7 +162,7 @@ const ShopTableView = ({
         >
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Distance</Text>
-            <Text strong style={{ fontSize: 12, color: '#0f172a' }}>{distKm} km</Text>
+            <Text strong style={{ fontSize: 12, color: colors.text }}>{distKm} km</Text>
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>ETA</Text>
@@ -169,11 +170,11 @@ const ShopTableView = ({
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Replies in</Text>
-            <Text strong style={{ fontSize: 12, color: '#4f46e5' }}>{getResponseTime(index)}</Text>
+            <Text strong style={{ fontSize: 12, color: colors.cobalt }}>{getResponseTime(index)}</Text>
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Price</Text>
-            <Text strong style={{ fontSize: 13, color: '#7c3aed', display: 'block' }}>{price}</Text>
+            <Text strong style={{ fontSize: 13, color: colors.primary, display: 'block' }}>{price}</Text>
             <Text type="secondary" style={{ fontSize: 9 }}>{priceSub}</Text>
           </div>
         </div>
@@ -184,11 +185,11 @@ const ShopTableView = ({
             type="primary"
             block
             style={{
-              borderRadius: 8,
+              borderRadius: radii.md,
               fontWeight: 700,
               height: 38,
-              background: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 100%)',
-              border: 'none',
+              background: colors.primary,
+              borderColor: colors.primary,
             }}
             onClick={() => {
               if (isShop) {
@@ -206,11 +207,11 @@ const ShopTableView = ({
             <Button
               icon={<MessageOutlined style={{ fontSize: 16 }} />}
               style={{
-                borderRadius: 8,
+                borderRadius: radii.md,
                 height: 38,
                 width: 42,
-                color: '#7c3aed',
-                borderColor: '#e2e8f0',
+                color: colors.primary,
+                borderColor: colors.border,
               }}
               disabled={!user_data?.user_id}
               onClick={() => handleChatOpen(ownerId, id, { shop_name: name })}
@@ -369,7 +370,7 @@ const ShopTableView = ({
                               padding: 0,
                               fontSize: 11,
                               fontWeight: 600,
-                              color: '#4f46e5',
+                              color: colors.primary,
                               width: 'fit-content',
                               marginTop: 2,
                             }}
@@ -433,13 +434,13 @@ const ShopTableView = ({
                             type="primary"
                             size="small"
                             style={{
-                              borderRadius: 6,
+                              borderRadius: radii.sm || 6,
                               fontWeight: 700,
                               fontSize: 12,
                               height: 32,
                               padding: '0 12px',
-                              background: '#7c3aed',
-                              border: 'none',
+                              background: colors.primary,
+                              borderColor: colors.primary,
                             }}
                             onClick={() => {
                               if (isShop) {
@@ -458,10 +459,10 @@ const ShopTableView = ({
                               size="small"
                               icon={<MessageOutlined />}
                               style={{
-                                borderRadius: 6,
+                                borderRadius: radii.sm || 6,
                                 height: 32,
                                 width: 32,
-                                color: '#7c3aed',
+                                color: colors.primary,
                               }}
                               disabled={!user_data?.user_id}
                               onClick={() => handleChatOpen(ownerId, id, { shop_name: name })}

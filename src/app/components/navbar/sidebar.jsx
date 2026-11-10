@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 import Routes from '../../routes/routes';
 import {
   Button,
@@ -13,13 +14,13 @@ import {
 import { useGlobalStore, useCartStore, useChatStore } from '../../services';
 import { useHistory, useLocation } from 'react-router-dom';
 import { storageKeys, checkUserRole } from '../../utils';
+import { AppIcon } from '../assets';
+import { colors, radii } from '../../styles/theme';
 import './index.css';
 import {
   CloseOutlined,
-  HomeOutlined,
   OrderedListOutlined,
   ShopOutlined,
-  AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
   LoginOutlined,
@@ -46,7 +47,7 @@ const SideBar = ({ open, handleClose }) => {
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
+  const { isAdmin, isMerchant } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
@@ -94,23 +95,17 @@ const SideBar = ({ open, handleClose }) => {
       {/* Top Drawer Header with Brand & Close */}
       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
         <Flex align="center" gap={10}>
-          <div
+          <img
+            src={AppIcon}
+            alt="Rquest"
             style={{
               width: 36,
               height: 36,
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              color: '#fff',
-              fontWeight: 800,
-              fontSize: 18,
-              boxShadow: '0 4px 12px rgba(79, 70, 229, 0.28)',
+              objectFit: 'contain',
+              boxShadow: '0 2px 8px rgba(79, 70, 229, 0.24)',
             }}
-          >
-            R
-          </div>
+          />
           <div>
             <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
               Rquest Direct
@@ -145,7 +140,7 @@ const SideBar = ({ open, handleClose }) => {
               size={42}
               icon={<UserOutlined />}
               style={{
-                backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
+                backgroundColor: isMerchant ? colors.cobalt : colors.primary,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 flexShrink: 0,
               }}
@@ -211,10 +206,11 @@ const SideBar = ({ open, handleClose }) => {
               icon={<LoginOutlined />}
               block
               style={{
-                borderRadius: 8,
+                borderRadius: radii.md,
                 fontWeight: 700,
                 height: 38,
-                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                background: colors.primary,
+                borderColor: colors.primary,
               }}
               onClick={() => handleNavigate(Routes.login)}
             >
@@ -223,7 +219,7 @@ const SideBar = ({ open, handleClose }) => {
             <Button
               block
               icon={<UserAddOutlined />}
-              style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
+              style={{ borderRadius: radii.md, fontWeight: 600, height: 38 }}
               onClick={() => handleNavigate(Routes.register)}
             >
               Register
@@ -234,26 +230,13 @@ const SideBar = ({ open, handleClose }) => {
 
       {/* Navigation List Menu */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        {/* Home Page: Only for unauthenticated guests */}
-        {!isLoggedIn && (
-          <Button
-            type="text"
-            icon={<HomeOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.landing ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.landing)}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>Home</span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Customer or Guest: Explore Market */}
+        {/* Customer or Guest: Explore Market (Homescreen) */}
         {(!isLoggedIn || !isMerchant) && (
           <Button
             type="text"
             icon={<CompassOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.app)}
+            className={`drawer-nav-item ${currentPath === Routes.home || currentPath === '/app' || currentPath === '/home' ? 'active' : ''}`}
+            onClick={() => handleNavigate(Routes.home)}
           >
             <span style={{ flex: 1, textAlign: 'left' }}>Explore Market</span>
             <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
@@ -264,9 +247,9 @@ const SideBar = ({ open, handleClose }) => {
         {isLoggedIn && isMerchant && (
           <Button
             type="text"
-            icon={<ShopOutlined style={{ fontSize: 17, color: '#4f46e5' }} />}
+            icon={<ShopOutlined style={{ fontSize: 17, color: colors.primary }} />}
             className={`drawer-nav-item ${currentPath.startsWith('/client') ? 'active' : ''}`}
-            style={{ color: '#4f46e5' }}
+            style={{ color: colors.primary }}
             onClick={() => handleNavigate(Routes.client)}
           >
             <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
@@ -275,8 +258,8 @@ const SideBar = ({ open, handleClose }) => {
             <span
               style={{
                 fontSize: 10,
-                background: '#ede9fe',
-                color: '#6d28d9',
+                background: colors.primaryLight,
+                color: colors.primary,
                 padding: '1px 6px',
                 borderRadius: 9999,
                 fontWeight: 700,
@@ -299,7 +282,7 @@ const SideBar = ({ open, handleClose }) => {
             {cartItemCount > 0 ? (
               <Badge
                 count={`${cartItemCount} item${cartItemCount > 1 ? 's' : ''}`}
-                style={{ backgroundColor: '#4f46e5', fontWeight: 700, fontSize: 11 }}
+                style={{ backgroundColor: colors.primary, fontWeight: 700, fontSize: 11 }}
               />
             ) : (
               <span style={{ fontSize: 12, color: '#94a3b8' }}>Empty</span>
@@ -403,9 +386,9 @@ const SideBar = ({ open, handleClose }) => {
         {isLoggedIn && (isAdmin || user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin' || user_data?.username === 'root') && (
           <Button
             type="text"
-            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: '#7c3aed' }} />}
+            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: colors.cobalt }} />}
             className={`drawer-nav-item ${currentPath === Routes.admin ? 'active' : ''}`}
-            style={{ color: '#7c3aed' }}
+            style={{ color: colors.cobalt }}
             onClick={() => handleNavigate(Routes.admin)}
           >
             <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
@@ -414,8 +397,8 @@ const SideBar = ({ open, handleClose }) => {
             <span
               style={{
                 fontSize: 10,
-                background: '#ede9fe',
-                color: '#6d28d9',
+                background: colors.primaryLight,
+                color: colors.primary,
                 padding: '1px 6px',
                 borderRadius: 9999,
                 fontWeight: 700,
@@ -451,13 +434,18 @@ const SideBar = ({ open, handleClose }) => {
         ) : (
           <div style={{ textAlign: 'center', padding: '4px 0' }}>
             <Text type="secondary" style={{ fontSize: 11 }}>
-              Rquest Direct • Zero Aggregator Markups • v1.0.8
+              Rquest Neighbourhood • Direct Local Stores • v1.0.8
             </Text>
           </div>
         )}
       </div>
     </Drawer>
   );
+};
+
+SideBar.propTypes = {
+  open: PropTypes.bool,
+  handleClose: PropTypes.func,
 };
 
 export default SideBar;

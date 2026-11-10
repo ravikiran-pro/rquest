@@ -5,12 +5,12 @@ import {
   HomeOutlined,
   ShopOutlined,
   EnvironmentOutlined,
-  PlusOutlined,
   CheckCircleFilled,
   AimOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 import AddressModal from './AddressModal';
+import { colors, radii } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -78,11 +78,11 @@ const AddressPicker = ({
               onClick={onSelectCurrentLocation}
               style={{
                 padding: '10px 14px',
-                borderRadius: 10,
+                borderRadius: radii.md,
                 border: isCurrentLocationSelected
-                  ? '2px solid #4f46e5'
-                  : '1px solid #e2e8f0',
-                background: isCurrentLocationSelected ? '#faf5ff' : '#ffffff',
+                  ? `2px solid ${colors.primary}`
+                  : `1px solid ${colors.border}`,
+                background: isCurrentLocationSelected ? colors.primaryLight : '#ffffff',
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -95,12 +95,12 @@ const AddressPicker = ({
                   style={{
                     width: 32,
                     height: 32,
-                    borderRadius: 8,
-                    background: '#eef2ff',
+                    borderRadius: radii.sm,
+                    background: colors.primaryLight,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#4f46e5',
+                    color: colors.primary,
                     fontSize: 16,
                   }}
                 >
@@ -117,7 +117,7 @@ const AddressPicker = ({
               </Flex>
 
               {isCurrentLocationSelected && (
-                <CheckCircleFilled style={{ color: '#4f46e5', fontSize: 18 }} />
+                <CheckCircleFilled style={{ color: colors.primary, fontSize: 18 }} />
               )}
             </div>
           )}
@@ -137,9 +137,9 @@ const AddressPicker = ({
                 onClick={() => onSelectAddress(addr)}
                 style={{
                   padding: '10px 14px',
-                  borderRadius: 10,
-                  border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                  background: isSelected ? '#faf5ff' : '#ffffff',
+                  borderRadius: radii.md,
+                  border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                  background: isSelected ? colors.primaryLight : '#ffffff',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -184,7 +184,7 @@ const AddressPicker = ({
                 </div>
 
                 {isSelected && (
-                  <CheckCircleFilled style={{ color: '#4f46e5', fontSize: 18, flexShrink: 0 }} />
+                  <CheckCircleFilled style={{ color: colors.primary, fontSize: 18, flexShrink: 0 }} />
                 )}
               </div>
             );
@@ -204,11 +204,11 @@ const AddressPicker = ({
             onClick={() => setModalOpen(true)}
             block
             style={{
-              borderRadius: 8,
+              borderRadius: radii.md,
               fontWeight: 600,
               height: 38,
-              borderColor: '#cbd5e1',
-              color: '#4f46e5',
+              borderColor: colors.borderDark,
+              color: colors.primary,
             }}
           >
             + Add New Delivery Address

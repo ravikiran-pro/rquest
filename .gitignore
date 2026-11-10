@@ -10,3 +10,4 @@ dev-dist
 .pem
 backups/
 *.sql
+docs/

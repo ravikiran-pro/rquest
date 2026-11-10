@@ -13,7 +13,6 @@ import {
   Empty,
   Flex,
   Modal,
-  Tabs,
   Row,
   Col,
   Form,
@@ -23,7 +22,6 @@ import {
   PlusOutlined,
   MinusOutlined,
   ShoppingCartOutlined,
-  SafetyCertificateOutlined,
   CheckCircleFilled,
   ShopOutlined,
   CloseOutlined,
@@ -40,6 +38,7 @@ import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storag
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal } from '../profile';
+import { colors, radii } from '../../styles/theme';
 
 const { Text, Title } = Typography;
 
@@ -264,9 +263,6 @@ const CartDrawer = () => {
     }
   };
 
-  // Backward-compatibility alias for cached client bundles and sessions
-  const handleQuickAuth = handleLoginSubmit;
-
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
       setIsOnboardingModalOpen(true);
@@ -420,15 +416,15 @@ const CartDrawer = () => {
               style={{
                 width: 36,
                 height: 36,
-                borderRadius: 10,
-                background: '#eef2ff',
+                borderRadius: radii.md,
+                background: colors.primaryLight,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
               }}
             >
-              <ShoppingCartOutlined style={{ color: '#4f46e5', fontSize: 18 }} />
+              <ShoppingCartOutlined style={{ color: colors.primary, fontSize: 18 }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', lineHeight: 1.2 }}>
@@ -608,7 +604,7 @@ const CartDrawer = () => {
                     >
                       {item.item_name}
                     </div>
-                    <div style={{ fontSize: 13, color: '#4f46e5', fontWeight: 700 }}>
+                    <div style={{ fontSize: 13, color: colors.primary, fontWeight: 700 }}>
                       ₹{item.unit_price}{' '}
                       <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400 }}>
                         / {item.unit}
@@ -670,16 +666,16 @@ const CartDrawer = () => {
                     onClick={() => setOrderType('pickup')}
                     style={{
                       padding: '12px 10px',
-                      borderRadius: 10,
-                      border: orderType === 'pickup' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                      background: orderType === 'pickup' ? '#eef2ff' : '#ffffff',
+                      borderRadius: radii.md,
+                      border: orderType === 'pickup' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      background: orderType === 'pickup' ? colors.primaryLight : '#ffffff',
                       cursor: 'pointer',
                       textAlign: 'center',
                       transition: 'all 0.2s',
                     }}
                   >
                     <div style={{ fontSize: 18, marginBottom: 4 }}>🏬</div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'pickup' ? '#4338ca' : '#1e293b' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'pickup' ? colors.primary : '#1e293b' }}>
                       Self-Pickup
                     </div>
                     <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500, marginTop: 2 }}>
@@ -692,19 +688,19 @@ const CartDrawer = () => {
                     onClick={() => setOrderType('delivery')}
                     style={{
                       padding: '12px 10px',
-                      borderRadius: 10,
-                      border: orderType === 'delivery' ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                      background: orderType === 'delivery' ? '#eef2ff' : '#ffffff',
+                      borderRadius: radii.md,
+                      border: orderType === 'delivery' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                      background: orderType === 'delivery' ? colors.primaryLight : '#ffffff',
                       cursor: 'pointer',
                       textAlign: 'center',
                       transition: 'all 0.2s',
                     }}
                   >
                     <div style={{ fontSize: 18, marginBottom: 4 }}>🛵</div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'delivery' ? '#4338ca' : '#1e293b' }}>
+                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'delivery' ? colors.primary : '#1e293b' }}>
                       Delivery
                     </div>
-                    <div style={{ fontSize: 11, color: '#6366f1', fontWeight: 500, marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: colors.cobalt, fontWeight: 500, marginTop: 2 }}>
                       ₹30
                     </div>
                   </div>
@@ -760,9 +756,9 @@ const CartDrawer = () => {
                           onClick={() => handleSelectSavedAddress(addr)}
                           style={{
                             padding: '8px 12px',
-                            borderRadius: 8,
-                            border: isSelected ? '2px solid #4f46e5' : '1px solid #e2e8f0',
-                            background: isSelected ? '#faf5ff' : '#ffffff',
+                            borderRadius: radii.md,
+                            border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
+                            background: isSelected ? colors.primaryLight : '#ffffff',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -805,7 +801,7 @@ const CartDrawer = () => {
                             </div>
                           </div>
 
-                          {isSelected && <CheckCircleFilled style={{ color: '#4f46e5', fontSize: 16 }} />}
+                          {isSelected && <CheckCircleFilled style={{ color: colors.primary, fontSize: 16 }} />}
                         </div>
                       );
                     })}
@@ -814,7 +810,7 @@ const CartDrawer = () => {
                       type="dashed"
                       size="small"
                       onClick={() => setIsAddAddressModalOpen(true)}
-                      style={{ borderRadius: 6, color: '#4f46e5', fontWeight: 600, marginTop: 4, width: '100%' }}
+                      style={{ borderRadius: 6, color: colors.primary, fontWeight: 600, marginTop: 4, width: '100%' }}
                     >
                       + Add New Delivery Address
                     </Button>
@@ -832,7 +828,7 @@ const CartDrawer = () => {
                           marginBottom: 8,
                         }}
                       >
-                        <EnvironmentOutlined style={{ fontSize: 24, color: '#4f46e5', marginBottom: 6 }} />
+                        <EnvironmentOutlined style={{ fontSize: 24, color: colors.primary, marginBottom: 6 }} />
                         <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 4 }}>
                           Default Delivery Address Required
                         </div>
@@ -843,10 +839,10 @@ const CartDrawer = () => {
                           type="primary"
                           onClick={() => setIsAddAddressModalOpen(true)}
                           style={{
-                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                            border: 'none',
+                            background: colors.primary,
+                            borderColor: colors.primary,
                             fontWeight: 700,
-                            borderRadius: 8,
+                            borderRadius: radii.md,
                             fontSize: 13,
                           }}
                         >
@@ -1001,7 +997,7 @@ const CartDrawer = () => {
                 }}
               >
                 <span>Total Amount</span>
-                <span style={{ color: '#4f46e5' }}>₹{finalTotal.toFixed(2)}</span>
+                <span style={{ color: colors.primary }}>₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
 
@@ -1113,7 +1109,10 @@ const CartDrawer = () => {
               style={{
                 height: 48,
                 fontSize: 15,
-                fontWeight: 600,
+                fontWeight: 700,
+                background: colors.primary,
+                borderColor: colors.primary,
+                borderRadius: radii.md,
                 marginBottom: 8,
               }}
             >
@@ -1181,7 +1180,7 @@ const CartDrawer = () => {
               <span>Don&apos;t have an account? </span>
               <a
                 onClick={() => setAuthMode('register')}
-                style={{ marginLeft: 6, color: '#4f46e5', fontWeight: 600, cursor: 'pointer' }}
+                style={{ marginLeft: 6, color: colors.primary, fontWeight: 600, cursor: 'pointer' }}
               >
                 Register Here
               </a>
@@ -1224,7 +1223,7 @@ const CartDrawer = () => {
               <span>Already have an account? </span>
               <a
                 onClick={() => setAuthMode('login')}
-                style={{ marginLeft: 6, color: '#4f46e5', fontWeight: 600, cursor: 'pointer' }}
+                style={{ marginLeft: 6, color: colors.primary, fontWeight: 600, cursor: 'pointer' }}
               >
                 Login Here
               </a>

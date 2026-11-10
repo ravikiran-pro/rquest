@@ -1,0 +1,29 @@
+{
+  "$schema": "https://antigravity.google/schemas/settings.json",
+  "buildExecution": {
+    "policy": "prompt_request_only",
+    "autoRunOnTurnEnd": false,
+    "description": "Never trigger npm run build, client:build, or server:build automatically at turn end. Only execute when explicitly requested in prompt."
+  },
+  "development": {
+    "devCommand": "npm run dev",
+    "clientDevCommand": "npm run client:dev",
+    "serverDevCommand": "npm run server:dev",
+    "clientPort": 3000,
+    "serverPort": 3001
+  },
+  "permissions": {
+    "fileAccessPolicy": "AGENT_SETTING_POLICY_ALLOW",
+    "sandboxMode": false,
+    "allowedCliCommands": [
+      "git status",
+      "git diff",
+      "npm run dev",
+      "npm run client:dev",
+      "npm run server:dev",
+      "npx eslint",
+      "npx sequelize-cli"
+    ]
+  }
+}
+

@@ -2,13 +2,14 @@ import React, { useState } from 'react';
 import Category from './category';
 import ShopsManager from './shops_manager';
 import AdminOrdersAccounts from './orders_accounts';
-import { Col, Row, Tabs, Card, Typography, Tag, Flex } from 'antd';
+import { Tabs, Card, Typography, Tag, Flex } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
   SafetyCertificateOutlined,
   DatabaseOutlined,
 } from '@ant-design/icons';
+import { colors, typography, radii } from '../../app/styles/theme';
 import './index.css';
 
 const { Title, Text } = Typography;
@@ -51,23 +52,42 @@ const Admin = () => {
   ];
 
   return (
-    <div style={{ maxWidth: 1200, margin: '24px auto', padding: '0 20px 60px 20px' }}>
+    <div className="admin-console-container" style={{ maxWidth: 1200, margin: '24px auto', padding: '0 20px 60px 20px' }}>
       <Card
         style={{
-          borderRadius: 16,
-          border: '1px solid #e2e8f0',
+          borderRadius: radii.xl,
+          border: `1px solid ${colors.border}`,
           marginBottom: 20,
-          boxShadow: '0 4px 12px rgba(15, 23, 42, 0.05)',
+          boxShadow: '0 4px 12px rgba(11, 45, 107, 0.04)',
+          background: colors.surface,
         }}
         bodyStyle={{ padding: 24 }}
       >
         <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
           <div>
             <Flex align="center" gap={10}>
-              <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
+              <Title
+                level={3}
+                style={{
+                  margin: 0,
+                  fontWeight: 800,
+                  color: colors.text,
+                  fontFamily: typography.fontHeadline,
+                }}
+              >
                 Platform Admin Console
               </Title>
-              <Tag color="purple" icon={<SafetyCertificateOutlined />} style={{ fontWeight: 700, padding: '2px 8px' }}>
+              <Tag
+                icon={<SafetyCertificateOutlined />}
+                style={{
+                  fontWeight: 700,
+                  padding: '2px 10px',
+                  borderRadius: radii.full,
+                  background: colors.primaryLight,
+                  color: colors.primary,
+                  borderColor: 'rgba(11, 45, 107, 0.2)',
+                }}
+              >
                 SUPER ADMIN
               </Tag>
             </Flex>
@@ -80,9 +100,10 @@ const Admin = () => {
 
       <Card
         style={{
-          borderRadius: 16,
-          border: '1px solid #e2e8f0',
-          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.04)',
+          borderRadius: radii.xl,
+          border: `1px solid ${colors.border}`,
+          boxShadow: '0 2px 8px rgba(11, 45, 107, 0.03)',
+          background: colors.surface,
         }}
         bodyStyle={{ padding: 24 }}
       >

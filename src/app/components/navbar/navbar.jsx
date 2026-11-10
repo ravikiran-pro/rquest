@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import Routes from '../../routes/routes';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 import { storageKeys, checkUserRole, netWorkCall, apiConfig } from '../../utils';
@@ -19,15 +20,15 @@ import {
   chatSocket,
   requestPushPermission,
 } from '../../services';
+import { DesktopLogo, AppIcon } from '../assets';
+import { colors, radii } from '../../styles/theme';
 import './index.css';
 import {
   MenuOutlined,
   UserOutlined,
   ShoppingCartOutlined,
   ShopOutlined,
-  AppstoreOutlined,
   LogoutOutlined,
-  HomeOutlined,
   OrderedListOutlined,
   DownOutlined,
   MessageOutlined,
@@ -50,7 +51,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isAdmin, isMerchant, role } = checkUserRole(user_data);
+  const { isAdmin, isMerchant } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
   );
@@ -69,7 +70,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         setNotificationsList(res.data);
         setUnreadNotifCount(res.unreadCount || res.data.filter((n) => !n.is_read).length);
       }
-    } catch (e) {}
+    } catch (e) {
+      // Ignore notification fetch error
+    }
   };
 
   useEffect(() => {
@@ -101,7 +104,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       await netWorkCall(apiConfig.notifications_read_all, 'PUT', null, true);
       setUnreadNotifCount(0);
       setNotificationsList((prev) => prev.map((n) => ({ ...n, is_read: true })));
-    } catch (e) {}
+    } catch (e) {
+      // Ignore mark all read error
+    }
   };
 
   const logout = () => {
@@ -113,12 +118,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   const currentPath = location.pathname;
 
   const logoDestination = !isLoggedIn
-    ? Routes.landing
+    ? Routes.home
     : isAdmin
     ? Routes.admin
     : isMerchant
     ? Routes.client
-    : Routes.app;
+    : Routes.home;
 
   // Dropdown items for desktop user profile capsule
   const userMenuItems = [
@@ -160,9 +165,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       ? [
           {
             key: 'merchant',
-            icon: <ShopOutlined style={{ color: '#4f46e5' }} />,
+            icon: <ShopOutlined style={{ color: colors.primary }} />,
             label: (
-              <span style={{ color: '#4f46e5', fontWeight: 700 }}>
+              <span style={{ color: colors.primary, fontWeight: 700 }}>
                 Merchant Studio
               </span>
             ),
@@ -238,9 +243,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       ? [
           {
             key: 'admin-console',
-            icon: <SafetyCertificateOutlined style={{ color: '#7c3aed' }} />,
+            icon: <SafetyCertificateOutlined style={{ color: colors.cobalt }} />,
             label: (
-              <span style={{ color: '#7c3aed', fontWeight: 700 }}>
+              <span style={{ color: colors.cobalt, fontWeight: 700 }}>
                 Platform Admin Console
               </span>
             ),
@@ -258,39 +263,176 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
     },
   ];
 
+  const isOrdersRoute = currentPath === Routes.orders;
+
+  if (isMobile && isOrdersRoute) {
+    return (
+      <header
+        className="navBar"
+        style={{
+          backgroundColor: '#F8F4EF',
+          borderBottom: 'none',
+          boxShadow: 'none',
+          padding: '0 16px',
+          height: 60,
+        }}
+      >
+        {/* Mobile Orders Top App Bar matching Stitch visual design */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <img
+            src={AppIcon}
+            alt="Rquest"
+            style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'contain' }}
+          />
+          <div>
+            <div style={{ fontWeight: 800, fontSize: 16, color: '#0B2D6B', lineHeight: 1.2 }}>
+              Orders
+            </div>
+            <div style={{ fontSize: 11, color: '#667085', fontWeight: 500, lineHeight: 1.2 }}>
+              Your Order History
+            </div>
+          </div>
+        </div>
+
+        <Flex align="center" gap={10}>
+          {/* Circular Bell Notification Action */}
+          <Dropdown
+            trigger={['click']}
+            placement="bottomRight"
+            dropdownRender={() => (
+              <div
+                style={{
+                  width: 320,
+                  maxWidth: '90vw',
+                  background: '#ffffff',
+                  borderRadius: 12,
+                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
+                  border: '1px solid #e2e8f0',
+                  overflow: 'hidden',
+                }}
+              >
+                <div
+                  style={{
+                    padding: '10px 14px',
+                    borderBottom: '1px solid #f1f5f9',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    background: '#f8fafc',
+                  }}
+                >
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
+                  </span>
+                  {unreadNotifCount > 0 && (
+                    <Button
+                      type="link"
+                      size="small"
+                      onClick={handleMarkAllRead}
+                      style={{ padding: 0, fontSize: 11, height: 'auto', color: colors.primary }}
+                    >
+                      Mark all read
+                    </Button>
+                  )}
+                </div>
+                {notificationsList.length === 0 ? (
+                  <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
+                    No new notifications
+                  </div>
+                ) : (
+                  <div style={{ maxHeight: 280, overflowY: 'auto' }}>
+                    {notificationsList.map((item, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          padding: '10px 14px',
+                          borderBottom: '1px solid #f8fafc',
+                          fontSize: 12,
+                        }}
+                      >
+                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{item.title}</div>
+                        <div style={{ color: '#64748b', fontSize: 11 }}>{item.body}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          >
+            <div
+              role="button"
+              tabIndex={0}
+              style={{
+                width: 38,
+                height: 38,
+                borderRadius: '50%',
+                background: '#ffffff',
+                border: '1px solid #ECE7DF',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              }}
+            >
+              <Badge count={unreadNotifCount} size="small" offset={[2, -2]}>
+                <BellOutlined style={{ fontSize: 16, color: '#1D2939' }} />
+              </Badge>
+            </div>
+          </Dropdown>
+
+          {/* Circular User Avatar Trigger */}
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => (open ? handleClose() : handleOpen())}
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: '50%',
+              background: '#0B2D6B',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              color: '#ffffff',
+            }}
+          >
+            <UserOutlined style={{ fontSize: 16 }} />
+          </div>
+        </Flex>
+      </header>
+    );
+  }
+
   return (
     <header className="navBar">
-      {/* Brand Logo - Navigates dynamically based on role */}
-      <Link to={logoDestination} className="navbar-brand">
-        <div className="navbar-logo-icon">R</div>
-        <div className="navbar-brand-text">
-          <span className="navbar-brand-name">Rquest</span>
-          <span className="navbar-badge">Direct</span>
-        </div>
+      {/* Brand Logo - Navigates dynamically based on role (Desktop Logo on desktop, App Icon on mobile) */}
+      <Link to={logoDestination} className="navbar-brand" aria-label="Rquest Home">
+        <img
+          src={DesktopLogo}
+          alt="Rquest"
+          className="navbar-logo-desktop"
+        />
+        <img
+          src={AppIcon}
+          alt="Rquest"
+          className="navbar-logo-mobile"
+        />
       </Link>
 
       {/* Desktop Navigation Links (≥ 992px) */}
       <nav className="navbar-desktop-nav">
-        {/* Guest: Show Home, Explore App, Sell with Us */}
+        {/* Guest: Show Explore Market, Sell with Us */}
         {!isLoggedIn && (
           <>
-            <Link to={Routes.landing}>
-              <Button
-                type="text"
-                icon={<HomeOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.landing ? 'active' : ''}`}
-              >
-                Home
-              </Button>
-            </Link>
-
-            <Link to={Routes.app}>
+            <Link to={Routes.home}>
               <Button
                 type="text"
                 icon={<CompassOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+                className={`nav-item-btn ${currentPath === Routes.home || currentPath === '/app' || currentPath === '/home' ? 'active' : ''}`}
               >
-                Explore App
+                Explore Market
               </Button>
             </Link>
 
@@ -340,7 +482,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                 type="text"
                 icon={<ShopOutlined />}
                 className={`nav-item-btn ${currentPath.startsWith('/client') ? 'active' : ''}`}
-                style={{ color: '#4f46e5', fontWeight: 700 }}
+                style={{ color: colors.primary, fontWeight: 700 }}
               >
                 Merchant Studio
               </Button>
@@ -373,7 +515,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             <Badge
               count={cartItemCount}
               offset={[-2, 4]}
-              color="#4f46e5"
+              color={colors.primary}
               size={screens.xs ? 'small' : 'default'}
             >
               <Button
@@ -382,10 +524,10 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                 icon={<ShoppingCartOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
                 onClick={openCart}
                 style={{
-                  border: '1px solid #e2e8f0',
-                  color: cartItemCount > 0 ? '#4f46e5' : '#64748b',
-                  background: cartItemCount > 0 ? '#eef2ff' : '#ffffff',
-                  boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(79, 70, 229, 0.2)' : 'none',
+                  border: `1px solid ${colors.border}`,
+                  color: cartItemCount > 0 ? colors.primary : '#64748b',
+                  background: cartItemCount > 0 ? colors.primaryLight : '#ffffff',
+                  boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(11, 45, 107, 0.2)' : 'none',
                 }}
                 aria-label="View Shopping Cart"
               />
@@ -420,15 +562,15 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     background: '#f8fafc',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
-                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: '#4f46e5' }} />}
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
                   </span>
                   {unreadNotifCount > 0 && (
                     <Button
                       type="link"
                       size="small"
                       onClick={handleMarkAllRead}
-                      style={{ padding: 0, fontSize: 11, height: 'auto', color: '#4f46e5' }}
+                      style={{ padding: 0, fontSize: 11, height: 'auto', color: colors.primary }}
                     >
                       Mark all read
                     </Button>
@@ -439,14 +581,14 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                   <div
                     style={{
                       padding: '8px 14px',
-                      background: '#eef2ff',
-                      borderBottom: '1px solid #e0e7ff',
+                      background: colors.primaryLight,
+                      borderBottom: `1px solid ${colors.border}`,
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
                     }}
                   >
-                    <span style={{ fontSize: 11, color: '#3730a3', fontWeight: 500 }}>
+                    <span style={{ fontSize: 11, color: colors.primary, fontWeight: 500 }}>
                       Receive OS & order alerts
                     </span>
                     <Button
@@ -457,9 +599,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                         fontSize: 11,
                         height: 24,
                         padding: '0 8px',
-                        borderRadius: 6,
-                        background: '#4f46e5',
-                        borderColor: '#4f46e5',
+                        borderRadius: radii.sm || 6,
+                        background: colors.primary,
+                        borderColor: colors.primary,
                       }}
                     >
                       Enable Push
@@ -511,9 +653,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                 size={screens.xs ? 'middle' : 'large'}
                 icon={<BellOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
                 style={{
-                  border: '1px solid #e2e8f0',
-                  color: unreadNotifCount > 0 ? '#4f46e5' : '#64748b',
-                  background: unreadNotifCount > 0 ? '#eef2ff' : '#ffffff',
+                  border: `1px solid ${colors.border}`,
+                  color: unreadNotifCount > 0 ? colors.primary : '#64748b',
+                  background: unreadNotifCount > 0 ? colors.primaryLight : '#ffffff',
                 }}
                 aria-label="Notifications"
               />
@@ -536,7 +678,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     size={30}
                     icon={<UserOutlined />}
                     style={{
-                      backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
+                      backgroundColor: isMerchant ? colors.cobalt : colors.primary,
                     }}
                   />
                   <span className="navbar-username">
@@ -553,7 +695,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             ) : (
               <Flex align="center" gap={8} style={{ marginLeft: 4 }}>
                 <Link to={Routes.login}>
-                  <Button type="default" style={{ borderRadius: 8, fontWeight: 600 }}>
+                  <Button type="default" style={{ borderRadius: radii.md, fontWeight: 600 }}>
                     Login
                   </Button>
                 </Link>
@@ -561,10 +703,10 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                   <Button
                     type="primary"
                     style={{
-                      borderRadius: 8,
+                      borderRadius: radii.md,
                       fontWeight: 700,
-                      background: '#0f172a',
-                      borderColor: '#0f172a',
+                      background: colors.primary,
+                      borderColor: colors.primary,
                       color: '#ffffff',
                     }}
                   >
@@ -584,7 +726,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => (open ? handleClose() : handleOpen())}
             style={{
               cursor: 'pointer',
-              backgroundColor: isMerchant ? '#7c3aed' : '#4f46e5',
+              backgroundColor: isMerchant ? colors.cobalt : colors.primary,
             }}
           />
         )}
@@ -604,6 +746,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       </Flex>
     </header>
   );
+};
+
+Navbar.propTypes = {
+  open: PropTypes.bool,
+  handleOpen: PropTypes.func,
+  handleClose: PropTypes.func,
 };
 
 export default Navbar;

@@ -18,7 +18,6 @@ import {
 import {
   EnvironmentOutlined,
   PhoneOutlined,
-  PlusOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
   RocketOutlined,
@@ -35,8 +34,9 @@ import {
 import { apiConfig, netWorkCall, getPreciseUserLocation, getLocationName } from '../../app/utils';
 import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
-import { useLocation, useHistory } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import ManageStore from './manage_store';
+import { radii } from '../../app/styles/theme';
 import './client_register.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -127,7 +127,6 @@ const STORE_CATEGORIES = [
 ];
 
 const ClientRegister = () => {
-  const history = useHistory();
   const screens = Grid.useBreakpoint();
   const location = useLocation();
 
@@ -374,11 +373,11 @@ const ClientRegister = () => {
           >
             <Flex justify="space-between" align="center" wrap="wrap" gap={14}>
               <div>
-                <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
-                  Merchant Studio & Outlets
+                <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
+                  Merchant Studio &amp; Outlets
                 </Title>
                 <Text type="secondary" style={{ fontSize: 13 }}>
-                  Manage your direct stores ({allShops.length} active), live customer orders & catalog.
+                  Manage your direct stores ({allShops.length} active), live customer orders &amp; catalog.
                 </Text>
               </div>
 
@@ -390,10 +389,10 @@ const ClientRegister = () => {
                   setCurrentStep(0);
                 }}
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 10,
                   fontWeight: 700,
-                  background: '#0f172a',
-                  borderColor: '#0f172a',
+                  background: '#0B2D6B',
+                  borderColor: '#0B2D6B',
                   height: 42,
                 }}
               >
@@ -412,21 +411,21 @@ const ClientRegister = () => {
               className="profile-clean-card"
               style={{ textAlign: 'center', padding: screens.xs ? '30px 16px' : '50px 20px' }}
             >
-              <Title level={4} style={{ color: '#0f172a', fontWeight: 800 }}>
+              <Title level={4} style={{ color: '#1C1C19', fontWeight: 800, fontFamily: 'var(--font-headline)' }}>
                 No Stores Registered Yet
               </Title>
               <Paragraph type="secondary" style={{ fontSize: 13, maxWidth: 440, margin: '0 auto 20px' }}>
-                Connect your business directly with local customers in your neighborhood with 0% aggregator markups.
+                Put your store in front of nearby customers. List your products, receive orders and connect directly with your neighbourhood.
               </Paragraph>
               <Button
                 type="primary"
                 size="large"
                 onClick={() => setIsFormEnable(true)}
                 style={{
-                  borderRadius: 8,
+                  borderRadius: 10,
                   fontWeight: 700,
-                  background: '#0f172a',
-                  borderColor: '#0f172a',
+                  background: '#0B2D6B',
+                  borderColor: '#0B2D6B',
                   height: 42,
                 }}
               >
@@ -452,11 +451,11 @@ const ClientRegister = () => {
                           borderRadius: 10,
                           objectFit: 'cover',
                           flexShrink: 0,
-                          border: '1px solid #e2e8f0',
+                          border: '1px solid #EAE4DA',
                         }}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <Title level={5} ellipsis style={{ margin: 0, fontWeight: 700, color: '#0f172a' }}>
+                        <Title level={5} ellipsis style={{ margin: 0, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                           {shop.shop_name}
                         </Title>
                         <Tag
@@ -464,15 +463,15 @@ const ClientRegister = () => {
                             marginTop: 4,
                             fontSize: 11,
                             borderRadius: 6,
-                            background: '#f1f5f9',
-                            color: '#334155',
-                            border: 'none',
+                            background: '#FAF7F2',
+                            color: '#5B3A29',
+                            border: '1px solid #EAE4DA',
                             fontWeight: 600,
                           }}
                         >
                           {shop.shop_type || 'Store Outlet'}
                         </Tag>
-                        <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                        <div style={{ fontSize: 12, color: '#5C5E66', marginTop: 4 }}>
                           <EnvironmentOutlined /> {shop.area || 'Local Outlet'}
                         </div>
                       </div>
@@ -492,11 +491,11 @@ const ClientRegister = () => {
                       icon={<EditOutlined />}
                       onClick={() => setManagedShop(shop)}
                       style={{
-                        borderRadius: 8,
+                        borderRadius: 10,
                         fontWeight: 700,
                         height: 38,
-                        background: '#0f172a',
-                        borderColor: '#0f172a',
+                        background: '#0B2D6B',
+                        borderColor: '#0B2D6B',
                       }}
                     >
                       Open Store Studio
@@ -517,7 +516,7 @@ const ClientRegister = () => {
               type="text"
               icon={<ArrowLeftOutlined />}
               onClick={() => setIsFormEnable(false)}
-              style={{ marginBottom: 14, fontWeight: 600, color: '#64748b' }}
+              style={{ marginBottom: 14, fontWeight: 600, color: '#5C5E66' }}
             >
               Back to Merchant Studio
             </Button>
@@ -529,7 +528,7 @@ const ClientRegister = () => {
           >
             {/* Header */}
             <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
+              <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                 Storefront Registration
               </Title>
               <Text type="secondary" style={{ fontSize: 13 }}>
@@ -564,7 +563,7 @@ const ClientRegister = () => {
             {/* STEP 0: Business Category & Identity */}
             {currentStep === 0 && (
               <div>
-                <Title level={5} style={{ marginBottom: 8, fontWeight: 700, color: '#0f172a' }}>
+                <Title level={5} style={{ marginBottom: 8, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                   1. Choose Your Business Category
                 </Title>
                 <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 14 }}>
@@ -585,7 +584,7 @@ const ClientRegister = () => {
                           <div className="store-category-title">{cat.title}</div>
                           <div className="store-category-desc">{cat.desc}</div>
                         </div>
-                        {isSelected && <CheckOutlined style={{ color: '#4f46e5', fontSize: 12 }} />}
+                        {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
                       </div>
                     );
                   })}
@@ -600,7 +599,7 @@ const ClientRegister = () => {
                       onChange={(e) =>
                         setOnboardingData({ ...onboardingData, shop_name: e.target.value })
                       }
-                      style={{ borderRadius: 8 }}
+                      style={{ borderRadius: 10 }}
                     />
                   </Form.Item>
 
@@ -613,7 +612,7 @@ const ClientRegister = () => {
                       onChange={(e) =>
                         setOnboardingData({ ...onboardingData, mobile_number: e.target.value })
                       }
-                      style={{ borderRadius: 8 }}
+                      style={{ borderRadius: 10 }}
                     />
                   </Form.Item>
                 </Form>
@@ -623,7 +622,7 @@ const ClientRegister = () => {
             {/* STEP 1: Store Location & Neighborhood */}
             {currentStep === 1 && (
               <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#0f172a' }}>
+                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                   2. Store Physical Location
                 </Title>
                 <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
@@ -633,17 +632,17 @@ const ClientRegister = () => {
                 {/* 1-Tap GPS Detection Box */}
                 <div
                   style={{
-                    background: '#f8fafc',
+                    background: '#FAF7F2',
                     padding: '14px 16px',
                     borderRadius: 12,
-                    border: '1px solid #e2e8f0',
+                    border: '1px solid #EAE4DA',
                     marginBottom: 16,
                   }}
                 >
                   <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
-                        <EnvironmentOutlined style={{ color: '#4f46e5' }} /> Store GPS Coordinates
+                      <div style={{ fontWeight: 700, fontSize: 13, color: '#1C1C19' }}>
+                        <EnvironmentOutlined style={{ color: '#0B2D6B' }} /> Store GPS Coordinates
                       </div>
                       <div style={{ fontSize: 12, color: '#64748b' }}>
                         Lat: {position[0]?.toFixed(4)}, Lon: {position[1]?.toFixed(4)}
@@ -714,15 +713,15 @@ const ClientRegister = () => {
             {/* STEP 2: Fulfillment & Payments */}
             {currentStep === 2 && (
               <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#0f172a' }}>
-                  3. Fulfillment & Payments
+                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
+                  3. Fulfillment &amp; Payments
                 </Title>
                 <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
                   Choose how neighborhood customers will order and pay.
                 </Text>
 
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1C1C19' }}>
                     Order Fulfillment Options
                   </label>
                   <div className="toggle-option-grid">
@@ -737,7 +736,7 @@ const ClientRegister = () => {
                         <div className="toggle-option-desc">Customers collect orders at your counter</div>
                       </div>
                       {onboardingData.fulfillment_modes.includes('pickup') && (
-                        <CheckOutlined style={{ color: '#4f46e5' }} />
+                        <CheckOutlined style={{ color: '#0B2D6B' }} />
                       )}
                     </div>
 
@@ -752,14 +751,14 @@ const ClientRegister = () => {
                         <div className="toggle-option-desc">Direct neighborhood delivery dispatch</div>
                       </div>
                       {onboardingData.fulfillment_modes.includes('delivery') && (
-                        <CheckOutlined style={{ color: '#4f46e5' }} />
+                        <CheckOutlined style={{ color: '#0B2D6B' }} />
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1C1C19' }}>
                     Accepted Payment Methods
                   </label>
                   <div className="toggle-option-grid">
@@ -774,7 +773,7 @@ const ClientRegister = () => {
                         <div className="toggle-option-desc">PhonePe, GPay, Paytm direct to your bank</div>
                       </div>
                       {onboardingData.payment_modes.includes('direct_upi') && (
-                        <CheckOutlined style={{ color: '#4f46e5' }} />
+                        <CheckOutlined style={{ color: '#0B2D6B' }} />
                       )}
                     </div>
 
@@ -789,14 +788,14 @@ const ClientRegister = () => {
                         <div className="toggle-option-desc">Pay cash when collecting or receiving</div>
                       </div>
                       {onboardingData.payment_modes.includes('cod') && (
-                        <CheckOutlined style={{ color: '#4f46e5' }} />
+                        <CheckOutlined style={{ color: '#0B2D6B' }} />
                       )}
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#334155' }}>
+                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#1C1C19' }}>
                     Store Cover Photo URL (Optional)
                   </label>
                   <Input
@@ -805,7 +804,7 @@ const ClientRegister = () => {
                     onChange={(e) =>
                       setOnboardingData({ ...onboardingData, img_url: e.target.value })
                     }
-                    style={{ borderRadius: 8 }}
+                    style={{ borderRadius: 10 }}
                   />
                 </div>
               </div>
@@ -814,7 +813,7 @@ const ClientRegister = () => {
             {/* STEP 3: Review & Launch */}
             {currentStep === 3 && (
               <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#0f172a' }}>
+                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                   4. Review Storefront
                 </Title>
                 <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
@@ -830,26 +829,26 @@ const ClientRegister = () => {
                       className="store-preview-media"
                     />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <Title level={5} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                      <Title level={5} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                         {onboardingData.shop_name || 'My Local Store'}
                       </Title>
                       <Tag
                         style={{
                           marginTop: 4,
                           fontSize: 11,
-                          borderRadius: 6,
-                          background: '#eef2ff',
-                          color: '#4338ca',
+                          borderRadius: radii.sm,
+                          background: '#E6EEF9',
+                          color: '#0B2D6B',
                           border: 'none',
                           fontWeight: 700,
                         }}
                       >
                         {activeCategoryObj?.title}
                       </Tag>
-                      <div style={{ fontSize: 12, color: '#64748b', marginTop: 4 }}>
+                      <div style={{ fontSize: 12, color: '#5C5E66', marginTop: 4 }}>
                         <EnvironmentOutlined /> {onboardingData.address || 'Address'}, {onboardingData.area || 'Neighborhood'}
                       </div>
-                      <div style={{ fontSize: 11, color: '#166534', fontWeight: 600, marginTop: 4 }}>
+                      <div style={{ fontSize: 11, color: '#0E7A43', fontWeight: 600, marginTop: 4 }}>
                         Direct Orders • Contact: {onboardingData.mobile_number}
                       </div>
                     </div>
@@ -859,8 +858,8 @@ const ClientRegister = () => {
                 {/* Pre-populate Starter Items Checkbox */}
                 <div
                   style={{
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
+                    background: '#FAF7F2',
+                    border: '1px solid #EAE4DA',
                     borderRadius: 12,
                     padding: '12px 14px',
                     marginBottom: 16,
@@ -872,11 +871,11 @@ const ClientRegister = () => {
                       setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })
                     }
                   >
-                    <span style={{ fontWeight: 600, color: '#0f172a', fontSize: 13 }}>
+                    <span style={{ fontWeight: 600, color: '#1C1C19', fontSize: 13 }}>
                       Pre-load starter sample catalog ({activeCategoryObj?.starters?.length} items)
                     </span>
                   </Checkbox>
-                  <div style={{ fontSize: 11, color: '#64748b', marginTop: 3, marginLeft: 24 }}>
+                  <div style={{ fontSize: 11, color: '#5C5E66', marginTop: 3, marginLeft: 24 }}>
                     Your store launches with realistic catalog items that you can edit anytime.
                   </div>
                 </div>
@@ -886,7 +885,7 @@ const ClientRegister = () => {
             {/* Stepper Navigation */}
             <div className="store-step-nav">
               {currentStep > 0 ? (
-                <Button onClick={handlePrevStep} style={{ borderRadius: 8, fontWeight: 600 }}>
+                <Button onClick={handlePrevStep} style={{ borderRadius: 10, fontWeight: 600 }}>
                   <ArrowLeftOutlined /> Previous
                 </Button>
               ) : (
@@ -898,10 +897,10 @@ const ClientRegister = () => {
                   type="primary"
                   onClick={handleNextStep}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 10,
                     fontWeight: 700,
-                    background: '#0f172a',
-                    borderColor: '#0f172a',
+                    background: '#0B2D6B',
+                    borderColor: '#0B2D6B',
                     padding: '0 24px',
                   }}
                 >
@@ -914,14 +913,14 @@ const ClientRegister = () => {
                   loading={submitting}
                   onClick={handleFinishOnboarding}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 10,
                     fontWeight: 700,
-                    background: '#0f172a',
-                    borderColor: '#0f172a',
+                    background: '#0B2D6B',
+                    borderColor: '#0B2D6B',
                     padding: '0 24px',
                   }}
                 >
-                  Launch Storefront & Studio
+                  Launch Storefront &amp; Studio
                 </Button>
               )}
             </div>

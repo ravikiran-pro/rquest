@@ -14,7 +14,6 @@ import {
   Modal,
   message,
   Tooltip,
-  Badge,
   Descriptions,
   Divider,
 } from 'antd';
@@ -22,9 +21,6 @@ import {
   DownloadOutlined,
   ReloadOutlined,
   SearchOutlined,
-  ShopOutlined,
-  DollarOutlined,
-  ShoppingOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
   SyncOutlined,
@@ -35,8 +31,9 @@ import {
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { useChatStore } from '../../app/services';
+import { colors, radii } from '../../app/styles/theme';
 
-const { Title, Text, Paragraph } = Typography;
+const { Text } = Typography;
 const { Option } = Select;
 
 const AdminOrdersAccounts = () => {
@@ -288,7 +285,7 @@ const AdminOrdersAccounts = () => {
               setSelectedOrder(record);
               setDetailModalVisible(true);
             }}
-            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: '#4f46e5' }}
+            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary }}
           >
             #{record.order_number}
           </Button>
@@ -497,13 +494,13 @@ const AdminOrdersAccounts = () => {
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#f5f3ff' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.primaryLight }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: '#5b21b6' }}>Delivery Fees</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.primary }}>Delivery Fees</span>}
               value={accounts.totalDeliveryFees}
               precision={2}
               prefix="₹"
-              valueStyle={{ color: '#6d28d9', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.primary, fontWeight: 800, fontSize: 18 }}
             />
           </Card>
         </Col>
@@ -597,7 +594,7 @@ const AdminOrdersAccounts = () => {
                 type="primary"
                 icon={<DownloadOutlined />}
                 onClick={handleExportBackupJSON}
-                style={{ background: '#4f46e5', borderColor: '#4f46e5', fontWeight: 600 }}
+                style={{ background: colors.primary, borderColor: colors.primary, fontWeight: 600, borderRadius: radii.md }}
               >
                 Backup Orders (JSON)
               </Button>

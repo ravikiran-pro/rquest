@@ -10,6 +10,7 @@ import {
   EnvironmentFilled,
 } from '@ant-design/icons';
 import { distanceConvertor } from '../../utils';
+import { colors } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -41,7 +42,7 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
           <span>High customer rating: <strong>{rating}★</strong></span>
         </Flex>
         <Flex align="center" gap={6}>
-          <ThunderboltFilled style={{ color: '#4f46e5' }} />
+          <ThunderboltFilled style={{ color: colors.primary }} />
           <span>Instant availability & fast response time</span>
         </Flex>
         <Flex align="center" gap={6}>

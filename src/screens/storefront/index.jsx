@@ -6,7 +6,6 @@ import {
   Card,
   Button,
   Tag,
-  Rate,
   Typography,
   Tabs,
   Modal,
@@ -39,6 +38,7 @@ import {
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useGlobalStore, useChatStore, useCartStore } from '../../app/services';
 import Routes from '../../app/routes/routes';
+import { colors, radii } from '../../app/styles/theme';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -643,7 +643,7 @@ const StorefrontScreen = () => {
                       {shop.shop_name}
                     </Title>
                     <SafetyCertificateFilled
-                      style={{ color: '#4f46e5', fontSize: 18 }}
+                      style={{ color: colors.primary, fontSize: 18 }}
                       title="Verified Local Merchant"
                     />
                     {isOwnStore && (
@@ -657,8 +657,15 @@ const StorefrontScreen = () => {
                   </Flex>
                   <Flex gap={6} align="center" wrap="wrap" style={{ marginTop: 4 }}>
                     <Tag
-                      color="indigo"
-                      style={{ fontWeight: 700, margin: 0, borderRadius: 6, fontSize: 11 }}
+                      style={{
+                        fontWeight: 700,
+                        margin: 0,
+                        borderRadius: 6,
+                        fontSize: 11,
+                        background: colors.primaryLight,
+                        color: colors.primary,
+                        borderColor: 'rgba(11, 45, 107, 0.2)',
+                      }}
                     >
                       {shop.shopCategory?.name || shop.shop_type || 'Store'}
                     </Tag>
@@ -696,7 +703,7 @@ const StorefrontScreen = () => {
                       fontWeight: 600,
                     }}
                   >
-                    <EnvironmentOutlined style={{ color: '#4f46e5' }} /> {shop.area}
+                    <EnvironmentOutlined style={{ color: colors.primary }} /> {shop.area}
                   </Tag>
                 )}
                 <Paragraph
@@ -711,7 +718,7 @@ const StorefrontScreen = () => {
                     lineHeight: '18px',
                   }}
                 >
-                  <EnvironmentOutlined style={{ color: '#4f46e5', marginTop: 3, flexShrink: 0 }} />
+                  <EnvironmentOutlined style={{ color: colors.primary, marginTop: 3, flexShrink: 0 }} />
                   <span>{shop.address}</span>
                 </Paragraph>
                 <Flex align="center" gap={6} style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>
@@ -786,11 +793,11 @@ const StorefrontScreen = () => {
                     style={{
                       flex: 2,
                       height: 42,
-                      borderRadius: 10,
+                      borderRadius: radii.md,
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
-                      border: 'none',
+                      background: colors.primary,
+                      borderColor: colors.primary,
+                      boxShadow: '0 4px 14px rgba(11, 45, 107, 0.28)',
                     }}
                   >
                     Chat with Owner
@@ -853,7 +860,7 @@ const StorefrontScreen = () => {
                       {shop.shop_name}
                     </Title>
                     <SafetyCertificateFilled
-                      style={{ color: '#4f46e5', fontSize: 20 }}
+                      style={{ color: colors.primary, fontSize: 20 }}
                       title="Verified Local Merchant"
                     />
                     {isOwnStore && (
@@ -869,13 +876,15 @@ const StorefrontScreen = () => {
                   {/* Badges: Category, Area, Rating */}
                   <Flex gap={8} align="center" wrap="wrap">
                     <Tag
-                      color="indigo"
                       style={{
                         fontWeight: 700,
                         margin: 0,
                         borderRadius: 6,
                         fontSize: 12,
                         padding: '1px 8px',
+                        background: colors.primaryLight,
+                        color: colors.primary,
+                        borderColor: 'rgba(11, 45, 107, 0.2)',
                       }}
                     >
                       {shop.shopCategory?.name || shop.shop_type || 'Store'}
@@ -894,7 +903,7 @@ const StorefrontScreen = () => {
                           fontWeight: 500,
                         }}
                       >
-                        <EnvironmentOutlined style={{ color: '#4f46e5' }} /> {shop.area}
+                        <EnvironmentOutlined style={{ color: colors.primary }} /> {shop.area}
                       </Tag>
                     )}
 
@@ -928,7 +937,7 @@ const StorefrontScreen = () => {
                       gap: 6,
                     }}
                   >
-                    <EnvironmentOutlined style={{ color: '#4f46e5', marginTop: 3, flexShrink: 0 }} />
+                    <EnvironmentOutlined style={{ color: colors.primary, marginTop: 3, flexShrink: 0 }} />
                     <span>{shop.address}</span>
                   </Paragraph>
 
@@ -1014,12 +1023,12 @@ const StorefrontScreen = () => {
                     }}
                     style={{
                       height: 40,
-                      borderRadius: 10,
+                      borderRadius: radii.md,
                       fontWeight: 700,
                       padding: '0 18px',
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                      boxShadow: '0 4px 14px rgba(79, 70, 229, 0.28)',
-                      border: 'none',
+                      background: colors.primary,
+                      borderColor: colors.primary,
+                      boxShadow: '0 4px 14px rgba(11, 45, 107, 0.28)',
                     }}
                   >
                     Chat with Owner
@@ -1272,7 +1281,7 @@ const StorefrontScreen = () => {
                       </Title>
 
                       <Flex align="baseline" gap={6}>
-                        <span style={{ fontSize: 17, fontWeight: 800, color: '#4f46e5' }}>
+                        <span style={{ fontSize: 17, fontWeight: 800, color: colors.primary }}>
                           ₹{item.price}
                         </span>
                         {item.mrp && item.mrp > item.price && (
@@ -1343,10 +1352,11 @@ const StorefrontScreen = () => {
                           type="primary"
                           block
                           style={{
-                            borderRadius: 8,
+                            borderRadius: radii.md,
                             fontWeight: 700,
                             height: 38,
-                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                            background: colors.primary,
+                            borderColor: colors.primary,
                           }}
                           onClick={() => handleAddToCart(item)}
                         >
@@ -1373,10 +1383,11 @@ const StorefrontScreen = () => {
                           block
                           icon={<ShoppingCartOutlined />}
                           style={{
-                            borderRadius: 8,
+                            borderRadius: radii.md,
                             fontWeight: 700,
                             height: 38,
-                            background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                            background: colors.primary,
+                            borderColor: colors.primary,
                           }}
                           onClick={() => {
                             if (isOwnStore) {
@@ -1422,10 +1433,11 @@ const StorefrontScreen = () => {
                         block
                         icon={<ShoppingCartOutlined />}
                         style={{
-                          borderRadius: 8,
+                          borderRadius: radii.md,
                           fontWeight: 700,
                           height: 38,
-                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                          background: colors.primary,
+                          borderColor: colors.primary,
                         }}
                         onClick={() => handleAddToCart(item)}
                       >
@@ -1444,7 +1456,7 @@ const StorefrontScreen = () => {
       {cartItemsForThisShop > 0 && (
         <div className="cart-floating-badge" onClick={openCart}>
           <Flex align="center" gap={8}>
-            <Badge count={cartItemsForThisShop} color="#4f46e5" />
+            <Badge count={cartItemsForThisShop} color={colors.primary} />
             <span style={{ fontWeight: 700 }}>
               {cartItemsForThisShop} {cartItemsForThisShop === 1 ? 'item' : 'items'} in Direct Cart
             </span>
@@ -1459,7 +1471,8 @@ const StorefrontScreen = () => {
               style={{
                 borderRadius: 9999,
                 fontWeight: 700,
-                background: '#4f46e5',
+                background: colors.primary,
+                borderColor: colors.primary,
               }}
             >
               View Cart & Checkout
@@ -1482,7 +1495,7 @@ const StorefrontScreen = () => {
             type="primary"
             loading={quoteLoading}
             onClick={submitQuote}
-            style={{ background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)', fontWeight: 700 }}
+            style={{ background: colors.primary, borderColor: colors.primary, fontWeight: 700, borderRadius: radii.md }}
           >
             Send Quote Request
           </Button>,
@@ -1500,9 +1513,9 @@ const StorefrontScreen = () => {
             placeholder="e.g. 1.5 Ton Split AC is blowing room temperature air. Need gas pressure check and repair on Saturday morning."
           />
         </div>
-        <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8, border: '1px solid #e2e8f0' }}>
+        <div style={{ background: '#f8fafc', padding: 12, borderRadius: radii.md, border: `1px solid ${colors.border}` }}>
           <Text type="secondary">Base Service / Inspection Rate:</Text>
-          <div style={{ fontSize: 18, fontWeight: 800, color: '#4f46e5' }}>
+          <div style={{ fontSize: 18, fontWeight: 800, color: colors.primary }}>
             ₹{quoteItem?.price || 0}{' '}
             <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>
               / {quoteItem?.unit || 'visit'}

@@ -22,6 +22,7 @@ import {
   AppstoreOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
+import { colors, radii } from '../../styles/theme';
 import {
   parseCSV,
   getCategoryCsvConfig,
@@ -182,7 +183,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         width: 110,
         render: (val, record) => (
           <div>
-            <span style={{ fontWeight: 700, color: '#4f46e5' }}>₹{val}</span>
+            <span style={{ fontWeight: 700, color: colors.primary }}>₹{val}</span>
             {record.unit && <span style={{ color: '#64748b', fontSize: 11 }}> / {record.unit}</span>}
           </div>
         ),
@@ -341,7 +342,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
     <Modal
       title={
         <Flex align="center" gap={8}>
-          <AppstoreOutlined style={{ color: '#4f46e5', fontSize: 18 }} />
+          <AppstoreOutlined style={{ color: colors.primary, fontSize: 18 }} />
           <span>Bulk Import Catalog via CSV</span>
         </Flex>
       }
@@ -362,8 +363,9 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           disabled={parsedItems.length === 0}
           onClick={handleImportSubmit}
           style={{
-            background: parsedItems.length > 0 ? '#4f46e5' : undefined,
-            borderColor: parsedItems.length > 0 ? '#4f46e5' : undefined,
+            background: parsedItems.length > 0 ? colors.primary : undefined,
+            borderColor: parsedItems.length > 0 ? colors.primary : undefined,
+            borderRadius: radii.md,
           }}
         >
           Confirm & Import ({parsedItems.length})
@@ -459,10 +461,11 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           icon={<DownloadOutlined />}
           onClick={handleDownloadSample}
           style={{
-            color: '#4f46e5',
-            borderColor: '#c7d2fe',
-            background: '#eef2ff',
+            color: colors.primary,
+            borderColor: colors.border,
+            background: colors.primaryLight,
             fontWeight: 600,
+            borderRadius: radii.md,
           }}
         >
           Download {csvConfig.label} Sample Template (.CSV)
@@ -503,7 +506,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
       <Divider style={{ margin: '12px 0' }} />
       <div style={{ fontSize: 12, color: '#64748b' }}>
         <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
-          <InfoCircleOutlined style={{ color: '#4f46e5' }} />
+          <InfoCircleOutlined style={{ color: colors.primary }} />
           <Text strong style={{ fontSize: 12, color: '#475569' }}>
             {csvConfig.label} Column Guide:
           </Text>

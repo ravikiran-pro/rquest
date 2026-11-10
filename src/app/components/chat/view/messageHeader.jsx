@@ -1,9 +1,11 @@
+import React from 'react';
+import PropTypes from 'prop-types';
 import { format, isToday, isYesterday } from 'date-fns';
-import { Card, Space, Avatar, Row, Col, Badge } from 'antd';
+import { Card, Avatar, Col, Badge } from 'antd';
 import './style.css';
-const ColorList = ['#f56a00', '#7265e6', '#ffbf00', '#00a2ae'];
 
 function formatDateTime(dateTimeString) {
+  if (!dateTimeString) return '';
   const dateTime = new Date(dateTimeString);
 
   if (isToday(dateTime)) {
@@ -16,27 +18,16 @@ function formatDateTime(dateTimeString) {
 }
 
 const MessageHeader = ({
-  name,
-  message,
+  name = 'User',
+  message = '',
   handleHeaderClick,
   color,
   totalUnread,
   dateTime,
-  index,
   isOnline,
 }) => {
-  console.log(
-    {
-      name,
-      message,
-      handleHeaderClick,
-      color,
-      totalUnread,
-      dateTime,
-    },
-    '\n---------',
-    index
-  );
+  const initial = (name && typeof name === 'string' && name.length > 0) ? name[0].toUpperCase() : 'U';
+
   return (
     <Card
       style={{ width: '100%' }}
@@ -52,7 +43,7 @@ const MessageHeader = ({
           }}
           size="large"
         >
-          {name[0].toUpperCase()}
+          {initial}
         </Avatar>
 
         <Col
@@ -74,11 +65,22 @@ const MessageHeader = ({
           <div>
             <span>{formatDateTime(dateTime)}</span>
           </div>
-          <div>{totalUnread ? <Badge count={totalUnread}></Badge> : ''}</div>
+          <div>{totalUnread ? <Badge count={totalUnread} /> : ''}</div>
         </Col>
       </div>
     </Card>
   );
+};
+
+MessageHeader.propTypes = {
+  name: PropTypes.string,
+  message: PropTypes.string,
+  handleHeaderClick: PropTypes.func,
+  color: PropTypes.string,
+  totalUnread: PropTypes.number,
+  dateTime: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
+  index: PropTypes.number,
+  isOnline: PropTypes.bool,
 };
 
 export default MessageHeader;

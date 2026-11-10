@@ -26,6 +26,7 @@ import { netWorkCall, apiConfig } from '../../app/utils';
 import { useGlobalStore } from '../../app/services';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../app/routes/routes';
+import { colors, radii } from '../../app/styles/theme';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -259,7 +260,7 @@ const DeliveryPortalScreen = () => {
 
                               <div style={{ marginTop: 10, fontSize: 13, color: '#334155' }}>
                                 <div style={{ marginBottom: 4 }}>
-                                  <ShopOutlined style={{ color: '#4f46e5', marginRight: 6 }} />
+                                  <ShopOutlined style={{ color: colors.primary, marginRight: 6 }} />
                                   <strong>Pickup:</strong> {order.shop?.shop_name || 'Local Store'}
                                   {order.shop?.address && (
                                     <span style={{ color: '#64748b', fontSize: 12 }}> ({order.shop.address})</span>
@@ -294,8 +295,9 @@ const DeliveryPortalScreen = () => {
                                   loading={actionLoading}
                                   onClick={() => handleClaim(order.id)}
                                   style={{
-                                    borderRadius: 8,
-                                    background: '#4f46e5',
+                                    borderRadius: radii.md,
+                                    background: colors.primary,
+                                    borderColor: colors.primary,
                                     fontWeight: 700,
                                     height: 38,
                                     padding: '0 20px',
@@ -342,14 +344,14 @@ const DeliveryPortalScreen = () => {
                                 <Text strong style={{ fontSize: 16, color: '#0f172a' }}>
                                   Order #{order.order_number}
                                 </Text>
-                                <Tag color="purple" style={{ borderRadius: 6, fontWeight: 700 }}>
+                                <Tag style={{ borderRadius: radii.full, fontWeight: 700, background: colors.primaryLight, color: colors.primary, borderColor: 'rgba(11, 45, 107, 0.2)' }}>
                                   ASSIGNED TO YOU
                                 </Tag>
                               </Space>
 
                               <div style={{ marginTop: 12, fontSize: 13, color: '#334155' }}>
                                 <div style={{ marginBottom: 6 }}>
-                                  <ShopOutlined style={{ color: '#4f46e5', marginRight: 6 }} />
+                                  <ShopOutlined style={{ color: colors.primary, marginRight: 6 }} />
                                   <strong>Store Contact:</strong> {order.shop?.shop_name} (
                                   {order.shop?.mobile_number || 'No phone'})
                                 </div>

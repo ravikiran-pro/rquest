@@ -1,0 +1,19 @@
+{
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "npm.enableRunFromFolder": true,
+  "npm.autoDetect": "off",
+  "task.autoDetect": "off",
+  "javascript.validate.enable": true,
+  "typescript.validate.enable": false,
+  "files.exclude": {
+    "**/.git": true,
+    "**/.svn": true,
+    "**/.hg": true,
+    "**/CVS": true,
+    "**/.DS_Store": true,
+    "**/node_modules": false,
+    "**/dist": false
+  }
+}
+

@@ -11,7 +11,6 @@ import { default as routes } from './routes';
 import {
   LoginScreen,
   HomeScreen,
-  LandingScreen,
   ClientRegister,
   RegisterScreen,
   StorefrontScreen,
@@ -20,7 +19,7 @@ import {
   DeliveryPortalScreen,
   AdminScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar, CartDrawer, ErrorBoundary } from '../components';
+import { ChatApp, NavBar, SideBar, BottomNav, CartDrawer, ErrorBoundary } from '../components';
 import {
   useChatStore,
   useGlobalStore,
@@ -30,8 +29,8 @@ import {
   subscribeToPushNotifications,
 } from '../../app/services';
 import { apiConfig, netWorkCall, checkUserRole, storageKeys } from '../utils';
-import { Avatar, Badge, message, notification } from 'antd';
-import { MessageFilled, CloseOutlined } from '@ant-design/icons';
+import { Badge, message, notification, Grid } from 'antd';
+import { MessageFilled } from '@ant-design/icons';
 import PrivateRoute from './privateroute';
 
 // Configure global message and notification toast behavior
@@ -87,8 +86,10 @@ function PushNotificationHandler() {
 }
 
 export default function AppRoutes() {
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
   const [drawer, setdrawer] = useState(false);
-  const { isChat, unreadTotal, handleChatOpen, handleChatClose } = useChatStore((state) => state);
+  const { isChat, unreadTotal, handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const isCartOpen = useCartStore((state) => state.isOpen);
   const { isMerchant } = checkUserRole(user_data);
@@ -167,36 +168,29 @@ export default function AppRoutes() {
         handleClose={handleClose}
         handleOpen={handleOpen}
       />
-      <div style={{ minHeight: 'calc(100vh - 64px)', overflowX: 'hidden' }}>
+      <BottomNav />
+      <div className="app-route-shell">
         <Switch>
-          <Route exact path={routes.landing}>
-            {isLoggedIn ? (
-              <Redirect to={isMerchant ? routes.client : routes.app} />
-            ) : (
-              <LandingScreen />
-            )}
+          <Route exact path="/">
+            <HomeScreen />
           </Route>
-          <Route path="/landing">
-            {isLoggedIn ? (
-              <Redirect to={isMerchant ? routes.client : routes.app} />
-            ) : (
-              <LandingScreen />
-            )}
+          <Route exact path="/landing">
+            <Redirect to="/" />
           </Route>
-          <Route path={routes.login}>
+          <Route exact path={routes.login}>
             {isLoggedIn ? (
               <Redirect to={isMerchant ? routes.client : routes.app} />
             ) : (
               <LoginScreen />
             )}
           </Route>
-          <Route path={routes.app}>
-            <HomeScreen />
+          <Route exact path="/app">
+            <Redirect to="/" />
           </Route>
-          <Route path="/home">
-            <HomeScreen />
+          <Route exact path="/home">
+            <Redirect to="/" />
           </Route>
-          <Route path={routes.storefront}>
+          <Route exact path={routes.storefront}>
             <StorefrontScreen />
           </Route>
           <PrivateRoute path={routes.orders} component={OrdersScreen} />
@@ -205,21 +199,21 @@ export default function AppRoutes() {
           <PrivateRoute path={routes.admin} component={AdminScreen} />
           <PrivateRoute path={routes.client} component={ClientRegister} />
           <PrivateRoute path={routes.clientShop} component={ClientRegister} />
-          <Route path={routes.register}>
+          <Route exact path={routes.register}>
             {isLoggedIn ? (
               <Redirect to={isMerchant ? routes.client : routes.app} />
             ) : (
               <RegisterScreen />
             )}
           </Route>
-          <Redirect to={routes.landing} />
+          <Redirect to="/" />
         </Switch>
       </div>
       <ErrorBoundary fallback={null}>
         <CartDrawer />
       </ErrorBoundary>
       {isChat && <ChatApp />}
-      {user_data?.user_id && !isChat && !isCartOpen && (
+      {user_data?.user_id && !isChat && !isCartOpen && !isMobile && (
         <div
           className="rquest-chat-fab"
           onClick={() => handleChatOpen(null, null)}

@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import DataTable from '../../app/components/datatable';
-import { Button, Col, Row, message, Tag } from 'antd';
+import { Button, message } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
-import { PlusOutlined, SettingOutlined } from '@ant-design/icons';
+import { SettingOutlined } from '@ant-design/icons';
+import { colors } from '../../app/styles/theme';
 import FormSchemaBuilderModal from './form_schema_builder';
 
-const Category = ({
-    handleSubCategory = () => null
-}) => {
+const Category = () => {
 
     const [rows, setRows] = useState([]);
     const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
@@ -35,8 +34,8 @@ const Category = ({
                         style={{
                             borderRadius: 6,
                             fontWeight: 600,
-                            background: fieldCount > 0 ? '#4f46e5' : undefined,
-                            borderColor: fieldCount > 0 ? '#4f46e5' : undefined,
+                            background: fieldCount > 0 ? colors.primary : undefined,
+                            borderColor: fieldCount > 0 ? colors.primary : undefined,
                             color: fieldCount > 0 ? '#fff' : undefined,
                         }}
                     >
@@ -94,8 +93,8 @@ const Category = ({
         }
     };
 
-    const handleTableChange = (pagination, filters, sorter) => {
-        const { current, pageSize } = pagination;
+    const handleTableChange = (pag) => {
+        const { current } = pag;
         fetchInitData(current);
     };
 

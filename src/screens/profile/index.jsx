@@ -12,7 +12,6 @@ import {
   Flex,
   Spin,
   Tag,
-  Divider,
   message,
   Grid,
   Empty,
@@ -49,9 +48,10 @@ import { netWorkCall, apiConfig, checkUserRole, getPreciseUserLocation, getLocat
 import Routes from '../../app/routes/routes';
 import { AddressCard, AddressModal } from '../../app/components/profile';
 import { LeafletComponent } from '../../app/components';
+import { colors } from '../../app/styles/theme';
 import './profile.css';
 
-const { Title, Text, Paragraph } = Typography;
+const { Title, Text } = Typography;
 
 // Clean, realistic shopper interest categories (No emojis, sleek modern icons)
 const SHOPPING_INTERESTS = [
@@ -569,7 +569,15 @@ const ProfileScreen = () => {
 
                 <div>
                   <Flex align="center" gap={8} wrap="wrap">
-                    <Title level={screens.xs ? 4 : 3} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
+                    <Title
+                      level={screens.xs ? 4 : 3}
+                      style={{
+                        margin: 0,
+                        fontWeight: 800,
+                        color: '#1C1C19',
+                        fontFamily: 'var(--font-headline)',
+                      }}
+                    >
                       {profile?.username || user_data?.username || 'User'}
                     </Title>
                     {isMerchant ? (
@@ -657,7 +665,7 @@ const ProfileScreen = () => {
                     type="link"
                     icon={<PlusOutlined />}
                     onClick={handleAddNewAddress}
-                    style={{ padding: 0, fontWeight: 700, color: '#4f46e5' }}
+                    style={{ padding: 0, fontWeight: 700, color: colors.primary }}
                   >
                     Add Address
                   </Button>
@@ -690,11 +698,11 @@ const ProfileScreen = () => {
                 <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
                   <Flex align="center" gap={8}>
                     {completionScore === 100 ? (
-                      <TrophyOutlined style={{ color: '#10b981', fontSize: 18 }} />
+                      <TrophyOutlined style={{ color: '#0E7A43', fontSize: 18 }} />
                     ) : (
-                      <RocketOutlined style={{ color: '#4f46e5', fontSize: 18 }} />
+                      <RocketOutlined style={{ color: '#0B2D6B', fontSize: 18 }} />
                     )}
-                    <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                    <span style={{ fontWeight: 800, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                       Profile Setup: {completionScore}% Complete
                     </span>
                   </Flex>
@@ -711,7 +719,7 @@ const ProfileScreen = () => {
                     percent={completionScore}
                     status={completionScore === 100 ? 'success' : 'normal'}
                     showInfo={false}
-                    strokeColor={completionScore === 100 ? '#10b981' : '#4f46e5'}
+                    strokeColor={completionScore === 100 ? '#0E7A43' : '#0B2D6B'}
                     strokeWidth={6}
                   />
                 </div>
@@ -748,10 +756,10 @@ const ProfileScreen = () => {
                     <div className="setup-focus-banner-left">
                       <div className="setup-focus-beacon" />
                       <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: '#1C1C19' }}>
                           Next Recommended Step: {firstIncompleteCheck.fullLabel}
                         </div>
-                        <div style={{ fontSize: 11, color: '#64748b' }}>
+                        <div style={{ fontSize: 11, color: '#5C5E66' }}>
                           Tap to complete this detail and boost your account status.
                         </div>
                       </div>
@@ -761,11 +769,11 @@ const ProfileScreen = () => {
                       size="small"
                       onClick={() => handleExecuteChecklistAction(firstIncompleteCheck)}
                       style={{
-                        borderRadius: 6,
+                        borderRadius: 10,
                         fontWeight: 700,
-                        background: '#0f172a',
-                        borderColor: '#0f172a',
-                        height: 32,
+                        background: '#0B2D6B',
+                        borderColor: '#0B2D6B',
+                        height: 34,
                         padding: '0 14px',
                       }}
                     >
@@ -778,7 +786,7 @@ const ProfileScreen = () => {
           </Card>
 
           {/* ================================================================
-              MAIN TABS (Clean White Cards, Light Theme)
+              MAIN TABS (Clean White Cards, Warm Parchment Alignment)
               ================================================================ */}
           <Card
             className="profile-clean-card profile-tabs-card"
@@ -799,7 +807,7 @@ const ProfileScreen = () => {
                     <div style={{ paddingTop: 4 }}>
                       <Flex justify="space-between" align="center" style={{ marginBottom: 16 }} wrap="wrap" gap={10}>
                         <div>
-                          <Title level={5} style={{ margin: 0, color: '#0f172a', fontWeight: 700 }}>
+                          <Title level={5} style={{ margin: 0, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
                             Saved Delivery Locations
                           </Title>
                           <Text type="secondary" style={{ fontSize: 12 }}>
@@ -811,10 +819,10 @@ const ProfileScreen = () => {
                           icon={<PlusOutlined />}
                           onClick={handleAddNewAddress}
                           style={{
-                            borderRadius: 8,
+                            borderRadius: 10,
                             fontWeight: 700,
-                            background: '#0f172a',
-                            borderColor: '#0f172a',
+                            background: '#0B2D6B',
+                            borderColor: '#0B2D6B',
                             height: 38,
                           }}
                         >
@@ -827,7 +835,7 @@ const ProfileScreen = () => {
                           <Empty
                             description={
                               <div>
-                                <div style={{ fontWeight: 700, color: '#334155', fontSize: 14, marginBottom: 4 }}>
+                                <div style={{ fontWeight: 700, color: '#1C1C19', fontSize: 14, marginBottom: 4 }}>
                                   No delivery address saved yet
                                 </div>
                                 <Text type="secondary" style={{ fontSize: 12 }}>
@@ -842,10 +850,10 @@ const ProfileScreen = () => {
                               onClick={handleAddNewAddress}
                               style={{
                                 marginTop: 12,
-                                borderRadius: 8,
+                                borderRadius: 10,
                                 fontWeight: 700,
-                                background: '#0f172a',
-                                borderColor: '#0f172a',
+                                background: '#0B2D6B',
+                                borderColor: '#0B2D6B',
                               }}
                             >
                               Add Your Address
@@ -878,7 +886,7 @@ const ProfileScreen = () => {
                   ),
                   children: (
                     <div style={{ maxWidth: 520, paddingTop: 6 }}>
-                      <Title level={5} style={{ marginBottom: 4, color: '#0f172a', fontWeight: 700 }}>
+                      <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
                         Contact Information
                       </Title>
                       <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
@@ -895,7 +903,7 @@ const ProfileScreen = () => {
                             prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
                             placeholder="Your username"
                             size="large"
-                            style={{ borderRadius: 8 }}
+                            style={{ borderRadius: 10 }}
                           />
                         </Form.Item>
 
@@ -908,7 +916,7 @@ const ProfileScreen = () => {
                             prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
                             placeholder="Mobile number"
                             size="large"
-                            style={{ borderRadius: 8 }}
+                            style={{ borderRadius: 10 }}
                           />
                         </Form.Item>
 
@@ -921,7 +929,7 @@ const ProfileScreen = () => {
                             prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
                             placeholder="name@example.com"
                             size="large"
-                            style={{ borderRadius: 8 }}
+                            style={{ borderRadius: 10 }}
                           />
                         </Form.Item>
 
@@ -932,10 +940,10 @@ const ProfileScreen = () => {
                           size="large"
                           style={{
                             marginTop: 6,
-                            borderRadius: 8,
+                            borderRadius: 10,
                             fontWeight: 700,
-                            background: '#0f172a',
-                            borderColor: '#0f172a',
+                            background: '#0B2D6B',
+                            borderColor: '#0B2D6B',
                             padding: '0 26px',
                           }}
                         >
@@ -951,13 +959,13 @@ const ProfileScreen = () => {
                         key: 'account_hub',
                         label: (
                           <span>
-                            <ShopOutlined /> Storefront & Outlets
+                            <ShopOutlined /> Storefront &amp; Outlets
                           </span>
                         ),
                         children: (
                           <div style={{ paddingTop: 6 }}>
-                            <Title level={5} style={{ marginBottom: 4, color: '#0f172a', fontWeight: 700 }}>
-                              Merchant & Store Management
+                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
+                              Merchant &amp; Store Management
                             </Title>
                             <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
                               Manage your physical storefronts, catalog, and active outlets.
@@ -965,8 +973,8 @@ const ProfileScreen = () => {
 
                             <div
                               style={{
-                                background: '#f8fafc',
-                                border: '1px solid #e2e8f0',
+                                background: '#FAF7F2',
+                                border: '1px solid #EAE4DA',
                                 borderRadius: 14,
                                 padding: '18px 20px',
                                 marginBottom: 16,
@@ -974,7 +982,7 @@ const ProfileScreen = () => {
                             >
                               <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
                                 <div>
-                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#1C1C19' }}>
                                     Merchant Outlet Hub Active
                                   </div>
                                   <Text type="secondary" style={{ fontSize: 12 }}>
@@ -987,10 +995,10 @@ const ProfileScreen = () => {
                                   type="primary"
                                   onClick={() => history.push(Routes.client)}
                                   style={{
-                                    borderRadius: 8,
+                                    borderRadius: 10,
                                     fontWeight: 700,
-                                    background: '#0f172a',
-                                    borderColor: '#0f172a',
+                                    background: '#0B2D6B',
+                                    borderColor: '#0B2D6B',
                                   }}
                                 >
                                   Open Merchant Studio
@@ -1021,9 +1029,9 @@ const ProfileScreen = () => {
                     type="link"
                     size="small"
                     onClick={() => history.push(`${Routes.client}?onboarding=shop`)}
-                    style={{ padding: 0, fontSize: 12, fontWeight: 600, color: '#4f46e5' }}
+                    style={{ padding: 0, fontSize: 12, fontWeight: 600, color: '#0B2D6B' }}
                   >
-                    Register your storefront with 0% commission &rarr;
+                    Register your store on Rquest &rarr;
                   </Button>
                 </Text>
               </div>
@@ -1050,22 +1058,30 @@ const ProfileScreen = () => {
         <div className="onboarding-sheet-header">
           <div
             style={{
-              width: 44,
-              height: 44,
+              width: 46,
+              height: 46,
               borderRadius: 12,
-              background: '#f1f5f9',
-              color: '#0f172a',
+              background: '#E6EEF9',
+              color: '#0B2D6B',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               fontSize: 20,
               margin: '0 auto 10px',
-              border: '1px solid #e2e8f0',
+              border: '1px solid #D5E2F5',
             }}
           >
             {isMerchant ? <ShopOutlined /> : <RocketOutlined />}
           </div>
-          <Title level={4} style={{ margin: 0, fontWeight: 800, color: '#0f172a' }}>
+          <Title
+            level={4}
+            style={{
+              margin: 0,
+              fontWeight: 800,
+              color: '#1C1C19',
+              fontFamily: 'var(--font-headline)',
+            }}
+          >
             {isMerchant ? 'Shop Owner Quick Setup' : 'Welcome to Rquest'}
           </Title>
           <Text type="secondary" style={{ fontSize: 13 }}>
@@ -1110,10 +1126,10 @@ const ProfileScreen = () => {
                     {(assistantData.username || 'U')[0].toUpperCase()}
                   </Avatar>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 700, fontSize: 14, color: '#1C1C19' }}>
                       {assistantData.username || 'User'}
                     </div>
-                    <div style={{ fontSize: 12, color: '#64748b' }}>
+                    <div style={{ fontSize: 12, color: '#5C5E66' }}>
                       Mobile: {assistantData.phone || 'Verified'}
                     </div>
                   </div>
@@ -1121,7 +1137,7 @@ const ProfileScreen = () => {
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#334155' }}>
+                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#1C1C19' }}>
                   Account Name
                 </label>
                 <Input
@@ -1129,13 +1145,13 @@ const ProfileScreen = () => {
                   value={assistantData.username}
                   onChange={(e) => setAssistantData({ ...assistantData, username: e.target.value })}
                   prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                  style={{ borderRadius: 8 }}
+                  style={{ borderRadius: 10 }}
                 />
               </div>
 
               <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#334155' }}>
-                  Email Address (For digital receipts & invoices)
+                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#1C1C19' }}>
+                  Email Address (For digital receipts &amp; invoices)
                 </label>
                 <Input
                   size="large"
@@ -1143,7 +1159,7 @@ const ProfileScreen = () => {
                   value={assistantData.email}
                   onChange={(e) => setAssistantData({ ...assistantData, email: e.target.value })}
                   prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-                  style={{ borderRadius: 8 }}
+                  style={{ borderRadius: 10 }}
                 />
               </div>
 
@@ -1154,7 +1170,7 @@ const ProfileScreen = () => {
                     setOnboardingModalOpen(false);
                     history.replace(Routes.profile);
                   }}
-                  style={{ color: '#64748b' }}
+                  style={{ color: '#5C5E66' }}
                 >
                   Skip for now
                 </Button>
@@ -1164,10 +1180,10 @@ const ProfileScreen = () => {
                   loading={savingAssistant}
                   onClick={handleSaveAssistantStep}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 10,
                     fontWeight: 700,
-                    background: '#0f172a',
-                    borderColor: '#0f172a',
+                    background: '#0B2D6B',
+                    borderColor: '#0B2D6B',
                     padding: '0 24px',
                   }}
                 >
@@ -1183,11 +1199,11 @@ const ProfileScreen = () => {
               {isMerchant ? (
                 <div>
                   <div style={{ textAlign: 'center', padding: '12px 0 16px' }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', marginBottom: 4 }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: '#1C1C19', marginBottom: 4, fontFamily: 'var(--font-headline)' }}>
                       Register Your Storefront Outlet
                     </div>
                     <Text type="secondary" style={{ fontSize: 13 }}>
-                      Pin your physical shop on the neighborhood map with 0% commission.
+                      Put your store in front of nearby customers in your neighbourhood.
                     </Text>
                   </div>
 
@@ -1200,7 +1216,7 @@ const ProfileScreen = () => {
                   />
 
                   <div className="onboarding-actions-footer">
-                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 8 }}>
+                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 10 }}>
                       <ArrowLeftOutlined /> Back
                     </Button>
                     <Button
@@ -1211,10 +1227,10 @@ const ProfileScreen = () => {
                         history.push(`${Routes.client}?onboarding=shop`);
                       }}
                       style={{
-                        borderRadius: 8,
+                        borderRadius: 10,
                         fontWeight: 700,
-                        background: '#0f172a',
-                        borderColor: '#0f172a',
+                        background: '#0B2D6B',
+                        borderColor: '#0B2D6B',
                         padding: '0 24px',
                       }}
                     >
@@ -1225,7 +1241,7 @@ const ProfileScreen = () => {
               ) : (
                 <div>
                   <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 700, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                       Add Primary Delivery Location
                     </div>
                     <Text type="secondary" style={{ fontSize: 12 }}>
@@ -1244,9 +1260,9 @@ const ProfileScreen = () => {
                       borderRadius: 10,
                       fontWeight: 600,
                       marginBottom: 14,
-                      background: '#f8fafc',
-                      borderColor: '#cbd5e1',
-                      color: '#0f172a',
+                      background: '#FAF7F2',
+                      borderColor: '#DDD6CC',
+                      color: '#0B2D6B',
                     }}
                   >
                     1-Tap Auto-Detect GPS Location
@@ -1254,7 +1270,7 @@ const ProfileScreen = () => {
 
                   {/* Address Label Pills */}
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 6, color: '#475569' }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 6, color: '#5C5E66' }}>
                       Address Label
                     </label>
                     <Flex gap={8}>
@@ -1266,9 +1282,9 @@ const ProfileScreen = () => {
                           style={{
                             borderRadius: 8,
                             fontWeight: 600,
-                            background: assistantData.address_label === lbl ? '#0f172a' : '#ffffff',
-                            color: assistantData.address_label === lbl ? '#ffffff' : '#334155',
-                            borderColor: assistantData.address_label === lbl ? '#0f172a' : '#e2e8f0',
+                            background: assistantData.address_label === lbl ? '#0B2D6B' : '#FFFFFF',
+                            color: assistantData.address_label === lbl ? '#FFFFFF' : '#444650',
+                            borderColor: assistantData.address_label === lbl ? '#0B2D6B' : '#EAE4DA',
                             flex: 1,
                           }}
                         >
@@ -1279,31 +1295,31 @@ const ProfileScreen = () => {
                   </div>
 
                   <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#475569' }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#5C5E66' }}>
                       House / Flat / Floor No.
                     </label>
                     <Input
                       placeholder="e.g. Flat 302, Green Valley Apartments"
                       value={assistantData.house_flat_floor}
                       onChange={(e) => setAssistantData({ ...assistantData, house_flat_floor: e.target.value })}
-                      style={{ borderRadius: 8 }}
+                      style={{ borderRadius: 10 }}
                     />
                   </div>
 
                   <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#475569' }}>
-                      Street & Neighborhood / Area
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#5C5E66' }}>
+                      Street &amp; Neighborhood / Area
                     </label>
                     <Input
                       placeholder="e.g. 12th Main Road, Indiranagar"
                       value={assistantData.street_area}
                       onChange={(e) => setAssistantData({ ...assistantData, street_area: e.target.value })}
-                      style={{ borderRadius: 8 }}
+                      style={{ borderRadius: 10 }}
                     />
                   </div>
 
                   <div className="onboarding-actions-footer">
-                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 8 }}>
+                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 10 }}>
                       <ArrowLeftOutlined /> Back
                     </Button>
                     <Button
@@ -1312,14 +1328,14 @@ const ProfileScreen = () => {
                       loading={savingAssistant}
                       onClick={handleSaveAssistantStep}
                       style={{
-                        borderRadius: 8,
+                        borderRadius: 10,
                         fontWeight: 700,
-                        background: '#0f172a',
-                        borderColor: '#0f172a',
+                        background: '#0B2D6B',
+                        borderColor: '#0B2D6B',
                         padding: '0 24px',
                       }}
                     >
-                      Save & Next <ArrowRightOutlined />
+                      Save &amp; Next <ArrowRightOutlined />
                     </Button>
                   </div>
                 </div>
@@ -1331,7 +1347,7 @@ const ProfileScreen = () => {
           {onboardingStep === 2 && (
             <div>
               <div style={{ textAlign: 'center', marginBottom: 14 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
                   What do you usually shop for?
                 </div>
                 <Text type="secondary" style={{ fontSize: 12 }}>
@@ -1348,21 +1364,21 @@ const ProfileScreen = () => {
                       onClick={() => handleToggleInterest(item.id)}
                       className={`category-interest-card ${isSelected ? 'selected' : ''}`}
                     >
-                      <div className="category-interest-icon" style={{ color: isSelected ? '#4f46e5' : '#64748b' }}>
+                      <div className="category-interest-icon" style={{ color: isSelected ? '#0B2D6B' : '#5C5E66' }}>
                         {item.icon}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div className="category-interest-name">{item.name}</div>
                         <div className="category-interest-desc">{item.desc}</div>
                       </div>
-                      {isSelected && <CheckOutlined style={{ color: '#4f46e5', fontSize: 12 }} />}
+                      {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
                     </div>
                   );
                 })}
               </div>
 
               <div className="onboarding-actions-footer">
-                <Button onClick={() => setOnboardingStep(1)} style={{ borderRadius: 8 }}>
+                <Button onClick={() => setOnboardingStep(1)} style={{ borderRadius: 10 }}>
                   <ArrowLeftOutlined /> Back
                 </Button>
                 <Button
@@ -1373,10 +1389,10 @@ const ProfileScreen = () => {
                     history.push(Routes.app);
                   }}
                   style={{
-                    borderRadius: 8,
+                    borderRadius: 10,
                     fontWeight: 700,
-                    background: '#0f172a',
-                    borderColor: '#0f172a',
+                    background: '#0B2D6B',
+                    borderColor: '#0B2D6B',
                     padding: '0 24px',
                   }}
                 >

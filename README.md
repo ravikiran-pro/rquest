@@ -64,6 +64,23 @@ In production, you have a single server serving everything.
 
 A test runner is not installed (right now). But ESLint and Prettier are checked on commit and pushed thanks to husky and lintstaged.
 
+## Google Antigravity & AI Agent Configuration
+
+This repository includes configuration and rules for **Google Antigravity** (IDE, CLI, and Agentic Pair Programming):
+
+- **Rules (`GEMINI.md`, `AGENTS.md`, `.agents/rules/`)**: Enforce project invariants, React 17 constraints, monorepo architecture, and backend guidelines.
+- **Build Policy (`.agents/rules/build-policy.md`)**:
+  - `npm run build` is executed **ONLY when explicitly requested in the prompt**.
+  - Background builds are disabled at prompt/turn ends to optimize speed and responsiveness.
+- **Custom Agents (`.agents/agents/`)**:
+  - `fullstack-orchestrator`: End-to-end features and architectural alignment.
+  - `frontend-specialist`: React 17, Vite 5, Ant Design 5, and Leaflet maps.
+  - `backend-specialist`: Express, PostgreSQL `earthdistance`, Sequelize ORM, and Socket.IO.
+- **Skills (`.agents/skills/`)**:
+  - `build-and-verify`: On-demand build execution and bundle diagnostics.
+  - `db-migrate`: Sequelize database migrations and seeders.
+- **Settings (`.agents/settings.json`, `.vscode/settings.json`)**: Workspace configuration preventing automatic task triggers and optimizing development flow.
+
 ## Licensing
 
 MIT

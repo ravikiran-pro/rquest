@@ -147,15 +147,15 @@ export function triggerNativeNotification(title, options = {}) {
     if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready.then((reg) => {
         reg.showNotification(title, {
-          icon: '/images/logo.png',
-          badge: '/images/logo.png',
+          icon: '/images/app-icon.png',
+          badge: '/images/app-icon.png',
           vibrate: [200, 100, 200],
           ...options,
         });
       });
     } else {
       new Notification(title, {
-        icon: '/images/logo.png',
+        icon: '/images/app-icon.png',
         ...options,
       });
     }

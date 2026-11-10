@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import DataTable from '../../app/components/datatable';
-import { Button, message } from 'antd';
+import { message } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
-import { PlusOutlined } from '@ant-design/icons';
 
 const Products = ({
   category_id = null,
@@ -48,9 +48,8 @@ const Products = ({
     }
   };
 
-  const handleTableChange = (pagination, filters, sorter) => {
-    const { current, pageSize } = pagination;
-    fetchInitData(current);
+  const handleTableChange = (pag) => {
+    fetchInitData(pag.current);
   };
 
   const handleDelete = async (record) => {
@@ -149,6 +148,11 @@ const Products = ({
       />
     </>
   );
+};
+
+Products.propTypes = {
+  category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  sub_category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
 };
 
 export default Products;

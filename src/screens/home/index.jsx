@@ -1,72 +1,78 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import {
-  Input,
   Button,
-  Typography,
   Col,
   Row,
-  Tag,
-  Segmented,
   Spin,
   Empty,
-  Card,
   Flex,
   Grid,
   Modal,
   message,
   Select,
+  Drawer,
 } from 'antd';
 import {
   SearchOutlined,
   EnvironmentOutlined,
-  ShopOutlined,
-  ShoppingCartOutlined,
   AimOutlined,
   AppstoreOutlined,
   BarsOutlined,
   AudioOutlined,
   CameraOutlined,
-  ThunderboltOutlined,
   CompassOutlined,
+  FilterOutlined,
+  CloseCircleOutlined,
+  SafetyCertificateOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
   ShopCard,
   ShopTableView,
   AddressModal,
-  SearchFilterBar,
   DEFAULT_FILTERS,
   applySearchFilters,
+  countActiveFilters,
+  FILTER_CATEGORIES,
   VoiceSearchModal,
   ImageSearchModal,
   AiSearchModal,
-  AiRecommendationCard,
-  TrustBanner,
+  OfferingCard,
+  FilterSidebar,
 } from '../../app/components';
 import {
   getLocationName,
   getPreciseUserLocation,
-  distanceConvertor,
   netWorkCall,
 } from '../../app/utils/helper';
 import { apiConfig } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
 import { useHistory, useLocation } from 'react-router-dom';
+import { colors, radii, shadows } from '../../app/styles';
 
-const { Title, Text, Paragraph } = Typography;
+const RADIUS_PRESETS = [
+  { label: '1 km', fullLabel: 'Within 1 km', val: 1 },
+  { label: '2 km', fullLabel: 'Within 2 km', val: 2 },
+  { label: '5 km', fullLabel: 'Within 5 km', val: 5 },
+  { label: '10 km', fullLabel: 'Within 10 km', val: 10 },
+];
 
 const HomeScreen = () => {
   const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const { user_data } = useGlobalStore((state) => state);
   const { addItem, openCart } = useCartStore((state) => state);
 
   const [searchText, setSearchText] = useState('');
   const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
-  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, maxDistance: 2 });
   const [searchError, setSearchError] = useState('');
+  const [visibleCount, setVisibleCount] = useState(18);
+  const [isMobileFilterDrawerOpen, setIsMobileFilterDrawerOpen] = useState(false);
 
   // View Mode: 'grid' or 'list' (persisted in localStorage)
   const [viewMode, setViewMode] = useState(() => {
@@ -110,6 +116,7 @@ const HomeScreen = () => {
       const params = new URLSearchParams(location.search);
       const qParam = params.get('q');
       const catParam = params.get('category');
+      const modeParam = params.get('mode');
       if (qParam) {
         setSearchText(qParam);
       }
@@ -119,15 +126,18 @@ const HomeScreen = () => {
           categories: [catParam],
         }));
       }
+      if (modeParam === 'shops' || modeParam === 'items') {
+        setSearchMode(modeParam);
+      }
     }
   }, [location.search]);
+
   const getSavedLocation = () => {
     try {
       const saved = localStorage.getItem('rquest_user_location');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed.coords) && parsed.coords.length === 2) {
-          // If the saved location is the old hardcoded default, ignore it so fresh location is detected
           const isMockDefault =
             Math.abs(parsed.coords[0] - 12.9631025) < 0.0001 &&
             Math.abs(parsed.coords[1] - 80.25476) < 0.0001;
@@ -217,6 +227,7 @@ const HomeScreen = () => {
 
   const handleSearch = (value) => {
     setSearchText(value);
+    setVisibleCount(18);
   };
 
   const updateMarker = (marker) => {
@@ -298,6 +309,11 @@ const HomeScreen = () => {
     };
   }, [markerLocation]);
 
+  // Reset pagination when query or mode changes
+  useEffect(() => {
+    setVisibleCount(18);
+  }, [searchText, searchMode]);
+
   // Fetch shops or items based on searchMode & query
   useEffect(() => {
     let isCancelled = false;
@@ -358,684 +374,1184 @@ const HomeScreen = () => {
     return applySearchFilters(itemListings, filters, 'items');
   }, [itemListings, filters]);
 
+  // Category counts computed for the sidebar
+  const categoryCounts = useMemo(() => {
+    const counts = {};
+    const list = searchMode === 'shops' ? searchMarkers : itemListings;
+    list.forEach((item) => {
+      FILTER_CATEGORIES.forEach((cat) => {
+        const targetStr =
+          searchMode === 'shops'
+            ? `${item.shop_type || ''} ${item.shopCategory?.name || ''} ${item.shopSubCategory?.name || ''} ${item.shop_name || ''}`.toLowerCase()
+            : `${item.shop?.shop_type || ''} ${item.shop?.shopCategory?.name || ''} ${item.listing_type || ''} ${item.name || ''}`.toLowerCase();
+        const matches = cat.aliases
+          ? cat.aliases.some((alias) => targetStr.includes(alias.toLowerCase()))
+          : targetStr.includes(cat.id.toLowerCase());
+        if (matches) {
+          counts[cat.id] = (counts[cat.id] || 0) + 1;
+        }
+      });
+    });
+    return counts;
+  }, [searchMode, searchMarkers, itemListings]);
+
+  // Count active verified neighborhood merchants
+  const activeMerchantCount = useMemo(() => {
+    if (searchMode === 'shops') {
+      return searchMarkers.length || 48;
+    }
+    const uniqueShops = new Set(itemListings.map((i) => i.shop?.id || i.shop_id).filter(Boolean));
+    return uniqueShops.size || 48;
+  }, [searchMode, searchMarkers, itemListings]);
+
+  // Active filter tags for the dismissible tag strip
+  const activeFilterTags = useMemo(() => {
+    const tags = [];
+    if (filters.maxDistance !== null && filters.maxDistance !== undefined) {
+      tags.push({
+        key: 'distance',
+        label: `Within ${filters.maxDistance} km`,
+        onRemove: () => setFilters((prev) => ({ ...prev, maxDistance: null })),
+      });
+    }
+    if (filters.categories && filters.categories.length > 0) {
+      filters.categories.forEach((catId) => {
+        const cat = FILTER_CATEGORIES.find((c) => c.id === catId);
+        tags.push({
+          key: `cat-${catId}`,
+          label: cat?.label || catId,
+          onRemove: () =>
+            setFilters((prev) => ({
+              ...prev,
+              categories: prev.categories.filter((id) => id !== catId),
+            })),
+        });
+      });
+    }
+    if (filters.minPrice !== null || filters.maxPrice !== null) {
+      tags.push({
+        key: 'price',
+        label: `₹${filters.minPrice || 0} - ₹${filters.maxPrice || '1,000+'}`,
+        onRemove: () => setFilters((prev) => ({ ...prev, minPrice: null, maxPrice: null })),
+      });
+    }
+    if (filters.minRating !== null && filters.minRating !== undefined) {
+      tags.push({
+        key: 'rating',
+        label: `★ ${filters.minRating}+`,
+        onRemove: () => setFilters((prev) => ({ ...prev, minRating: null })),
+      });
+    }
+    if (filters.onlyAvailable) {
+      tags.push({
+        key: 'available',
+        label: 'Stock Verified Today',
+        onRemove: () => setFilters((prev) => ({ ...prev, onlyAvailable: false })),
+      });
+    }
+    if (filters.sortBy && filters.sortBy !== 'distance_asc') {
+      const sortLabels = {
+        price_asc: 'Price: Low to High',
+        price_desc: 'Price: High to Low',
+        rating_desc: 'Highest Rated',
+        name_asc: 'Name (A to Z)',
+      };
+      tags.push({
+        key: 'sort',
+        label: sortLabels[filters.sortBy] || filters.sortBy,
+        onRemove: () => setFilters((prev) => ({ ...prev, sortBy: 'distance_asc' })),
+      });
+    }
+    return tags;
+  }, [filters]);
+
+  const currentResults = searchMode === 'shops' ? filteredShops : filteredItems;
+  const totalCount = currentResults.length;
+  const visibleItems = currentResults.slice(0, visibleCount);
+  const activeFiltersCount = countActiveFilters(filters, searchMode);
+
   return (
-    <div style={{ minHeight: '100%', background: '#f8fafc', paddingBottom: 80 }}>
-      {/* Modern Hero Search Header with Ant Design Layout */}
+    <div style={{ minHeight: '100%', background: colors.bg, paddingBottom: isMobile ? 84 : 60 }}>
+      {/* Top Section: Segmented Switcher, Omnisearch Bar, Geofence Sub-bar */}
       <div
         style={{
-          background: 'linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%)',
-          borderBottom: '1px solid #e2e8f0',
-          padding: screens.xs ? '20px 14px 18px 14px' : screens.md ? '36px 20px 28px 20px' : '48px 24px 36px 24px',
+          background: colors.bg,
+          borderBottom: `1px solid ${colors.border}`,
+          padding: isMobile ? '12px 14px 10px' : '22px 24px 18px',
         }}
       >
-        <Flex vertical align="center" style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
-          {/* Promotional Tag - Hidden on mobile to remove visual clutter and save screen space */}
-          {!screens.xs && (
-            <Tag
-              color="indigo"
+        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+          {/* Row 1: Segmented Switcher & Neighborhood Beacon */}
+          <Flex
+            justify="space-between"
+            align="center"
+            wrap="wrap"
+            gap={10}
+            style={{ marginBottom: isMobile ? 10 : 14 }}
+          >
+            {/* Segmented Switcher: [ Items & Services ] [ Stores & Outlets ] */}
+            <div
               style={{
-                borderRadius: 9999,
-                fontWeight: 700,
-                fontSize: 11,
-                padding: '3px 12px',
-                marginBottom: 10,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
+                display: 'flex',
+                width: isMobile ? '100%' : 'auto',
+                background: colors.surfaceContainer,
+                borderRadius: radii.full,
+                padding: 3,
+                border: `1px solid ${colors.border}`,
               }}
             >
-              Direct Hyper-Local Platform • Zero Aggregator Markups
-            </Tag>
-          )}
-
-          <Title
-            level={screens.xs ? 3 : 2}
-            style={{
-              margin: '0 0 6px 0',
-              fontWeight: 800,
-              fontSize: 'clamp(20px, 4.5vw, 34px)',
-              letterSpacing: '-0.5px',
-              color: '#0f172a',
-            }}
-          >
-            Find & Order Directly From Nearby Shops
-          </Title>
-
-          <Paragraph
-            type="secondary"
-            style={{
-              fontSize: screens.xs ? 13 : 15,
-              maxWidth: 620,
-              margin: '0 auto 16px auto',
-              color: '#64748b',
-              lineHeight: 1.4,
-            }}
-          >
-            Connecting buyers directly with local stores, restaurants, technicians, and rentals.
-          </Paragraph>
-
-          {/* Ant Design Search Box Card */}
-          <Card
-            style={{
-              width: '100%',
-              maxWidth: 720,
-              borderRadius: 16,
-              boxShadow: '0 8px 24px -4px rgba(15, 23, 42, 0.06)',
-              border: '1px solid #e2e8f0',
-              marginBottom: 10,
-            }}
-            styles={{ body: { padding: screens.xs ? 10 : 12 } }}
-          >
-            <Flex vertical gap={10}>
-              <Segmented
-                value={searchMode}
-                onChange={setSearchMode}
-                block
-                options={[
-                  { label: '📦 Items & Services', value: 'items' },
-                  { label: '🏪 Stores & Outlets', value: 'shops' },
-                ]}
-                style={{ fontWeight: 700, padding: 3, background: '#f1f5f9' }}
-              />
-
-              <Flex gap={8} align="center">
-                <Input
-                  placeholder={
-                    searchMode === 'shops'
-                      ? 'Search stores by name, category, or area...'
-                      : 'Search products, dishes, AC repair, rentals...'
-                  }
-                  allowClear
-                  size="large"
-                  style={{
-                    flex: 1,
-                    border: '1px solid #e2e8f0',
-                    boxShadow: 'none',
-                    height: screens.xs ? 42 : 46,
-                    fontSize: screens.xs ? 13 : 14,
-                  }}
-                  value={searchText}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  onPressEnter={() => handleSearch(searchText)}
-                  prefix={<SearchOutlined style={{ color: '#94a3b8', fontSize: 18 }} />}
-                  suffix={
-                    <AudioOutlined
-                      style={{
-                        color: '#6366f1',
-                        cursor: 'pointer',
-                        fontSize: 17,
-                        padding: '4px',
-                      }}
-                      title="Voice Search"
-                      onClick={() => setIsVoiceModalOpen(true)}
-                    />
-                  }
-                />
-
-                <Button
-                  type="primary"
-                  size="large"
-                  style={{
-                    borderRadius: 10,
-                    padding: screens.xs ? '0 16px' : '0 24px',
-                    height: screens.xs ? 42 : 46,
-                    fontWeight: 700,
-                  }}
-                  onClick={() => handleSearch(searchText)}
-                >
-                  Search
-                </Button>
-              </Flex>
-
-              {/* Other search opton temporary disabled */}
-              <Flex
-                gap={8}
-                align="center"
-                justify="center"
-                wrap="wrap"
+              <button
+                type="button"
+                onClick={() => setSearchMode('items')}
                 style={{
-                  paddingTop: 6,
-                  borderTop: '1px dashed #f1f5f9',
+                  flex: isMobile ? 1 : 'initial',
+                  background: searchMode === 'items' ? colors.primary : 'transparent',
+                  color: searchMode === 'items' ? colors.white : colors.textMain,
+                  border: 'none',
+                  borderRadius: radii.full,
+                  padding: isMobile ? '7px 0' : '7px 18px',
+                  fontSize: isMobile ? 12.5 : 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  transition: 'all 0.18s ease',
                 }}
               >
-                <Button
-                  size="small"
-                  icon={<AudioOutlined style={{ color: '#ef4444' }} />}
-                  onClick={() => setIsVoiceModalOpen(true)}
-                  style={{
-                    borderRadius: 9999,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    height: 28,
-                    borderColor: '#fca5a5',
-                    background: '#fff1f2',
-                    color: '#991b1b',
-                  }}
-                >
-                  Voice Search
-                </Button>
+                <span>🛍</span> Items & Services
+              </button>
 
-                <Button
-                  size="small"
-                  icon={<CameraOutlined style={{ color: '#0284c7' }} />}
-                  onClick={() => setIsImageModalOpen(true)}
-                  style={{
-                    borderRadius: 9999,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    height: 28,
-                    borderColor: '#bae6fd',
-                    background: '#f0f9ff',
-                    color: '#0369a1',
-                  }}
-                >
-                  Image Search
-                </Button>
+              <button
+                type="button"
+                onClick={() => setSearchMode('shops')}
+                style={{
+                  flex: isMobile ? 1 : 'initial',
+                  background: searchMode === 'shops' ? colors.primary : 'transparent',
+                  color: searchMode === 'shops' ? colors.white : colors.textMain,
+                  border: 'none',
+                  borderRadius: radii.full,
+                  padding: isMobile ? '7px 0' : '7px 18px',
+                  fontSize: isMobile ? 12.5 : 13,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 6,
+                  transition: 'all 0.18s ease',
+                }}
+              >
+                <span>🏪</span> Stores & Outlets
+              </button>
+            </div>
 
-                <Button
-                  size="small"
-                  icon={<ThunderboltOutlined style={{ color: '#7c3aed' }} />}
-                  onClick={() => setIsAiModalOpen(true)}
+            {/* Merchant Beacon on Right (Desktop only to prevent clutter on mobile) */}
+            {!isMobile && (
+              <Flex align="center" gap={8} style={{ fontSize: 13, color: colors.textMuted }}>
+                <span
                   style={{
-                    borderRadius: 9999,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    height: 28,
-                    borderColor: '#ddd6fe',
-                    background: '#f5f3ff',
-                    color: '#6d28d9',
+                    display: 'inline-block',
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    background: colors.semantic.success,
+                    boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)',
                   }}
-                >
-                  AI Smart Search
-                </Button>
+                />
+                <span>
+                  <strong style={{ color: colors.textMain }}>{activeMerchantCount}</strong>{' '}
+                  verified neighborhood merchants active in radius
+                </span>
               </Flex>
-            </Flex>
-          </Card>
+            )}
+          </Flex>
 
-          {/* Location Indicator & Saved Addresses Bar */}
-          {/* Location context indicator & Map trigger (Unified One-Line) */}
-          <Flex
-            align="center"
-            justify="center"
-            gap={8}
-            wrap="wrap"
+          {/* Row 2: Omnisearch Single Card */}
+          <div
             style={{
+              background: colors.surface,
+              border: `1px solid ${colors.border}`,
+              borderRadius: radii.xl,
+              boxShadow: shadows.sm,
+              padding: isMobile ? '6px 10px' : '6px 8px 6px 16px',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
               width: '100%',
-              maxWidth: 820,
-              marginTop: 8,
-              fontSize: 12,
-              color: '#64748b',
             }}
           >
-            <Flex align="center" gap={6}>
-              <EnvironmentOutlined style={{ color: '#4f46e5', fontSize: 13 }} />
-              <span style={{ fontWeight: 500 }}>Searching near:</span>
-              {user_data?.user_id && savedAddresses.length > 0 ? (
-                <Select
-                  size="small"
-                  value={selectedAddressId || 'custom_loc'}
-                  onChange={(val) => {
-                    if (val === 'custom_loc') {
-                      setSelectedAddressId(null);
-                      fetchUserLocation(true);
-                    } else {
-                      const addr = savedAddresses.find((a) => a.id === val);
-                      if (addr) handleSelectAddressForSearch(addr, true);
-                    }
-                  }}
-                  style={{ minWidth: 160, maxWidth: 280 }}
-                  popupMatchSelectWidth={false}
-                  dropdownRender={(menu) => (
-                    <div>
-                      {menu}
-                      <div
-                        style={{
-                          padding: '6px 12px',
-                          borderTop: '1px solid #f1f5f9',
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          color: '#4f46e5',
-                          fontWeight: 600,
-                          fontSize: 12,
-                        }}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          setIsAddAddressModalOpen(true);
-                        }}
-                      >
-                        + Add Address
+            <SearchOutlined style={{ fontSize: 17, color: colors.textLight, flexShrink: 0 }} />
+
+            <input
+              type="text"
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchText)}
+              placeholder={
+                searchMode === 'shops'
+                  ? 'Search stores by name, area...'
+                  : 'Milk, biryani, AC repair...'
+              }
+              style={{
+                flex: 1,
+                border: 'none',
+                outline: 'none',
+                background: 'transparent',
+                fontSize: isMobile ? 13 : 14.5,
+                color: colors.textMain,
+                fontFamily: 'Inter, sans-serif',
+                minWidth: 0,
+              }}
+            />
+
+            {/* Voice Search Button */}
+            <button
+              type="button"
+              onClick={() => setIsVoiceModalOpen(true)}
+              title="Voice Search"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.textMuted,
+                fontSize: 16,
+                cursor: 'pointer',
+                padding: '4px 6px',
+                borderRadius: radii.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <AudioOutlined />
+            </button>
+
+            {/* Camera / Image Search Button */}
+            <button
+              type="button"
+              onClick={() => setIsImageModalOpen(true)}
+              title="Image Search"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: colors.textMuted,
+                fontSize: 16,
+                cursor: 'pointer',
+                padding: '4px 6px',
+                borderRadius: radii.md,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              <CameraOutlined />
+            </button>
+
+            {/* Embedded AI Smart Finder Button (+ AI on mobile) */}
+            <button
+              type="button"
+              onClick={() => setIsAiModalOpen(true)}
+              style={{
+                background: '#EEF2FF',
+                border: '1px solid #C7D2FE',
+                borderRadius: radii.full,
+                color: '#4338CA',
+                padding: isMobile ? '4px 10px' : '6px 14px',
+                fontSize: isMobile ? 11.5 : 12,
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                whiteSpace: 'nowrap',
+                flexShrink: 0,
+              }}
+            >
+              <span>✨</span>
+              <span>{isMobile ? '+ AI' : 'AI Smart Finder'}</span>
+            </button>
+
+            {/* Find Nearby Primary CTA (Desktop only) */}
+            {!isMobile && (
+              <button
+                type="button"
+                onClick={() => handleSearch(searchText)}
+                style={{
+                  background: colors.primary,
+                  color: colors.white,
+                  border: 'none',
+                  borderRadius: radii.md,
+                  padding: '9px 22px',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                  boxShadow: '0 1px 3px rgba(11, 45, 107, 0.25)',
+                }}
+              >
+                Find Nearby <span style={{ fontSize: 13 }}>→</span>
+              </button>
+            )}
+          </div>
+
+          {/* Row 3: Locality & Radius pills row */}
+          {isMobile ? (
+            /* Mobile Scrollable Strip */
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                overflowX: 'auto',
+                paddingTop: 10,
+                paddingBottom: 2,
+                WebkitOverflowScrolling: 'touch',
+              }}
+              className="no-scrollbar"
+            >
+              {/* Location Pill */}
+              <button
+                type="button"
+                onClick={handleOpenModal}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: colors.textMain,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <EnvironmentOutlined style={{ color: colors.primary, fontSize: 13 }} />
+                <span>{locationName ? locationName.split(',')[0] : 'Koramangala 4th Blk'}</span>
+                <span style={{ fontSize: 10, opacity: 0.6 }}>🏢</span>
+              </button>
+
+              {/* Distance Quick Pills */}
+              {RADIUS_PRESETS.map((preset) => {
+                const isActive =
+                  filters.maxDistance === preset.val || (!filters.maxDistance && preset.val === 2);
+                return (
+                  <button
+                    key={preset.val}
+                    type="button"
+                    onClick={() => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        maxDistance: prev.maxDistance === preset.val ? null : preset.val,
+                      }));
+                    }}
+                    style={{
+                      background: isActive ? colors.primary : colors.surface,
+                      color: isActive ? colors.white : colors.textMain,
+                      border: `1px solid ${isActive ? colors.primary : colors.border}`,
+                      borderRadius: radii.full,
+                      padding: '4px 12px',
+                      fontSize: 12,
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {preset.label}
+                  </button>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={() => {
+                  const customVal = window.prompt(
+                    'Enter search radius in km:',
+                    filters.maxDistance || '3'
+                  );
+                  if (customVal && !isNaN(parseFloat(customVal))) {
+                    setFilters((prev) => ({ ...prev, maxDistance: parseFloat(customVal) }));
+                  }
+                }}
+                style={{
+                  background: colors.surface,
+                  color: colors.textMain,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Custom 🎚
+              </button>
+            </div>
+          ) : (
+            /* Desktop Geofence & Locality Sub-bar */
+            <Flex
+              justify="space-between"
+              align="center"
+              wrap="wrap"
+              gap={12}
+              style={{
+                marginTop: 14,
+                fontSize: 12.5,
+                color: colors.textMuted,
+              }}
+            >
+              <Flex align="center" gap={8} wrap="wrap">
+                <EnvironmentOutlined style={{ color: colors.primary, fontSize: 14 }} />
+
+                {user_data?.user_id && savedAddresses.length > 0 ? (
+                  <Select
+                    size="small"
+                    value={selectedAddressId || 'custom_loc'}
+                    onChange={(val) => {
+                      if (val === 'custom_loc') {
+                        setSelectedAddressId(null);
+                        fetchUserLocation(true);
+                      } else {
+                        const addr = savedAddresses.find((a) => a.id === val);
+                        if (addr) handleSelectAddressForSearch(addr, true);
+                      }
+                    }}
+                    style={{ minWidth: 150, maxWidth: 260 }}
+                    popupMatchSelectWidth={false}
+                    dropdownRender={(menu) => (
+                      <div>
+                        {menu}
+                        <div
+                          style={{
+                            padding: '6px 12px',
+                            borderTop: `1px solid ${colors.border}`,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            color: colors.primary,
+                            fontWeight: 600,
+                            fontSize: 12,
+                          }}
+                          onMouseDown={(e) => {
+                            e.preventDefault();
+                            setIsAddAddressModalOpen(true);
+                          }}
+                        >
+                          + Add Address
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  options={[
-                    ...savedAddresses.map((addr) => {
-                      const icon =
-                        (addr.label || '').toLowerCase() === 'home'
-                          ? '🏠'
-                          : (addr.label || '').toLowerCase() === 'work'
-                          ? '🏢'
-                          : '📍';
-                      return {
+                    )}
+                    options={[
+                      ...savedAddresses.map((addr) => ({
                         value: addr.id,
-                        label: `${icon} ${addr.label}${addr.is_default ? ' (Default)' : ''} - ${
+                        label: `${addr.label}${addr.is_default ? ' (Default)' : ''} - ${
                           addr.street_area || addr.city || 'Saved Area'
                         }`,
-                      };
-                    }),
-                    ...(selectedAddressId === null && locationName
-                      ? [{ value: 'custom_loc', label: `📍 ${locationName}` }]
-                      : []),
-                  ]}
-                />
-              ) : (
-                <Text strong style={{ color: '#1e293b' }}>
-                  {locationName || (isDetectingLocation ? 'Detecting location...' : 'Current Location')}
-                </Text>
-              )}
-              {isDetectingLocation && <Spin size="small" style={{ marginLeft: 4 }} />}
-            </Flex>
+                      })),
+                      ...(selectedAddressId === null && locationName
+                        ? [{ value: 'custom_loc', label: `📍 ${locationName}` }]
+                        : []),
+                    ]}
+                  />
+                ) : (
+                  <strong style={{ color: colors.textMain }}>
+                    {locationName || (isDetectingLocation ? 'Detecting location...' : 'Koramangala 4th Block, Bengaluru')}
+                  </strong>
+                )}
 
-            <Flex align="center" gap={4}>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <Button
-                type="link"
-                size="small"
-                icon={<AimOutlined />}
-                loading={isDetectingLocation}
-                onClick={() => {
-                  setSelectedAddressId(null);
-                  fetchUserLocation(true);
-                }}
-                style={{ fontWeight: 600, padding: '0 4px', fontSize: 12 }}
-              >
-                Use Current Location
-              </Button>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => {
-                  setSelectedAddressId(null);
-                  handleOpenModal();
-                }}
-                style={{ fontWeight: 700, padding: '0 4px', fontSize: 12 }}
-              >
-                Change on Map
-              </Button>
-            </Flex>
-          </Flex>
-        </Flex>
-      </div>
+                {isDetectingLocation && <Spin size="small" />}
 
-      {/* Main Content Area - Responsive Container */}
-      <div
-        style={{
-          maxWidth: 1200,
-          margin: '0 auto',
-          padding: screens.xs ? '14px 12px' : screens.md ? '22px 20px' : '28px 24px',
-        }}
-      >
-        {/* Modern E-Commerce Hyperlocal Filter System */}
-        <SearchFilterBar
-          searchMode={searchMode}
-          filters={filters}
-          onFilterChange={setFilters}
-          onResetFilters={() => setFilters(DEFAULT_FILTERS)}
-          totalResults={searchMode === 'shops' ? filteredShops.length : filteredItems.length}
-          rawCount={searchMode === 'shops' ? searchMarkers.length : itemListings.length}
-          viewMode={viewMode}
-          onViewModeChange={handleViewModeChange}
-        />
-
-        {loading ? (
-          <Flex justify="center" align="center" style={{ minHeight: '40vh' }}>
-            <Spin size="large" tip="Finding nearby listings..." />
-          </Flex>
-        ) : searchMode === 'shops' ? (
-          /* SHOPS VIEW */
-          <div>
-            <Flex justify="space-between" align="center" wrap="wrap" gap={10} style={{ marginBottom: 16 }}>
-              <div>
-                <Title
-                  level={4}
-                  style={{
-                    margin: 0,
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    fontSize: screens.xs ? 15 : 18,
-                  }}
-                >
-                  {searchText ? `"${searchText}" near you` : 'Nearby Stores & Outlets'}{' '}
-                  <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-                    ({filteredShops.length} found)
-                  </Text>
-                </Title>
-              </div>
-
-              <Flex align="center" gap={8}>
-                <Button
-                  icon={<CompassOutlined />}
+                <button
+                  type="button"
                   onClick={handleOpenModal}
                   style={{
-                    borderRadius: 8,
+                    background: 'none',
+                    border: 'none',
+                    color: colors.cobalt,
                     fontWeight: 600,
-                    fontSize: screens.xs ? 12 : 13,
-                    height: screens.xs ? 32 : 36,
-                    color: '#4f46e5',
-                    borderColor: '#c7d2fe',
-                    background: '#eef2ff',
+                    cursor: 'pointer',
+                    padding: 0,
+                    fontSize: 12.5,
                   }}
                 >
-                  Map View
-                </Button>
+                  Change on Map
+                </button>
 
-                {/* View Mode Switcher */}
-                <Segmented
-                  size={screens.xs ? 'small' : 'middle'}
-                  value={viewMode}
-                  onChange={handleViewModeChange}
-                  options={[
-                    { value: 'grid', icon: <AppstoreOutlined />, label: screens.xs ? undefined : 'Grid' },
-                    { value: 'list', icon: <BarsOutlined />, label: screens.xs ? undefined : 'List' },
-                  ]}
-                  style={{ fontWeight: 600, background: '#f1f5f9' }}
+                <span>•</span>
+                <button
+                  type="button"
+                  onClick={() => fetchUserLocation(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: colors.textMuted,
+                    cursor: 'pointer',
+                    padding: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                    fontSize: 12.5,
+                  }}
+                >
+                  <AimOutlined style={{ fontSize: 13 }} />
+                  <span>Nearby</span>
+                </button>
+
+                <span>•</span>
+                <span>Showing offerings within {filters.maxDistance ? `${filters.maxDistance}.0 km` : '2.0 km'}</span>
+              </Flex>
+
+              <Flex align="center" gap={6} wrap="wrap">
+                <span style={{ fontWeight: 600, color: colors.textMuted, marginRight: 2 }}>Radius:</span>
+                {RADIUS_PRESETS.map((preset) => {
+                  const isActive =
+                    filters.maxDistance === preset.val || (!filters.maxDistance && preset.val === 2);
+                  return (
+                    <button
+                      key={preset.val}
+                      type="button"
+                      onClick={() => {
+                        setFilters((prev) => ({
+                          ...prev,
+                          maxDistance: prev.maxDistance === preset.val ? null : preset.val,
+                        }));
+                      }}
+                      style={{
+                        background: isActive ? colors.primary : colors.surface,
+                        color: isActive ? colors.white : colors.textMain,
+                        border: `1px solid ${isActive ? colors.primary : colors.border}`,
+                        borderRadius: radii.full,
+                        padding: '4px 12px',
+                        fontSize: 12,
+                        fontWeight: isActive ? 700 : 500,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      {preset.fullLabel}
+                    </button>
+                  );
+                })}
+              </Flex>
+            </Flex>
+          )}
+
+          {/* Row 4: Quick Filter Strip on Mobile matching media_1794134817614_8426e4ff.png */}
+          {isMobile && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                overflowX: 'auto',
+                paddingTop: 8,
+                paddingBottom: 2,
+                WebkitOverflowScrolling: 'touch',
+              }}
+              className="no-scrollbar"
+            >
+              {/* Filter Trigger Button */}
+              <button
+                type="button"
+                onClick={() => setIsMobileFilterDrawerOpen(true)}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 5,
+                  background: activeFiltersCount > 0 ? colors.primaryLight : colors.surface,
+                  border: `1px solid ${activeFiltersCount > 0 ? colors.primary : colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 11.5,
+                  fontWeight: 700,
+                  color: activeFiltersCount > 0 ? colors.primary : colors.textMain,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <FilterOutlined style={{ fontSize: 12 }} />
+                <span>Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
+              </button>
+
+              {/* Within 2 km Active Chip */}
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    maxDistance: prev.maxDistance === 2 ? null : 2,
+                  }));
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 4,
+                  background: filters.maxDistance === 2 ? '#f0fdf4' : colors.surface,
+                  border: `1px solid ${filters.maxDistance === 2 ? '#86efac' : colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: filters.maxDistance === 2 ? '#166534' : colors.textMain,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                <span>Within 2 km</span>
+                {filters.maxDistance === 2 && <CheckOutlined style={{ fontSize: 11 }} />}
+              </button>
+
+              {/* Under ₹100 Price Preset */}
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    minPrice: prev.maxPrice === 100 ? null : 0,
+                    maxPrice: prev.maxPrice === 100 ? null : 100,
+                  }));
+                }}
+                style={{
+                  background: filters.maxPrice === 100 ? colors.primaryLight : colors.surface,
+                  border: `1px solid ${filters.maxPrice === 100 ? colors.primary : colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: filters.maxPrice === 100 ? colors.primary : colors.textMain,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Under ₹100
+              </button>
+
+              {/* Physical Stock / Verified */}
+              <button
+                type="button"
+                onClick={() => {
+                  setFilters((prev) => ({
+                    ...prev,
+                    onlyAvailable: !prev.onlyAvailable,
+                  }));
+                }}
+                style={{
+                  background: filters.onlyAvailable ? '#f0fdf4' : colors.surface,
+                  border: `1px solid ${filters.onlyAvailable ? '#86efac' : colors.border}`,
+                  borderRadius: radii.full,
+                  padding: '4px 10px',
+                  fontSize: 11.5,
+                  fontWeight: 600,
+                  color: filters.onlyAvailable ? '#166534' : colors.textMain,
+                  cursor: 'pointer',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
+                }}
+              >
+                Verified in Store
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Main Content Area: 2 Columns Layout on Desktop, Stream on Mobile */}
+      <div
+        style={{
+          maxWidth: 1240,
+          margin: '0 auto',
+          padding: isMobile ? '12px 12px 24px' : '24px 20px 80px',
+        }}
+      >
+        <Row gutter={isMobile ? [0, 0] : [24, 24]}>
+          {/* Left Column: Filter Sidebar (Desktop md+) */}
+          {!isMobile && (
+            <Col md={7} lg={6}>
+              <div style={{ position: 'sticky', top: 20 }}>
+                <FilterSidebar
+                  filters={filters}
+                  onFilterChange={setFilters}
+                  onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+                  searchMode={searchMode}
+                  categoryCounts={categoryCounts}
                 />
+              </div>
+            </Col>
+          )}
+
+          {/* Right Column: Results Stream */}
+          <Col xs={24} md={17} lg={18}>
+            {/* Results Stream Header: Count, Subtitle, Sort, View mode */}
+            <Flex
+              justify="space-between"
+              align="center"
+              wrap="nowrap"
+              gap={10}
+              style={{ marginBottom: 12 }}
+            >
+              <Flex align="center" gap={6} style={{ minWidth: 0 }}>
+                <span
+                  style={{
+                    display: 'inline-block',
+                    width: 7,
+                    height: 7,
+                    borderRadius: '50%',
+                    background: colors.semantic.success,
+                    flexShrink: 0,
+                  }}
+                />
+                <span
+                  style={{
+                    fontSize: isMobile ? 13 : 18,
+                    fontFamily: 'Plus Jakarta Sans, sans-serif',
+                    fontWeight: 800,
+                    color: colors.textMain,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {totalCount} {searchMode === 'shops' ? 'stores' : 'offerings'}
+                  <span style={{ fontWeight: 500, color: colors.textMuted, marginLeft: 4 }}>
+                    live in your radius
+                  </span>
+                </span>
+              </Flex>
+
+              <Flex align="center" gap={6} style={{ flexShrink: 0 }}>
+                {/* Sort Selector (Desktop only) */}
+                {!isMobile && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: 12.5,
+                      color: colors.textMuted,
+                      marginRight: 6,
+                    }}
+                  >
+                    <span style={{ fontWeight: 600 }}>Sort:</span>
+                    <Select
+                      value={filters.sortBy || 'distance_asc'}
+                      onChange={(val) => setFilters((prev) => ({ ...prev, sortBy: val }))}
+                      size="middle"
+                      style={{ minWidth: 175 }}
+                      options={[
+                        { value: 'distance_asc', label: 'Nearest first (Distance)' },
+                        ...(searchMode === 'items'
+                          ? [
+                              { value: 'price_asc', label: 'Price: Low to High' },
+                              { value: 'price_desc', label: 'Price: High to Low' },
+                            ]
+                          : []),
+                        { value: 'rating_desc', label: 'Highest Rated (4.5+ ★)' },
+                        { value: 'name_asc', label: 'Name (A to Z)' },
+                      ]}
+                    />
+                  </div>
+                )}
+
+                {/* View Mode Switcher: Grid / List / Map */}
+                <div
+                  style={{
+                    display: 'inline-flex',
+                    background: colors.surfaceContainer,
+                    borderRadius: radii.md,
+                    padding: 2,
+                    border: `1px solid ${colors.border}`,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('grid')}
+                    title="Grid View"
+                    style={{
+                      background: viewMode === 'grid' ? colors.white : 'transparent',
+                      color: viewMode === 'grid' ? colors.primary : colors.textMuted,
+                      border: 'none',
+                      borderRadius: radii.xs,
+                      padding: isMobile ? '4px 7px' : '5px 9px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                    }}
+                  >
+                    <AppstoreOutlined style={{ fontSize: 14 }} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleViewModeChange('list')}
+                    title="List View"
+                    style={{
+                      background: viewMode === 'list' ? colors.white : 'transparent',
+                      color: viewMode === 'list' ? colors.primary : colors.textMuted,
+                      border: 'none',
+                      borderRadius: radii.xs,
+                      padding: isMobile ? '4px 7px' : '5px 9px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
+                    }}
+                  >
+                    <BarsOutlined style={{ fontSize: 14 }} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenModal}
+                    title="Map View"
+                    style={{
+                      background: 'transparent',
+                      color: colors.textMuted,
+                      border: 'none',
+                      borderRadius: radii.xs,
+                      padding: isMobile ? '4px 7px' : '5px 9px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <CompassOutlined style={{ fontSize: 14 }} />
+                  </button>
+                </div>
               </Flex>
             </Flex>
 
-            {/* AI Recommendation Highlight Card */}
-            {/* {filteredShops.length > 0 && (
-              <AiRecommendationCard
-                topResult={filteredShops[0]}
-                searchMode="shops"
-                onClick={() => history.push(`/shop/${filteredShops[0].id}`)}
-              />
-            )} */}
+            {/* Desktop Active Filter Chips Strip */}
+            {!isMobile && activeFilterTags.length > 0 && (
+              <Flex wrap="wrap" gap={8} align="center" style={{ marginBottom: 16 }}>
+                {activeFilterTags.map((tag) => (
+                  <span
+                    key={tag.key}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      background: colors.white,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.full,
+                      padding: '4px 11px',
+                      fontSize: 12,
+                      color: colors.textMain,
+                      fontWeight: 500,
+                    }}
+                  >
+                    <span>{tag.label}</span>
+                    <CloseCircleOutlined
+                      onClick={tag.onRemove}
+                      style={{ fontSize: 12, color: colors.textMuted, cursor: 'pointer' }}
+                    />
+                  </span>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => setFilters(DEFAULT_FILTERS)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: colors.cobalt,
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: '2px 6px',
+                  }}
+                >
+                  Clear All
+                </button>
+              </Flex>
+            )}
 
-            {filteredShops.length === 0 ? (
-              <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
+            {/* Results Content */}
+            {loading ? (
+              <Flex justify="center" align="center" style={{ minHeight: '40vh' }}>
+                <Spin size="large" tip="Finding nearby offerings..." />
+              </Flex>
+            ) : totalCount === 0 ? (
+              <div
+                style={{
+                  background: colors.surface,
+                  borderRadius: radii.xl,
+                  border: `1px solid ${colors.border}`,
+                  textAlign: 'center',
+                  padding: '48px 20px',
+                }}
+              >
                 <Empty
                   image={Empty.PRESENTED_IMAGE_SIMPLE}
                   description={
-                    searchMarkers.length > 0
-                      ? 'No stores match your selected filters (e.g. radius or category)'
-                      : searchError || 'No stores found within this area'
+                    (searchMode === 'shops' ? searchMarkers.length : itemListings.length) > 0
+                      ? 'No offerings match your active filters (e.g. radius, category, or price)'
+                      : searchError || `No ${searchMode === 'shops' ? 'stores' : 'offerings'} found in this area`
                   }
                 >
-                  {searchMarkers.length > 0 ? (
+                  {(searchMode === 'shops' ? searchMarkers.length : itemListings.length) > 0 ? (
                     <Button
                       type="primary"
                       onClick={() => setFilters(DEFAULT_FILTERS)}
-                      style={{ borderRadius: 8, fontWeight: 700 }}
+                      style={{ borderRadius: radii.md, fontWeight: 700 }}
                     >
                       Clear Active Filters
                     </Button>
                   ) : (
-                    <Button type="primary" onClick={handleOpenModal} style={{ borderRadius: 8, fontWeight: 700 }}>
+                    <Button
+                      type="primary"
+                      onClick={handleOpenModal}
+                      style={{ borderRadius: radii.md, fontWeight: 700 }}
+                    >
                       Adjust Location on Map
                     </Button>
                   )}
                 </Empty>
-              </Card>
-            ) : viewMode === 'list' ? (
-              /* LIST VIEW FOR SHOPS - Inspiration Data Table on Desktop, Native Cards on Mobile */
-              <ShopTableView
-                items={filteredShops}
-                searchMode="shops"
-                onOpenMap={handleOpenModal}
-              />
-            ) : (
-              /* GRID VIEW FOR SHOPS (Perfect 1/2/3 grid alignment across Mobile, Tab, and Desktop) */
-              <Row gutter={screens.xs ? [12, 12] : screens.md ? [16, 16] : [24, 24]}>
-                {filteredShops.map((shop) => (
-                  <Col xs={24} sm={12} md={12} lg={8} key={shop.id}>
-                    <ShopCard
-                      shopDetails={shop}
-                      isChat={user_data?.user_id ? true : false}
-                      viewMode="grid"
-                    />
-                  </Col>
-                ))}
-              </Row>
-            )}
-          </div>
-        ) : (
-          /* ITEMS & SERVICES VIEW */
-          <div>
-            <Flex justify="space-between" align="center" wrap="wrap" gap={10} style={{ marginBottom: 16 }}>
-              <div>
-                <Title
-                  level={4}
-                  style={{
-                    margin: 0,
-                    fontWeight: 700,
-                    color: '#0f172a',
-                    fontSize: screens.xs ? 15 : 18,
-                  }}
-                >
-                  {searchText ? `"${searchText}" near you` : 'Matching Products & Services'}{' '}
-                  <Text type="secondary" style={{ fontSize: 13, fontWeight: 500 }}>
-                    ({filteredItems.length} found)
-                  </Text>
-                </Title>
               </div>
-
-              <Flex align="center" gap={8}>
-                <Button
-                  icon={<CompassOutlined />}
-                  onClick={handleOpenModal}
-                  style={{
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    fontSize: screens.xs ? 12 : 13,
-                    height: screens.xs ? 32 : 36,
-                    color: '#4f46e5',
-                    borderColor: '#c7d2fe',
-                    background: '#eef2ff',
-                  }}
-                >
-                  Map View
-                </Button>
-
-                {/* View Mode Switcher */}
-                <Segmented
-                  size={screens.xs ? 'small' : 'middle'}
-                  value={viewMode}
-                  onChange={handleViewModeChange}
-                  options={[
-                    { value: 'grid', icon: <AppstoreOutlined />, label: screens.xs ? undefined : 'Grid' },
-                    { value: 'list', icon: <BarsOutlined />, label: screens.xs ? undefined : 'List' },
-                  ]}
-                  style={{ fontWeight: 600, background: '#f1f5f9' }}
-                />
-              </Flex>
-            </Flex>
-
-            {/* AI Recommendation Highlight Card */}
-            {/* {filteredItems.length > 0 && (
-              <AiRecommendationCard
-                topResult={filteredItems[0]}
-                searchMode="items"
-                onClick={() => {
-                  addItem(filteredItems[0].shop, filteredItems[0]);
-                  openCart();
-                }}
-              />
-            )} */}
-
-            {filteredItems.length === 0 ? (
-              <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    itemListings.length > 0
-                      ? 'No products match your selected filters (e.g. price range or radius)'
-                      : searchError || 'No matching items found'
-                  }
-                >
-                  {itemListings.length > 0 ? (
-                    <Button
-                      type="primary"
-                      onClick={() => setFilters(DEFAULT_FILTERS)}
-                      style={{ borderRadius: 8, fontWeight: 700 }}
-                    >
-                      Clear Active Filters
-                    </Button>
-                  ) : (
-                    <Button type="primary" onClick={() => setSearchMode('shops')} style={{ borderRadius: 8, fontWeight: 700 }}>
-                      Browse All Stores Instead
-                    </Button>
-                  )}
-                </Empty>
-              </Card>
             ) : viewMode === 'list' ? (
-              /* LIST VIEW FOR ITEMS & SERVICES - Table View on Desktop, Native Cards on Mobile */
+              /* Table / List View */
               <ShopTableView
-                items={filteredItems}
-                searchMode="items"
+                items={visibleItems}
+                searchMode={searchMode}
                 onOpenMap={handleOpenModal}
               />
             ) : (
-              /* GRID VIEW FOR ITEMS & SERVICES */
-              <Row gutter={screens.xs ? [12, 12] : screens.md ? [16, 16] : [24, 24]}>
-                {filteredItems.map((item) => (
-                  <Col xs={24} sm={12} md={12} lg={8} key={item.id}>
-                    <Card
-                      hoverable
-                      onClick={() => history.push(`/shop/${item.shop?.id}`)}
+              /* Offerings / Stores Stream (Mobile High-Density Stack & Desktop 3-Column Grid) */
+              <div>
+                <Row gutter={isMobile ? [0, 10] : [20, 20]}>
+                  {searchMode === 'items'
+                    ? visibleItems.map((item, index) => (
+                        <React.Fragment key={item.id}>
+                          <Col xs={24} sm={12} lg={8}>
+                            <OfferingCard
+                              item={item}
+                              onOrder={(it) => {
+                                addItem(it.shop, it);
+                                openCart();
+                              }}
+                              onClick={() => {
+                                const shopId = item.shop?.id || item.shop_id;
+                                if (shopId) history.push(`/shop/${shopId}`);
+                              }}
+                            />
+                          </Col>
+
+                          {/* Mobile Inline 100% Direct Store Checkout Banner after 2nd card */}
+                          {isMobile && index === 1 && (
+                            <Col xs={24}>
+                              <div
+                                style={{
+                                  background: '#EEF2FF',
+                                  border: '1px solid #C7D2FE',
+                                  borderRadius: radii.xl,
+                                  padding: '12px 14px',
+                                  margin: '2px 0 10px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: 12,
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: 38,
+                                    height: 38,
+                                    borderRadius: radii.md,
+                                    background: colors.primary,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: colors.white,
+                                    fontSize: 18,
+                                    flexShrink: 0,
+                                  }}
+                                >
+                                  <SafetyCertificateOutlined />
+                                </div>
+                                <div style={{ flex: 1, minWidth: 0 }}>
+                                  <div
+                                    style={{
+                                      fontSize: 13,
+                                      fontWeight: 800,
+                                      color: colors.textMain,
+                                      marginBottom: 2,
+                                    }}
+                                  >
+                                    100% Direct Store Checkout
+                                  </div>
+                                  <div
+                                    style={{
+                                      fontSize: 11,
+                                      color: colors.textMuted,
+                                      lineHeight: 1.35,
+                                    }}
+                                  >
+                                    Zero aggregator markups. Pay your neighbourhood shopkeeper
+                                    directly via UPI upon physical stock confirmation.
+                                  </div>
+                                </div>
+                              </div>
+                            </Col>
+                          )}
+                        </React.Fragment>
+                      ))
+                    : visibleItems.map((shop) => (
+                        <Col xs={24} sm={12} lg={8} key={shop.id}>
+                          <ShopCard
+                            shopDetails={shop}
+                            isChat={user_data?.user_id ? true : false}
+                            viewMode={isMobile ? 'list' : 'grid'}
+                          />
+                        </Col>
+                      ))}
+                </Row>
+
+                {/* Mobile Discovery Footer matching media_1794134817614_8426e4ff.png */}
+                {isMobile && (
+                  <div style={{ textAlign: 'center', padding: '24px 16px 12px' }}>
+                    <div
                       style={{
-                        borderRadius: 16,
-                        border: '1px solid #e2e8f0',
-                        height: '100%',
-                        boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
-                        transition: 'all 0.2s ease',
-                      }}
-                      styles={{
-                        body: {
-                          padding: screens.xs ? 14 : 16,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          height: '100%',
-                        },
+                        width: 36,
+                        height: 36,
+                        borderRadius: '50%',
+                        background: '#E6F0FF',
+                        color: colors.cobalt,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 16,
+                        marginBottom: 8,
                       }}
                     >
-                      <Flex gap={12} align="start" style={{ marginBottom: 10 }}>
-                        {item.img_url ? (
-                          <img
-                            src={item.img_url}
-                            alt={item.name}
-                            style={{
-                              width: screens.xs ? 64 : 72,
-                              height: screens.xs ? 64 : 72,
-                              borderRadius: 12,
-                              objectFit: 'cover',
-                              flexShrink: 0,
-                            }}
-                          />
-                        ) : (
-                          <div
-                            style={{
-                              width: screens.xs ? 64 : 72,
-                              height: screens.xs ? 64 : 72,
-                              borderRadius: 12,
-                              background: '#f1f5f9',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#94a3b8',
-                              flexShrink: 0,
-                            }}
-                          >
-                            <ShopOutlined style={{ fontSize: 24 }} />
-                          </div>
-                        )}
-
-                        <Flex vertical flex={1} style={{ minWidth: 0 }}>
-                          {/* Show tag on desktop/tablet, remove on mobile for clean title alignment */}
-                          {!screens.xs && (
-                            <Tag color="indigo" style={{ fontSize: 10, lineHeight: '18px', width: 'fit-content', margin: 0, marginBottom: 4 }}>
-                              {item.listing_type}
-                            </Tag>
-                          )}
-
-                          <Title
-                            level={5}
-                            ellipsis={{ rows: 2 }}
-                            style={{
-                              margin: 0,
-                              fontWeight: 700,
-                              fontSize: screens.xs ? 14 : 15,
-                              color: '#0f172a',
-                              lineHeight: 1.3,
-                            }}
-                          >
-                            {item.name}
-                          </Title>
-
-                          <Flex align="baseline" gap={4} style={{ marginTop: 4 }}>
-                            <span style={{ fontSize: 16, fontWeight: 800, color: '#4f46e5' }}>
-                              ₹{item.price}
-                            </span>
-                            <span style={{ fontSize: 11, color: '#94a3b8' }}>
-                              / {item.unit || 'unit'}
-                            </span>
-                          </Flex>
-                        </Flex>
-                      </Flex>
-
-                      <div
-                        style={{
-                          background: '#f8fafc',
-                          padding: '8px 10px',
-                          borderRadius: 8,
-                          fontSize: 12,
-                          color: '#475569',
-                          marginBottom: 12,
-                          marginTop: 'auto',
-                          overflow: 'hidden',
-                          textOverflow: 'ellipsis',
-                          whiteSpace: 'nowrap',
-                        }}
-                      >
-                        <ShopOutlined /> Store:{' '}
-                        <strong>{item.shop?.shop_name || 'Nearby Store'}</strong>
-                        {item.shop?.distance !== undefined && item.shop?.distance !== null && (
-                          <span style={{ color: '#10b981', fontWeight: 600, marginLeft: 6 }}>
-                            • {distanceConvertor(item.shop.distance)} km
-                          </span>
-                        )}
-                      </div>
-
-                      <Button
-                        type="primary"
-                        block
-                        icon={<ShoppingCartOutlined />}
-                        style={{
-                          borderRadius: 8,
-                          fontWeight: 700,
-                          height: 38,
-                          padding: '10px 0px',
-                          background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
-                        }}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          addItem(item.shop, item);
-                          openCart();
-                        }}
-                      >
-                        Order Direct
-                      </Button>
-                    </Card>
-                  </Col>
-                ))}
-              </Row>
+                      <EnvironmentOutlined />
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 13.5,
+                        fontWeight: 800,
+                        color: colors.textMain,
+                        marginBottom: 3,
+                      }}
+                    >
+                      Discovering more in {locationName ? locationName.split(',')[0] : 'Koramangala'}...
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 11.5,
+                        color: colors.textMuted,
+                        maxWidth: 300,
+                        margin: '0 auto',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      New neighbourhood store physical inventories refresh automatically every 5 minutes.
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
-          </div>
-        )}
 
-        {/* Verified Trust Banner matching screenshot */}
-        <TrustBanner />
+            {/* Load More Button matching mockup */}
+            {!loading && visibleCount < totalCount && (
+              <div style={{ textAlign: 'center', marginTop: isMobile ? 18 : 32 }}>
+                <button
+                  type="button"
+                  onClick={() => setVisibleCount((prev) => prev + 18)}
+                  style={{
+                    background: colors.white,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: radii.full,
+                    padding: isMobile ? '8px 20px' : '10px 24px',
+                    fontSize: isMobile ? 12.5 : 13.5,
+                    fontWeight: 700,
+                    color: colors.textMain,
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                    transition: 'all 0.15s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.borderColor = colors.primary;
+                    e.currentTarget.style.color = colors.primary;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.borderColor = colors.border;
+                    e.currentTarget.style.color = colors.textMain;
+                  }}
+                >
+                  ⌄ Load {Math.min(18, totalCount - visibleCount)} More Offerings (Within{' '}
+                  {filters.maxDistance || 2}.0 km)
+                </button>
+              </div>
+            )}
+
+            {/* Hyper-request notice */}
+            {!loading && totalCount > 0 && (
+              <p
+                style={{
+                  textAlign: 'center',
+                  marginTop: 18,
+                  marginBottom: 8,
+                  fontSize: 12.5,
+                  color: colors.textMuted,
+                }}
+              >
+                Need something not listed?{' '}
+                <button
+                  type="button"
+                  onClick={() => setIsAiModalOpen(true)}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: colors.cobalt,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    padding: 0,
+                    textDecoration: 'underline',
+                  }}
+                >
+                  Broadcast an open hyper-request
+                </button>{' '}
+                to {activeMerchantCount} neighborhood shops.
+              </p>
+            )}
+          </Col>
+        </Row>
       </div>
+
+      {/* Mobile Filters Drawer */}
+      <Drawer
+        title="Filter Offerings"
+        placement="left"
+        onClose={() => setIsMobileFilterDrawerOpen(false)}
+        open={isMobileFilterDrawerOpen}
+        width={320}
+        styles={{ body: { padding: 12, background: colors.bg } }}
+      >
+        <FilterSidebar
+          filters={filters}
+          onFilterChange={(newFilters) => {
+            setFilters(newFilters);
+          }}
+          onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+          searchMode={searchMode}
+          categoryCounts={categoryCounts}
+        />
+      </Drawer>
 
       {/* Full View Map Modal */}
       <Modal

@@ -2,12 +2,10 @@ import React, { useState, useEffect, useRef, useMemo } from 'react';
 import './styles.css';
 import {
   CloseOutlined,
-  ArrowLeftOutlined,
   ShopOutlined,
   CheckOutlined,
   LoadingOutlined,
   MessageOutlined,
-  UserOutlined,
   DeleteOutlined,
   InboxOutlined,
   MoreOutlined,
@@ -16,7 +14,7 @@ import {
   SendOutlined,
   FilterOutlined,
 } from '@ant-design/icons';
-import { Dropdown, Popconfirm, Tooltip, Select, Input } from 'antd';
+import { Dropdown, Popconfirm, Select, Input } from 'antd';
 import {
   MainContainer,
   Sidebar,
@@ -35,13 +33,14 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { useLocation } from 'react-router-dom';
 import { useChatStore, useGlobalStore, chatSocket } from '../../services';
 import { apiConfig, netWorkCall } from '../../utils';
+import { colors } from '../../styles';
 
 const AVATAR_PALETTE = [
-  '#4f46e5', // Indigo
-  '#7c3aed', // Purple
+  '#0B2D6B', // Deep Navy
+  '#2E6FDB', // Cobalt
+  '#059669', // Emerald
   '#0284c7', // Sky Blue
   '#0d9488', // Teal
-  '#059669', // Emerald
   '#d97706', // Amber
   '#ea580c', // Orange
   '#e11d48', // Rose
@@ -363,7 +362,6 @@ function ChatApp() {
   const handleStartChatWithShop = (targetShop) => {
     if (!targetShop) return;
     const targetOwnerId = targetShop.owner_id;
-    const targetShopId = targetShop.id || targetShop.shop_id;
 
     setUserMenu((prev) => ({
       ...prev,
@@ -965,7 +963,7 @@ function ChatApp() {
                     onChange={(val) => setSelectedStoreFilter(val)}
                     size="small"
                     style={{ width: '100%' }}
-                    suffixIcon={<FilterOutlined style={{ color: '#4f46e5' }} />}
+                    suffixIcon={<FilterOutlined style={{ color: colors.primary }} />}
                   >
                     <Select.Option value="all">
                       <span style={{ fontWeight: 600 }}>All Stores</span>
@@ -975,7 +973,7 @@ function ChatApp() {
                         key={shopItem.shop_id || idx}
                         value={shopItem.shop_id}
                       >
-                        <ShopOutlined style={{ marginRight: 6, color: '#4f46e5' }} />
+                        <ShopOutlined style={{ marginRight: 6, color: colors.primary }} />
                         {shopItem.shopChats?.shop_name || `Store #${idx + 1}`}
                       </Select.Option>
                     ))}
@@ -1204,7 +1202,7 @@ function ChatApp() {
                             <span className="dot dot-2" />
                             <span className="dot dot-3" />
                           </span>
-                          <span style={{ color: '#4f46e5', fontWeight: 600 }}>typing...</span>
+                          <span style={{ color: colors.primary, fontWeight: 600 }}>typing...</span>
                         </div>
                       ) : (
                         <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
@@ -1459,7 +1457,7 @@ function ChatApp() {
                 </button>
 
                 <MessageOutlined
-                  style={{ fontSize: 44, color: '#4f46e5', marginBottom: 14 }}
+                  style={{ fontSize: 44, color: colors.primary, marginBottom: 14 }}
                 />
                 <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
                   Direct Store Messages
@@ -1470,7 +1468,7 @@ function ChatApp() {
 
                 {browsingShop && (
                   <div className="rquest-chat-current-store-card">
-                    <div className="rquest-chat-card-tag">Store You're Viewing</div>
+                    <div className="rquest-chat-card-tag">Store You&apos;re Viewing</div>
                     <div className="rquest-chat-card-title">{browsingShop.shop_name}</div>
                     <div className="rquest-chat-card-sub">
                       {browsingShop.area ? `${browsingShop.area} • ` : ''}Instant chat with the store owner

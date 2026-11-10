@@ -16,7 +16,14 @@ import {
   SearchOutlined,
   CloseOutlined,
 } from '@ant-design/icons';
-import { getPreciseUserLocation, getLocationName, searchLocations } from '../../utils';
+import {
+  getPreciseUserLocation,
+  getLocationName,
+  searchLocations,
+  getPlaceDetails,
+  createLocationSessionToken,
+} from '../../utils';
+import { colors } from '../../styles';
 
 import 'leaflet/dist/leaflet.css';
 import * as L from 'leaflet';
@@ -70,13 +77,17 @@ const MapController = ({ onMapClick, center }) => {
     const timer1 = setTimeout(() => {
       try {
         map.invalidateSize();
-      } catch (e) {}
+      } catch (e) {
+        // ignore map resize before mount
+      }
     }, 150);
 
     const timer2 = setTimeout(() => {
       try {
         map.invalidateSize();
-      } catch (e) {}
+      } catch (e) {
+        // ignore map resize before mount
+      }
     }, 450);
 
     return () => {
@@ -106,6 +117,11 @@ const MapController = ({ onMapClick, center }) => {
   });
 
   return null;
+};
+
+MapController.propTypes = {
+  onMapClick: PropTypes.func.isRequired,
+  center: PropTypes.arrayOf(PropTypes.number),
 };
 
 const LeafletComponent = (props) => {
@@ -180,6 +196,7 @@ const LeafletComponent = (props) => {
   };
 
   const searchTimeoutRef = React.useRef(null);
+  const sessionTokenRef = React.useRef(createLocationSessionToken());
 
   const handleAddressSearch = (val) => {
     setSearchQuery(val);
@@ -196,34 +213,46 @@ const LeafletComponent = (props) => {
     setSearchingLoc(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await searchLocations(val, currentCoords[0], currentCoords[1]);
+        const results = await searchLocations(
+          val,
+          currentCoords[0],
+          currentCoords[1],
+          sessionTokenRef.current
+        );
         setSearchOptions(
-          results.map((r, i) => ({
-            value: r.display_name || r.name,
-            key: `loc-${r.lat}-${r.lon}-${i}`,
-            label: (
-              <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
-                <div
-                  style={{
-                    fontSize: 11,
-                    color: '#64748b',
-                    whiteSpace: 'normal',
-                    lineHeight: 1.3,
-                    maxHeight: 36,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {r.display_name}
+          results.map((r, i) => {
+            const hasCoords =
+              r.lat !== undefined &&
+              r.lon !== undefined &&
+              !isNaN(Number(r.lat)) &&
+              !isNaN(Number(r.lon));
+            return {
+              value: r.display_name || r.name,
+              key: `loc-${r.place_id || `${r.lat}-${r.lon}`}-${i}`,
+              label: (
+                <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
+                  <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
+                  <div
+                    style={{
+                      fontSize: 11,
+                      color: '#64748b',
+                      whiteSpace: 'normal',
+                      lineHeight: 1.3,
+                      maxHeight: 36,
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {r.secondary_text || r.display_name}
+                  </div>
                 </div>
-              </div>
-            ),
-            coords: [parseFloat(r.lat), parseFloat(r.lon)],
-            name: r.name,
-            display_name: r.display_name,
-            raw: r,
-          }))
+              ),
+              coords: hasCoords ? [parseFloat(r.lat), parseFloat(r.lon)] : null,
+              name: r.name,
+              display_name: r.display_name,
+              raw: r,
+            };
+          })
         );
       } catch (err) {
         console.error('Error during location search:', err);
@@ -233,20 +262,48 @@ const LeafletComponent = (props) => {
     }, 280);
   };
 
-  const handleAddressSelect = (value, option) => {
+  const handleAddressSelect = async (value, option) => {
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    const coords =
+    let coords =
       option?.coords ||
-      (option?.raw ? [parseFloat(option.raw.lat), parseFloat(option.raw.lon)] : null);
+      (option?.raw &&
+      option.raw.lat !== undefined &&
+      option.raw.lon !== undefined &&
+      !isNaN(Number(option.raw.lat)) &&
+      !isNaN(Number(option.raw.lon))
+        ? [parseFloat(option.raw.lat), parseFloat(option.raw.lon)]
+        : null);
+
+    let resolvedName = option?.name || '';
+    let resolvedDisplay = option?.display_name || '';
+
+    if (!coords && option?.raw?.place_id) {
+      setSearchingLoc(true);
+      try {
+        const details = await getPlaceDetails(
+          option.raw.place_id,
+          sessionTokenRef.current
+        );
+        sessionTokenRef.current = createLocationSessionToken();
+        if (details && !isNaN(Number(details.lat)) && !isNaN(Number(details.lon))) {
+          coords = [parseFloat(details.lat), parseFloat(details.lon)];
+          resolvedName = details.name || resolvedName;
+          resolvedDisplay = details.display_name || resolvedDisplay;
+        }
+      } finally {
+        setSearchingLoc(false);
+      }
+    }
+
     if (coords && Array.isArray(coords)) {
       const clean = sanitizeCoords(coords);
       setPosition(clean);
       updateMarker(clean);
-      const chosenText = option?.name || option?.display_name || value || '';
+      const chosenText = resolvedName || resolvedDisplay || value || '';
       setSearchQuery(chosenText);
-      setCurrentAddress(option?.display_name || chosenText);
+      setCurrentAddress(resolvedDisplay || chosenText);
       setSearchOptions([]);
     }
   };
@@ -273,11 +330,11 @@ const LeafletComponent = (props) => {
                   width: 38,
                   height: 38,
                   borderRadius: 10,
-                  background: '#eef2ff',
+                  background: colors.primaryLight,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#4f46e5',
+                  color: colors.primary,
                   fontSize: 18,
                 }}
               >
@@ -346,7 +403,7 @@ const LeafletComponent = (props) => {
                       height: 38,
                       padding: '0 18px',
                       fontSize: 13,
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      background: colors.primary,
                       border: 'none',
                     }}
                   >
@@ -379,7 +436,7 @@ const LeafletComponent = (props) => {
             {/* Mobile Tier 1: Title & Action Buttons */}
             <Flex align="center" justify="space-between" style={{ width: '100%' }}>
               <Flex align="center" gap={8}>
-                <EnvironmentOutlined style={{ color: '#4f46e5', fontSize: 18 }} />
+                <EnvironmentOutlined style={{ color: colors.primary, fontSize: 18 }} />
                 <div>
                   <Text strong style={{ fontSize: 14, display: 'block', color: '#0f172a', lineHeight: 1.2 }}>
                     Pick Location
@@ -403,7 +460,7 @@ const LeafletComponent = (props) => {
                       height: 32,
                       padding: '0 12px',
                       fontSize: 12,
-                      background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                      background: colors.primary,
                       border: 'none',
                     }}
                   >
