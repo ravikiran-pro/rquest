@@ -53,9 +53,13 @@ const SideBar = ({ open, handleClose }) => {
   );
 
   const currentPath = location.pathname;
+  const isMobile = !screens.md;
+  const isAuthRoute =
+    currentPath === Routes.login || currentPath === Routes.register;
 
   const logout = () => {
     update_user_data({});
+    useChatStore.getState().setUnreadTotal(0);
     sessionStorage.clear();
     handleClose();
     history.push(Routes.login);
@@ -75,6 +79,10 @@ const SideBar = ({ open, handleClose }) => {
     handleClose();
     handleChatOpen(null, null);
   };
+
+  if (isMobile && isAuthRoute) {
+    return null;
+  }
 
   return (
     <Drawer

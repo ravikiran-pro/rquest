@@ -34,7 +34,7 @@ router.get('/shop/:shop_id', async (req, res) => {
 // 2. Search listings by item name or category near coordinates (Public)
 router.post('/search', async (req, res) => {
   try {
-    const { search, lat, lon, listing_type, limit = 50 } = req.body;
+    const { search, lat, lon, listing_type, limit = 200 } = req.body;
     const searchLat = parseFloat(lat) || 12.9631025;
     const searchLon = parseFloat(lon) || 80.25476;
     const queryText = typeof search === 'string' ? search.trim() : '';
@@ -67,6 +67,8 @@ router.post('/search', async (req, res) => {
             'rating',
             'img_url',
             'shop_type',
+            'category_id',
+            'sub_category_id',
             'latitude',
             'longitude',
             'owner_id',
@@ -76,6 +78,18 @@ router.post('/search', async (req, res) => {
               ),
               'distance',
             ],
+          ],
+          include: [
+            {
+              model: categories,
+              as: 'shopCategory',
+              attributes: ['id', 'name'],
+            },
+            {
+              model: sub_categories,
+              as: 'shopSubCategory',
+              attributes: ['id', 'name'],
+            },
           ],
         },
       ],

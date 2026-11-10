@@ -1180,7 +1180,7 @@ const OrdersScreen = () => {
                 boxShadow: customerOrderFilter === 'completed' ? '0 2px 6px rgba(11, 45, 107, 0.2)' : 'none',
               }}
             >
-              Past Orders ({pastCustomerOrders.length > 0 ? pastCustomerOrders.length : 4})
+              Past Orders ({pastCustomerOrders.length > 0 ? pastCustomerOrders.length : MOCK_PAST_ORDERS.length})
             </button>
           </div>
 
@@ -1561,6 +1561,7 @@ const OrdersScreen = () => {
                   {activeCustomerOrders.map((ord) => {
                     const isExpanded = expandedOrders[ord.id];
                     const items = ord.items || [];
+                    const totalItemQty = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
                     const timeAgo = ord.createdAt
                       ? `${Math.max(1, Math.round((Date.now() - new Date(ord.createdAt).getTime()) / 60000))}m ago`
                       : 'Just now';
@@ -1759,7 +1760,9 @@ const OrdersScreen = () => {
                               marginBottom: 8,
                             }}
                           >
-                            <strong>{items.length || 1} items:</strong>{' '}
+                            <strong>
+                              {totalItemQty} {totalItemQty === 1 ? 'item' : 'items'}:
+                            </strong>{' '}
                             {items.length > 0
                               ? items.map((it) => `${it.item_name} (x${it.quantity})`).join(', ')
                               : 'Order placed with merchant'}

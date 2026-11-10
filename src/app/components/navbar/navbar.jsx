@@ -68,7 +68,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       const res = await netWorkCall(apiConfig.notifications_list, 'GET', null, true);
       if (res?.success && Array.isArray(res?.data)) {
         setNotificationsList(res.data);
-        setUnreadNotifCount(res.unreadCount || res.data.filter((n) => !n.is_read).length);
+        setUnreadNotifCount(
+          res.unreadCount !== undefined
+            ? res.unreadCount
+            : res.data.filter((n) => !n.is_read).length
+        );
       }
     } catch (e) {
       // Ignore notification fetch error
@@ -78,6 +82,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   useEffect(() => {
     if (isLoggedIn) {
       loadNotifications();
+    } else {
+      setNotificationsList([]);
+      setUnreadNotifCount(0);
     }
   }, [isLoggedIn, user_data?.user_id]);
 
@@ -87,7 +94,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       loadNotifications();
     });
     return () => unsub();
-  }, []);
+  }, [user_data?.user_id]);
 
   const handleEnablePush = async () => {
     const perm = await requestPushPermission(user_data);
@@ -111,6 +118,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   const logout = () => {
     update_user_data({});
+    useChatStore.getState().setUnreadTotal(0);
+    setNotificationsList([]);
+    setUnreadNotifCount(0);
     sessionStorage.clear();
     history.push(Routes.login);
   };
@@ -264,6 +274,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   ];
 
   const isOrdersRoute = currentPath === Routes.orders;
+  const isAuthRoute =
+    currentPath === Routes.login || currentPath === Routes.register;
+
+  if (isMobile && isAuthRoute) {
+    return null;
+  }
 
   if (isMobile && isOrdersRoute) {
     return (

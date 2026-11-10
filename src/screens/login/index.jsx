@@ -228,6 +228,12 @@ const LoginScreen = () => {
         <div className="rq-auth-form-col">
           {step === 'phone' ? (
             <div className="rq-auth-card-wrapper">
+              <div className="rq-auth-mobile-top-nav">
+                <Link to={Routes.home} className="rq-otp-inline-back-btn">
+                  <ArrowLeftOutlined />
+                  <span>Back to Market</span>
+                </Link>
+              </div>
               {/* Centered Brand Hero */}
               <div className="rq-auth-hero">
                 <div className="rq-auth-logo-badge-wrap">
@@ -301,16 +307,6 @@ const LoginScreen = () => {
                       <span>{passwordMode ? 'Sign In with Password' : 'Continue with OTP'}</span>
                       <ArrowRightOutlined />
                     </Button>
-
-                    {/* Zero Spam Direct Guarantee Strip */}
-                    <div className="rq-auth-zero-spam-pill">
-                      <span className="rq-zero-spam-icon">
-                        <CheckCircleFilled />
-                      </span>
-                      <span className="rq-zero-spam-text">
-                        Zero spam · Direct neighbourhood connection
-                      </span>
-                    </div>
 
                     <div className="rq-auth-mode-toggle">
                       <button
@@ -452,19 +448,6 @@ const LoginScreen = () => {
                   <span>Verify &amp; Continue</span>
                   <ArrowRightOutlined />
                 </Button>
-
-                {/* ZERO SPAM GUARANTEE Card */}
-                <div className="rq-zero-spam-card">
-                  <div className="rq-zero-spam-card-icon">
-                    <CheckCircleFilled />
-                  </div>
-                  <div className="rq-zero-spam-card-body">
-                    <div className="rq-zero-spam-card-title">ZERO SPAM GUARANTEE</div>
-                    <div className="rq-zero-spam-card-text">
-                      Direct neighbourhood shop contact only. No spam calls or promotional messages.
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* Contact Support Footer */}

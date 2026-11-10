@@ -274,7 +274,7 @@ const DeliveryPortalScreen = () => {
                               </div>
 
                               <div style={{ marginTop: 8, fontSize: 12, color: '#64748b' }}>
-                                Items: {order.items?.length || 1} • Store Bill: ₹{order.total_amount}{' '}
+                                Items: {order.items?.length || 0} • Store Bill: ₹{order.total_amount}{' '}
                                 (Direct UPI to shop)
                               </div>
                             </div>

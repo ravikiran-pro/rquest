@@ -250,13 +250,16 @@ code {
 }
 
 @media (max-width: 767px) {
-  body {
-    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px)) !important;
+  .app-route-shell {
+    min-height: calc(100vh - 58px);
+    min-height: calc(100dvh - 58px);
+    padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 
-  .app-route-shell {
-    min-height: calc(100vh - 58px - 64px - env(safe-area-inset-bottom, 0px));
-    min-height: calc(100dvh - 58px - 64px - env(safe-area-inset-bottom, 0px));
+  .app-route-shell.app-route-shell--auth {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 

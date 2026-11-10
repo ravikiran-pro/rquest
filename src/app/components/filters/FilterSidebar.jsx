@@ -204,8 +204,15 @@ const FilterSidebar = ({
                     {cat.label}
                   </span>
                 </Flex>
-                <span style={{ fontSize: 11, color: colors.textLight, fontWeight: 500 }}>
-                  {count > 0 ? count : ''}
+                <span
+                  style={{
+                    fontSize: 11,
+                    color: count > 0 ? colors.textMuted : colors.textLight,
+                    fontWeight: count > 0 ? 600 : 400,
+                    fontVariantNumeric: 'tabular-nums',
+                  }}
+                >
+                  {count}
                 </span>
               </Flex>
             );
@@ -213,8 +220,9 @@ const FilterSidebar = ({
         </div>
       </div>
 
-      {/* PRICE RANGE */}
-      <div style={{ marginBottom: 18 }}>
+      {/* PRICE RANGE (Offerings mode only) */}
+      {searchMode === 'items' && (
+        <div style={{ marginBottom: 18 }}>
         <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
           <span
             style={{
@@ -284,7 +292,8 @@ const FilterSidebar = ({
             ₹500+
           </button>
         </Flex>
-      </div>
+        </div>
+      )}
 
       {/* MERCHANT RATING */}
       <div style={{ marginBottom: 18 }}>

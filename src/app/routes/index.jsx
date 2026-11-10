@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import PropTypes from 'prop-types';
 import {
   BrowserRouter as Router,
   Route,
@@ -45,7 +46,7 @@ notification.config({
   duration: 3.5,
 });
 
-function RouteChangeHandler() {
+function RouteChangeHandler({ onRouteChange }) {
   const location = useLocation();
   const { isChat, handleChatClose } = useChatStore((state) => state);
   const prevPath = React.useRef(location.pathname);
@@ -53,14 +54,39 @@ function RouteChangeHandler() {
   useEffect(() => {
     if (prevPath.current !== location.pathname) {
       prevPath.current = location.pathname;
+      if (onRouteChange) {
+        onRouteChange();
+      }
       if (isChat) {
         handleChatClose();
       }
     }
-  }, [location.pathname, isChat, handleChatClose]);
+  }, [location.pathname, isChat, handleChatClose, onRouteChange]);
 
   return null;
 }
+
+function RouteShell({ children }) {
+  const location = useLocation();
+  const isAuthRoute =
+    location.pathname === routes.login || location.pathname === routes.register;
+
+  return (
+    <div
+      className={`app-route-shell${isAuthRoute ? ' app-route-shell--auth' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
+RouteChangeHandler.propTypes = {
+  onRouteChange: PropTypes.func,
+};
+
+RouteShell.propTypes = {
+  children: PropTypes.node.isRequired,
+};
 
 function PushNotificationHandler() {
   const history = useHistory();
@@ -160,7 +186,7 @@ export default function AppRoutes() {
 
   return (
     <Router>
-      <RouteChangeHandler />
+      <RouteChangeHandler onRouteChange={handleClose} />
       <PushNotificationHandler />
       <NavBar open={drawer} handleOpen={handleOpen} handleClose={handleClose} />
       <SideBar
@@ -169,7 +195,7 @@ export default function AppRoutes() {
         handleOpen={handleOpen}
       />
       <BottomNav />
-      <div className="app-route-shell">
+      <RouteShell>
         <Switch>
           <Route exact path="/">
             <HomeScreen />
@@ -208,7 +234,7 @@ export default function AppRoutes() {
           </Route>
           <Redirect to="/" />
         </Switch>
-      </div>
+      </RouteShell>
       <ErrorBoundary fallback={null}>
         <CartDrawer />
       </ErrorBoundary>

@@ -6,6 +6,8 @@ export const DEFAULT_FILTERS = {
   minRating: null,   // number or null (e.g. 4.0)
   listingType: 'all',// 'all', 'product', 'service', 'food', 'rentals'
   onlyAvailable: false,
+  verifiedToday: false,
+  immediatePickup: false,
   sortBy: 'distance_asc', // 'distance_asc' | 'price_asc' | 'price_desc' | 'rating_desc' | 'name_asc'
 };
 
@@ -58,6 +60,25 @@ export const SORT_OPTIONS = [
 ];
 
 /**
+ * Shared predicate for category matching (used by both filter application and category counts)
+ */
+export const matchesCategoryFilter = (item, catId, searchMode = 'items') => {
+  const targetStr =
+    searchMode === 'shops'
+      ? `${item.shop_type || ''} ${item.shopCategory?.name || ''} ${item.shopSubCategory?.name || ''} ${item.shop_name || ''}`.toLowerCase()
+      : `${item.shop?.shop_type || ''} ${item.shop?.shopCategory?.name || ''} ${item.shop?.shopSubCategory?.name || ''} ${item.listing_type || ''} ${item.name || ''}`.toLowerCase();
+
+  const def = FILTER_CATEGORIES.find((c) => c.id === catId);
+  if (def && def.aliases) {
+    return (
+      targetStr.includes(catId.toLowerCase()) ||
+      def.aliases.some((alias) => targetStr.includes(alias.toLowerCase()))
+    );
+  }
+  return targetStr.includes(catId.toLowerCase());
+};
+
+/**
  * Filter and sort results based on active filters
  */
 export const applySearchFilters = (items, filters, searchMode = 'items') => {
@@ -75,18 +96,9 @@ export const applySearchFilters = (items, filters, searchMode = 'items') => {
 
     // 2. Category filter
     if (filters.categories && filters.categories.length > 0) {
-      const targetStr =
-        searchMode === 'shops'
-          ? `${item.shop_type || ''} ${item.shopCategory?.name || ''} ${item.shopSubCategory?.name || ''} ${item.shop_name || ''}`.toLowerCase()
-          : `${item.shop?.shop_type || ''} ${item.shop?.shopCategory?.name || ''} ${item.listing_type || ''} ${item.name || ''}`.toLowerCase();
-
-      const matchesCategory = filters.categories.some((catId) => {
-        const def = FILTER_CATEGORIES.find((c) => c.id === catId);
-        if (def && def.aliases) {
-          return def.aliases.some((alias) => targetStr.includes(alias.toLowerCase()));
-        }
-        return targetStr.includes(catId.toLowerCase());
-      });
+      const matchesCategory = filters.categories.some((catId) =>
+        matchesCategoryFilter(item, catId, searchMode)
+      );
 
       if (!matchesCategory) return false;
     }
@@ -98,12 +110,41 @@ export const applySearchFilters = (items, filters, searchMode = 'items') => {
       if (numRating < filters.minRating) return false;
     }
 
-    // 4. Availability filter (both items & shops)
+    // 4. Availability & verification filters (both items & shops)
     if (filters.onlyAvailable) {
       if (searchMode === 'shops') {
         if (item.is_open === false || item.is_available === false) return false;
       } else {
         if (item.is_available === false || item.shop?.is_open === false) return false;
+      }
+    }
+
+    if (filters.verifiedToday) {
+      if (searchMode === 'shops') {
+        if (item.is_open === false || item.is_available === false) return false;
+      } else {
+        if (
+          item.is_available === false ||
+          item.shop?.is_open === false ||
+          item.metadata?.verified_today === false
+        ) {
+          return false;
+        }
+      }
+    }
+
+    if (filters.immediatePickup) {
+      if (searchMode === 'shops') {
+        if (item.is_open === false || item.pickup_available === false) return false;
+      } else {
+        if (
+          item.is_available === false ||
+          item.shop?.is_open === false ||
+          item.listing_type === 'service' ||
+          item.metadata?.pickup_available === false
+        ) {
+          return false;
+        }
       }
     }
 
@@ -170,6 +211,8 @@ export const countActiveFilters = (filters, searchMode = 'items') => {
   if (filters.sortBy && filters.sortBy !== 'distance_asc') count++;
 
   if (filters.onlyAvailable) count++;
+  if (filters.verifiedToday) count++;
+  if (filters.immediatePickup) count++;
 
   if (searchMode === 'items') {
     if (filters.minPrice !== null || filters.maxPrice !== null) count++;
