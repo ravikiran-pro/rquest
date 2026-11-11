@@ -23,7 +23,7 @@ import {
   SaveOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
-import { colors } from '../../app/styles/theme';
+import { colors, radii, typography } from '../../app/styles/theme';
 
 const { Text, Paragraph } = Typography;
 const { Option } = Select;
@@ -240,41 +240,54 @@ const FormSchemaBuilderModal = ({
     {
       title: '#',
       width: 50,
-      render: (_, __, idx) => <Text type="secondary">{idx + 1}</Text>,
+      render: (_, __, idx) => <Text style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>{idx + 1}</Text>,
     },
     {
-      title: 'Field Label',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Field Label
+        </span>
+      ),
       dataIndex: 'label',
       width: 180,
       render: (val, _, idx) => (
         <Input
           value={val}
           placeholder="e.g. Expiry Date"
+          style={{ borderRadius: radii.sm, borderColor: colors.border }}
           onChange={(e) => handleFieldChange(idx, 'label', e.target.value)}
         />
       ),
     },
     {
-      title: 'Field Key (DB Attribute)',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Field Key (DB Attribute)
+        </span>
+      ),
       dataIndex: 'key',
       width: 170,
       render: (val, _, idx) => (
         <Input
           value={val}
           placeholder="e.g. expiry_date"
-          style={{ fontFamily: 'monospace', fontSize: 12 }}
+          style={{ fontFamily: typography.fontFamily.mono, fontSize: 12, borderRadius: radii.sm, borderColor: colors.border }}
           onChange={(e) => handleFieldChange(idx, 'key', e.target.value)}
         />
       ),
     },
     {
-      title: 'Type',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Type
+        </span>
+      ),
       dataIndex: 'type',
       width: 150,
       render: (val, _, idx) => (
         <Select
           value={val}
-          style={{ width: '100%' }}
+          style={{ width: '100%', borderRadius: radii.sm }}
           onChange={(newType) => handleFieldChange(idx, 'type', newType)}
         >
           <Option value="text">Text Input</Option>
@@ -288,7 +301,11 @@ const FormSchemaBuilderModal = ({
       ),
     },
     {
-      title: 'Options / Details',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Options / Details
+        </span>
+      ),
       dataIndex: 'options',
       render: (val, record, idx) => {
         if (record.type === 'select' || record.type === 'radio') {
@@ -296,6 +313,7 @@ const FormSchemaBuilderModal = ({
             <Input
               value={Array.isArray(val) ? val.join(', ') : ''}
               placeholder="Comma-separated: Tablet, Syrup, Strip"
+              style={{ borderRadius: radii.sm, borderColor: colors.border }}
               onChange={(e) => handleOptionsChange(idx, e.target.value)}
             />
           );
@@ -304,13 +322,18 @@ const FormSchemaBuilderModal = ({
           <Input
             value={record.placeholder || ''}
             placeholder="Placeholder or helper text"
+            style={{ borderRadius: radii.sm, borderColor: colors.border }}
             onChange={(e) => handleFieldChange(idx, 'placeholder', e.target.value)}
           />
         );
       },
     },
     {
-      title: 'Req.',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Req.
+        </span>
+      ),
       dataIndex: 'required',
       width: 70,
       render: (val, _, idx) => (
@@ -321,7 +344,11 @@ const FormSchemaBuilderModal = ({
       ),
     },
     {
-      title: 'Order / Action',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Order / Action
+        </span>
+      ),
       width: 130,
       render: (_, __, idx) => (
         <Space size={4}>
@@ -329,12 +356,14 @@ const FormSchemaBuilderModal = ({
             size="small"
             icon={<ArrowUpOutlined />}
             disabled={idx === 0}
+            style={{ borderRadius: radii.xs, borderColor: colors.border }}
             onClick={() => handleMove(idx, -1)}
           />
           <Button
             size="small"
             icon={<ArrowDownOutlined />}
             disabled={idx === fields.length - 1}
+            style={{ borderRadius: radii.xs, borderColor: colors.border }}
             onClick={() => handleMove(idx, 1)}
           />
           <Popconfirm
@@ -343,7 +372,7 @@ const FormSchemaBuilderModal = ({
             okText="Yes"
             cancelText="No"
           >
-            <Button size="small" danger icon={<DeleteOutlined />} />
+            <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: radii.xs }} />
           </Popconfirm>
         </Space>
       ),
@@ -353,9 +382,9 @@ const FormSchemaBuilderModal = ({
   return (
     <Modal
       title={
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <SettingOutlined style={{ color: colors.primary }} />
-          <span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <SettingOutlined style={{ color: colors.primary, fontSize: 18 }} />
+          <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain, fontSize: 16 }}>
             {isShopTarget
               ? `Custom Product Form — Store: ${shop?.shop_name || 'Shop'}`
               : `Product Form Configuration — Category: ${category?.name || 'Category'}`}
@@ -366,7 +395,11 @@ const FormSchemaBuilderModal = ({
       onCancel={onClose}
       width={1000}
       footer={[
-        <Button key="cancel" onClick={onClose}>
+        <Button
+          key="cancel"
+          onClick={onClose}
+          style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMain, fontFamily: typography.fontFamily.body }}
+        >
           Cancel
         </Button>,
         ...(isShopTarget
@@ -374,7 +407,7 @@ const FormSchemaBuilderModal = ({
               <Button
                 key="reset"
                 onClick={handleResetToCategoryDefault}
-                style={{ borderRadius: 6 }}
+                style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMuted, fontFamily: typography.fontFamily.body }}
               >
                 Reset to Standard Category Default
               </Button>,
@@ -386,7 +419,14 @@ const FormSchemaBuilderModal = ({
           icon={<SaveOutlined />}
           loading={saving}
           onClick={handleSave}
-          style={{ background: colors.primary, borderColor: colors.primary }}
+          style={{
+            background: colors.primary,
+            borderColor: colors.primary,
+            borderRadius: radii.md,
+            fontWeight: 600,
+            fontFamily: typography.fontFamily.body,
+            boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
+          }}
         >
           {isShopTarget
             ? `Save Shop Override (${fields.length} Fields)`
@@ -398,7 +438,7 @@ const FormSchemaBuilderModal = ({
       <Alert
         message={isShopTarget ? 'Store-Specific Form Override' : 'Standard Category Schema'}
         description={
-          <div>
+          <div style={{ fontFamily: typography.fontFamily.body }}>
             {isShopTarget ? (
               <>
                 Fields defined here will apply <strong>only to {shop?.shop_name}</strong>. If empty or cleared, this store will use standard <strong>{shop?.shopCategory?.name || shop?.shop_type || 'Category'}</strong> fields.
@@ -412,13 +452,13 @@ const FormSchemaBuilderModal = ({
         }
         type={isShopTarget ? 'warning' : 'info'}
         showIcon
-        style={{ marginBottom: 16, borderRadius: 10 }}
+        style={{ marginBottom: 16, borderRadius: radii.md }}
       />
 
       {/* Quick Template Presets */}
-      <div style={{ marginBottom: 16, background: '#f8fafc', padding: '12px 16px', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-        <Text strong style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-          <BulbOutlined style={{ color: '#f59e0b' }} /> Load Ready-Made Industry Template:
+      <div style={{ marginBottom: 16, background: colors.surfaceContainerLow, padding: '12px 16px', borderRadius: radii.lg, border: `1px solid ${colors.border}` }}>
+        <Text strong style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+          <BulbOutlined style={{ color: colors.tertiary }} /> Load Ready-Made Industry Template:
         </Text>
         <Space wrap>
           {Object.entries(SCHEMA_PRESETS).map(([key, item]) => (
@@ -426,7 +466,15 @@ const FormSchemaBuilderModal = ({
               key={key}
               size="small"
               onClick={() => handleApplyPreset(key)}
-              style={{ borderRadius: 6, fontSize: 12 }}
+              style={{
+                borderRadius: radii.md,
+                fontSize: 12,
+                borderColor: colors.border,
+                background: colors.surface,
+                color: colors.textMain,
+                fontFamily: typography.fontFamily.body,
+                fontWeight: 500,
+              }}
             >
               {item.label}
             </Button>
@@ -435,38 +483,58 @@ const FormSchemaBuilderModal = ({
       </div>
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-        <Text strong style={{ fontSize: 14 }}>
+        <Text strong style={{ fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
           Configured Fields ({fields.length}):
         </Text>
         <Button
           type="primary"
           onClick={handleAddField}
-          style={{ borderRadius: 6, fontWeight: 600 }}
+          style={{
+            borderRadius: radii.md,
+            fontWeight: 600,
+            background: colors.primary,
+            borderColor: colors.primary,
+            fontFamily: typography.fontFamily.body,
+          }}
         >
           + Add Custom Field
         </Button>
       </div>
 
-      <Table
-        dataSource={fields}
-        columns={columns}
-        rowKey={(record, idx) => record.key || idx}
-        pagination={false}
-        size="small"
-        scroll={{ x: 'max-content' }}
-        locale={{
-          emptyText: (
-            <div style={{ padding: '24px 0', textAlign: 'center' }}>
-              <Paragraph type="secondary">
-                No custom fields configured for this category yet. It will use standard product fields.
-              </Paragraph>
-              <Button type="dashed" icon={<PlusOutlined />} onClick={handleAddField}>
-                Add First Custom Field or pick a template above
-              </Button>
-            </div>
-          ),
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.md,
+          overflow: 'hidden',
+          background: colors.surface,
         }}
-      />
+      >
+        <Table
+          dataSource={fields}
+          columns={columns}
+          rowKey={(record, idx) => record.key || idx}
+          pagination={false}
+          size="small"
+          scroll={{ x: 'max-content' }}
+          locale={{
+            emptyText: (
+              <div style={{ padding: '24px 0', textAlign: 'center' }}>
+                <Paragraph style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+                  No custom fields configured for this category yet. It will use standard product fields.
+                </Paragraph>
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={handleAddField}
+                  style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.primary }}
+                >
+                  Add First Custom Field or pick a template above
+                </Button>
+              </div>
+            ),
+          }}
+        />
+      </div>
     </Modal>
   );
 };

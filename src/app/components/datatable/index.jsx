@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Table, Tag, Form, Input, Button, Row, Col } from 'antd';
-import { Avatar } from 'antd';
-import { Upload } from 'antd';
-import { apiConfig, config, netWorkCall } from '../../utils';
+import PropTypes from 'prop-types';
+import { Space, Table, Tag, Input, Button, Row, Col, Avatar, Upload } from 'antd';
+import { apiConfig, config } from '../../utils';
 import { PlusOutlined } from '@ant-design/icons';
+import { colors, typography, radii } from '../../styles/theme';
 
 const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableChange, handleStatusChange, handleRowChange, handleDelete }) => {
   const [data, setData] = useState(rows);
@@ -67,57 +67,119 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
 
     switch (key) {
       case 'img_url':
-        return isEditable ? <Upload
-          listType="picture"
-          beforeUpload={(file) => onImageUpload(file, index)}
-          maxCount={1}
-        >
-          <Space size="middle">
-            <a>upload</a>
-          </Space>
-        </Upload> :
+        return isEditable ? (
+          <Upload
+            listType="picture"
+            beforeUpload={(file) => onImageUpload(file, index)}
+            maxCount={1}
+          >
+            <Button type="link" size="small" style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}>
+              Upload
+            </Button>
+          </Upload>
+        ) : (
           <Avatar src={value || 'data:image/jpeg;base64,/9j/4AAQ...'} alt='none' />
+        );
       case 'menu':
-        return <Button style={{ color: '#fff' }} onClick={() => item?.onClick(record)}> Add {item?.title} </Button>
+        return (
+          <Button
+            type="default"
+            style={{
+              borderColor: colors.border,
+              color: colors.primary,
+              fontWeight: 600,
+              borderRadius: radii.md,
+            }}
+            onClick={() => item?.onClick(record)}
+          >
+            Add {item?.title}
+          </Button>
+        );
       case 'createdBy':
-        return <span>Admin</span>;
+        return <span style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>Admin</span>;
       case 'is_active':
         return (
-          <Tag color={value ? 'green' : 'red'} onClick={() => handleChange("is_active", !value, index)}>
-            {value ? 'Active' : 'In Active'}
+          <Tag
+            style={{
+              cursor: 'pointer',
+              borderRadius: radii.full,
+              fontWeight: 600,
+              fontSize: 12,
+              padding: '2px 10px',
+              background: value ? colors.semantic.successLight : colors.semantic.errorLight,
+              color: value ? colors.semantic.success : colors.semantic.error,
+              borderColor: value ? colors.semantic.successBorder : colors.semantic.errorBorder,
+            }}
+            onClick={() => handleChange("is_active", !value, index)}
+          >
+            {value ? 'Active' : 'Inactive'}
           </Tag>
         );
       case 'action':
         return isEditable ? (
           <Space size="middle">
-            <a onClick={() => handleSave(index)}>Save</a>
-            <a onClick={() => {
-              setData(rows);
-              setEditableRow(null);
-              setIsNew(false)
-            }}>Cancel</a>
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}
+              onClick={() => handleSave(index)}
+            >
+              Save
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.textMuted, fontWeight: 500, padding: 0 }}
+              onClick={() => {
+                setData(rows);
+                setEditableRow(null);
+                setIsNew(false);
+              }}
+            >
+              Cancel
+            </Button>
           </Space>
         ) : (
-          <>
-            <Space size="middle" onClick={() => handleEdit(index)}>
-              <a>Edit</a>
-            </Space>
-            <Space size="middle" style={{marginLeft: 10}} onClick={() => handleDelete(record)}>
-            <a>Delete</a>
+          <Space size="middle">
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}
+              onClick={() => handleEdit(index)}
+            >
+              Edit
+            </Button>
+            <Button
+              type="link"
+              danger
+              size="small"
+              style={{ color: colors.semantic.error, fontWeight: 600, padding: 0 }}
+              onClick={() => handleDelete(record)}
+            >
+              Delete
+            </Button>
           </Space>
-          </>
         );
       default:
         return isEditable ? (
-          <Input defaultValue={value} onChange={(e) => handleChange(key, e.target.value, index)} />
+          <Input
+            defaultValue={value}
+            style={{ borderRadius: radii.md, borderColor: colors.border }}
+            onChange={(e) => handleChange(key, e.target.value, index)}
+          />
         ) : (
-          value
+          <span style={{ color: colors.textMain, fontFamily: typography.fontFamily.body }}>{value}</span>
         );
     }
   };
 
   const columnsRender = columns.map((item) => ({
-    title: item.title,
+    ...item,
+    title: (
+      <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+        {item.title}
+      </span>
+    ),
     dataIndex: item.key,
     key: item.key,
     render: (value, record, index) => renderCell(item, value, record, index),
@@ -127,33 +189,67 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
   React.useEffect(() => {
     if (isNew) {
       setData([initRow, ...data]);
-      setEditableRow(0)
+      setEditableRow(0);
     } else {
       setData([...rows]);
-      setEditableRow(null)
+      setEditableRow(null);
     }
-  }, [isNew])
+  }, [isNew]);
 
-  return <>
-    <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
-      {
-        isAddNew && <Row>
-          <Col>
-            <Button type='primary' onClick={() => setIsNew(!isNew)}>
-              Add New
-              <PlusOutlined />
-            </Button>
-          </Col>
-        </Row>
-      }
-    </Col>
-    <Table
-      columns={columnsRender}
-      dataSource={data}
-      pagination={pagination}
-      onChange={handleTableChange}
-    />
-  </>
+  return (
+    <>
+      <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
+        {isAddNew && (
+          <Row>
+            <Col>
+              <Button
+                type="primary"
+                style={{
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  borderRadius: radii.md,
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
+                }}
+                onClick={() => setIsNew(!isNew)}
+              >
+                Add New
+                <PlusOutlined />
+              </Button>
+            </Col>
+          </Row>
+        )}
+      </Col>
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.lg,
+          overflow: 'hidden',
+          background: colors.surface,
+        }}
+      >
+        <Table
+          columns={columnsRender}
+          dataSource={data}
+          pagination={pagination}
+          onChange={handleTableChange}
+        />
+      </div>
+    </>
+  );
+};
+
+DataTable.propTypes = {
+  rows: PropTypes.array,
+  columns: PropTypes.array,
+  initRow: PropTypes.object,
+  isAddNew: PropTypes.bool,
+  pagination: PropTypes.object,
+  handleTableChange: PropTypes.func,
+  handleStatusChange: PropTypes.func,
+  handleRowChange: PropTypes.func,
+  handleDelete: PropTypes.func,
 };
 
 export default DataTable;
+

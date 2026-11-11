@@ -38,7 +38,7 @@ import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storag
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal } from '../profile';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text, Title } = Typography;
 
@@ -396,12 +396,12 @@ const CartDrawer = () => {
   };
 
   const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth < 576 : false
+    typeof window !== 'undefined' ? window.innerWidth <= 767 : false
   );
 
   React.useEffect(() => {
     const handleResize = () => {
-      setIsMobile(window.innerWidth < 576);
+      setIsMobile(window.innerWidth <= 767);
     };
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
@@ -427,14 +427,24 @@ const CartDrawer = () => {
               <ShoppingCartOutlined style={{ color: colors.primary, fontSize: 18 }} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a', lineHeight: 1.2 }}>
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: colors.textMain,
+                  letterSpacing: '-0.02em',
+                  lineHeight: 1.2,
+                }}
+              >
                 Your Cart
               </div>
               {cart.shop_name && (
                 <div
                   style={{
                     fontSize: 12,
-                    color: '#64748b',
+                    color: colors.textMuted,
+                    fontFamily: typography.fontFamily.body,
                     fontWeight: 500,
                     marginTop: 2,
                     whiteSpace: 'nowrap',
@@ -444,7 +454,7 @@ const CartDrawer = () => {
                   }}
                   title={cart.shop_name}
                 >
-                  From: <span style={{ color: '#0f172a', fontWeight: 600 }}>{cart.shop_name}</span>
+                  From: <span style={{ color: colors.textMain, fontWeight: 600 }}>{cart.shop_name}</span>
                 </div>
               )}
             </div>
@@ -454,7 +464,7 @@ const CartDrawer = () => {
           <Button
             type="text"
             shape="circle"
-            icon={<CloseOutlined style={{ fontSize: 15, color: '#64748b' }} />}
+            icon={<CloseOutlined style={{ fontSize: 14, color: colors.textMuted }} />}
             onClick={handleClose}
             style={{
               width: 32,
@@ -462,55 +472,105 @@ const CartDrawer = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              borderRadius: 8,
-              border: '1px solid #f1f5f9',
-              background: '#f8fafc',
+              borderRadius: radii.md,
+              border: `1px solid ${colors.border}`,
+              background: colors.surfaceContainerLow,
             }}
             aria-label="Close cart"
           />
         }
         placement={isMobile ? 'bottom' : 'right'}
-        height={isMobile ? '90vh' : undefined}
-        width={isMobile ? '100%' : 440}
+        height={isMobile ? '92dvh' : undefined}
+        width={isMobile ? '100vw' : 440}
         onClose={handleClose}
         open={isCartOpen}
         zIndex={1200}
         styles={{
-          body: { padding: isMobile ? '16px 14px' : '20px 24px' },
-          header: { padding: isMobile ? '14px 16px' : '16px 24px', borderBottom: '1px solid #f1f5f9' },
+          body: {
+            padding: isMobile ? '16px 14px' : '20px 24px',
+            background: colors.surface,
+            paddingBottom: isMobile
+              ? 'calc(24px + env(safe-area-inset-bottom, 0px))'
+              : '24px',
+          },
+          header: {
+            padding: isMobile ? '14px 16px' : '16px 24px',
+            borderBottom: `1px solid ${colors.border}`,
+            background: colors.surface,
+          },
         }}
         closable={false}
       >
       {orderSuccess ? (
         <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <CheckCircleFilled style={{ fontSize: 64, color: '#10b981', marginBottom: 16 }} />
-          <Title level={3} style={{ marginBottom: 8 }}>
+          <CheckCircleFilled style={{ fontSize: 64, color: colors.semantic.success, marginBottom: 16 }} />
+          <Title
+            level={3}
+            style={{
+              marginBottom: 8,
+              fontFamily: typography.fontFamily.headline,
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              color: colors.textMain,
+            }}
+          >
             Order Confirmed!
           </Title>
-          <Text type="secondary" style={{ display: 'block', marginBottom: 20 }}>
+          <Text
+            style={{
+              display: 'block',
+              marginBottom: 20,
+              fontFamily: typography.fontFamily.body,
+              color: colors.textMuted,
+              fontSize: 13,
+            }}
+          >
             Order #{orderSuccess.order_number} has been sent directly to{' '}
-            <strong>{orderSuccess.shop?.shop_name || 'the merchant'}</strong>.
+            <strong style={{ color: colors.textMain }}>{orderSuccess.shop?.shop_name || 'the merchant'}</strong>.
           </Text>
 
           <Card
             style={{
               textAlign: 'left',
-              background: '#f8fafc',
+              background: colors.surfaceContainerLow,
               marginBottom: 24,
-              borderRadius: 12,
+              borderRadius: radii.lg,
+              border: `1px solid ${colors.border}`,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text type="secondary">Total Amount:</Text>
-              <Text strong>₹{orderSuccess.total_amount?.toFixed(2)}</Text>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
+              <Text style={{ color: colors.textMuted }}>Total Amount:</Text>
+              <Text strong style={{ color: colors.textMain, fontWeight: 700 }}>₹{orderSuccess.total_amount?.toFixed(2)}</Text>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <Text type="secondary">Payment Mode:</Text>
-              <Tag color="blue">{orderSuccess.payment_mode}</Tag>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
+              <Text style={{ color: colors.textMuted }}>Payment Mode:</Text>
+              <Tag
+                style={{
+                  background: colors.primaryLight,
+                  color: colors.primary,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radii.xs,
+                  fontWeight: 600,
+                  margin: 0,
+                }}
+              >
+                {orderSuccess.payment_mode}
+              </Tag>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <Text type="secondary">Status:</Text>
-              <Tag color="orange">Pending Acceptance</Tag>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: typography.fontFamily.body, fontSize: 13 }}>
+              <Text style={{ color: colors.textMuted }}>Status:</Text>
+              <Tag
+                style={{
+                  background: colors.liveBadgeBg,
+                  color: colors.liveBadgeText,
+                  border: 'none',
+                  borderRadius: radii.xs,
+                  fontWeight: 700,
+                  margin: 0,
+                }}
+              >
+                Pending Acceptance
+              </Tag>
             </div>
           </Card>
 
@@ -523,10 +583,31 @@ const CartDrawer = () => {
                 handleClose();
                 history.push(Routes.orders);
               }}
+              style={{
+                height: 44,
+                borderRadius: radii.md,
+                background: colors.primary,
+                borderColor: colors.primary,
+                fontFamily: typography.fontFamily.body,
+                fontWeight: 700,
+                boxShadow: shadows.primary,
+              }}
             >
               View Order Details
             </Button>
-            <Button block onClick={handleClose}>
+            <Button
+              block
+              onClick={handleClose}
+              style={{
+                height: 44,
+                borderRadius: radii.md,
+                border: `1px solid ${colors.border}`,
+                background: colors.surface,
+                color: colors.textMain,
+                fontFamily: typography.fontFamily.body,
+                fontWeight: 600,
+              }}
+            >
               Continue Browsing
             </Button>
           </Space>
@@ -534,13 +615,30 @@ const CartDrawer = () => {
       ) : cart.items.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Your cart is empty"
-          style={{ marginTop: 80 }}
+          description={
+            <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, fontSize: 16, color: colors.textMain, letterSpacing: '-0.02em' }}>
+              Your cart is empty
+            </span>
+          }
+          style={{ marginTop: 80, fontFamily: typography.fontFamily.body }}
         >
-          <Text type="secondary" style={{ display: 'block', marginBottom: 16 }}>
+          <Text style={{ display: 'block', marginBottom: 16, color: colors.textMuted, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
             Browse nearby shops, foods, or services to add items.
           </Text>
-          <Button type="primary" onClick={closeCart}>
+          <Button
+            type="primary"
+            onClick={closeCart}
+            style={{
+              background: colors.primary,
+              borderColor: colors.primary,
+              borderRadius: radii.md,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.body,
+              height: 40,
+              padding: '0 20px',
+              boxShadow: shadows.primary,
+            }}
+          >
             Explore Market
           </Button>
         </Empty>
@@ -555,14 +653,14 @@ const CartDrawer = () => {
                   display: 'flex',
                   justifyContent: 'space-between',
                   alignItems: 'center',
-                  padding: '12px',
-                  background: '#f8fafc',
-                  borderRadius: 12,
+                  padding: '12px 14px',
+                  background: colors.surfaceContainerLow,
+                  borderRadius: radii.lg,
                   marginBottom: 10,
-                  border: '1px solid #e2e8f0',
+                  border: `1px solid ${colors.border}`,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
                   {item.img_url ? (
                     <img
                       src={item.img_url}
@@ -570,8 +668,9 @@ const CartDrawer = () => {
                       style={{
                         width: 48,
                         height: 48,
-                        borderRadius: 8,
+                        borderRadius: radii.md,
                         objectFit: 'cover',
+                        border: `1px solid ${colors.borderLight}`,
                       }}
                     />
                   ) : (
@@ -579,85 +678,120 @@ const CartDrawer = () => {
                       style={{
                         width: 48,
                         height: 48,
-                        borderRadius: 8,
-                        background: '#e2e8f0',
+                        borderRadius: radii.md,
+                        background: colors.surfaceContainer,
+                        border: `1px solid ${colors.borderLight}`,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        color: '#64748b',
+                        color: colors.textMuted,
                       }}
                     >
-                      <ShopOutlined />
+                      <ShopOutlined style={{ fontSize: 20 }} />
                     </div>
                   )}
-                  <div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div
                       style={{
-                        fontWeight: 600,
+                        fontFamily: typography.fontFamily.headline,
+                        fontWeight: 700,
                         fontSize: 14,
-                        color: '#0f172a',
+                        color: colors.textMain,
+                        letterSpacing: '-0.01em',
                         maxWidth: 180,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
+                        lineHeight: 1.3,
                       }}
                     >
                       {item.item_name}
                     </div>
-                    <div style={{ fontSize: 13, color: colors.primary, fontWeight: 700 }}>
+                    <div style={{ fontSize: 13, color: colors.primary, fontWeight: 700, fontFamily: typography.fontFamily.body, marginTop: 2 }}>
                       ₹{item.unit_price}{' '}
-                      <span style={{ fontSize: 11, color: '#94a3b8', fontWeight: 400 }}>
+                      <span style={{ fontSize: 11, color: colors.textLight, fontWeight: 400 }}>
                         / {item.unit}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                   <div
                     style={{
                       display: 'flex',
                       alignItems: 'center',
-                      background: '#fff',
-                      border: '1px solid #cbd5e1',
-                      borderRadius: 8,
+                      background: colors.surface,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.md,
                       overflow: 'hidden',
+                      boxShadow: shadows.sm,
                     }}
                   >
                     <Button
                       type="text"
                       size="small"
-                      icon={<MinusOutlined style={{ fontSize: 10 }} />}
+                      icon={<MinusOutlined style={{ fontSize: 10, color: colors.textMain }} />}
                       onClick={() => updateQuantity(item.listing_id, -1)}
-                      style={{ width: 26, height: 26 }}
+                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      aria-label="Decrease quantity"
                     />
-                    <span style={{ padding: '0 8px', fontWeight: 700, fontSize: 13 }}>
+                    <span
+                      style={{
+                        padding: '0 8px',
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: colors.textMain,
+                        fontFamily: typography.fontFamily.body,
+                        minWidth: 20,
+                        textAlign: 'center',
+                      }}
+                    >
                       {item.quantity}
                     </span>
                     <Button
                       type="text"
                       size="small"
-                      icon={<PlusOutlined style={{ fontSize: 10 }} />}
+                      icon={<PlusOutlined style={{ fontSize: 10, color: colors.textMain }} />}
                       onClick={() => updateQuantity(item.listing_id, 1)}
-                      style={{ width: 26, height: 26 }}
+                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      aria-label="Increase quantity"
                     />
                   </div>
                   <Button
                     type="text"
                     danger
                     size="small"
-                    icon={<DeleteOutlined />}
+                    icon={<DeleteOutlined style={{ fontSize: 14 }} />}
                     onClick={() => removeItem(item.listing_id)}
+                    style={{
+                      width: 28,
+                      height: 28,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: radii.md,
+                    }}
+                    aria-label="Remove item"
                   />
                 </div>
               </div>
             ))}
 
-            <Divider style={{ margin: '16px 0' }} />
+            <Divider style={{ margin: '16px 0', borderColor: colors.borderLight }} />
 
             {/* Order Fulfillment Type */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  fontSize: 13,
+                  marginBottom: 8,
+                  color: colors.textMain,
+                }}
+              >
                 Fulfillment Mode
               </div>
               <Row gutter={[10, 10]}>
@@ -666,19 +800,27 @@ const CartDrawer = () => {
                     onClick={() => setOrderType('pickup')}
                     style={{
                       padding: '12px 10px',
-                      borderRadius: radii.md,
+                      borderRadius: radii.lg,
                       border: orderType === 'pickup' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      background: orderType === 'pickup' ? colors.primaryLight : '#ffffff',
+                      background: orderType === 'pickup' ? colors.primaryLight : colors.surface,
                       cursor: 'pointer',
                       textAlign: 'center',
-                      transition: 'all 0.2s',
+                      transition: 'all 0.2s ease',
+                      boxShadow: orderType === 'pickup' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
                     }}
                   >
                     <div style={{ fontSize: 18, marginBottom: 4 }}>🏬</div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'pickup' ? colors.primary : '#1e293b' }}>
+                    <div
+                      style={{
+                        fontFamily: typography.fontFamily.body,
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: orderType === 'pickup' ? colors.primary : colors.textMain,
+                      }}
+                    >
                       Self-Pickup
                     </div>
-                    <div style={{ fontSize: 11, color: '#10b981', fontWeight: 500, marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 600, marginTop: 2, fontFamily: typography.fontFamily.body }}>
                       Free
                     </div>
                   </div>
@@ -688,19 +830,27 @@ const CartDrawer = () => {
                     onClick={() => setOrderType('delivery')}
                     style={{
                       padding: '12px 10px',
-                      borderRadius: radii.md,
+                      borderRadius: radii.lg,
                       border: orderType === 'delivery' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      background: orderType === 'delivery' ? colors.primaryLight : '#ffffff',
+                      background: orderType === 'delivery' ? colors.primaryLight : colors.surface,
                       cursor: 'pointer',
                       textAlign: 'center',
-                      transition: 'all 0.2s',
+                      transition: 'all 0.2s ease',
+                      boxShadow: orderType === 'delivery' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
                     }}
                   >
                     <div style={{ fontSize: 18, marginBottom: 4 }}>🛵</div>
-                    <div style={{ fontWeight: 600, fontSize: 13, color: orderType === 'delivery' ? colors.primary : '#1e293b' }}>
+                    <div
+                      style={{
+                        fontFamily: typography.fontFamily.body,
+                        fontWeight: 700,
+                        fontSize: 13,
+                        color: orderType === 'delivery' ? colors.primary : colors.textMain,
+                      }}
+                    >
                       Delivery
                     </div>
-                    <div style={{ fontSize: 11, color: colors.cobalt, fontWeight: 500, marginTop: 2 }}>
+                    <div style={{ fontSize: 11, color: colors.secondary, fontWeight: 600, marginTop: 2, fontFamily: typography.fontFamily.body }}>
                       ₹30
                     </div>
                   </div>
@@ -712,7 +862,15 @@ const CartDrawer = () => {
             {orderType !== 'pickup' && (
               <div style={{ marginBottom: 14 }}>
                 <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
-                  <div style={{ fontWeight: 600, fontSize: 13, color: '#334155' }}>
+                  <div
+                    style={{
+                      fontFamily: typography.fontFamily.headline,
+                      fontWeight: 700,
+                      letterSpacing: '-0.02em',
+                      fontSize: 13,
+                      color: colors.textMain,
+                    }}
+                  >
                     Delivery Destination
                   </div>
                   <Flex gap={8}>
@@ -721,7 +879,7 @@ const CartDrawer = () => {
                         type="link"
                         size="small"
                         onClick={() => setAddressMode(addressMode === 'saved' ? 'manual' : 'saved')}
-                        style={{ padding: 0, fontSize: 12, fontWeight: 600 }}
+                        style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
                       >
                         {addressMode === 'saved' ? 'Enter Manually' : 'Use Saved Address'}
                       </Button>
@@ -732,7 +890,7 @@ const CartDrawer = () => {
                       icon={<AimOutlined />}
                       loading={detectingGps}
                       onClick={handleUseLiveGpsInCart}
-                      style={{ padding: 0, fontSize: 12, fontWeight: 600 }}
+                      style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
                     >
                       Use GPS
                     </Button>
@@ -755,10 +913,10 @@ const CartDrawer = () => {
                           key={addr.id}
                           onClick={() => handleSelectSavedAddress(addr)}
                           style={{
-                            padding: '8px 12px',
+                            padding: '10px 12px',
                             borderRadius: radii.md,
                             border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                            background: isSelected ? colors.primaryLight : '#ffffff',
+                            background: isSelected ? colors.primaryLight : colors.surface,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -770,19 +928,36 @@ const CartDrawer = () => {
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <Flex align="center" gap={6} style={{ marginBottom: 2 }}>
                               <Tag
-                                color={
-                                  (addr.label || '').toLowerCase() === 'home'
-                                    ? 'blue'
-                                    : (addr.label || '').toLowerCase() === 'work'
-                                    ? 'purple'
-                                    : 'default'
-                                }
-                                style={{ borderRadius: 4, fontWeight: 700, fontSize: 10, margin: 0, padding: '0 4px' }}
+                                style={{
+                                  borderRadius: radii.xs,
+                                  fontWeight: 700,
+                                  fontSize: 10,
+                                  margin: 0,
+                                  padding: '0 6px',
+                                  background:
+                                    (addr.label || '').toLowerCase() === 'home'
+                                      ? colors.verifiedChipBg
+                                      : (addr.label || '').toLowerCase() === 'work'
+                                      ? colors.serviceChipBg
+                                      : colors.surfaceContainer,
+                                  color:
+                                    (addr.label || '').toLowerCase() === 'home'
+                                      ? colors.verifiedChipText
+                                      : (addr.label || '').toLowerCase() === 'work'
+                                      ? colors.serviceChipText
+                                      : colors.textMuted,
+                                  border:
+                                    (addr.label || '').toLowerCase() === 'home'
+                                      ? `1px solid ${colors.verifiedChipBorder}`
+                                      : (addr.label || '').toLowerCase() === 'work'
+                                      ? `1px solid ${colors.serviceChipBorder}`
+                                      : `1px solid ${colors.border}`,
+                                }}
                               >
                                 {addr.label}
                               </Tag>
                               {addr.recipient_name && (
-                                <Text strong style={{ fontSize: 12, color: '#334155' }}>
+                                <Text strong style={{ fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                                   {addr.recipient_name}
                                 </Text>
                               )}
@@ -790,7 +965,8 @@ const CartDrawer = () => {
                             <div
                               style={{
                                 fontSize: 11,
-                                color: '#64748b',
+                                color: colors.textMuted,
+                                fontFamily: typography.fontFamily.body,
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis',
@@ -810,7 +986,15 @@ const CartDrawer = () => {
                       type="dashed"
                       size="small"
                       onClick={() => setIsAddAddressModalOpen(true)}
-                      style={{ borderRadius: 6, color: colors.primary, fontWeight: 600, marginTop: 4, width: '100%' }}
+                      style={{
+                        borderRadius: radii.md,
+                        color: colors.primary,
+                        borderColor: colors.borderDark,
+                        fontWeight: 600,
+                        marginTop: 4,
+                        width: '100%',
+                        fontFamily: typography.fontFamily.body,
+                      }}
                     >
                       + Add New Delivery Address
                     </Button>
@@ -821,18 +1005,27 @@ const CartDrawer = () => {
                       <div
                         style={{
                           padding: '16px 14px',
-                          background: '#f8fafc',
-                          borderRadius: 10,
-                          border: '1.5px dashed #cbd5e1',
+                          background: colors.surfaceContainerLow,
+                          borderRadius: radii.lg,
+                          border: `1.5px dashed ${colors.borderDark}`,
                           textAlign: 'center',
                           marginBottom: 8,
                         }}
                       >
                         <EnvironmentOutlined style={{ fontSize: 24, color: colors.primary, marginBottom: 6 }} />
-                        <div style={{ fontWeight: 700, fontSize: 13, color: '#1e293b', marginBottom: 4 }}>
+                        <div
+                          style={{
+                            fontFamily: typography.fontFamily.headline,
+                            fontWeight: 700,
+                            letterSpacing: '-0.02em',
+                            fontSize: 13,
+                            color: colors.textMain,
+                            marginBottom: 4,
+                          }}
+                        >
                           Default Delivery Address Required
                         </div>
-                        <div style={{ fontSize: 12, color: '#64748b', marginBottom: 12 }}>
+                        <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body, marginBottom: 12 }}>
                           Please add your delivery address to proceed with order checkout.
                         </div>
                         <Button
@@ -844,6 +1037,8 @@ const CartDrawer = () => {
                             fontWeight: 700,
                             borderRadius: radii.md,
                             fontSize: 13,
+                            fontFamily: typography.fontFamily.body,
+                            boxShadow: shadows.primary,
                           }}
                         >
                           + Create Default Address
@@ -856,14 +1051,19 @@ const CartDrawer = () => {
                           placeholder="Street address, house no, landmark, locality..."
                           value={address}
                           onChange={(e) => setAddress(e.target.value)}
-                          style={{ borderRadius: 8, fontSize: 13 }}
+                          style={{
+                            borderRadius: radii.md,
+                            fontSize: 13,
+                            border: `1px solid ${colors.border}`,
+                            fontFamily: typography.fontFamily.body,
+                          }}
                         />
                         <Flex justify="space-between" align="center" style={{ marginTop: 4 }}>
                           <Button
                             type="link"
                             size="small"
                             onClick={() => setIsAddAddressModalOpen(true)}
-                            style={{ padding: 0, fontSize: 11, fontWeight: 600 }}
+                            style={{ padding: 0, fontSize: 11, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
                           >
                             + Save this address to profile
                           </Button>
@@ -871,7 +1071,7 @@ const CartDrawer = () => {
                             type="link"
                             size="small"
                             onClick={() => setAddressMode('saved')}
-                            style={{ padding: 0, fontSize: 11 }}
+                            style={{ padding: 0, fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}
                           >
                             Choose from saved
                           </Button>
@@ -884,46 +1084,84 @@ const CartDrawer = () => {
             )}
 
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4, color: '#334155' }}>
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  fontSize: 13,
+                  marginBottom: 4,
+                  color: colors.textMain,
+                }}
+              >
                 Contact Phone
               </div>
               <Input
-                prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+                prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
                 placeholder="Mobile number for delivery coordination"
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                style={{ borderRadius: 8 }}
+                style={{
+                  borderRadius: radii.md,
+                  border: `1px solid ${colors.border}`,
+                  fontFamily: typography.fontFamily.body,
+                }}
               />
             </div>
 
             <div style={{ marginBottom: 12 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 4, color: '#334155' }}>
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  fontSize: 13,
+                  marginBottom: 4,
+                  color: colors.textMain,
+                }}
+              >
                 Order Instructions / Notes (Optional)
               </div>
               <Input
                 placeholder="e.g. Ring the bell, deliver by 4 PM, etc."
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                style={{ borderRadius: 8 }}
+                style={{
+                  borderRadius: radii.md,
+                  border: `1px solid ${colors.border}`,
+                  fontFamily: typography.fontFamily.body,
+                }}
               />
             </div>
 
             {/* Payment Method */}
             <div style={{ marginBottom: 16 }}>
-              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#334155' }}>
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  fontSize: 13,
+                  marginBottom: 8,
+                  color: colors.textMain,
+                }}
+              >
                 Payment Method
               </div>
               <Radio.Group
                 value={paymentMode}
                 onChange={(e) => setPaymentMode(e.target.value)}
-                style={{ display: 'flex', flexDirection: 'column', gap: 6 }}
+                style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: typography.fontFamily.body }}
               >
                 <Radio value="direct_upi">
-                  <span style={{ fontWeight: 600 }}>Direct UPI</span> (Pay directly to merchant via
-                  GPay/PhonePe upon delivery)
+                  <span style={{ fontWeight: 600, color: colors.textMain }}>Direct UPI</span>{' '}
+                  <span style={{ color: colors.textMuted }}>
+                    (Pay directly to merchant via GPay/PhonePe upon {orderType === 'delivery' ? 'delivery' : 'pickup'})
+                  </span>
                 </Radio>
                 <Radio value="cod">
-                  <span style={{ fontWeight: 600 }}>Cash on Delivery</span> / Pay at store
+                  <span style={{ fontWeight: 600, color: colors.textMain }}>Cash on Delivery</span>{' '}
+                  <span style={{ color: colors.textMuted }}>/ Pay at store</span>
                 </Radio>
               </Radio.Group>
             </div>
@@ -931,20 +1169,20 @@ const CartDrawer = () => {
             {/* Payment Notification Banner */}
             <div
               style={{
-                background: '#f0fdf4',
+                background: colors.semantic.successLight,
                 padding: '12px 14px',
-                borderRadius: 10,
-                border: '1px solid #bbf7d0',
+                borderRadius: radii.lg,
+                border: `1px solid ${colors.semantic.successBorder}`,
                 marginBottom: 14,
               }}
             >
               <Flex gap={8} align="flex-start">
-                <ThunderboltFilled style={{ color: '#16a34a', fontSize: 15, marginTop: 2 }} />
+                <ThunderboltFilled style={{ color: colors.semantic.success, fontSize: 15, marginTop: 2 }} />
                 <div>
-                  <div style={{ fontWeight: 600, fontSize: 12, color: '#15803d' }}>
+                  <div style={{ fontWeight: 700, fontSize: 12, color: colors.semantic.successHover, fontFamily: typography.fontFamily.body }}>
                     Payment on Order Confirmation
                   </div>
-                  <div style={{ fontSize: 11, color: '#166534', marginTop: 2 }}>
+                  <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, fontFamily: typography.fontFamily.body }}>
                     The shop will confirm and pack your order first. Pay via UPI QR or cash upon {orderType === 'delivery' ? 'delivery' : 'pickup'}.
                   </div>
                 </div>
@@ -954,23 +1192,36 @@ const CartDrawer = () => {
             {/* Bill Summary */}
             <div
               style={{
-                background: '#f8fafc',
+                background: colors.surfaceContainerLow,
                 padding: '14px',
-                borderRadius: 12,
-                border: '1px solid #e2e8f0',
+                borderRadius: radii.lg,
+                border: `1px solid ${colors.border}`,
                 marginBottom: 16,
               }}
             >
+              <div
+                style={{
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 700,
+                  letterSpacing: '-0.02em',
+                  fontSize: 13,
+                  marginBottom: 10,
+                  color: colors.textMain,
+                }}
+              >
+                Bill Summary
+              </div>
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
                   marginBottom: 6,
                   fontSize: 13,
+                  fontFamily: typography.fontFamily.body,
                 }}
               >
-                <Text type="secondary">Subtotal</Text>
-                <Text strong>₹{itemsTotal.toFixed(2)}</Text>
+                <Text style={{ color: colors.textMuted }}>Subtotal</Text>
+                <Text strong style={{ color: colors.textMain }}>₹{itemsTotal.toFixed(2)}</Text>
               </div>
 
               {orderType === 'delivery' && (
@@ -980,34 +1231,63 @@ const CartDrawer = () => {
                     justifyContent: 'space-between',
                     marginBottom: 6,
                     fontSize: 13,
+                    fontFamily: typography.fontFamily.body,
                   }}
                 >
-                  <Text type="secondary">Delivery Fee</Text>
-                  <Text strong>₹{deliveryFee.toFixed(2)}</Text>
+                  <Text style={{ color: colors.textMuted }}>Delivery Fee</Text>
+                  <Text strong style={{ color: colors.textMain }}>₹{deliveryFee.toFixed(2)}</Text>
                 </div>
               )}
 
-              <Divider style={{ margin: '8px 0' }} />
               <div
                 style={{
                   display: 'flex',
                   justifyContent: 'space-between',
-                  fontSize: 16,
-                  fontWeight: 700,
+                  marginBottom: 6,
+                  fontSize: 13,
+                  fontFamily: typography.fontFamily.body,
                 }}
               >
-                <span>Total Amount</span>
-                <span style={{ color: colors.primary }}>₹{finalTotal.toFixed(2)}</span>
+                <Text style={{ color: colors.textMuted }}>Platform Fee (Direct Commerce)</Text>
+                <span
+                  style={{
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: colors.verifiedChipText,
+                    background: colors.verifiedChipBg,
+                    padding: '1px 6px',
+                    borderRadius: radii.xs,
+                    border: `1px solid ${colors.verifiedChipBorder}`,
+                  }}
+                >
+                  ₹0 (Zero Markup)
+                </span>
+              </div>
+
+              <Divider style={{ margin: '8px 0', borderColor: colors.borderLight }} />
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  fontSize: 16,
+                  fontFamily: typography.fontFamily.headline,
+                  fontWeight: 800,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                <span style={{ color: colors.textMain }}>Total Amount</span>
+                <span style={{ color: colors.primary, fontSize: 18 }}>₹{finalTotal.toFixed(2)}</span>
               </div>
             </div>
 
             {/* Quick Inquiry / Chat Instead of Immediate Order */}
             <div
               style={{
-                background: 'linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%)',
-                padding: '12px 14px',
-                borderRadius: 12,
-                border: '1px solid #bae6fd',
+                background: colors.surfaceContainerLow,
+                padding: '14px',
+                borderRadius: radii.lg,
+                border: `1px solid ${colors.border}`,
                 marginBottom: 16,
               }}
             >
@@ -1020,17 +1300,35 @@ const CartDrawer = () => {
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MessageOutlined style={{ color: '#0284c7', fontSize: 15 }} />
-                  <span style={{ fontWeight: 700, fontSize: 13, color: '#0f172a' }}>
+                  <MessageOutlined style={{ color: colors.secondary, fontSize: 15 }} />
+                  <span
+                    style={{
+                      fontFamily: typography.fontFamily.headline,
+                      fontWeight: 700,
+                      letterSpacing: '-0.02em',
+                      fontSize: 13,
+                      color: colors.textMain,
+                    }}
+                  >
                     Have a Query Before Ordering?
                   </span>
                 </div>
-                <Tag color="cyan" style={{ borderRadius: 6, fontWeight: 700, margin: 0, fontSize: 10 }}>
+                <Tag
+                  style={{
+                    borderRadius: radii.xs,
+                    fontWeight: 700,
+                    margin: 0,
+                    fontSize: 10,
+                    background: colors.verifiedChipBg,
+                    color: colors.verifiedChipText,
+                    border: `1px solid ${colors.verifiedChipBorder}`,
+                  }}
+                >
                   Pre-built Chat
                 </Tag>
               </div>
 
-              <div style={{ fontSize: 11, color: '#475569', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 8, fontFamily: typography.fontFamily.body }}>
                 Select a 1-tap question or send a quick inquiry directly to the store owner:
               </div>
 
@@ -1043,16 +1341,17 @@ const CartDrawer = () => {
                     disabled={loading || !!querySending}
                     onClick={() => handleSendPrebuiltInquiry(q.text)}
                     style={{
-                      borderRadius: 16,
+                      borderRadius: radii.full,
                       fontSize: 11,
                       fontWeight: 600,
-                      background: '#ffffff',
-                      borderColor: '#cbd5e1',
-                      color: '#1e293b',
+                      background: colors.surface,
+                      borderColor: colors.border,
+                      color: colors.textMain,
                       display: 'flex',
                       alignItems: 'center',
                       gap: 4,
-                      boxShadow: '0 1px 2px rgba(0,0,0,0.03)',
+                      boxShadow: shadows.sm,
+                      fontFamily: typography.fontFamily.body,
                     }}
                   >
                     <span>{q.icon}</span>
@@ -1068,10 +1367,25 @@ const CartDrawer = () => {
                     placeholder="Type your question for the store owner..."
                     value={customQueryText}
                     onChange={(e) => setCustomQueryText(e.target.value)}
-                    style={{ borderRadius: 8, fontSize: 12, marginBottom: 6 }}
+                    style={{
+                      borderRadius: radii.md,
+                      fontSize: 12,
+                      marginBottom: 6,
+                      border: `1px solid ${colors.border}`,
+                      fontFamily: typography.fontFamily.body,
+                    }}
                   />
                   <Flex gap={8} justify="flex-end">
-                    <Button size="small" onClick={() => setShowCustomQuery(false)}>
+                    <Button
+                      size="small"
+                      onClick={() => setShowCustomQuery(false)}
+                      style={{
+                        borderRadius: radii.md,
+                        border: `1px solid ${colors.border}`,
+                        color: colors.textMuted,
+                        fontFamily: typography.fontFamily.body,
+                      }}
+                    >
                       Cancel
                     </Button>
                     <Button
@@ -1079,7 +1393,13 @@ const CartDrawer = () => {
                       size="small"
                       loading={querySending === 'custom'}
                       onClick={() => handleSendPrebuiltInquiry(customQueryText)}
-                      style={{ background: '#0284c7', borderColor: '#0284c7', borderRadius: 6 }}
+                      style={{
+                        background: colors.secondary,
+                        borderColor: colors.secondary,
+                        borderRadius: radii.md,
+                        fontWeight: 600,
+                        fontFamily: typography.fontFamily.body,
+                      }}
                     >
                       Send Query
                     </Button>
@@ -1090,7 +1410,7 @@ const CartDrawer = () => {
                   type="link"
                   size="small"
                   onClick={() => setShowCustomQuery(true)}
-                  style={{ padding: 0, fontSize: 11, color: '#0284c7', fontWeight: 600 }}
+                  style={{ padding: 0, fontSize: 11, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
                 >
                   ✏️ Type a custom question for this store...
                 </Button>
@@ -1099,7 +1419,7 @@ const CartDrawer = () => {
           </div>
 
           {/* Place Order CTA & Quick Chat */}
-          <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 14 }}>
+          <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 14 }}>
             <Button
               type="primary"
               size="large"
@@ -1112,23 +1432,28 @@ const CartDrawer = () => {
                 fontWeight: 700,
                 background: colors.primary,
                 borderColor: colors.primary,
-                borderRadius: radii.md,
+                borderRadius: radii.lg,
                 marginBottom: 8,
+                boxShadow: shadows.primary,
+                fontFamily: typography.fontFamily.body,
+                letterSpacing: '-0.01em',
               }}
             >
               Place Order (₹{finalTotal.toFixed(0)})
             </Button>
             <Button
               block
-              icon={<MessageOutlined />}
+              icon={<MessageOutlined style={{ color: colors.secondary }} />}
               onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
               style={{
-                borderRadius: 8,
+                height: 42,
+                borderRadius: radii.lg,
                 fontSize: 13,
                 fontWeight: 600,
-                color: '#0284c7',
-                borderColor: '#bae6fd',
-                background: '#f0f9ff',
+                color: colors.secondary,
+                borderColor: colors.border,
+                background: colors.surfaceContainerLow,
+                fontFamily: typography.fontFamily.body,
               }}
             >
               💬 Inquire with Store Owner Instead
@@ -1142,7 +1467,16 @@ const CartDrawer = () => {
       <Modal
         title={
           <div style={{ textAlign: 'center', paddingTop: 8, paddingBottom: 4 }}>
-            <Typography.Title level={4} style={{ margin: 0 }}>
+            <Typography.Title
+              level={4}
+              style={{
+                margin: 0,
+                fontFamily: typography.fontFamily.headline,
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: colors.textMain,
+              }}
+            >
               {authMode === 'login' ? 'Login' : 'Create an Account'}
             </Typography.Title>
           </div>
@@ -1159,28 +1493,53 @@ const CartDrawer = () => {
           <Form onFinish={handleLoginSubmit} layout="vertical" style={{ marginTop: 16 }}>
             <Form.Item
               name="mobile"
-              label="Mobile Number or Username"
+              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Mobile Number or Username</span>}
               rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Mobile number or username" size="large" />
+              <Input
+                prefix={<UserOutlined style={{ color: colors.textLight }} />}
+                placeholder="Mobile number or username"
+                size="large"
+                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+              />
             </Form.Item>
             <Form.Item
               name="password"
-              label="Password"
+              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Password</span>}
               rules={[{ required: true, message: 'Please enter your password' }]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+              <Input.Password
+                prefix={<LockOutlined style={{ color: colors.textLight }} />}
+                placeholder="Password"
+                size="large"
+                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+              />
             </Form.Item>
             <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
-              <Button type="primary" htmlType="submit" loading={authLoading} size="large" block>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={authLoading}
+                size="large"
+                block
+                style={{
+                  height: 44,
+                  borderRadius: radii.md,
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  boxShadow: shadows.primary,
+                  fontWeight: 700,
+                  fontFamily: typography.fontFamily.body,
+                }}
+              >
                 Log in
               </Button>
             </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-              <span>Don&apos;t have an account? </span>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
+              <span style={{ color: colors.textMuted }}>Don&apos;t have an account? </span>
               <a
                 onClick={() => setAuthMode('register')}
-                style={{ marginLeft: 6, color: colors.primary, fontWeight: 600, cursor: 'pointer' }}
+                style={{ marginLeft: 6, color: colors.secondary, fontWeight: 600, cursor: 'pointer' }}
               >
                 Register Here
               </a>
@@ -1195,35 +1554,65 @@ const CartDrawer = () => {
           >
             <Form.Item
               name="username"
-              label="Username"
+              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Username</span>}
               rules={[{ required: true, message: 'Please enter your username' }]}
             >
-              <Input prefix={<UserOutlined />} placeholder="Username" size="large" />
+              <Input
+                prefix={<UserOutlined style={{ color: colors.textLight }} />}
+                placeholder="Username"
+                size="large"
+                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+              />
             </Form.Item>
             <Form.Item
               name="mobile"
-              label="Mobile Number"
+              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Mobile Number</span>}
               rules={[{ required: true, message: 'Please enter your mobile number' }]}
             >
-              <Input prefix={<PhoneOutlined />} placeholder="Mobile number" size="large" />
+              <Input
+                prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
+                placeholder="Mobile number"
+                size="large"
+                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+              />
             </Form.Item>
             <Form.Item
               name="password"
-              label="Password"
+              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Password</span>}
               rules={[{ required: true, message: 'Please enter your password' }]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Password" size="large" />
+              <Input.Password
+                prefix={<LockOutlined style={{ color: colors.textLight }} />}
+                placeholder="Password"
+                size="large"
+                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+              />
             </Form.Item>
             <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
-              <Button type="primary" htmlType="submit" loading={authLoading} size="large" block>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={authLoading}
+                size="large"
+                block
+                style={{
+                  height: 44,
+                  borderRadius: radii.md,
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  boxShadow: shadows.primary,
+                  fontWeight: 700,
+                  fontFamily: typography.fontFamily.body,
+                }}
+              >
                 Register
               </Button>
             </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12 }}>
-              <span>Already have an account? </span>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
+              <span style={{ color: colors.textMuted }}>Already have an account? </span>
               <a
                 onClick={() => setAuthMode('login')}
-                style={{ marginLeft: 6, color: colors.primary, fontWeight: 600, cursor: 'pointer' }}
+                style={{ marginLeft: 6, color: colors.secondary, fontWeight: 600, cursor: 'pointer' }}
               >
                 Login Here
               </a>

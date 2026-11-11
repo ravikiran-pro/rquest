@@ -25,7 +25,7 @@ const Admin = () => {
     {
       key: '1',
       label: (
-        <span style={{ fontWeight: 600, fontSize: 14 }}>
+        <span style={{ fontWeight: 600, fontSize: 14, fontFamily: typography.fontFamily.headline }}>
           <AppstoreOutlined /> Standard Business Categories & Forms
         </span>
       ),
@@ -34,7 +34,7 @@ const Admin = () => {
     {
       key: '2',
       label: (
-        <span style={{ fontWeight: 600, fontSize: 14 }}>
+        <span style={{ fontWeight: 600, fontSize: 14, fontFamily: typography.fontFamily.headline }}>
           <ShopOutlined /> Registered Stores & Custom Form Overrides
         </span>
       ),
@@ -43,7 +43,7 @@ const Admin = () => {
     {
       key: '3',
       label: (
-        <span style={{ fontWeight: 600, fontSize: 14 }}>
+        <span style={{ fontWeight: 600, fontSize: 14, fontFamily: typography.fontFamily.headline }}>
           <DatabaseOutlined /> All Platform Orders, Accounts & Backup
         </span>
       ),
@@ -71,8 +71,9 @@ const Admin = () => {
                 style={{
                   margin: 0,
                   fontWeight: 800,
-                  color: colors.text,
-                  fontFamily: typography.fontHeadline,
+                  letterSpacing: '-0.02em',
+                  color: colors.textMain,
+                  fontFamily: typography.fontFamily.headline,
                 }}
               >
                 Platform Admin Console
@@ -91,7 +92,7 @@ const Admin = () => {
                 SUPER ADMIN
               </Tag>
             </Flex>
-            <Text type="secondary" style={{ fontSize: 13, marginTop: 4, display: 'block' }}>
+            <Text style={{ fontSize: 13, marginTop: 4, display: 'block', color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
               Manage standard business categories, define default product form schemas, and configure custom form overrides for specific shops.
             </Text>
           </div>

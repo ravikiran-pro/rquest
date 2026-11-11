@@ -31,7 +31,7 @@ import {
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { useChatStore } from '../../app/services';
-import { colors, radii } from '../../app/styles/theme';
+import { colors, radii, typography } from '../../app/styles/theme';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -130,24 +130,53 @@ const AdminOrdersAccounts = () => {
 
   // Status Badge Helper
   const getStatusTag = (status) => {
+    const baseStyle = { borderRadius: radii.full, fontWeight: 600, fontSize: 12, padding: '2px 10px', fontFamily: typography.fontFamily.body };
     switch (status) {
       case 'order_prepare':
       case 'preparing':
-        return <Tag color="blue" icon={<SyncOutlined spin />}>Preparing</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.secondaryLight, color: colors.secondary, borderColor: 'rgba(1, 89, 197, 0.25)' }} icon={<SyncOutlined spin />}>
+            Preparing
+          </Tag>
+        );
       case 'ready_for_pickup':
-        return <Tag color="cyan" icon={<CheckCircleOutlined />}>Ready Pickup</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.primaryLight, color: colors.primary, borderColor: 'rgba(11, 45, 107, 0.2)' }} icon={<CheckCircleOutlined />}>
+            Ready Pickup
+          </Tag>
+        );
       case 'open_to_delivery':
-        return <Tag color="gold" icon={<ClockCircleOutlined />}>Open to Delivery</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.secondaryLight, color: colors.secondary, borderColor: 'rgba(1, 89, 197, 0.25)' }} icon={<ClockCircleOutlined />}>
+            Open to Delivery
+          </Tag>
+        );
       case 'out_for_delivery':
-        return <Tag color="purple" icon={<CarOutlined />}>Out for Delivery</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.secondaryLight, color: colors.secondary, borderColor: 'rgba(1, 89, 197, 0.25)' }} icon={<CarOutlined />}>
+            Out for Delivery
+          </Tag>
+        );
       case 'completed':
-        return <Tag color="success" icon={<CheckCircleOutlined />}>Completed</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.semantic.successLight, color: colors.semantic.success, borderColor: colors.semantic.successBorder }} icon={<CheckCircleOutlined />}>
+            Completed
+          </Tag>
+        );
       case 'cancelled':
-        return <Tag color="error" icon={<CloseCircleOutlined />}>Cancelled</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.semantic.errorLight, color: colors.semantic.error, borderColor: colors.semantic.errorBorder }} icon={<CloseCircleOutlined />}>
+            Cancelled
+          </Tag>
+        );
       case 'placed':
       case 'pending':
       default:
-        return <Tag color="warning" icon={<ClockCircleOutlined />}>Placed / Pending</Tag>;
+        return (
+          <Tag style={{ ...baseStyle, background: colors.surfaceContainerLow, color: colors.textMuted, borderColor: colors.border }} icon={<ClockCircleOutlined />}>
+            Placed / Pending
+          </Tag>
+        );
     }
   };
 
@@ -274,7 +303,11 @@ const AdminOrdersAccounts = () => {
 
   const columns = [
     {
-      title: 'Order Details',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Order Details
+        </span>
+      ),
       key: 'order_details',
       width: 140,
       render: (_, record) => (
@@ -285,11 +318,11 @@ const AdminOrdersAccounts = () => {
               setSelectedOrder(record);
               setDetailModalVisible(true);
             }}
-            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary }}
+            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary, fontFamily: typography.fontFamily.headline }}
           >
             #{record.order_number}
           </Button>
-          <div style={{ fontSize: 11, color: '#64748b' }}>
+          <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
             {new Date(record.createdAt).toLocaleDateString([], {
               month: 'short',
               day: 'numeric',
@@ -299,8 +332,31 @@ const AdminOrdersAccounts = () => {
           </div>
           <div style={{ marginTop: 2 }}>
             <Tag
-              color={record.order_type === 'delivery' ? 'purple' : record.order_type === 'service' ? 'cyan' : 'blue'}
-              style={{ fontSize: 10, padding: '0 4px', margin: 0 }}
+              style={{
+                fontSize: 10,
+                padding: '1px 6px',
+                margin: 0,
+                borderRadius: radii.full,
+                fontWeight: 600,
+                background:
+                  record.order_type === 'delivery'
+                    ? colors.verifiedChipBg
+                    : record.order_type === 'service'
+                    ? colors.serviceChipBg
+                    : colors.primaryLight,
+                color:
+                  record.order_type === 'delivery'
+                    ? colors.verifiedChipText
+                    : record.order_type === 'service'
+                    ? colors.serviceChipText
+                    : colors.primary,
+                borderColor:
+                  record.order_type === 'delivery'
+                    ? colors.verifiedChipBorder
+                    : record.order_type === 'service'
+                    ? colors.serviceChipBorder
+                    : 'rgba(11, 45, 107, 0.2)',
+              }}
             >
               {record.order_type === 'delivery' ? '🚚 Delivery' : record.order_type === 'service' ? '🛠️ Service' : '🛍️ Pickup'}
             </Tag>
@@ -309,31 +365,43 @@ const AdminOrdersAccounts = () => {
       ),
     },
     {
-      title: 'Store & Owner',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Store & Owner
+        </span>
+      ),
       key: 'shop_info',
       width: 180,
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 700, color: '#0f172a' }}>{record.shop?.shop_name || 'Store'}</div>
-          <div style={{ fontSize: 12, color: '#475569' }}>
-            Owner: <span style={{ fontWeight: 600 }}>{record.shop?.owner?.username || 'Owner'}</span>
+          <div style={{ fontWeight: 700, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+            {record.shop?.shop_name || 'Store'}
+          </div>
+          <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+            Owner: <span style={{ fontWeight: 600, color: colors.textMain }}>{record.shop?.owner?.username || 'Owner'}</span>
           </div>
           {record.shop?.owner?.mobile && (
-            <div style={{ fontSize: 11, color: '#64748b' }}>📞 {record.shop.owner.mobile}</div>
+            <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+              📞 {record.shop.owner.mobile}
+            </div>
           )}
         </div>
       ),
     },
     {
-      title: 'Customer',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Customer
+        </span>
+      ),
       key: 'customer_info',
       width: 160,
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 600, color: '#0f172a' }}>
+          <div style={{ fontWeight: 600, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
             {record.customer?.username || 'Customer'}
           </div>
-          <div style={{ fontSize: 12, color: '#475569' }}>
+          <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
             📞 {record.customer_phone || record.customer?.mobile || 'No Phone'}
           </div>
           {record.delivery_address && (
@@ -341,11 +409,12 @@ const AdminOrdersAccounts = () => {
               <div
                 style={{
                   fontSize: 11,
-                  color: '#94a3b8',
+                  color: colors.textLight,
                   maxWidth: 150,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
+                  fontFamily: typography.fontFamily.body,
                 }}
               >
                 📍 {record.delivery_address}
@@ -356,30 +425,40 @@ const AdminOrdersAccounts = () => {
       ),
     },
     {
-      title: 'Items',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Items
+        </span>
+      ),
       key: 'items',
       width: 180,
       render: (_, record) => {
         const items = record.items || [];
         return (
           <div>
-            <div style={{ fontWeight: 600, fontSize: 12 }}>
+            <div style={{ fontWeight: 600, fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
               {items.length} item{items.length !== 1 ? 's' : ''}
             </div>
             {items.slice(0, 2).map((it, idx) => (
-              <div key={idx} style={{ fontSize: 11, color: '#475569' }}>
+              <div key={idx} style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 • {it.quantity}x {it.item_name}
               </div>
             ))}
             {items.length > 2 && (
-              <div style={{ fontSize: 10, color: '#94a3b8' }}>+{items.length - 2} more...</div>
+              <div style={{ fontSize: 10, color: colors.textLight, fontFamily: typography.fontFamily.body }}>
+                +{items.length - 2} more...
+              </div>
             )}
           </div>
         );
       },
     },
     {
-      title: 'Financials & Accounts',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Financials & Accounts
+        </span>
+      ),
       key: 'financials',
       width: 160,
       render: (_, record) => {
@@ -388,20 +467,28 @@ const AdminOrdersAccounts = () => {
         const netStore = total - pFee;
         return (
           <div>
-            <div style={{ fontWeight: 800, fontSize: 14, color: '#0f172a' }}>₹{total.toFixed(2)}</div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>
-              Fee: <span style={{ color: '#059669', fontWeight: 600 }}>₹{pFee.toFixed(2)}</span>
+            <div style={{ fontWeight: 800, fontSize: 14, color: colors.primary, fontFamily: typography.fontFamily.headline }}>
+              ₹{total.toFixed(2)}
             </div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>
-              Store: <span style={{ fontWeight: 600 }}>₹{netStore.toFixed(2)}</span>
+            <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+              Fee: <span style={{ color: colors.semantic.success, fontWeight: 600 }}>₹{pFee.toFixed(2)}</span>
             </div>
-            <div style={{ fontSize: 10, color: '#94a3b8' }}>{record.payment_mode || 'direct_upi'}</div>
+            <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+              Store: <span style={{ fontWeight: 600, color: colors.textMain }}>₹{netStore.toFixed(2)}</span>
+            </div>
+            <div style={{ fontSize: 10, color: colors.textLight, fontFamily: typography.fontFamily.body }}>
+              {record.payment_mode || 'direct_upi'}
+            </div>
           </div>
         );
       },
     },
     {
-      title: 'Status',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Status
+        </span>
+      ),
       key: 'status',
       width: 130,
       render: (_, record) => (
@@ -410,7 +497,7 @@ const AdminOrdersAccounts = () => {
           <Select
             size="small"
             value={record.status}
-            style={{ width: '100%', marginTop: 6 }}
+            style={{ width: '100%', marginTop: 6, borderRadius: radii.md }}
             onChange={(val) => handleAdminStatusChange(record.id, val)}
             loading={updatingStatus}
           >
@@ -426,18 +513,28 @@ const AdminOrdersAccounts = () => {
       ),
     },
     {
-      title: 'Actions',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Actions
+        </span>
+      ),
       key: 'actions',
       width: 120,
       render: (_, record) => (
         <Space direction="vertical" size={4}>
           <Button
             size="small"
-            type="primary"
-            ghost
+            type="default"
             onClick={() => {
               setSelectedOrder(record);
               setDetailModalVisible(true);
+            }}
+            style={{
+              borderRadius: radii.md,
+              borderColor: colors.border,
+              color: colors.secondary,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.body,
             }}
           >
             Details
@@ -447,6 +544,13 @@ const AdminOrdersAccounts = () => {
               size="small"
               icon={<MessageOutlined />}
               onClick={() => handleChatOpen(record.shop.owner_id, record.shop_id, { shop_name: record.shop?.shop_name })}
+              style={{
+                borderRadius: radii.md,
+                borderColor: colors.border,
+                color: colors.primary,
+                fontWeight: 600,
+                fontFamily: typography.fontFamily.body,
+              }}
             >
               Chat Store
             </Button>
@@ -461,64 +565,64 @@ const AdminOrdersAccounts = () => {
       {/* Financial Accounts KPI Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#f8fafc' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surface }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600 }}>Platform GMV</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Platform GMV</span>}
               value={accounts.totalGMV}
               precision={2}
               prefix="₹"
-              valueStyle={{ color: '#0f172a', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.primary, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#ecfdf5' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.semantic.successBorder}`, background: colors.surface }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: '#065f46' }}>Platform Revenue</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.semantic.successHover, fontFamily: typography.fontFamily.headline }}>Platform Revenue</span>}
               value={accounts.totalPlatformFees}
               precision={2}
               prefix="₹"
-              valueStyle={{ color: '#047857', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.semantic.success, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#f0fdf4' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surface }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: '#166534' }}>Store Payouts</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Store Payouts</span>}
               value={accounts.netStorePayouts}
               precision={2}
               prefix="₹"
-              valueStyle={{ color: '#15803d', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.textMain, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.primaryLight }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: '1px solid #d2e3fc', background: colors.primaryLight }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.primary }}>Delivery Fees</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.primary, fontFamily: typography.fontFamily.headline }}>Delivery Fees</span>}
               value={accounts.totalDeliveryFees}
               precision={2}
               prefix="₹"
-              valueStyle={{ color: colors.primary, fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.secondary, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#fffbeb' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.serviceChipBorder}`, background: colors.serviceChipBg }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: '#92400e' }}>Total Orders</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.serviceChipText, fontFamily: typography.fontFamily.headline }}>Total Orders</span>}
               value={accounts.totalOrders}
-              valueStyle={{ color: '#b45309', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.tertiary, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
         <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: 12, border: '1px solid #e2e8f0', background: '#eff6ff' }}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surfaceContainerLow }}>
             <Statistic
-              title={<span style={{ fontSize: 12, fontWeight: 600, color: '#1e40af' }}>Completed</span>}
+              title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Completed</span>}
               value={accounts.statusCounts?.completed || 0}
-              valueStyle={{ color: '#2563eb', fontWeight: 800, fontSize: 18 }}
+              valueStyle={{ color: colors.semantic.success, fontWeight: 800, fontSize: 18, fontFamily: typography.fontFamily.headline }}
             />
           </Card>
         </Col>
@@ -527,9 +631,10 @@ const AdminOrdersAccounts = () => {
       {/* Filter and Backup Export Header */}
       <Card
         style={{
-          borderRadius: 12,
-          border: '1px solid #e2e8f0',
+          borderRadius: radii.xl,
+          border: `1px solid ${colors.border}`,
           marginBottom: 16,
+          background: colors.surface,
         }}
         bodyStyle={{ padding: 16 }}
       >
@@ -538,16 +643,16 @@ const AdminOrdersAccounts = () => {
             <Space wrap style={{ width: '100%' }}>
               <Input
                 placeholder="Search Order #, Shop, Owner, Customer, Phone..."
-                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                prefix={<SearchOutlined style={{ color: colors.textLight }} />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: 280, borderRadius: 8 }}
+                style={{ width: 280, borderRadius: radii.md }}
                 allowClear
               />
               <Select
                 value={selectedShopFilter}
                 onChange={setSelectedShopFilter}
-                style={{ width: 170 }}
+                style={{ width: 170, borderRadius: radii.md }}
               >
                 <Option value="all">All Stores ({uniqueShops.length})</Option>
                 {uniqueShops.map((s) => (
@@ -559,7 +664,7 @@ const AdminOrdersAccounts = () => {
               <Select
                 value={selectedStatusFilter}
                 onChange={setSelectedStatusFilter}
-                style={{ width: 150 }}
+                style={{ width: 150, borderRadius: radii.md }}
               >
                 <Option value="all">All Statuses</Option>
                 <Option value="placed">Placed / Pending</Option>
@@ -579,6 +684,13 @@ const AdminOrdersAccounts = () => {
                 icon={<ReloadOutlined />}
                 onClick={fetchAdminOrders}
                 loading={loading}
+                style={{
+                  borderRadius: radii.md,
+                  borderColor: colors.border,
+                  color: colors.textMain,
+                  fontWeight: 600,
+                  fontFamily: typography.fontFamily.body,
+                }}
               >
                 Refresh
               </Button>
@@ -586,7 +698,13 @@ const AdminOrdersAccounts = () => {
                 type="default"
                 icon={<FileTextOutlined />}
                 onClick={handleExportAccountsCSV}
-                style={{ borderColor: '#10b981', color: '#047857', fontWeight: 600 }}
+                style={{
+                  borderColor: colors.secondary,
+                  color: colors.secondary,
+                  fontWeight: 600,
+                  borderRadius: radii.md,
+                  fontFamily: typography.fontFamily.body,
+                }}
               >
                 Export Accounts (CSV)
               </Button>
@@ -594,7 +712,14 @@ const AdminOrdersAccounts = () => {
                 type="primary"
                 icon={<DownloadOutlined />}
                 onClick={handleExportBackupJSON}
-                style={{ background: colors.primary, borderColor: colors.primary, fontWeight: 600, borderRadius: radii.md }}
+                style={{
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  fontWeight: 600,
+                  borderRadius: radii.md,
+                  fontFamily: typography.fontFamily.body,
+                  boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
+                }}
               >
                 Backup Orders (JSON)
               </Button>
@@ -604,22 +729,39 @@ const AdminOrdersAccounts = () => {
       </Card>
 
       {/* Orders Table */}
-      <Table
-        columns={columns}
-        dataSource={filteredOrders}
-        rowKey="id"
-        loading={loading}
-        scroll={{ x: 1100 }}
-        pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '25', '50', '100'] }}
-      />
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.lg,
+          overflow: 'hidden',
+          background: colors.surface,
+        }}
+      >
+        <Table
+          columns={columns}
+          dataSource={filteredOrders}
+          rowKey="id"
+          loading={loading}
+          scroll={{ x: 1100 }}
+          pagination={{ pageSize: 10, showSizeChanger: true, pageSizeOptions: ['10', '25', '50', '100'] }}
+        />
+      </div>
 
       {/* Order Detail Modal */}
       <Modal
-        title={`Order #${selectedOrder?.order_number || ''} Audit & Accounts Details`}
+        title={
+          <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+            Order #{selectedOrder?.order_number || ''} Audit & Accounts Details
+          </span>
+        }
         visible={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
-          <Button key="close" onClick={() => setDetailModalVisible(false)}>
+          <Button
+            key="close"
+            onClick={() => setDetailModalVisible(false)}
+            style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMain }}
+          >
             Close
           </Button>,
         ]}
@@ -629,19 +771,33 @@ const AdminOrdersAccounts = () => {
           <div>
             <Descriptions bordered size="small" column={{ xs: 1, sm: 2 }}>
               <Descriptions.Item label="Order Number">
-                <Text strong>{selectedOrder.order_number}</Text>
+                <Text strong style={{ color: colors.primary, fontFamily: typography.fontFamily.headline }}>
+                  {selectedOrder.order_number}
+                </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Status">
                 {getStatusTag(selectedOrder.status)}
               </Descriptions.Item>
               <Descriptions.Item label="Order Type">
-                <Tag color="purple">{selectedOrder.order_type}</Tag>
+                <Tag
+                  style={{
+                    borderRadius: radii.full,
+                    fontWeight: 600,
+                    background: colors.secondaryLight,
+                    color: colors.secondary,
+                    borderColor: 'rgba(1, 89, 197, 0.25)',
+                  }}
+                >
+                  {selectedOrder.order_type}
+                </Tag>
               </Descriptions.Item>
               <Descriptions.Item label="Date & Time">
                 {new Date(selectedOrder.createdAt).toLocaleString()}
               </Descriptions.Item>
               <Descriptions.Item label="Store Name">
-                <Text strong>{selectedOrder.shop?.shop_name}</Text>
+                <Text strong style={{ color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+                  {selectedOrder.shop?.shop_name}
+                </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Store Owner">
                 {selectedOrder.shop?.owner?.username} ({selectedOrder.shop?.owner?.mobile || 'No Phone'})
@@ -662,12 +818,12 @@ const AdminOrdersAccounts = () => {
                 {selectedOrder.shop_upi_id || 'N/A'}
               </Descriptions.Item>
               <Descriptions.Item label="Total Amount">
-                <Text strong style={{ fontSize: 16, color: '#0f172a' }}>
+                <Text strong style={{ fontSize: 16, color: colors.primary, fontFamily: typography.fontFamily.headline, fontWeight: 800 }}>
                   ₹{parseFloat(selectedOrder.total_amount || 0).toFixed(2)}
                 </Text>
               </Descriptions.Item>
               <Descriptions.Item label="Platform Fee">
-                <Text style={{ color: '#059669', fontWeight: 600 }}>
+                <Text style={{ color: colors.semantic.success, fontWeight: 600 }}>
                   ₹{parseFloat(selectedOrder.platform_fee || 0).toFixed(2)}
                 </Text>
               </Descriptions.Item>
@@ -675,16 +831,16 @@ const AdminOrdersAccounts = () => {
                 ₹{parseFloat(selectedOrder.delivery_fee || 0).toFixed(2)}
               </Descriptions.Item>
               <Descriptions.Item label="Net Merchant Payout">
-                <Text strong style={{ color: '#2563eb' }}>
+                <Text strong style={{ color: colors.textMain, fontWeight: 700 }}>
                   ₹{(parseFloat(selectedOrder.total_amount || 0) - parseFloat(selectedOrder.platform_fee || 0)).toFixed(2)}
                 </Text>
               </Descriptions.Item>
             </Descriptions>
 
-            <Divider orientation="left" style={{ margin: '16px 0 8px 0', fontSize: 13 }}>
+            <Divider orientation="left" style={{ margin: '16px 0 8px 0', fontSize: 13, fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
               Ordered Items ({selectedOrder.items?.length || 0})
             </Divider>
-            <div style={{ background: '#f8fafc', padding: 12, borderRadius: 8 }}>
+            <div style={{ background: colors.surfaceContainerLow, padding: 12, borderRadius: radii.md, border: `1px solid ${colors.border}` }}>
               {(selectedOrder.items || []).map((it, idx) => (
                 <div
                   key={idx}
@@ -692,39 +848,78 @@ const AdminOrdersAccounts = () => {
                     display: 'flex',
                     justifyContent: 'space-between',
                     padding: '6px 0',
-                    borderBottom: idx !== selectedOrder.items.length - 1 ? '1px dashed #e2e8f0' : 'none',
+                    borderBottom: idx !== selectedOrder.items.length - 1 ? `1px dashed ${colors.border}` : 'none',
                   }}
                 >
                   <div>
-                    <Text strong>{it.item_name}</Text>
-                    <div style={{ fontSize: 11, color: '#64748b' }}>
+                    <Text strong style={{ color: colors.textMain, fontFamily: typography.fontFamily.body }}>{it.item_name}</Text>
+                    <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                       Qty: {it.quantity} × ₹{it.unit_price}
                     </div>
                   </div>
-                  <Text strong style={{ color: '#0f172a' }}>
+                  <Text strong style={{ color: colors.primary, fontFamily: typography.fontFamily.headline, fontWeight: 700 }}>
                     ₹{it.subtotal || it.quantity * it.unit_price}
                   </Text>
                 </div>
               ))}
             </div>
 
-            <Divider orientation="left" style={{ margin: '16px 0 8px 0', fontSize: 13 }}>
+            <Divider orientation="left" style={{ margin: '16px 0 8px 0', fontSize: 13, fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
               Admin Override Status
             </Divider>
             <Space wrap>
               {['placed', 'order_prepare', 'ready_for_pickup', 'open_to_delivery', 'out_for_delivery', 'completed', 'cancelled'].map(
-                (st) => (
-                  <Button
-                    key={st}
-                    size="small"
-                    type={selectedOrder.status === st ? 'primary' : 'default'}
-                    danger={st === 'cancelled'}
-                    onClick={() => handleAdminStatusChange(selectedOrder.id, st)}
-                    loading={updatingStatus}
-                  >
-                    {st}
-                  </Button>
-                )
+                (st) => {
+                  const isCurrent = selectedOrder.status === st;
+                  let bg = undefined;
+                  let border = colors.border;
+                  let textColor = colors.textMain;
+
+                  if (isCurrent) {
+                    if (st === 'order_prepare' || st === 'open_to_delivery' || st === 'out_for_delivery') {
+                      bg = colors.secondary;
+                      border = colors.secondary;
+                      textColor = '#ffffff';
+                    } else if (st === 'ready_for_pickup') {
+                      bg = colors.primary;
+                      border = colors.primary;
+                      textColor = '#ffffff';
+                    } else if (st === 'completed') {
+                      bg = colors.semantic.success;
+                      border = colors.semantic.success;
+                      textColor = '#ffffff';
+                    } else if (st === 'cancelled') {
+                      bg = colors.semantic.error;
+                      border = colors.semantic.error;
+                      textColor = '#ffffff';
+                    } else {
+                      bg = colors.primary;
+                      border = colors.primary;
+                      textColor = '#ffffff';
+                    }
+                  } else if (st === 'cancelled') {
+                    textColor = colors.semantic.error;
+                  }
+
+                  return (
+                    <Button
+                      key={st}
+                      size="small"
+                      onClick={() => handleAdminStatusChange(selectedOrder.id, st)}
+                      loading={updatingStatus}
+                      style={{
+                        borderRadius: radii.md,
+                        fontWeight: isCurrent ? 700 : 500,
+                        background: bg,
+                        borderColor: border,
+                        color: textColor,
+                        fontFamily: typography.fontFamily.body,
+                      }}
+                    >
+                      {st.replace(/_/g, ' ')}
+                    </Button>
+                  );
+                }
               )}
             </Space>
           </div>

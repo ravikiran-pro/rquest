@@ -36,15 +36,15 @@ import { apiConfig, netWorkCall } from '../../utils';
 import { colors } from '../../styles';
 
 const AVATAR_PALETTE = [
-  '#0B2D6B', // Deep Navy
-  '#2E6FDB', // Cobalt
+  '#0B2D6B', // Maritime Navy
+  '#0159C5', // Radiant Cobalt
+  '#5B3A29', // Roasted Amber-Brown
   '#059669', // Emerald
+  '#2E6FDB', // Cobalt Container
   '#0284c7', // Sky Blue
-  '#0d9488', // Teal
   '#d97706', // Amber
   '#ea580c', // Orange
-  '#e11d48', // Rose
-  '#db2777', // Pink
+  '#926a56', // Umber Container
 ];
 
 function getAvatarColor(name = '') {
@@ -985,16 +985,18 @@ function ChatApp() {
               <div className="rquest-chat-search-wrapper">
                 <Input
                   placeholder="Search conversations..."
-                  prefix={<SearchOutlined style={{ color: '#94a3b8', marginRight: 4 }} />}
+                  prefix={<SearchOutlined style={{ color: 'var(--text-light, #747781)', marginRight: 6 }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   allowClear
                   style={{
                     borderRadius: 10,
-                    background: '#f8fafc',
-                    border: '1px solid #e2e8f0',
+                    background: 'var(--surface-container-low, #f7f3ee)',
+                    border: '1px solid var(--border-color, #ebe7e0)',
                     fontSize: 13,
                     padding: '6px 12px',
+                    color: 'var(--text-main, #1c1c19)',
+                    fontFamily: "var(--font-body, 'Inter', sans-serif)",
                   }}
                 />
               </div>
@@ -1102,7 +1104,7 @@ function ChatApp() {
                                   </span>
                                 ) : item.lastMsg ? (
                                   item.lastMsg.is_deleted ? (
-                                    <span style={{ fontStyle: 'italic', color: '#94a3b8' }}>
+                                    <span style={{ fontStyle: 'italic', color: 'var(--text-light, #747781)' }}>
                                       🚫 This message was deleted
                                     </span>
                                   ) : (
@@ -1114,7 +1116,7 @@ function ChatApp() {
                                     </span>
                                   )
                                 ) : (
-                                  <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>
+                                  <span style={{ color: 'var(--text-light, #747781)', fontStyle: 'italic' }}>
                                     Start a conversation
                                   </span>
                                 )}
@@ -1184,7 +1186,15 @@ function ChatApp() {
                   <ConversationHeader.Content
                     userName={
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span style={{ fontWeight: 700, fontSize: 15, color: '#0f172a' }}>
+                        <span
+                          style={{
+                            fontFamily: "var(--font-headline, 'Plus Jakarta Sans', sans-serif)",
+                            fontWeight: 700,
+                            fontSize: 15,
+                            color: 'var(--text-main, #1c1c19)',
+                            letterSpacing: '-0.01em',
+                          }}
+                        >
                           {activePartnerInfo.name}
                         </span>
                         {activePartnerInfo.shopName && (
@@ -1212,10 +1222,10 @@ function ChatApp() {
                               width: 7,
                               height: 7,
                               borderRadius: '50%',
-                              backgroundColor: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8',
+                              backgroundColor: activePartnerInfo.isOnline ? 'var(--success, #059669)' : 'var(--text-light, #747781)',
                             }}
                           />
-                          <span style={{ color: activePartnerInfo.isOnline ? '#10b981' : '#94a3b8', fontWeight: 500 }}>
+                          <span style={{ color: activePartnerInfo.isOnline ? 'var(--success, #059669)' : 'var(--text-light, #747781)', fontWeight: 500 }}>
                             {activePartnerInfo.isOnline ? 'Active now' : 'Offline'}
                           </span>
                         </div>
@@ -1330,7 +1340,7 @@ function ChatApp() {
                                   <span>
                                     {msg.status === 'pending' ? (
                                       <LoadingOutlined
-                                        style={{ fontSize: 10, color: '#94a3b8' }}
+                                        style={{ fontSize: 10, color: 'var(--text-light, #747781)' }}
                                         title="Sending..."
                                       />
                                     ) : msg.is_read ? (
@@ -1459,10 +1469,27 @@ function ChatApp() {
                 <MessageOutlined
                   style={{ fontSize: 44, color: colors.primary, marginBottom: 14 }}
                 />
-                <div style={{ fontSize: 18, fontWeight: 700, color: '#0f172a', marginBottom: 6 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-headline, 'Plus Jakarta Sans', sans-serif)",
+                    fontSize: 18,
+                    fontWeight: 700,
+                    color: 'var(--text-main, #1c1c19)',
+                    marginBottom: 6,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
                   Direct Store Messages
                 </div>
-                <div style={{ fontSize: 13, color: '#64748b', maxWidth: 300, lineHeight: 1.5 }}>
+                <div
+                  style={{
+                    fontFamily: "var(--font-body, 'Inter', sans-serif)",
+                    fontSize: 13,
+                    color: 'var(--text-muted, #444650)',
+                    maxWidth: 300,
+                    lineHeight: 1.5,
+                  }}
+                >
                   Select an active conversation on the left, or chat directly with stores on Rquest.
                 </div>
 

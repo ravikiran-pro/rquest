@@ -1,10 +1,12 @@
 /* Platform Admin Console Styles */
 .admin-console-container {
-  font-family: var(--font-body);
+  font-family: var(--font-body, 'Inter', sans-serif);
 }
 
 .admin-header-title {
-  font-family: var(--font-headline);
+  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
   font-weight: 800;
-  color: var(--color-text, #0f172a);
+  letter-spacing: -0.02em;
+  color: var(--text-main, #1c1c19);
 }
+

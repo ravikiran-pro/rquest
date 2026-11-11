@@ -46,7 +46,7 @@ import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
 import { AddProductModal, ImportProductCsvModal } from '../../app/components';
 import { useChatStore } from '../../app/services';
-import { colors, radii } from '../../app/styles/theme';
+import { colors, radii, typography } from '../../app/styles/theme';
 import './client_register.css';
 
 const { Title, Text } = Typography;
@@ -364,7 +364,11 @@ const ManageStore = ({
 
   const listingColumns = [
     {
-      title: 'Item / Service',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Item / Service
+        </span>
+      ),
       dataIndex: 'name',
       key: 'name',
       width: 250,
@@ -374,39 +378,46 @@ const ManageStore = ({
             <img
               src={record.img_url}
               alt={name}
-              style={{ width: 44, height: 44, borderRadius: 8, objectFit: 'cover' }}
+              style={{ width: 44, height: 44, borderRadius: radii.md, objectFit: 'cover' }}
             />
           ) : (
             <div
               style={{
                 width: 44,
                 height: 44,
-                borderRadius: 8,
-                background: '#f1f5f9',
+                borderRadius: radii.md,
+                background: colors.surfaceContainerLow,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                color: '#94a3b8',
+                color: colors.textLight,
               }}
             >
               <FileTextOutlined />
             </div>
           )}
           <div>
-            <div style={{ fontWeight: 700, color: '#0f172a' }}>{name}</div>
+            <div style={{ fontWeight: 700, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>{name}</div>
             <Flex gap={4} align="center" style={{ marginTop: 2 }}>
-              <Tag color="blue" style={{ fontSize: 10, lineHeight: '16px', margin: 0 }}>
+              <Tag color="blue" style={{ fontSize: 10, lineHeight: '16px', margin: 0, borderRadius: radii.xs }}>
                 {record.listing_type}
               </Tag>
               {record.metadata?.section && (
-                <Tag color="default" style={{ fontSize: 10, lineHeight: '16px', margin: 0 }}>
+                <Tag style={{ fontSize: 10, lineHeight: '16px', margin: 0, borderRadius: radii.xs, background: colors.surfaceContainerLow, color: colors.textMuted, borderColor: colors.border }}>
                   {record.metadata.section}
                 </Tag>
               )}
               {record.metadata?.food_type && (
                 <Tag
-                  color={record.metadata.food_type === 'veg' ? 'green' : 'red'}
-                  style={{ fontSize: 10, lineHeight: '16px', margin: 0 }}
+                  style={{
+                    fontSize: 10,
+                    lineHeight: '16px',
+                    margin: 0,
+                    borderRadius: radii.xs,
+                    background: record.metadata.food_type === 'veg' ? colors.semantic.successLight : colors.semantic.errorLight,
+                    color: record.metadata.food_type === 'veg' ? colors.semantic.success : colors.semantic.error,
+                    borderColor: record.metadata.food_type === 'veg' ? colors.semantic.successBorder : colors.semantic.errorBorder,
+                  }}
                 >
                   {record.metadata.food_type === 'veg' ? 'Veg' : 'Non-Veg'}
                 </Tag>
@@ -417,15 +428,19 @@ const ManageStore = ({
       ),
     },
     {
-      title: 'Price / Unit',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Price / Unit
+        </span>
+      ),
       key: 'price',
       width: 130,
       render: (_, record) => (
         <div>
-          <span style={{ fontWeight: 800, color: colors.primary }}>₹{record.price}</span>
-          <span style={{ fontSize: 12, color: '#64748b' }}> / {record.unit}</span>
+          <span style={{ fontWeight: 800, color: colors.primary, fontFamily: typography.fontFamily.headline }}>₹{record.price}</span>
+          <span style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}> / {record.unit}</span>
           {record.mrp && record.mrp > record.price && (
-            <div style={{ fontSize: 11, color: '#94a3b8', textDecoration: 'line-through' }}>
+            <div style={{ fontSize: 11, color: colors.textLight, textDecoration: 'line-through' }}>
               MRP: ₹{record.mrp}
             </div>
           )}
@@ -433,7 +448,11 @@ const ManageStore = ({
       ),
     },
     {
-      title: 'In Stock',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          In Stock
+        </span>
+      ),
       key: 'is_available',
       width: 95,
       render: (_, record) => (
@@ -444,7 +463,11 @@ const ManageStore = ({
       ),
     },
     {
-      title: 'Actions',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Actions
+        </span>
+      ),
       key: 'actions',
       width: 105,
       render: (_, record) => (
@@ -452,6 +475,7 @@ const ManageStore = ({
           <Button
             size="small"
             icon={<EditOutlined />}
+            style={{ borderRadius: radii.sm, borderColor: colors.border }}
             onClick={() => handleOpenEditModal(record)}
           />
           <Popconfirm
@@ -460,7 +484,7 @@ const ManageStore = ({
             okText="Yes"
             cancelText="No"
           >
-            <Button size="small" danger icon={<DeleteOutlined />} />
+            <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: radii.sm }} />
           </Popconfirm>
         </Space>
       ),
@@ -469,7 +493,11 @@ const ManageStore = ({
 
   const orderColumns = [
     {
-      title: 'Order ID',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Order ID
+        </span>
+      ),
       dataIndex: 'order_number',
       key: 'order_number',
       width: 120,
@@ -481,11 +509,11 @@ const ManageStore = ({
               setSelectedOrder(record);
               setIsOrderDrawerOpen(true);
             }}
-            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary }}
+            style={{ padding: 0, fontWeight: 700, fontSize: 13, color: colors.primary, fontFamily: typography.fontFamily.headline }}
           >
             #{val}
           </Button>
-          <div style={{ fontSize: 11, color: '#64748b' }}>
+          <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
             {new Date(record.createdAt).toLocaleDateString([], {
               month: 'short',
               day: 'numeric',
@@ -497,38 +525,76 @@ const ManageStore = ({
       ),
     },
     {
-      title: 'Type',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Type
+        </span>
+      ),
       dataIndex: 'order_type',
       key: 'order_type',
       width: 100,
       render: (type) => (
         <Tag
-          color={type === 'delivery' ? 'purple' : type === 'service' ? 'cyan' : 'blue'}
-          style={{ borderRadius: 6, fontWeight: 700, fontSize: 11 }}
+          style={{
+            borderRadius: radii.full,
+            fontWeight: 700,
+            fontSize: 11,
+            padding: '1px 8px',
+            background:
+              type === 'delivery'
+                ? colors.verifiedChipBg
+                : type === 'service'
+                ? colors.serviceChipBg
+                : colors.primaryLight,
+            color:
+              type === 'delivery'
+                ? colors.verifiedChipText
+                : type === 'service'
+                ? colors.serviceChipText
+                : colors.primary,
+            borderColor:
+              type === 'delivery'
+                ? colors.verifiedChipBorder
+                : type === 'service'
+                ? colors.serviceChipBorder
+                : 'rgba(11, 45, 107, 0.2)',
+          }}
         >
           {type === 'delivery' ? '🚚 Delivery' : type === 'service' ? '🛠️ Service' : '🛍️ Pickup'}
         </Tag>
       ),
     },
     {
-      title: 'Customer',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Customer
+        </span>
+      ),
       key: 'customer',
       width: 140,
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 600 }}>{record.customer?.username || 'Customer'}</div>
-          <div style={{ fontSize: 12, color: '#64748b' }}>{record.customer_phone || record.customer?.mobile}</div>
+          <div style={{ fontWeight: 600, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
+            {record.customer?.username || 'Customer'}
+          </div>
+          <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+            {record.customer_phone || record.customer?.mobile}
+          </div>
         </div>
       ),
     },
     {
-      title: 'Items',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Items
+        </span>
+      ),
       key: 'items',
       width: 150,
       render: (_, record) => (
         <div>
           {record.items?.map((it, idx) => (
-            <div key={idx} style={{ fontSize: 12 }}>
+            <div key={idx} style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
               {it.quantity}x {it.item_name}
             </div>
           ))}
@@ -536,20 +602,28 @@ const ManageStore = ({
       ),
     },
     {
-      title: 'Amount',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Amount
+        </span>
+      ),
       key: 'amount',
       width: 110,
       render: (_, record) => (
         <div>
-          <span style={{ fontWeight: 800, color: '#0f172a' }}>₹{record.total_amount}</span>
-          <div style={{ fontSize: 11, color: '#10b981', fontWeight: 600 }}>
+          <span style={{ fontWeight: 800, color: colors.primary, fontFamily: typography.fontFamily.headline }}>₹{record.total_amount}</span>
+          <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 600, fontFamily: typography.fontFamily.body }}>
             {record.payment_mode === 'direct_upi' ? 'Direct UPI' : 'COD'}
           </div>
         </div>
       ),
     },
     {
-      title: 'Status',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Status
+        </span>
+      ),
       key: 'status',
       width: 150,
       render: (_, record) => {
@@ -578,14 +652,18 @@ const ManageStore = ({
           cancelled: '❌ Cancelled',
         };
         return (
-          <Tag color={statusColors[record.status] || 'default'} style={{ fontWeight: 600 }}>
+          <Tag color={statusColors[record.status] || 'default'} style={{ fontWeight: 600, borderRadius: radii.full }}>
             {statusLabels[record.status] || record.status}
           </Tag>
         );
       },
     },
     {
-      title: 'Update Action',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Update Action
+        </span>
+      ),
       key: 'action',
       width: 160,
       render: (_, record) => {
@@ -601,7 +679,7 @@ const ManageStore = ({
                 setSelectedOrder(record);
                 setIsOrderDrawerOpen(true);
               }}
-              style={{ borderRadius: radii.sm, fontWeight: 600, color: colors.primary, borderColor: colors.border, background: colors.primaryLight }}
+              style={{ borderRadius: radii.md, fontWeight: 600, color: colors.secondary, borderColor: colors.border, background: colors.surface }}
             >
               Details
             </Button>
@@ -611,7 +689,7 @@ const ManageStore = ({
               <Button
                 type="primary"
                 size="small"
-                style={{ background: '#3b82f6', borderColor: '#3b82f6', fontWeight: 600 }}
+                style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'order_prepare')}
               >
                 🍳 Order Prepare
@@ -628,7 +706,7 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
-                    style={{ background: '#0891b2', borderColor: '#0891b2', fontWeight: 600 }}
+                    style={{ background: colors.primary, borderColor: colors.primary, fontWeight: 600, borderRadius: radii.md }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'ready_for_pickup')}
                   >
                     🛍️ Ready for Pickup
@@ -640,7 +718,7 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
-                    style={{ background: colors.cobalt, borderColor: colors.cobalt, fontWeight: 600 }}
+                    style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 600, borderRadius: radii.md }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'open_to_delivery')}
                   >
                     🚚 Move to Open to Delivery
@@ -652,7 +730,7 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
-                    style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                    style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
                   >
                     Mark Completed
@@ -663,6 +741,7 @@ const ManageStore = ({
                 <Button
                   size="small"
                   onClick={() => handleUpdateOrderStatus(record.id, 'placed')}
+                  style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMuted }}
                 >
                   ↩️ Placed
                 </Button>
@@ -674,7 +753,7 @@ const ManageStore = ({
               <Button
                 type="primary"
                 size="small"
-                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
                 ✅ Hand Over
@@ -686,7 +765,7 @@ const ManageStore = ({
               <Button
                 type="primary"
                 size="small"
-                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
                 ✅ Delivered
@@ -698,7 +777,7 @@ const ManageStore = ({
               <Button
                 type="primary"
                 size="small"
-                style={{ background: '#10b981', borderColor: '#10b981', fontWeight: 600 }}
+                style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
                 ✅ Delivered
@@ -711,6 +790,7 @@ const ManageStore = ({
                 size="small"
                 danger
                 onClick={() => handleUpdateOrderStatus(record.id, 'cancelled')}
+                style={{ borderRadius: radii.md, borderColor: colors.semantic.errorBorder, color: colors.semantic.error }}
               >
                 Reject
               </Button>
@@ -784,16 +864,33 @@ const ManageStore = ({
           </div>
 
           <div className="manage-store-info">
-            <Title level={4} className="manage-store-title">
+            <Title
+              level={4}
+              className="manage-store-title"
+              style={{
+                margin: 0,
+                fontFamily: typography.fontFamily.headline,
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: colors.textMain,
+              }}
+            >
               {shop.shop_name}
             </Title>
             <div className="manage-store-meta">
-              <Text type="secondary" style={{ fontSize: 13 }}>
+              <Text style={{ fontSize: 13, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 {shop.area} • {shop.shopCategory?.name || shop.shop_type || 'Store Outlet'}
               </Text>
               <Tag
-                color={isServiceStore ? 'blue' : 'green'}
-                style={{ fontSize: 11, margin: 0, borderRadius: 4, fontWeight: 700 }}
+                style={{
+                  fontSize: 11,
+                  margin: 0,
+                  borderRadius: radii.full,
+                  fontWeight: 700,
+                  background: isServiceStore ? colors.serviceChipBg : colors.verifiedChipBg,
+                  borderColor: isServiceStore ? colors.serviceChipBorder : colors.verifiedChipBorder,
+                  color: isServiceStore ? colors.serviceChipText : colors.verifiedChipText,
+                }}
               >
                 {isServiceStore ? '🔧 Service Business' : '🛒 Product Store'}
               </Tag>
@@ -804,12 +901,13 @@ const ManageStore = ({
         <div className="manage-store-header-right">
           {allShops?.length > 1 && (
             <div className="manage-store-outlet-switcher">
-              <Text strong className="manage-store-outlet-switcher-label">
+              <Text strong className="manage-store-outlet-switcher-label" style={{ fontFamily: typography.fontFamily.headline, color: colors.textMain }}>
                 Switch Outlet:
               </Text>
               <Select
                 value={shop.id}
                 className="manage-store-outlet-select"
+                style={{ borderRadius: radii.md }}
                 onChange={(newId) => {
                   const target = allShops.find((s) => s.id === newId);
                   if (target) onSwitchShop(target);
@@ -829,7 +927,7 @@ const ManageStore = ({
             icon={<EyeOutlined />}
             onClick={() => history.push(`/shop/${shop.id}`)}
             className="manage-store-live-btn-desktop"
-            style={{ fontWeight: 600, borderRadius: 8 }}
+            style={{ fontWeight: 600, borderRadius: radii.md, background: colors.primary, borderColor: colors.primary, boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)' }}
           >
             Live Storefront
           </Button>
@@ -839,6 +937,11 @@ const ManageStore = ({
       {/* Main Management Tabs */}
       <Card
         className="manage-store-main-card"
+        style={{
+          borderRadius: radii.xl,
+          border: `1px solid ${colors.border}`,
+          background: colors.surface,
+        }}
         styles={{ body: { padding: screens.xs ? '14px 12px' : 20 } }}
       >
         <Tabs
@@ -848,7 +951,7 @@ const ManageStore = ({
             {
               key: 'catalog',
               label: (
-                <span className="manage-store-tab-label" style={{ fontWeight: 700, fontSize: 15 }}>
+                <span className="manage-store-tab-label" style={{ fontWeight: 700, fontSize: 15, fontFamily: typography.fontFamily.headline }}>
                   {catalogTabLabel}
                 </span>
               ),
@@ -856,10 +959,10 @@ const ManageStore = ({
                 <div>
                   <div className="manage-store-tab-header">
                     <div>
-                      <Title level={5} style={{ margin: 0 }}>
+                      <Title level={5} style={{ margin: 0, fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
                         {catalogTitle}
                       </Title>
-                      <Text type="secondary" style={{ fontSize: 13 }}>
+                      <Text style={{ fontSize: 13, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                         {catalogDesc}
                       </Text>
                     </div>
@@ -874,6 +977,7 @@ const ManageStore = ({
                           fontWeight: 700,
                           background: colors.primary,
                           borderColor: colors.primary,
+                          boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
                         }}
                       >
                         {addItemButtonLabel}
@@ -881,79 +985,98 @@ const ManageStore = ({
                     </Space>
                   </div>
 
-                  <Table
-                    columns={listingColumns}
-                    dataSource={listings}
-                    rowKey="id"
-                    loading={listingsLoading}
-                    scroll={{ x: 'max-content' }}
-                    pagination={{ pageSize: 8 }}
-                  />
+                  <div
+                    style={{
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.lg,
+                      overflow: 'hidden',
+                      background: colors.surface,
+                    }}
+                  >
+                    <Table
+                      columns={listingColumns}
+                      dataSource={listings}
+                      rowKey="id"
+                      loading={listingsLoading}
+                      scroll={{ x: 'max-content' }}
+                      pagination={{ pageSize: 8 }}
+                    />
+                  </div>
                 </div>
               ),
             },
             {
               key: 'orders',
               label: (
-                <span style={{ fontWeight: 700, fontSize: 15 }}>
+                <span style={{ fontWeight: 700, fontSize: 15, fontFamily: typography.fontFamily.headline }}>
                   {ordersTabLabel}
                 </span>
               ),
               children: (
                 <div>
                   <div style={{ marginBottom: 16 }}>
-                    <Title level={5} style={{ margin: 0 }}>
+                    <Title level={5} style={{ margin: 0, fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
                       {ordersTitle}
                     </Title>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
+                    <Text style={{ fontSize: 13, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                       {ordersDesc} Click on any order to open the full transaction & delivery tracker sidebar.
                     </Text>
                   </div>
 
-                  <Table
-                    columns={orderColumns}
-                    dataSource={orders}
-                    rowKey="id"
-                    loading={ordersLoading}
-                    scroll={{ x: 'max-content' }}
-                    pagination={{ pageSize: 8 }}
-                    onRow={(record) => ({
-                      onClick: (e) => {
-                        if (e.target.closest('button') || e.target.closest('.ant-btn')) return;
-                        setSelectedOrder(record);
-                        setIsOrderDrawerOpen(true);
-                      },
-                      style: { cursor: 'pointer' },
-                    })}
-                  />
+                  <div
+                    style={{
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.lg,
+                      overflow: 'hidden',
+                      background: colors.surface,
+                    }}
+                  >
+                    <Table
+                      columns={orderColumns}
+                      dataSource={orders}
+                      rowKey="id"
+                      loading={ordersLoading}
+                      scroll={{ x: 'max-content' }}
+                      pagination={{ pageSize: 8 }}
+                      onRow={(record) => ({
+                        onClick: (e) => {
+                          if (e.target.closest('button') || e.target.closest('.ant-btn')) return;
+                          setSelectedOrder(record);
+                          setIsOrderDrawerOpen(true);
+                        },
+                        style: { cursor: 'pointer' },
+                      })}
+                    />
+                  </div>
                 </div>
               ),
             },
             {
               key: 'settings',
               label: (
-                <span style={{ fontWeight: 700, fontSize: 15 }}>
+                <span style={{ fontWeight: 700, fontSize: 15, fontFamily: typography.fontFamily.headline }}>
                   <SettingOutlined /> Store Settings & Info
                 </span>
               ),
               children: (
                 <div style={{ maxWidth: 700 }}>
                   <div style={{ marginBottom: 20 }}>
-                    <Title level={5} style={{ margin: 0 }}>
+                    <Title level={5} style={{ margin: 0, fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
                       Store Information & Business Profile
                     </Title>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
+                    <Text style={{ fontSize: 13, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                       Update your storefront profile, location information, and customer contact details.
                     </Text>
                   </div>
 
-                  <Card style={{ borderRadius: 12, border: '1px solid #e2e8f0', marginBottom: 20 }}>
+                  <Card style={{ borderRadius: radii.xl, border: `1px solid ${colors.border}`, marginBottom: 20, background: colors.surface }}>
                     <div style={{ marginBottom: 16 }}>
-                      <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                      <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                         Store / Outlet Name:
                       </Text>
                       <Input
                         value={shopSettings.shop_name}
+                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                         onChange={(e) =>
                           setShopSettings((prev) => ({ ...prev, shop_name: e.target.value }))
                         }
@@ -962,22 +1085,24 @@ const ManageStore = ({
 
                     <Row gutter={[16, 16]} style={{ marginBottom: 16 }}>
                       <Col xs={24} sm={12}>
-                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                           Area / Locality:
                         </Text>
                         <Input
                           value={shopSettings.area}
+                          style={{ borderRadius: radii.md, borderColor: colors.border }}
                           onChange={(e) =>
                             setShopSettings((prev) => ({ ...prev, area: e.target.value }))
                           }
                         />
                       </Col>
                       <Col xs={24} sm={12}>
-                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                           Contact Phone:
                         </Text>
                         <Input
                           value={shopSettings.mobile_number}
+                          style={{ borderRadius: radii.md, borderColor: colors.border }}
                           onChange={(e) =>
                             setShopSettings((prev) => ({ ...prev, mobile_number: e.target.value }))
                           }
@@ -986,12 +1111,13 @@ const ManageStore = ({
                     </Row>
 
                     <div style={{ marginBottom: 16 }}>
-                      <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                      <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                         Full Street Address:
                       </Text>
                       <Input.TextArea
                         rows={2}
                         value={shopSettings.address}
+                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                         onChange={(e) =>
                           setShopSettings((prev) => ({ ...prev, address: e.target.value }))
                         }
@@ -1000,24 +1126,26 @@ const ManageStore = ({
 
                     <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
                       <Col xs={24} sm={12}>
-                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                           Website / Social:
                         </Text>
                         <Input
                           value={shopSettings.website}
                           placeholder="https://..."
+                          style={{ borderRadius: radii.md, borderColor: colors.border }}
                           onChange={(e) =>
                             setShopSettings((prev) => ({ ...prev, website: e.target.value }))
                           }
                         />
                       </Col>
                       <Col xs={24} sm={12}>
-                        <Text strong style={{ display: 'block', marginBottom: 4 }}>
+                        <Text strong style={{ display: 'block', marginBottom: 4, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                           Storefront Banner / Image URL:
                         </Text>
                         <Input
                           value={shopSettings.img_url}
                           placeholder="https://images.unsplash.com/..."
+                          style={{ borderRadius: radii.md, borderColor: colors.border }}
                           onChange={(e) =>
                             setShopSettings((prev) => ({ ...prev, img_url: e.target.value }))
                           }
@@ -1028,28 +1156,35 @@ const ManageStore = ({
                     {/* Business Operating Mode */}
                     <div
                       style={{
-                        background: '#FAF7F2',
-                        border: '1px solid #EAE4DA',
-                        borderRadius: 10,
+                        background: colors.surfaceContainerLow,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.lg,
                         padding: '14px 16px',
                         marginBottom: 20,
                       }}
                     >
                       <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
                         <div>
-                          <Text strong style={{ fontSize: 14, color: '#1C1C19', display: 'flex', alignItems: 'center', gap: 6 }}>
-                            {isServiceStore ? <ToolOutlined style={{ color: '#0284c7' , marginRight: 4 }} /> : <ShopOutlined style={{ color: '#16a34a', marginRight: 4}} />}
+                          <Text strong style={{ fontSize: 14, color: colors.textMain, display: 'flex', alignItems: 'center', gap: 6, fontFamily: typography.fontFamily.headline }}>
+                            {isServiceStore ? <ToolOutlined style={{ color: colors.secondary, marginRight: 4 }} /> : <ShopOutlined style={{ color: colors.semantic.success, marginRight: 4 }} />}
                             Business Operating Mode
                           </Text>
-                          <Text type="secondary" style={{ fontSize: 12, display: 'block', marginTop: 4 }}>
+                          <Text style={{ fontSize: 12, display: 'block', marginTop: 4, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                             {isServiceStore
                               ? 'Configured as a Service Business — Catalog is streamlined for service packages, rate cards, and appointment bookings.'
                               : 'Configured as a Product Store — Catalog is streamlined for retail items, in-stock inventory, and order fulfillment.'}
                           </Text>
                         </div>
                         <Tag
-                          color={isServiceStore ? 'blue' : 'green'}
-                          style={{ fontWeight: 700, padding: '4px 10px', borderRadius: 6, fontSize: 12 }}
+                          style={{
+                            fontWeight: 700,
+                            padding: '3px 10px',
+                            borderRadius: radii.full,
+                            fontSize: 12,
+                            background: isServiceStore ? colors.serviceChipBg : colors.verifiedChipBg,
+                            borderColor: isServiceStore ? colors.serviceChipBorder : colors.verifiedChipBorder,
+                            color: isServiceStore ? colors.serviceChipText : colors.verifiedChipText,
+                          }}
                         >
                           {isServiceStore ? 'Service Category' : 'Product Category'}
                         </Tag>
@@ -1067,6 +1202,7 @@ const ManageStore = ({
                         borderRadius: radii.md,
                         width: screens.xs ? '100%' : 'auto',
                         height: screens.xs ? 42 : 'auto',
+                        boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
                       }}
                     >
                       Save Store Settings
@@ -1076,17 +1212,17 @@ const ManageStore = ({
                   {/* Danger Zone: Delete Store */}
                   <Card
                     style={{
-                      borderRadius: 12,
+                      borderRadius: radii.xl,
                       border: '1px solid #fee2e8',
                       background: '#fff5f5',
                     }}
                   >
                     <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
                       <div>
-                        <Text strong style={{ color: '#b91c1c', fontSize: 14, display: 'block' }}>
+                        <Text strong style={{ color: '#b91c1c', fontSize: 14, display: 'block', fontFamily: typography.fontFamily.headline }}>
                           Danger Zone: Delete Store Outlet
                         </Text>
-                        <Text type="secondary" style={{ fontSize: 12, color: '#991b1b' }}>
+                        <Text style={{ fontSize: 12, color: '#991b1b', fontFamily: typography.fontFamily.body }}>
                           Permanently delete this shop outlet and remove all its catalog items.
                         </Text>
                       </div>
@@ -1099,7 +1235,7 @@ const ManageStore = ({
                         okButtonProps={{ danger: true, loading: deletingShop }}
                         onConfirm={handleDeleteShop}
                       >
-                        <Button danger type="primary" style={{ width: screens.xs ? '100%' : 'auto' }}>
+                        <Button danger type="primary" style={{ width: screens.xs ? '100%' : 'auto', borderRadius: radii.md }}>
                           Delete Store Outlet
                         </Button>
                       </Popconfirm>
@@ -1148,10 +1284,10 @@ const ManageStore = ({
           selectedOrder ? (
             <Flex justify="space-between" align="center" style={{ width: '100%', paddingRight: 12 }}>
               <div>
-                <span style={{ fontSize: 16, fontWeight: 800, color: '#0f172a' }}>
+                <span style={{ fontSize: 16, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                   Order #{selectedOrder.order_number || selectedOrder.id?.slice(0, 8)}
                 </span>
-                <div style={{ fontSize: 12, color: '#64748b', fontWeight: 500, marginTop: 2 }}>
+                <div style={{ fontSize: 12, color: colors.textMuted, fontWeight: 500, marginTop: 2, fontFamily: typography.fontFamily.body }}>
                   {selectedOrder.createdAt &&
                     new Date(selectedOrder.createdAt).toLocaleString([], {
                       month: 'short',
@@ -1163,19 +1299,30 @@ const ManageStore = ({
                 </div>
               </div>
               <Tag
-                color={
-                  selectedOrder.order_type === 'delivery'
-                    ? 'purple'
-                    : selectedOrder.order_type === 'service'
-                    ? 'cyan'
-                    : 'blue'
-                }
                 style={{
-                  borderRadius: 6,
+                  borderRadius: radii.full,
                   fontWeight: 700,
                   fontSize: 12,
                   padding: '2px 10px',
                   margin: 0,
+                  background:
+                    selectedOrder.order_type === 'delivery'
+                      ? colors.verifiedChipBg
+                      : selectedOrder.order_type === 'service'
+                      ? colors.serviceChipBg
+                      : colors.primaryLight,
+                  color:
+                    selectedOrder.order_type === 'delivery'
+                      ? colors.verifiedChipText
+                      : selectedOrder.order_type === 'service'
+                      ? colors.serviceChipText
+                      : colors.primary,
+                  borderColor:
+                    selectedOrder.order_type === 'delivery'
+                      ? colors.verifiedChipBorder
+                      : selectedOrder.order_type === 'service'
+                      ? colors.serviceChipBorder
+                      : 'rgba(11, 45, 107, 0.2)',
                 }}
               >
                 {selectedOrder.order_type === 'delivery'
@@ -1186,7 +1333,9 @@ const ManageStore = ({
               </Tag>
             </Flex>
           ) : (
-            'Order Details'
+            <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+              Order Details
+            </span>
           )
         }
       >
@@ -1207,9 +1356,9 @@ const ManageStore = ({
             {selectedOrder.status !== 'cancelled' && (
               <Card
                 style={{
-                  borderRadius: 12,
-                  border: '1px solid #EAE4DA',
-                  background: '#FAF7F2',
+                  borderRadius: radii.xl,
+                  border: `1px solid ${colors.border}`,
+                  background: colors.surfaceContainerLow,
                 }}
                 bodyStyle={{ padding: '16px 12px' }}
               >
@@ -1222,9 +1371,9 @@ const ManageStore = ({
                 />
 
                 {/* Primary Action Button Based on Current Status */}
-                <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: 12 }}>
+                <div style={{ borderTop: `1px solid ${colors.borderLight}`, paddingTop: 12 }}>
                   <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
-                    <Text strong style={{ fontSize: 13, color: '#334155' }}>
+                    <Text strong style={{ fontSize: 13, color: colors.textMain }}>
                       Fulfillment Action:
                     </Text>
                     <Space wrap size={[6, 6]}>
@@ -1233,10 +1382,10 @@ const ManageStore = ({
                           <Button
                             type="primary"
                             style={{
-                              background: '#3b82f6',
-                              borderColor: '#3b82f6',
+                              background: colors.secondary,
+                              borderColor: colors.secondary,
                               fontWeight: 700,
-                              borderRadius: 8,
+                              borderRadius: radii.md,
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'order_prepare')}
                           >
@@ -1244,7 +1393,7 @@ const ManageStore = ({
                           </Button>
                           <Button
                             danger
-                            style={{ borderRadius: 8 }}
+                            style={{ borderRadius: radii.md }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'cancelled')}
                           >
                             Reject
@@ -1260,10 +1409,10 @@ const ManageStore = ({
                             <Button
                               type="primary"
                               style={{
-                                background: '#0891b2',
-                                borderColor: '#0891b2',
+                                background: colors.primary,
+                                borderColor: colors.primary,
                                 fontWeight: 700,
-                                borderRadius: 8,
+                                borderRadius: radii.md,
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'ready_for_pickup')}
                             >
@@ -1275,8 +1424,8 @@ const ManageStore = ({
                             <Button
                               type="primary"
                               style={{
-                                background: colors.cobalt,
-                                borderColor: colors.cobalt,
+                                background: colors.secondary,
+                                borderColor: colors.secondary,
                                 fontWeight: 700,
                                 borderRadius: radii.md,
                               }}
@@ -1290,10 +1439,10 @@ const ManageStore = ({
                             <Button
                               type="primary"
                               style={{
-                                background: '#10b981',
-                                borderColor: '#10b981',
+                                background: colors.semantic.success,
+                                borderColor: colors.semantic.success,
                                 fontWeight: 700,
-                                borderRadius: 8,
+                                borderRadius: radii.md,
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                             >
@@ -1304,7 +1453,7 @@ const ManageStore = ({
                           <Button
                             size="small"
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'placed')}
-                            style={{ borderRadius: 6 }}
+                            style={{ borderRadius: radii.sm, borderColor: colors.border, color: colors.textMuted }}
                           >
                             ↩️ Revert to Placed
                           </Button>
@@ -1315,10 +1464,10 @@ const ManageStore = ({
                         <Button
                           type="primary"
                           style={{
-                            background: '#10b981',
-                            borderColor: '#10b981',
+                            background: colors.semantic.success,
+                            borderColor: colors.semantic.success,
                             fontWeight: 700,
-                            borderRadius: 8,
+                            borderRadius: radii.md,
                           }}
                           onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                         >
@@ -1331,10 +1480,10 @@ const ManageStore = ({
                           <Button
                             type="primary"
                             style={{
-                              background: '#2563eb',
-                              borderColor: '#2563eb',
+                              background: colors.secondary,
+                              borderColor: colors.secondary,
                               fontWeight: 700,
-                              borderRadius: 8,
+                              borderRadius: radii.md,
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'out_for_delivery')}
                           >
@@ -1342,11 +1491,11 @@ const ManageStore = ({
                           </Button>
                           <Button
                             style={{
-                              background: '#10b981',
-                              borderColor: '#10b981',
+                              background: colors.semantic.success,
+                              borderColor: colors.semantic.success,
                               color: '#fff',
                               fontWeight: 700,
-                              borderRadius: 8,
+                              borderRadius: radii.md,
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                           >
@@ -1359,10 +1508,10 @@ const ManageStore = ({
                         <Button
                           type="primary"
                           style={{
-                            background: '#10b981',
-                            borderColor: '#10b981',
+                            background: colors.semantic.success,
+                            borderColor: colors.semantic.success,
                             fontWeight: 700,
-                            borderRadius: 8,
+                            borderRadius: radii.md,
                           }}
                           onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                         >
@@ -1374,7 +1523,7 @@ const ManageStore = ({
                         <Tag
                           color="success"
                           icon={<CheckCircleFilled />}
-                          style={{ fontSize: 13, padding: '4px 12px', borderRadius: 8 }}
+                          style={{ fontSize: 13, padding: '4px 12px', borderRadius: radii.md }}
                         >
                           Order Completed & Fulfilled
                         </Tag>
@@ -1391,15 +1540,15 @@ const ManageStore = ({
                 <div
                   style={{
                     background: colors.surfaceContainerLow,
-                    border: `1px solid ${colors.borderLight}`,
+                    border: `1px solid ${colors.border}`,
                     borderRadius: radii.md,
                     padding: '12px 14px',
                   }}
                 >
                   <Flex gap={8} align="flex-start">
-                    <CarOutlined style={{ color: colors.cobalt, fontSize: 18, marginTop: 2 }} />
+                    <CarOutlined style={{ color: colors.secondary, fontSize: 18, marginTop: 2 }} />
                     <div>
-                      <Text strong style={{ color: colors.primary, display: 'block' }}>
+                      <Text strong style={{ color: colors.primary, display: 'block', fontFamily: typography.fontFamily.headline }}>
                         Captured in Open-to-Delivery Pool
                       </Text>
                       <Text style={{ fontSize: 12, color: colors.textMuted }}>
@@ -1413,7 +1562,7 @@ const ManageStore = ({
             {/* Customer Details & Actions */}
             <Card
               title={
-                <span style={{ fontSize: 14, fontWeight: 700 }}>
+                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: typography.fontFamily.headline }}>
                   <UserOutlined style={{ marginRight: 6, color: colors.primary }} /> Customer Information
                 </span>
               }
@@ -1433,10 +1582,10 @@ const ManageStore = ({
                     {(selectedOrder.customer?.username || 'C')[0]?.toUpperCase()}
                   </Avatar>
                   <div>
-                    <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 800, fontSize: 15, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                       {selectedOrder.customer?.username || 'Guest Customer'}
                     </div>
-                    <div style={{ fontSize: 13, color: '#64748b' }}>
+                    <div style={{ fontSize: 13, color: colors.textMuted }}>
                       {selectedOrder.customer_phone || selectedOrder.customer?.mobile || 'No phone recorded'}
                     </div>
                   </div>
@@ -1447,7 +1596,7 @@ const ManageStore = ({
                     <Button
                       icon={<PhoneOutlined />}
                       href={`tel:${selectedOrder.customer_phone || selectedOrder.customer?.mobile}`}
-                      style={{ borderRadius: 8, fontWeight: 600 }}
+                      style={{ borderRadius: radii.md, fontWeight: 600, borderColor: colors.border }}
                     >
                       Call
                     </Button>
@@ -1480,16 +1629,16 @@ const ManageStore = ({
                   style={{
                     marginTop: 14,
                     paddingTop: 12,
-                    borderTop: '1px solid #f1f5f9',
+                    borderTop: `1px solid ${colors.borderLight}`,
                   }}
                 >
                   <Flex gap={8} align="flex-start">
-                    <EnvironmentOutlined style={{ color: '#ef4444', fontSize: 16, marginTop: 2 }} />
+                    <EnvironmentOutlined style={{ color: colors.semantic.error, fontSize: 16, marginTop: 2 }} />
                     <div>
-                      <Text strong style={{ fontSize: 12, color: '#64748b', textTransform: 'uppercase' }}>
+                      <Text strong style={{ fontSize: 12, color: colors.textMuted, textTransform: 'uppercase' }}>
                         Delivery Address
                       </Text>
-                      <div style={{ fontSize: 13, color: '#1e293b', marginTop: 2 }}>
+                      <div style={{ fontSize: 13, color: colors.textMain, marginTop: 2 }}>
                         {selectedOrder.delivery_address}
                       </div>
                     </div>
@@ -1503,7 +1652,7 @@ const ManageStore = ({
                   style={{
                     marginTop: 10,
                     padding: '8px 12px',
-                    borderRadius: 8,
+                    borderRadius: radii.md,
                     background: '#fefce8',
                     border: '1px solid #fef08a',
                   }}
@@ -1518,11 +1667,11 @@ const ManageStore = ({
             {/* Items Ordered List */}
             <Card
               title={
-                <span style={{ fontSize: 14, fontWeight: 700 }}>
-                  <ShoppingCartOutlined style={{ marginRight: 6, color: '#10b981' }} /> Order Items ({selectedOrder.items?.length || 0})
+                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: typography.fontFamily.headline }}>
+                  <ShoppingCartOutlined style={{ marginRight: 6, color: colors.semantic.success }} /> Order Items ({selectedOrder.items?.length || 0})
                 </span>
               }
-              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
               bodyStyle={{ padding: 16 }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -1533,18 +1682,18 @@ const ManageStore = ({
                     align="center"
                     style={{
                       paddingBottom: idx === selectedOrder.items.length - 1 ? 0 : 10,
-                      borderBottom: idx === selectedOrder.items.length - 1 ? 'none' : '1px solid #f1f5f9',
+                      borderBottom: idx === selectedOrder.items.length - 1 ? 'none' : `1px solid ${colors.borderLight}`,
                     }}
                   >
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+                      <div style={{ fontWeight: 700, fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                         {item.item_name}
                       </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
+                      <div style={{ fontSize: 12, color: colors.textMuted }}>
                         {item.quantity} x ₹{item.unit_price}
                       </div>
                     </div>
-                    <div style={{ fontWeight: 800, fontSize: 14, color: '#0f172a' }}>
+                    <div style={{ fontWeight: 800, fontSize: 14, color: colors.textMain }}>
                       ₹{item.subtotal || (item.quantity * item.unit_price)}
                     </div>
                   </Flex>
@@ -1555,17 +1704,17 @@ const ManageStore = ({
             {/* Bill Breakdown & Payment Mode */}
             <Card
               title={
-                <span style={{ fontSize: 14, fontWeight: 700 }}>
-                  <ThunderboltFilled style={{ marginRight: 6, color: '#f59e0b' }} /> Payment & Transaction Breakdown
+                <span style={{ fontSize: 14, fontWeight: 700, fontFamily: typography.fontFamily.headline }}>
+                  <ThunderboltFilled style={{ marginRight: 6, color: colors.tertiary }} /> Payment & Transaction Breakdown
                 </span>
               }
-              style={{ borderRadius: 12, border: '1px solid #e2e8f0' }}
+              style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
               bodyStyle={{ padding: 16 }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Flex justify="space-between" align="center">
-                  <Text type="secondary" style={{ fontSize: 13 }}>Items Subtotal</Text>
-                  <Text strong style={{ fontSize: 13 }}>
+                  <Text type="secondary" style={{ fontSize: 13, color: colors.textMuted }}>Items Subtotal</Text>
+                  <Text strong style={{ fontSize: 13, color: colors.textMain }}>
                     ₹{(
                       Number(selectedOrder.total_amount || 0) -
                       Number(selectedOrder.delivery_fee || 0) -
@@ -1575,26 +1724,26 @@ const ManageStore = ({
                 </Flex>
 
                 <Flex justify="space-between" align="center">
-                  <Text type="secondary" style={{ fontSize: 13 }}>Delivery Fee</Text>
-                  <Text strong style={{ fontSize: 13 }}>
+                  <Text type="secondary" style={{ fontSize: 13, color: colors.textMuted }}>Delivery Fee</Text>
+                  <Text strong style={{ fontSize: 13, color: colors.textMain }}>
                     ₹{Number(selectedOrder.delivery_fee || 0).toFixed(2)}
                   </Text>
                 </Flex>
 
                 <Flex justify="space-between" align="center">
-                  <Text type="secondary" style={{ fontSize: 13 }}>Platform Fee</Text>
-                  <Text strong style={{ fontSize: 13, color: '#16a34a' }}>
+                  <Text type="secondary" style={{ fontSize: 13, color: colors.textMuted }}>Platform Fee</Text>
+                  <Text strong style={{ fontSize: 13, color: colors.semantic.success }}>
                     {Number(selectedOrder.platform_fee || 0) > 0 ? `₹${selectedOrder.platform_fee}` : 'FREE (₹0)'}
                   </Text>
                 </Flex>
 
-                <Divider style={{ margin: '8px 0' }} />
+                <Divider style={{ margin: '8px 0', borderColor: colors.borderLight }} />
 
                 <Flex justify="space-between" align="center">
-                  <span style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                  <span style={{ fontWeight: 800, fontSize: 15, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                     Total Transaction Value
                   </span>
-                  <span style={{ fontWeight: 800, fontSize: 18, color: colors.primary }}>
+                  <span style={{ fontWeight: 800, fontSize: 18, color: colors.primary, fontFamily: typography.fontFamily.headline }}>
                     ₹{Number(selectedOrder.total_amount || 0).toFixed(2)}
                   </span>
                 </Flex>
@@ -1603,7 +1752,7 @@ const ManageStore = ({
                   style={{
                     marginTop: 8,
                     padding: '10px 12px',
-                    borderRadius: 8,
+                    borderRadius: radii.md,
                     background: selectedOrder.payment_mode === 'direct_upi' ? '#ecfdf5' : '#fffbeb',
                     border: selectedOrder.payment_mode === 'direct_upi' ? '1px solid #a7f3d0' : '1px solid #fde68a',
                   }}
@@ -1633,15 +1782,15 @@ const ManageStore = ({
             <div
               style={{
                 padding: '10px 14px',
-                borderRadius: 10,
-                background: '#FAF7F2',
-                border: '1px solid #EAE4DA',
+                borderRadius: radii.md,
+                background: colors.surfaceContainerLow,
+                border: `1px solid ${colors.border}`,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
               }}
             >
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <Text type="secondary" style={{ fontSize: 12, color: colors.textMuted }}>
                 Ref ID: {selectedOrder.id}
               </Text>
               <Button
@@ -1649,7 +1798,7 @@ const ManageStore = ({
                 size="small"
                 icon={<CopyOutlined />}
                 onClick={() => handleCopyOrderId(selectedOrder.order_number || selectedOrder.id)}
-                style={{ fontSize: 12, color: '#64748b' }}
+                style={{ fontSize: 12, color: colors.secondary }}
               >
                 Copy ID
               </Button>

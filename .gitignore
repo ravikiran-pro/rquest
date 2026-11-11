@@ -11,3 +11,4 @@ dev-dist
 backups/
 *.sql
 docs/
+.agents/

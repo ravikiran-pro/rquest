@@ -18,7 +18,7 @@ import {
   PhoneOutlined,
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
-import { colors, radii } from '../../app/styles/theme';
+import { colors, radii, typography } from '../../app/styles/theme';
 import FormSchemaBuilderModal from './form_schema_builder';
 
 const ShopsManager = () => {
@@ -99,7 +99,11 @@ const ShopsManager = () => {
 
   const columns = [
     {
-      title: 'Store Name',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Store Name
+        </span>
+      ),
       key: 'shop_name',
       render: (_, record) => (
         <Flex align="center" gap={10}>
@@ -111,11 +115,11 @@ const ShopsManager = () => {
             style={{ borderRadius: radii.md, background: colors.primaryLight, color: colors.primary }}
           />
           <div>
-            <div style={{ fontWeight: 700, color: '#0f172a', fontSize: 14 }}>
+            <div style={{ fontWeight: 700, color: colors.textMain, fontSize: 14, fontFamily: typography.fontFamily.headline }}>
               {record.shop_name}
             </div>
-            <div style={{ fontSize: 11, color: '#64748b' }}>
-              <EnvironmentOutlined style={{ marginRight: 4 }} />
+            <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+              <EnvironmentOutlined style={{ marginRight: 4, color: colors.tertiary }} />
               {record.area || record.address || 'Location not specified'}
             </div>
           </div>
@@ -123,34 +127,57 @@ const ShopsManager = () => {
       ),
     },
     {
-      title: 'Category / Archetype',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Category / Archetype
+        </span>
+      ),
       key: 'category',
       render: (_, record) => {
         const catName = record.shopCategory?.name || record.shop_type || 'General Store';
         return (
-          <Tag color="geekblue" style={{ fontWeight: 600, borderRadius: 6 }}>
+          <Tag
+            style={{
+              fontWeight: 600,
+              borderRadius: radii.full,
+              padding: '2px 10px',
+              background: colors.serviceChipBg,
+              borderColor: colors.serviceChipBorder,
+              color: colors.serviceChipText,
+              fontSize: 12,
+              fontFamily: typography.fontFamily.body,
+            }}
+          >
             {catName}
           </Tag>
         );
       },
     },
     {
-      title: 'Owner & Contact',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Owner & Contact
+        </span>
+      ),
       key: 'owner',
       render: (_, record) => (
         <div>
-          <div style={{ fontWeight: 600, fontSize: 13, color: '#1e293b' }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
             {record.owner?.username || 'Owner'}
           </div>
-          <div style={{ fontSize: 11, color: '#64748b' }}>
-            <PhoneOutlined style={{ marginRight: 4 }} />
+          <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+            <PhoneOutlined style={{ marginRight: 4, color: colors.secondary }} />
             {record.mobile_number || record.owner?.mobile || 'N/A'}
           </div>
         </div>
       ),
     },
     {
-      title: 'Active Form Engine',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Active Form Engine
+        </span>
+      ),
       key: 'form_schema',
       render: (_, record) => {
         const customCount = Array.isArray(record.form_schema) ? record.form_schema.length : 0;
@@ -158,12 +185,34 @@ const ShopsManager = () => {
         return (
           <div>
             {hasCustom ? (
-              <Tag color="purple" style={{ fontWeight: 700, borderRadius: 6 }}>
+              <Tag
+                style={{
+                  fontWeight: 700,
+                  borderRadius: radii.full,
+                  padding: '2px 10px',
+                  background: colors.secondaryLight,
+                  borderColor: 'rgba(1, 89, 197, 0.25)',
+                  color: colors.secondary,
+                  fontSize: 12,
+                  fontFamily: typography.fontFamily.body,
+                }}
+              >
                 <BuildOutlined style={{ marginRight: 4 }} />
                 Custom Override ({customCount} fields)
               </Tag>
             ) : (
-              <Tag color="default" style={{ color: '#64748b', borderRadius: 6 }}>
+              <Tag
+                style={{
+                  fontWeight: 500,
+                  borderRadius: radii.full,
+                  padding: '2px 10px',
+                  background: colors.surfaceContainerLow,
+                  borderColor: colors.border,
+                  color: colors.textMuted,
+                  fontSize: 12,
+                  fontFamily: typography.fontFamily.body,
+                }}
+              >
                 Standard Category Form
               </Tag>
             )}
@@ -172,7 +221,11 @@ const ShopsManager = () => {
       },
     },
     {
-      title: 'Action',
+      title: (
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          Action
+        </span>
+      ),
       key: 'action',
       render: (_, record) => {
         const customCount = Array.isArray(record.form_schema) ? record.form_schema.length : 0;
@@ -184,11 +237,13 @@ const ShopsManager = () => {
             icon={<SettingOutlined />}
             onClick={() => handleOpenFormBuilder(record)}
             style={{
-              borderRadius: radii.sm || 6,
+              borderRadius: radii.md,
               fontWeight: 600,
-              background: hasCustom ? colors.primary : undefined,
-              borderColor: hasCustom ? colors.primary : undefined,
-              color: hasCustom ? '#fff' : undefined,
+              fontFamily: typography.fontFamily.body,
+              background: hasCustom ? colors.primary : colors.surface,
+              borderColor: hasCustom ? colors.primary : colors.border,
+              color: hasCustom ? '#ffffff' : colors.primary,
+              boxShadow: hasCustom ? '0 2px 6px rgba(11, 45, 107, 0.16)' : 'none',
             }}
           >
             {hasCustom ? 'Edit Custom Form' : '+ Configure Custom Form'}
@@ -209,13 +264,13 @@ const ShopsManager = () => {
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onSearch={handleSearch}
-            style={{ width: 280 }}
+            style={{ width: 280, borderRadius: radii.md }}
           />
 
           <Select
             value={selectedCategory}
             onChange={handleCategoryFilter}
-            style={{ width: 220 }}
+            style={{ width: 220, borderRadius: radii.md }}
           >
             <Select.Option value="all">All Category Types</Select.Option>
             {categories.map((c) => (
@@ -230,24 +285,38 @@ const ShopsManager = () => {
           icon={<ReloadOutlined />}
           onClick={() => fetchShops(pagination.current)}
           loading={loading}
+          style={{
+            borderRadius: radii.md,
+            borderColor: colors.border,
+            color: colors.textMain,
+            fontWeight: 600,
+            fontFamily: typography.fontFamily.body,
+          }}
         >
           Refresh
         </Button>
       </Flex>
 
       {/* Stores Table */}
-      <Table
-        rowKey="id"
-        columns={columns}
-        dataSource={shopsList}
-        loading={loading}
-        pagination={{
-          ...pagination,
-          onChange: (page) => fetchShops(page),
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.lg,
+          overflow: 'hidden',
+          background: colors.surface,
         }}
-        bordered
-        style={{ borderRadius: 12, overflow: 'hidden' }}
-      />
+      >
+        <Table
+          rowKey="id"
+          columns={columns}
+          dataSource={shopsList}
+          loading={loading}
+          pagination={{
+            ...pagination,
+            onChange: (page) => fetchShops(page),
+          }}
+        />
+      </div>
 
       {/* Specific Shop Form Builder Modal */}
       <FormSchemaBuilderModal

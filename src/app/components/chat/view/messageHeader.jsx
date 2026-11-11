@@ -30,16 +30,18 @@ const MessageHeader = ({
 
   return (
     <Card
-      style={{ width: '100%' }}
+      style={{ width: '100%', marginBottom: 8 }}
       className="message-header-root"
       onClick={handleHeaderClick}
     >
       <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <Avatar
           style={{
-            backgroundColor: color,
+            backgroundColor: color || 'var(--primary, #0B2D6B)',
             verticalAlign: 'middle',
-            marginRight: 10,
+            marginRight: 12,
+            fontFamily: "var(--font-headline, 'Plus Jakarta Sans', sans-serif)",
+            fontWeight: 700,
           }}
           size="large"
         >
@@ -55,7 +57,7 @@ const MessageHeader = ({
         >
           <div className="title">
             <span>{name}</span>
-            <span className={`badge ${isOnline ? 'online' : 'offline'}`}></span>
+            <span className={`badge ${isOnline ? 'online' : 'offline'}`} />
           </div>
           <div className="sub-title">{message}</div>
         </Col>
@@ -65,7 +67,7 @@ const MessageHeader = ({
           <div>
             <span>{formatDateTime(dateTime)}</span>
           </div>
-          <div>{totalUnread ? <Badge count={totalUnread} /> : ''}</div>
+          <div>{totalUnread ? <Badge count={totalUnread} style={{ backgroundColor: 'var(--primary, #0B2D6B)' }} /> : null}</div>
         </Col>
       </div>
     </Card>
