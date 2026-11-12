@@ -239,16 +239,33 @@ const AddProductModal = ({
           metadata: {
             allow_instant_order: true,
             allow_enquiry: true,
-            food_type: 'veg',
-            min_rental_days: 1,
-            prep_time_mins: 15,
-            duration_mins: 45,
-            service_mode: 'both',
+            // A category form brings its own defaults; these are for the
+            // built-in fields shown when no form is configured.
+            ...(dynamicFields.length > 0
+              ? {}
+              : {
+                  food_type: 'veg',
+                  min_rental_days: 1,
+                  prep_time_mins: 15,
+                  duration_mins: 45,
+                  service_mode: 'both',
+                }),
           },
         });
       }
     }
   }, [open, editingItem, shop, defaultListingType, storeArchetype]);
+
+  // Show a rejected save: the server names the custom fields that need fixing
+  const showSaveError = (res, fallback) => {
+    const fieldErrors = Array.isArray(res?.errors) ? res.errors.filter((e) => e?.key) : [];
+    if (fieldErrors.length > 0) {
+      form.setFields(
+        fieldErrors.map((e) => ({ name: ['metadata', e.key], errors: [e.message] }))
+      );
+    }
+    message.error(res?.error || fallback);
+  };
 
   const handleFinish = async (values) => {
     if (!shop?.id) {
@@ -282,7 +299,7 @@ const AddProductModal = ({
           onSuccess?.(res.data);
           onClose();
         } else {
-          message.error(res?.error || 'Failed to update listing');
+          showSaveError(res, 'Failed to update listing');
         }
       } else {
         // Create new listing
@@ -296,7 +313,7 @@ const AddProductModal = ({
           onSuccess?.(res.data);
           onClose();
         } else {
-          message.error(res?.error || 'Failed to add item');
+          showSaveError(res, 'Failed to add item');
         }
       }
     } catch (err) {

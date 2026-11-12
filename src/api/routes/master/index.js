@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllCategories, updateCategoryStatus, editCategory, updateCategoryFormSchema, deleteCategory } = require('./category');
+const { getFormTemplates, getAllCategories, updateCategoryStatus, editCategory, updateCategoryFormSchema, deleteCategory } = require('./category');
 const { getAllSubCategories, updateSubCategoryStatus, editSubCategory, deleteSubCategory } = require('./subcategory');
 const { getAllMasterShops, updateShopFormSchema } = require('./shops');
 const uploadFiles = require('./aws');
@@ -16,6 +16,8 @@ router.post('/upload', upload.single('fileData'), uploadFiles);
 
 router.use(authMiddleware);
 
+
+router.get('/form_templates', getFormTemplates);
 
 router.post('/categories', getAllCategories);
 router.put('/categories/status', updateCategoryStatus);

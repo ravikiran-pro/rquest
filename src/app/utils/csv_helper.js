@@ -573,9 +573,11 @@ export const generateSampleCsv = (shop = null, category = null, customSchema = n
 };
 
 /**
- * Parse uploaded CSV text into structured product items with metadata
+ * Parse uploaded CSV text into structured product items with metadata.
+ * Columns that match a field of the category's form (schemaFields) are read as
+ * that field's type, so a number column "1" stays 1 instead of becoming true.
  */
-export const parseCSV = (csvText) => {
+export const parseCSV = (csvText, schemaFields = []) => {
   if (!csvText || typeof csvText !== 'string') return [];
   const lines = csvText.trim().split(/\r\n|\n/);
   if (lines.length < 2) return [];
@@ -595,6 +597,11 @@ export const parseCSV = (csvText) => {
     'listing_type',
     'is_available',
   ];
+
+  const fieldTypes = {};
+  (Array.isArray(schemaFields) ? schemaFields : []).forEach((f) => {
+    if (f?.key) fieldTypes[f.key] = f.type || 'text';
+  });
 
   const results = [];
   for (let i = 1; i < lines.length; i++) {
@@ -628,7 +635,13 @@ export const parseCSV = (csvText) => {
       // Boolean normalization
       const lower = val.toLowerCase();
       let parsedVal = val;
-      if (lower === 'true' || lower === 'yes' || lower === '1') {
+      const fieldType = fieldTypes[header];
+      if (fieldType && fieldType !== 'boolean') {
+        // A typed form field: keep the text as written, numbers as numbers
+        if (fieldType === 'number' && val !== '' && Number.isFinite(Number(val))) {
+          parsedVal = Number(val);
+        }
+      } else if (lower === 'true' || lower === 'yes' || lower === '1') {
         parsedVal = true;
       } else if (lower === 'false' || lower === 'no' || lower === '0') {
         parsedVal = false;

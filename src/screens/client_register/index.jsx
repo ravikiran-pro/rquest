@@ -325,6 +325,8 @@ const ClientRegister = () => {
                 listing_type: starter.listing_type,
                 metadata: {},
                 is_available: true,
+                // Starter items may skip the category form's required fields
+                is_starter: true,
               }),
               true
             ).catch(() => {});

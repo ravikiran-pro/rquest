@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { shops, categories, users, shop_listings } = require('../../models');
+const { normalizeSchema } = require('../../services/formSchema');
 
 const getAllMasterShops = async (req, res) => {
   try {
@@ -77,7 +78,15 @@ const updateShopFormSchema = async (req, res) => {
       });
     }
 
-    const schemaToSave = Array.isArray(form_schema) ? form_schema : [];
+    const { schema: schemaToSave, errors } = normalizeSchema(form_schema);
+    if (errors.length) {
+      return res.status(400).json({
+        success: false,
+        error: errors[0].message,
+        message: 'The form has fields that need fixing',
+        errors,
+      });
+    }
 
     await shops.update(
       { form_schema: schemaToSave },
