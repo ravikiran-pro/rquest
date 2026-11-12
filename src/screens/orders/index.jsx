@@ -1001,7 +1001,7 @@ const OrdersScreen = () => {
                             icon={<CarOutlined />}
                             loading={isActionBusy}
                             onClick={() => handleUpdateStoreOrderStatus(ord.id, 'open_to_delivery')}
-                            style={{ background: colors.cobalt, borderColor: colors.cobalt, fontWeight: 700, borderRadius: 8 }}
+                            style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 700, borderRadius: 8 }}
                           >
                             Open to Delivery Runner
                           </Button>

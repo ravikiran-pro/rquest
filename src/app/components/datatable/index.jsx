@@ -2,34 +2,34 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Space, Table, Tag, Input, Button, Row, Col, Avatar, Upload } from 'antd';
 import { apiConfig, config } from '../../utils';
-import { PlusOutlined } from '@ant-design/icons';
+import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
 import { colors, typography, radii } from '../../styles/theme';
 
 const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableChange, handleStatusChange, handleRowChange, handleDelete }) => {
-  const [data, setData] = useState(rows);
+  const [data, setData] = useState(Array.isArray(rows) ? rows : []);
   const [editableRow, setEditableRow] = useState(null);
-  const [isNew, setIsNew] = useState(false)
+  const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
-    setData(rows);
+    setData(Array.isArray(rows) ? rows : []);
+    setEditableRow(null);
+    setIsNew(false);
   }, [rows]);
 
-
   const handleStateUpdate = (updatedState, index) => {
-    const newData = data;
-    newData[index] = {
-      ...newData[index],
-      ...updatedState
+    const nextRow = {
+      ...(data?.[index] || {}),
+      ...updatedState,
     };
-    setData([...newData])
-    return newData[index]
-  }
+    setData((prev) => (prev || []).map((row, idx) => (idx === index ? nextRow : row)));
+    return nextRow;
+  };
 
   const handleChange = (keyName, value, index) => {
     if (keyName === 'is_active') {
-      handleStatusChange({ category_id: data[index]?.id, is_active: value })
+      handleStatusChange({ category_id: data[index]?.id, is_active: value });
     }
-    handleStateUpdate({ [keyName]: value }, index)
+    handleStateUpdate({ [keyName]: value }, index);
   };
 
   const handleEdit = (index) => {
@@ -37,9 +37,24 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
   };
 
   const handleSave = (index) => {
-    const newData = data;
-    handleRowChange({ ...newData[index] })
-    setEditableRow(null)
+    const currentRow = data?.[index];
+    if (currentRow) {
+      handleRowChange({ ...currentRow });
+    }
+    setEditableRow(null);
+    setIsNew(false);
+  };
+
+  const handleToggleNew = () => {
+    if (isNew) {
+      setData(Array.isArray(rows) ? [...rows] : []);
+      setEditableRow(null);
+      setIsNew(false);
+    } else {
+      setData((prev) => [{ ...(initRow || {}), __tempKey: `new-${Date.now()}` }, ...(prev || [])]);
+      setEditableRow(0);
+      setIsNew(true);
+    }
   };
 
   const onImageUpload = async (file, index) => {
@@ -51,11 +66,12 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
         method: 'POST',
         body: formData,
       });
-      const { data } = await response.json();
-      handleStateUpdate({ 'img_url': data?.Location }, index)
+      const resJson = await response.json();
+      handleStateUpdate({ img_url: resJson?.data?.Location }, index);
     } catch (error) {
       console.error(error);
     }
+    return false;
   };
 
   const renderCell = (item, value, record, index) => {
@@ -78,7 +94,12 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
             </Button>
           </Upload>
         ) : (
-          <Avatar src={value || 'data:image/jpeg;base64,/9j/4AAQ...'} alt='none' />
+          <Avatar
+            src={value || undefined}
+            icon={!value ? <PictureOutlined /> : undefined}
+            alt={record?.name || 'Item'}
+            style={{ backgroundColor: colors.primaryLight, color: colors.primary }}
+          />
         );
       case 'menu':
         return (
@@ -110,7 +131,7 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
               color: value ? colors.semantic.success : colors.semantic.error,
               borderColor: value ? colors.semantic.successBorder : colors.semantic.errorBorder,
             }}
-            onClick={() => handleChange("is_active", !value, index)}
+            onClick={() => handleChange('is_active', !value, index)}
           >
             {value ? 'Active' : 'Inactive'}
           </Tag>
@@ -131,7 +152,7 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
               size="small"
               style={{ color: colors.textMuted, fontWeight: 500, padding: 0 }}
               onClick={() => {
-                setData(rows);
+                setData(Array.isArray(rows) ? [...rows] : []);
                 setEditableRow(null);
                 setIsNew(false);
               }}
@@ -163,7 +184,7 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
       default:
         return isEditable ? (
           <Input
-            defaultValue={value}
+            value={value ?? ''}
             style={{ borderRadius: radii.md, borderColor: colors.border }}
             onChange={(e) => handleChange(key, e.target.value, index)}
           />
@@ -185,17 +206,6 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
     render: (value, record, index) => renderCell(item, value, record, index),
   }));
 
-
-  React.useEffect(() => {
-    if (isNew) {
-      setData([initRow, ...data]);
-      setEditableRow(0);
-    } else {
-      setData([...rows]);
-      setEditableRow(null);
-    }
-  }, [isNew]);
-
   return (
     <>
       <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
@@ -211,9 +221,9 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
                   fontWeight: 600,
                   boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
                 }}
-                onClick={() => setIsNew(!isNew)}
+                onClick={handleToggleNew}
               >
-                Add New
+                {isNew ? 'Cancel New' : 'Add New'}
                 <PlusOutlined />
               </Button>
             </Col>
@@ -229,10 +239,16 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
         }}
       >
         <Table
+          rowKey={(record, idx) =>
+            record?.id !== undefined && record?.id !== null
+              ? record.id
+              : record?.__tempKey || `row-${idx}`
+          }
           columns={columnsRender}
           dataSource={data}
           pagination={pagination}
           onChange={handleTableChange}
+          scroll={{ x: 'max-content' }}
         />
       </div>
     </>

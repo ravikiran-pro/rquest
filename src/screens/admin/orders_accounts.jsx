@@ -564,7 +564,7 @@ const AdminOrdersAccounts = () => {
     <div>
       {/* Financial Accounts KPI Cards */}
       <Row gutter={[16, 16]} style={{ marginBottom: 20 }}>
-        <Col xs={12} sm={8} md={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surface }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Platform GMV</span>}
@@ -575,7 +575,7 @@ const AdminOrdersAccounts = () => {
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.semantic.successBorder}`, background: colors.surface }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.semantic.successHover, fontFamily: typography.fontFamily.headline }}>Platform Revenue</span>}
@@ -586,7 +586,7 @@ const AdminOrdersAccounts = () => {
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surface }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Store Payouts</span>}
@@ -597,8 +597,8 @@ const AdminOrdersAccounts = () => {
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={4}>
-          <Card size="small" style={{ borderRadius: radii.lg, border: '1px solid #d2e3fc', background: colors.primaryLight }}>
+        <Col xs={12} sm={8} lg={4}>
+          <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.verifiedChipBorder}`, background: colors.primaryLight }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.primary, fontFamily: typography.fontFamily.headline }}>Delivery Fees</span>}
               value={accounts.totalDeliveryFees}
@@ -608,7 +608,7 @@ const AdminOrdersAccounts = () => {
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.serviceChipBorder}`, background: colors.serviceChipBg }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.serviceChipText, fontFamily: typography.fontFamily.headline }}>Total Orders</span>}
@@ -617,7 +617,7 @@ const AdminOrdersAccounts = () => {
             />
           </Card>
         </Col>
-        <Col xs={12} sm={8} md={4}>
+        <Col xs={12} sm={8} lg={4}>
           <Card size="small" style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}`, background: colors.surfaceContainerLow }}>
             <Statistic
               title={<span style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.headline }}>Completed</span>}
@@ -636,23 +636,23 @@ const AdminOrdersAccounts = () => {
           marginBottom: 16,
           background: colors.surface,
         }}
-        bodyStyle={{ padding: 16 }}
+        styles={{ body: { padding: 16 } }}
       >
         <Row gutter={[12, 12]} align="middle" justify="space-between">
           <Col xs={24} md={12}>
-            <Space wrap style={{ width: '100%' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, width: '100%' }}>
               <Input
                 placeholder="Search Order #, Shop, Owner, Customer, Phone..."
                 prefix={<SearchOutlined style={{ color: colors.textLight }} />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ width: 280, borderRadius: radii.md }}
+                style={{ width: '100%', maxWidth: 280, borderRadius: radii.md }}
                 allowClear
               />
               <Select
                 value={selectedShopFilter}
                 onChange={setSelectedShopFilter}
-                style={{ width: 170, borderRadius: radii.md }}
+                style={{ width: '100%', maxWidth: 170, borderRadius: radii.md }}
               >
                 <Option value="all">All Stores ({uniqueShops.length})</Option>
                 {uniqueShops.map((s) => (
@@ -664,7 +664,7 @@ const AdminOrdersAccounts = () => {
               <Select
                 value={selectedStatusFilter}
                 onChange={setSelectedStatusFilter}
-                style={{ width: 150, borderRadius: radii.md }}
+                style={{ width: '100%', maxWidth: 150, borderRadius: radii.md }}
               >
                 <Option value="all">All Statuses</Option>
                 <Option value="placed">Placed / Pending</Option>
@@ -675,10 +675,10 @@ const AdminOrdersAccounts = () => {
                 <Option value="completed">Completed</Option>
                 <Option value="cancelled">Cancelled</Option>
               </Select>
-            </Space>
+            </div>
           </Col>
 
-          <Col xs={24} md={12} style={{ textAlign: 'right' }}>
+          <Col xs={24} md={12} className="admin-orders-actions-col">
             <Space wrap>
               <Button
                 icon={<ReloadOutlined />}
@@ -754,7 +754,7 @@ const AdminOrdersAccounts = () => {
             Order #{selectedOrder?.order_number || ''} Audit & Accounts Details
           </span>
         }
-        visible={detailModalVisible}
+        open={detailModalVisible}
         onCancel={() => setDetailModalVisible(false)}
         footer={[
           <Button
@@ -766,6 +766,7 @@ const AdminOrdersAccounts = () => {
           </Button>,
         ]}
         width={700}
+        style={{ maxWidth: 'calc(100vw - 24px)' }}
       >
         {selectedOrder && (
           <div>
@@ -879,23 +880,23 @@ const AdminOrdersAccounts = () => {
                     if (st === 'order_prepare' || st === 'open_to_delivery' || st === 'out_for_delivery') {
                       bg = colors.secondary;
                       border = colors.secondary;
-                      textColor = '#ffffff';
+                      textColor = colors.white;
                     } else if (st === 'ready_for_pickup') {
                       bg = colors.primary;
                       border = colors.primary;
-                      textColor = '#ffffff';
+                      textColor = colors.white;
                     } else if (st === 'completed') {
                       bg = colors.semantic.success;
                       border = colors.semantic.success;
-                      textColor = '#ffffff';
+                      textColor = colors.white;
                     } else if (st === 'cancelled') {
                       bg = colors.semantic.error;
                       border = colors.semantic.error;
-                      textColor = '#ffffff';
+                      textColor = colors.white;
                     } else {
                       bg = colors.primary;
                       border = colors.primary;
-                      textColor = '#ffffff';
+                      textColor = colors.white;
                     }
                   } else if (st === 'cancelled') {
                     textColor = colors.semantic.error;

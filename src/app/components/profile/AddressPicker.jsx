@@ -10,7 +10,7 @@ import {
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 import AddressModal from './AddressModal';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, typography } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -43,11 +43,27 @@ const AddressPicker = ({
     fetchAddresses();
   }, []);
 
-  const getTagColor = (label) => {
+  const getTagStyle = (label) => {
     const l = (label || '').toLowerCase();
-    if (l === 'home') return 'blue';
-    if (l === 'work' || l === 'office') return 'purple';
-    return 'default';
+    if (l === 'home') {
+      return {
+        background: colors.verifiedChipBg,
+        color: colors.verifiedChipText,
+        border: `1px solid ${colors.verifiedChipBorder}`,
+      };
+    }
+    if (l === 'work' || l === 'office') {
+      return {
+        background: colors.serviceChipBg,
+        color: colors.serviceChipText,
+        border: `1px solid ${colors.serviceChipBorder}`,
+      };
+    }
+    return {
+      background: colors.surfaceContainerLow,
+      color: colors.textMuted,
+      border: `1px solid ${colors.border}`,
+    };
   };
 
   const getTagIcon = (label) => {
@@ -65,10 +81,11 @@ const AddressPicker = ({
   };
 
   return (
-    <div style={{ width: '100%' }}>
+    <div style={{ width: '100%', fontFamily: typography.fontFamily.body }}>
       {loading ? (
-        <Flex justify="center" align="center" style={{ padding: '16px 0' }}>
-          <Spin size="small" tip="Loading saved addresses..." />
+        <Flex justify="center" align="center" gap={8} style={{ padding: '16px 0' }}>
+          <Spin size="small" />
+          <Text style={{ fontSize: 12, color: colors.textMuted }}>Loading saved addresses...</Text>
         </Flex>
       ) : (
         <Flex vertical gap={8}>
@@ -82,7 +99,7 @@ const AddressPicker = ({
                 border: isCurrentLocationSelected
                   ? `2px solid ${colors.primary}`
                   : `1px solid ${colors.border}`,
-                background: isCurrentLocationSelected ? colors.primaryLight : '#ffffff',
+                background: isCurrentLocationSelected ? colors.primaryLight : colors.surface,
                 cursor: 'pointer',
                 display: 'flex',
                 alignItems: 'center',
@@ -107,10 +124,10 @@ const AddressPicker = ({
                   <AimOutlined />
                 </div>
                 <div>
-                  <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block' }}>
+                  <Text strong style={{ fontSize: 13, color: colors.textMain, display: 'block', fontFamily: typography.fontFamily.headline }}>
                     Use Live GPS Location
                   </Text>
-                  <Text type="secondary" style={{ fontSize: 11 }}>
+                  <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                     Locate current device position automatically
                   </Text>
                 </div>
@@ -139,7 +156,7 @@ const AddressPicker = ({
                   padding: '10px 14px',
                   borderRadius: radii.md,
                   border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                  background: isSelected ? colors.primaryLight : '#ffffff',
+                  background: isSelected ? colors.primaryLight : colors.surface,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -149,21 +166,38 @@ const AddressPicker = ({
                 }}
               >
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <Flex align="center" gap={6} style={{ marginBottom: 3 }}>
+                  <Flex align="center" gap={6} style={{ marginBottom: 3 }} wrap="wrap">
                     <Tag
-                      color={getTagColor(addr.label)}
                       icon={getTagIcon(addr.label)}
-                      style={{ borderRadius: 6, fontWeight: 700, fontSize: 11, margin: 0 }}
+                      style={{
+                        ...getTagStyle(addr.label),
+                        borderRadius: radii.xs,
+                        fontWeight: 700,
+                        fontSize: 11,
+                        margin: 0,
+                        fontFamily: typography.fontFamily.body,
+                      }}
                     >
                       {addr.label || 'Saved'}
                     </Tag>
                     {addr.is_default && (
-                      <Tag color="green" style={{ borderRadius: 6, fontSize: 10, margin: 0 }}>
+                      <Tag
+                        style={{
+                          background: colors.semantic.successLight,
+                          color: colors.semantic.successHover,
+                          border: `1px solid ${colors.semantic.successBorder}`,
+                          borderRadius: radii.xs,
+                          fontSize: 10,
+                          fontWeight: 600,
+                          margin: 0,
+                          fontFamily: typography.fontFamily.body,
+                        }}
+                      >
                         Default
                       </Tag>
                     )}
                     {addr.recipient_name && (
-                      <Text strong style={{ fontSize: 12, color: '#334155' }}>
+                      <Text strong style={{ fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
                         • {addr.recipient_name}
                       </Text>
                     )}
@@ -172,7 +206,8 @@ const AddressPicker = ({
                   <div
                     style={{
                       fontSize: 12,
-                      color: '#475569',
+                      color: colors.textMuted,
+                      fontFamily: typography.fontFamily.body,
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -209,6 +244,7 @@ const AddressPicker = ({
               height: 38,
               borderColor: colors.borderDark,
               color: colors.primary,
+              fontFamily: typography.fontFamily.body,
             }}
           >
             + Add New Delivery Address

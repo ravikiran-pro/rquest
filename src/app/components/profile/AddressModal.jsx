@@ -34,7 +34,7 @@ import {
   createLocationSessionToken,
 } from '../../utils';
 import LeafletComponent from '../leaflet/leaflet';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -44,6 +44,7 @@ const AddressModal = ({
   onSuccess,
   initialData = null,
   userProfile = {},
+  zIndex,
 }) => {
   const [form] = Form.useForm();
   const screens = Grid.useBreakpoint();
@@ -145,9 +146,9 @@ const AddressModal = ({
             value: r.display_name || r.name,
             key: `loc-${r.place_id || `${r.lat}-${r.lon}`}-${i}`,
             label: (
-              <div key={`loc-${i}`} style={{ padding: '4px 0' }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#0f172a' }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: '#64748b' }}>
+              <div key={`loc-${i}`} style={{ padding: '4px 0', fontFamily: typography.fontFamily.body }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: colors.textMain }}>{r.name}</div>
+                <div style={{ fontSize: 11, color: colors.textMuted }}>
                   {r.secondary_text || r.display_name}
                 </div>
               </div>
@@ -285,6 +286,7 @@ const AddressModal = ({
         open={open}
         onCancel={onClose}
         footer={null}
+        zIndex={zIndex}
         title={
           <Flex align="center" gap={10}>
             <div
@@ -303,10 +305,17 @@ const AddressModal = ({
               <EnvironmentOutlined />
             </div>
             <div>
-              <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a' }}>
+              <div
+                style={{
+                  fontWeight: 700,
+                  fontSize: 16,
+                  color: colors.textMain,
+                  fontFamily: typography.fontFamily.headline,
+                }}
+              >
                 {initialData ? 'Edit Address' : 'Add New Address'}
               </div>
-              <Text type="secondary" style={{ fontSize: 11 }}>
+              <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 Provide precise delivery details for seamless order delivery
               </Text>
             </div>
@@ -318,16 +327,17 @@ const AddressModal = ({
             maxHeight: '78vh',
             overflowY: 'auto',
             padding: isMobile ? '14px 4px' : '20px 8px',
+            fontFamily: typography.fontFamily.body,
           },
         }}
-        destroyOnClose
+        destroyOnHidden
       >
         <Form
           form={form}
           layout="vertical"
           onFinish={handleFinish}
           initialValues={{ label: 'Home', is_default: false }}
-          style={{ marginTop: 12 }}
+          style={{ marginTop: 12, fontFamily: typography.fontFamily.body }}
         >
           {/* Address Label Capsule */}
           <Form.Item name="label" label="Address Tag / Label" rules={[{ required: true }]}>
@@ -347,19 +357,27 @@ const AddressModal = ({
           {/* Location Pinpoint & Map Assist */}
           <div
             style={{
-              background: '#FAF7F2',
-              border: '1px solid #EAE4DA',
-              borderRadius: 12,
+              background: colors.surfaceContainerLow,
+              border: `1px solid ${colors.border}`,
+              borderRadius: radii.lg,
               padding: '12px 14px',
               marginBottom: 16,
             }}
           >
             <Flex justify="space-between" align="center" style={{ marginBottom: 8 }} wrap="wrap" gap={8}>
               <div>
-                <Text strong style={{ fontSize: 13, color: '#1C1C19', display: 'block' }}>
+                <Text
+                  strong
+                  style={{
+                    fontSize: 13,
+                    color: colors.textMain,
+                    display: 'block',
+                    fontFamily: typography.fontFamily.headline,
+                  }}
+                >
                   Location Pinpoint (GPS)
                 </Text>
-                <Text type="secondary" style={{ fontSize: 11 }}>
+                <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.mono }}>
                   Coordinates: {coords[0].toFixed(4)}, {coords[1].toFixed(4)}
                 </Text>
               </div>
@@ -370,7 +388,14 @@ const AddressModal = ({
                   icon={detectingGps ? <Spin size="small" /> : <AimOutlined />}
                   onClick={detectGpsLocation}
                   loading={detectingGps}
-                  style={{ borderRadius: 6, fontWeight: 600, fontSize: 12 }}
+                  style={{
+                    borderRadius: radii.sm,
+                    borderColor: colors.border,
+                    color: colors.textMain,
+                    fontWeight: 600,
+                    fontSize: 12,
+                    fontFamily: typography.fontFamily.body,
+                  }}
                 >
                   Locate Me
                 </Button>
@@ -380,7 +405,14 @@ const AddressModal = ({
                   ghost
                   icon={<EnvironmentOutlined />}
                   onClick={() => setShowMapPicker(true)}
-                  style={{ borderRadius: 6, fontWeight: 600, fontSize: 12 }}
+                  style={{
+                    borderRadius: radii.sm,
+                    borderColor: colors.primary,
+                    color: colors.primary,
+                    fontWeight: 600,
+                    fontSize: 12,
+                    fontFamily: typography.fontFamily.body,
+                  }}
                 >
                   Pick on Map
                 </Button>
@@ -390,7 +422,7 @@ const AddressModal = ({
             {/* Quick Locality Autocomplete Search */}
             <AutoComplete
               style={{ width: '100%' }}
-              className='address-search'
+              className="address-search"
               options={searchOptions}
               value={searchLocalityValue}
               onChange={(val) => {
@@ -403,9 +435,9 @@ const AddressModal = ({
             >
               <Input
                 allowClear
-                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                prefix={<SearchOutlined style={{ color: colors.textLight }} />}
                 suffix={searchingArea ? <Spin size="small" /> : null}
-                style={{ borderRadius: 8, height: 36, fontSize: 13 }}
+                style={{ borderRadius: radii.md, height: 38, fontSize: 13 }}
               />
             </AutoComplete>
           </div>
@@ -418,7 +450,7 @@ const AddressModal = ({
               rules={[{ required: true, message: 'Please enter contact person name' }]}
               style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
             >
-              <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="e.g. Rahul Sharma" />
+              <Input prefix={<UserOutlined style={{ color: colors.textLight }} />} placeholder="e.g. Rahul Sharma" />
             </Form.Item>
 
             <Form.Item
@@ -430,7 +462,7 @@ const AddressModal = ({
               ]}
               style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
             >
-              <Input prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="10-digit mobile number" />
+              <Input prefix={<PhoneOutlined style={{ color: colors.textLight }} />} placeholder="10-digit mobile number" />
             </Form.Item>
           </Flex>
 
@@ -510,10 +542,13 @@ const AddressModal = ({
               onClick={onClose}
               disabled={saving}
               style={{
-                borderRadius: 8,
+                borderRadius: radii.md,
+                borderColor: colors.border,
+                color: colors.textMain,
                 fontWeight: 600,
                 flex: isMobile ? 1 : 'none',
                 height: isMobile ? 42 : 'auto',
+                fontFamily: typography.fontFamily.body,
               }}
             >
               Cancel
@@ -531,6 +566,8 @@ const AddressModal = ({
                 padding: '0 24px',
                 flex: isMobile ? 1 : 'none',
                 height: isMobile ? 42 : 'auto',
+                boxShadow: shadows.primary,
+                fontFamily: typography.fontFamily.body,
               }}
             >
               {initialData ? 'Update Address' : 'Save Address'}
@@ -545,6 +582,7 @@ const AddressModal = ({
           open={showMapPicker}
           onCancel={() => setShowMapPicker(false)}
           footer={null}
+          zIndex={zIndex ? zIndex + 100 : 1200}
           width="100vw"
           wrapClassName="full-view-map-modal"
           closable={false}
@@ -571,6 +609,7 @@ AddressModal.propTypes = {
   onSuccess: PropTypes.func,
   initialData: PropTypes.object,
   userProfile: PropTypes.object,
+  zIndex: PropTypes.number,
 };
 
 export default AddressModal;

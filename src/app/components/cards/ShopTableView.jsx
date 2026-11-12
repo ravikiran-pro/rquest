@@ -162,7 +162,7 @@ const ShopTableView = ({
         >
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Distance</Text>
-            <Text strong style={{ fontSize: 12, color: colors.text }}>{distKm} km</Text>
+            <Text strong style={{ fontSize: 12, color: colors.textMain }}>{distKm} km</Text>
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>ETA</Text>
@@ -170,7 +170,7 @@ const ShopTableView = ({
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Replies in</Text>
-            <Text strong style={{ fontSize: 12, color: colors.cobalt }}>{getResponseTime(index)}</Text>
+            <Text strong style={{ fontSize: 12, color: colors.secondary }}>{getResponseTime(index)}</Text>
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Price</Text>

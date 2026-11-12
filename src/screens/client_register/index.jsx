@@ -346,16 +346,19 @@ const ClientRegister = () => {
     }
   };
 
-  // If a store is selected, open the ManageStore hub
+  // If a store is selected, open the ManageStore hub inside the warm merchant canvas
   if (managedShop) {
     return (
-      <ManageStore
-        shop={managedShop}
-        allShops={allShops}
-        onSwitchShop={(target) => setManagedShop(target)}
-        onClose={() => setManagedShop(null)}
-        onRefreshShop={fetchAllShops}
-      />
+      <div className="merchant-page-wrapper">
+        <div className="merchant-ambient-dots" />
+        <ManageStore
+          shop={managedShop}
+          allShops={allShops}
+          onSwitchShop={(target) => setManagedShop(target)}
+          onClose={() => setManagedShop(null)}
+          onRefreshShop={fetchAllShops}
+        />
+      </div>
     );
   }
 
@@ -431,12 +434,12 @@ const ClientRegister = () => {
                 className="merchant-clean-card"
                 style={{
                   textAlign: 'center',
-                  padding: screens.xs ? '32px 16px' : '48px 24px',
                   background: colors.surface,
                   border: `1px solid ${colors.border}`,
                   borderRadius: radii.xl,
                   boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
                 }}
+                styles={{ body: { padding: screens.xs ? '32px 16px' : '48px 24px' } }}
               >
                 <div
                   style={{
@@ -710,13 +713,13 @@ const ClientRegister = () => {
                       style={{ marginBottom: 14 }}
                     >
                       <Input
+                        className="merchant-warm-input"
                         size="large"
                         placeholder="e.g. City Supermarket, Biryani Pot, HealthPlus Pharmacy"
                         value={onboardingData.shop_name}
                         onChange={(e) =>
                           setOnboardingData({ ...onboardingData, shop_name: e.target.value })
                         }
-                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                       />
                     </Form.Item>
 
@@ -726,6 +729,7 @@ const ClientRegister = () => {
                       style={{ marginBottom: 0 }}
                     >
                       <Input
+                        className="merchant-warm-input"
                         size="large"
                         prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
                         placeholder="10-digit mobile number for order notifications"
@@ -733,7 +737,6 @@ const ClientRegister = () => {
                         onChange={(e) =>
                           setOnboardingData({ ...onboardingData, mobile_number: e.target.value })
                         }
-                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                       />
                     </Form.Item>
                   </Form>
@@ -819,13 +822,13 @@ const ClientRegister = () => {
                       style={{ marginBottom: 14 }}
                     >
                       <Input
+                        className="merchant-warm-input"
                         size="large"
                         placeholder="e.g. 24/A Perambur Barracks Road"
                         value={onboardingData.address}
                         onChange={(e) =>
                           setOnboardingData({ ...onboardingData, address: e.target.value })
                         }
-                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                       />
                     </Form.Item>
 
@@ -835,13 +838,13 @@ const ClientRegister = () => {
                       style={{ marginBottom: 14 }}
                     >
                       <Input
+                        className="merchant-warm-input"
                         size="large"
                         placeholder="e.g. Indiranagar, Anna Nagar, HSR Layout"
                         value={onboardingData.area}
                         onChange={(e) =>
                           setOnboardingData({ ...onboardingData, area: e.target.value })
                         }
-                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                       />
                     </Form.Item>
 
@@ -850,12 +853,12 @@ const ClientRegister = () => {
                       style={{ marginBottom: 0 }}
                     >
                       <Input
+                        className="merchant-warm-input"
                         placeholder="https://maps.app.goo.gl/..."
                         value={onboardingData.directions}
                         onChange={(e) =>
                           setOnboardingData({ ...onboardingData, directions: e.target.value })
                         }
-                        style={{ borderRadius: radii.md, borderColor: colors.border }}
                       />
                     </Form.Item>
                   </Form>
@@ -959,12 +962,12 @@ const ClientRegister = () => {
                       Store Cover Photo URL (Optional)
                     </label>
                     <Input
+                      className="merchant-warm-input"
                       placeholder="https://images.unsplash.com/..."
                       value={onboardingData.img_url}
                       onChange={(e) =>
                         setOnboardingData({ ...onboardingData, img_url: e.target.value })
                       }
-                      style={{ borderRadius: radii.md, borderColor: colors.border }}
                     />
                   </div>
                 </div>

@@ -344,7 +344,7 @@ const CartDrawer = () => {
     let targetOwnerId = cart.owner_id;
     if (!targetOwnerId && cart.shop_id) {
       try {
-        const shopDetails = await netWorkCall(`${apiConfig.shops}/${cart.shop_id}/details`, 'GET', null, false);
+        const shopDetails = await netWorkCall(`${apiConfig.shop_details}/${cart.shop_id}/details`, 'GET', null, false);
         targetOwnerId = shopDetails?.data?.owner_id;
       } catch (err) {
         console.error('Error fetching shop details for chat:', err);
@@ -450,7 +450,6 @@ const CartDrawer = () => {
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
-                    maxWidth: 240,
                   }}
                   title={cart.shop_name}
                 >
@@ -463,7 +462,6 @@ const CartDrawer = () => {
         extra={
           <Button
             type="text"
-            shape="circle"
             icon={<CloseOutlined style={{ fontSize: 14, color: colors.textMuted }} />}
             onClick={handleClose}
             style={{
@@ -698,7 +696,6 @@ const CartDrawer = () => {
                         fontSize: 14,
                         color: colors.textMain,
                         letterSpacing: '-0.01em',
-                        maxWidth: 180,
                         whiteSpace: 'nowrap',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -1054,7 +1051,6 @@ const CartDrawer = () => {
                           style={{
                             borderRadius: radii.md,
                             fontSize: 13,
-                            border: `1px solid ${colors.border}`,
                             fontFamily: typography.fontFamily.body,
                           }}
                         />
@@ -1103,7 +1099,6 @@ const CartDrawer = () => {
                 onChange={(e) => setPhone(e.target.value)}
                 style={{
                   borderRadius: radii.md,
-                  border: `1px solid ${colors.border}`,
                   fontFamily: typography.fontFamily.body,
                 }}
               />
@@ -1128,7 +1123,6 @@ const CartDrawer = () => {
                 onChange={(e) => setNotes(e.target.value)}
                 style={{
                   borderRadius: radii.md,
-                  border: `1px solid ${colors.border}`,
                   fontFamily: typography.fontFamily.body,
                 }}
               />
@@ -1371,7 +1365,6 @@ const CartDrawer = () => {
                       borderRadius: radii.md,
                       fontSize: 12,
                       marginBottom: 6,
-                      border: `1px solid ${colors.border}`,
                       fontFamily: typography.fontFamily.body,
                     }}
                   />
@@ -1485,7 +1478,7 @@ const CartDrawer = () => {
         onCancel={() => setIsOnboardingModalOpen(false)}
         footer={null}
         width={400}
-        destroyOnClose
+        destroyOnHidden
         centered
         zIndex={1400}
       >
@@ -1500,7 +1493,7 @@ const CartDrawer = () => {
                 prefix={<UserOutlined style={{ color: colors.textLight }} />}
                 placeholder="Mobile number or username"
                 size="large"
-                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
               />
             </Form.Item>
             <Form.Item
@@ -1512,7 +1505,7 @@ const CartDrawer = () => {
                 prefix={<LockOutlined style={{ color: colors.textLight }} />}
                 placeholder="Password"
                 size="large"
-                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
               />
             </Form.Item>
             <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
@@ -1535,14 +1528,16 @@ const CartDrawer = () => {
                 Log in
               </Button>
             </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
-              <span style={{ color: colors.textMuted }}>Don&apos;t have an account? </span>
-              <a
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
+              <span style={{ color: colors.textMuted }}>Don&apos;t have an account?</span>
+              <Button
+                type="link"
+                size="small"
                 onClick={() => setAuthMode('register')}
-                style={{ marginLeft: 6, color: colors.secondary, fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: 0, height: 'auto', marginLeft: 6, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
               >
                 Register Here
-              </a>
+              </Button>
             </div>
           </Form>
         ) : (
@@ -1561,7 +1556,7 @@ const CartDrawer = () => {
                 prefix={<UserOutlined style={{ color: colors.textLight }} />}
                 placeholder="Username"
                 size="large"
-                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
               />
             </Form.Item>
             <Form.Item
@@ -1573,7 +1568,7 @@ const CartDrawer = () => {
                 prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
                 placeholder="Mobile number"
                 size="large"
-                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
               />
             </Form.Item>
             <Form.Item
@@ -1585,7 +1580,7 @@ const CartDrawer = () => {
                 prefix={<LockOutlined style={{ color: colors.textLight }} />}
                 placeholder="Password"
                 size="large"
-                style={{ borderRadius: radii.md, border: `1px solid ${colors.border}`, fontFamily: typography.fontFamily.body }}
+                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
               />
             </Form.Item>
             <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
@@ -1608,14 +1603,16 @@ const CartDrawer = () => {
                 Register
               </Button>
             </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
-              <span style={{ color: colors.textMuted }}>Already have an account? </span>
-              <a
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
+              <span style={{ color: colors.textMuted }}>Already have an account?</span>
+              <Button
+                type="link"
+                size="small"
                 onClick={() => setAuthMode('login')}
-                style={{ marginLeft: 6, color: colors.secondary, fontWeight: 600, cursor: 'pointer' }}
+                style={{ padding: 0, height: 'auto', marginLeft: 6, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
               >
                 Login Here
-              </a>
+              </Button>
             </div>
           </Form>
         )}
@@ -1627,6 +1624,7 @@ const CartDrawer = () => {
           onClose={() => setIsAddAddressModalOpen(false)}
           onSuccess={handleNewAddressCreated}
           userProfile={user_data}
+          zIndex={1400}
         />
       )}
     </>

@@ -36,15 +36,15 @@ import { apiConfig, netWorkCall } from '../../utils';
 import { colors } from '../../styles';
 
 const AVATAR_PALETTE = [
-  '#0B2D6B', // Maritime Navy
-  '#0159C5', // Radiant Cobalt
-  '#5B3A29', // Roasted Amber-Brown
-  '#059669', // Emerald
-  '#2E6FDB', // Cobalt Container
-  '#0284c7', // Sky Blue
-  '#d97706', // Amber
-  '#ea580c', // Orange
-  '#926a56', // Umber Container
+  colors.primary, // Maritime Navy (#0B2D6B)
+  colors.secondary, // Radiant Cobalt (#0159c5)
+  colors.tertiary, // Roasted Amber-Brown (#5B3A29)
+  colors.semantic.success, // Emerald (#059669)
+  colors.primaryContainer, // Cobalt Container (#2e6fdb)
+  colors.secondaryHover, // Deep Cobalt (#004397)
+  colors.semantic.warningHover, // Warm Amber (#d97706)
+  colors.tertiaryHover, // Deep Espresso (#472919)
+  colors.tertiaryContainer, // Umber Container (#926a56)
 ];
 
 function getAvatarColor(name = '') {
@@ -255,7 +255,6 @@ function ChatApp() {
 
       setAllShops(shopsList);
     } catch (err) {
-      console.error('Failed to load shops:', err);
       if (isMountedRef.current) {
         console.error('Failed to load shops:', err);
       }
@@ -291,12 +290,10 @@ function ChatApp() {
         }
       }
     } catch (err) {
-      console.error('Failed to load messages:', err);
       if (isMountedRef.current) {
         console.error('Failed to load messages:', err);
       }
     } finally {
-      setIsChatLoading(false);
       if (isMountedRef.current) {
         setIsChatLoading(false);
       }
@@ -330,7 +327,6 @@ function ChatApp() {
 
       setUnreadTotal((prev) => Math.max(0, prev - unreadIds.length));
     } catch (err) {
-      console.error('Failed to mark messages as read:', err);
       if (isMountedRef.current) {
         console.error('Failed to mark messages as read:', err);
       }
@@ -380,7 +376,6 @@ function ChatApp() {
     );
   };
 
-  // Delete/Clear conversation from sidebar
   // Delete/Clear conversation
   const handleDeleteConversation = (partnerId) => {
     setUserMenu((prev) => {
@@ -422,7 +417,6 @@ function ChatApp() {
         ),
       }));
     } catch (err) {
-      console.error('Failed to delete message:', err);
       if (isMountedRef.current) {
         console.error('Failed to delete message:', err);
       }
@@ -509,13 +503,6 @@ function ChatApp() {
         });
       }
     } catch (err) {
-      console.error('Failed to send message:', err);
-      setUserMenu((prev) => ({
-        ...prev,
-        [selectedChat]: (prev[selectedChat] || []).map((m) =>
-          m.id === tempId ? { ...m, status: 'failed' } : m
-        ),
-      }));
       if (isMountedRef.current) {
         console.error('Failed to send message:', err);
         setUserMenu((prev) => ({
@@ -531,7 +518,6 @@ function ChatApp() {
   // Real-time socket event subscribers
   useEffect(() => {
     const unsubReceive = chatSocket.onReceiveMessage((newMsg) => {
-      if (!newMsg || !newMsg.sender_id) return;
       if (!isMountedRef.current || !newMsg || !newMsg.sender_id) return;
       const partnerId = newMsg.sender_id;
 
@@ -574,7 +560,6 @@ function ChatApp() {
     });
 
     const unsubSent = chatSocket.onMessageSent((sentMsg) => {
-      if (!sentMsg || !sentMsg.receiver_id) return;
       if (!isMountedRef.current || !sentMsg || !sentMsg.receiver_id) return;
       const partnerId = sentMsg.receiver_id;
 
@@ -647,7 +632,6 @@ function ChatApp() {
     });
 
     const unsubDeleted = chatSocket.onMessageDeleted((deletedData) => {
-      if (!deletedData || !deletedData.id) return;
       if (!isMountedRef.current || !deletedData || !deletedData.id) return;
       const partnerId =
         deletedData.sender_id === user_data?.user_id

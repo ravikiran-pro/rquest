@@ -4,7 +4,6 @@ import {
   Button,
   Input,
   Tag,
-  Space,
   Select,
   Flex,
   Avatar,
@@ -242,7 +241,7 @@ const ShopsManager = () => {
               fontFamily: typography.fontFamily.body,
               background: hasCustom ? colors.primary : colors.surface,
               borderColor: hasCustom ? colors.primary : colors.border,
-              color: hasCustom ? '#ffffff' : colors.primary,
+              color: hasCustom ? colors.surface : colors.primary,
               boxShadow: hasCustom ? '0 2px 6px rgba(11, 45, 107, 0.16)' : 'none',
             }}
           >
@@ -257,20 +256,20 @@ const ShopsManager = () => {
     <div>
       {/* Control Bar: Search & Category Filter */}
       <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 16 }}>
-        <Space wrap>
+        <Flex wrap="wrap" gap={10} style={{ flex: '1 1 280px', minWidth: 0 }}>
           <Input.Search
             placeholder="Search stores by name, area, or mobile..."
             allowClear
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onSearch={handleSearch}
-            style={{ width: 280, borderRadius: radii.md }}
+            style={{ width: '100%', maxWidth: 280, borderRadius: radii.md }}
           />
 
           <Select
             value={selectedCategory}
             onChange={handleCategoryFilter}
-            style={{ width: 220, borderRadius: radii.md }}
+            style={{ width: '100%', maxWidth: 220, borderRadius: radii.md }}
           >
             <Select.Option value="all">All Category Types</Select.Option>
             {categories.map((c) => (
@@ -279,7 +278,7 @@ const ShopsManager = () => {
               </Select.Option>
             ))}
           </Select>
-        </Space>
+        </Flex>
 
         <Button
           icon={<ReloadOutlined />}
@@ -311,6 +310,7 @@ const ShopsManager = () => {
           columns={columns}
           dataSource={shopsList}
           loading={loading}
+          scroll={{ x: 'max-content' }}
           pagination={{
             ...pagination,
             onChange: (page) => fetchShops(page),

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import Category from './category';
 import ShopsManager from './shops_manager';
 import AdminOrdersAccounts from './orders_accounts';
-import { Tabs, Card, Typography, Tag, Flex } from 'antd';
+import { Tabs, Card, Typography, Tag, Flex, Grid } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
@@ -16,6 +16,7 @@ const { Title, Text } = Typography;
 
 const Admin = () => {
   const [activeKey, setActiveKey] = useState('1');
+  const screens = Grid.useBreakpoint();
 
   const onChange = (key) => {
     setActiveKey(key);
@@ -52,7 +53,14 @@ const Admin = () => {
   ];
 
   return (
-    <div className="admin-console-container" style={{ maxWidth: 1200, margin: '24px auto', padding: '0 20px 60px 20px' }}>
+    <div
+      className="admin-console-container"
+      style={{
+        maxWidth: 1200,
+        margin: screens.xs ? '14px auto' : '24px auto',
+        padding: screens.xs ? '0 12px 60px 12px' : '0 20px 60px 20px',
+      }}
+    >
       <Card
         style={{
           borderRadius: radii.xl,
@@ -61,11 +69,11 @@ const Admin = () => {
           boxShadow: '0 4px 12px rgba(11, 45, 107, 0.04)',
           background: colors.surface,
         }}
-        bodyStyle={{ padding: 24 }}
+        styles={{ body: { padding: screens.xs ? 16 : 24 } }}
       >
         <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
           <div>
-            <Flex align="center" gap={10}>
+            <Flex align="center" gap={10} wrap="wrap">
               <Title
                 level={3}
                 style={{
@@ -106,7 +114,7 @@ const Admin = () => {
           boxShadow: '0 2px 8px rgba(11, 45, 107, 0.03)',
           background: colors.surface,
         }}
-        bodyStyle={{ padding: 24 }}
+        styles={{ body: { padding: screens.xs ? 14 : 24 } }}
       >
         <Tabs activeKey={activeKey} items={items} onChange={onChange} />
       </Card>

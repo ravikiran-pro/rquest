@@ -19,7 +19,7 @@
   width: 100%;
 }
 
-.badge {
+.message-header-root .badge {
   height: 8px;
   width: 8px;
   margin-left: 6px;
@@ -27,15 +27,15 @@
   display: inline-block;
 }
 
-.badge.online {
+.message-header-root .badge.online {
   background-color: var(--success, #059669);
 }
 
-.badge.offline {
+.message-header-root .badge.offline {
   background-color: var(--outline-variant, #c2c6d5);
 }
 
-.title {
+.message-header-root .title {
   font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
   font-size: 15px;
   font-weight: 700;
@@ -45,12 +45,12 @@
   letter-spacing: -0.01em;
 }
 
-.title .ant-badge {
+.message-header-root .title .ant-badge {
   margin-left: 5px;
   margin-bottom: 2px;
 }
 
-.sub-title {
+.message-header-root .sub-title {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 12.5px;
   color: var(--text-muted, #444650);

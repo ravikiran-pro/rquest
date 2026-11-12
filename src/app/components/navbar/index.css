@@ -56,7 +56,7 @@
   width: 38px;
   border-radius: 10px;
   object-fit: contain;
-  box-shadow: 0 2px 8px rgba(79, 70, 229, 0.24);
+  box-shadow: 0 2px 8px rgba(11, 45, 107, 0.2);
   transition: transform 0.15s ease;
 }
 
@@ -88,7 +88,7 @@
 
 .nav-item-btn {
   font-weight: var(--font-weight-semibold) !important;
-  color: var(--slate-600) !important;
+  color: var(--text-muted) !important;
   border-radius: var(--radius-sm) !important;
   height: 36px !important;
   padding: 0 12px !important;
@@ -102,7 +102,7 @@
 
 .nav-item-btn.active {
   color: var(--text-main) !important;
-  background: var(--slate-100) !important;
+  background: var(--surface-container) !important;
   font-weight: var(--font-weight-bold) !important;
 }
 
@@ -121,7 +121,7 @@
 }
 
 .navbar-user-capsule:hover {
-  background: var(--slate-100);
+  background: var(--surface-container);
   border-color: var(--border-color-dark);
 }
 
@@ -169,13 +169,13 @@
   border-radius: var(--radius-md) !important;
   font-weight: var(--font-weight-semibold) !important;
   font-size: var(--font-size-base) !important;
-  color: var(--slate-700) !important;
+  color: var(--text-muted) !important;
   transition: all 0.2s ease !important;
   text-align: left !important;
 }
 
 .drawer-nav-item:hover {
-  background: var(--slate-100) !important;
+  background: var(--surface-container) !important;
   color: var(--primary) !important;
 }
 
@@ -235,7 +235,7 @@
   .mobile-nav-label {
     font-size: 10.5px;
     font-weight: var(--font-weight-medium);
-    font-family: 'Inter', sans-serif;
+    font-family: var(--font-body);
     color: var(--text-muted);
     transition: color 0.15s ease;
   }

@@ -16,7 +16,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  z-index: 1000;
+  z-index: 1050;
   animation: rquestChatPopIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   font-family: var(--font-sans, 'Inter', 'Plus Jakarta Sans', sans-serif);
 }
@@ -584,7 +584,7 @@
 
 .rquest-quick-pill:hover {
   background: var(--primary-light, #E6F0FF);
-  border-color: var(--primary-light, #E6F0FF);
+  border-color: var(--primary, #0B2D6B);
   color: var(--primary, #0B2D6B);
   transform: translateY(-1px);
 }
@@ -694,7 +694,7 @@
   padding: 16px 20px;
   background: var(--surface-container-low, #f7f3ee);
   border: 1px solid var(--border-color, #ebe7e0);
-  border-radius: var(--radius-lg, 14px);
+  border-radius: var(--radius-lg, 12px);
   max-width: 320px;
   width: 100%;
   box-shadow: 0 4px 16px rgba(11, 45, 107, 0.04);

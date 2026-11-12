@@ -253,9 +253,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       ? [
           {
             key: 'admin-console',
-            icon: <SafetyCertificateOutlined style={{ color: colors.cobalt }} />,
+            icon: <SafetyCertificateOutlined style={{ color: colors.secondary }} />,
             label: (
-              <span style={{ color: colors.cobalt, fontWeight: 700 }}>
+              <span style={{ color: colors.secondary, fontWeight: 700 }}>
                 Platform Admin Console
               </span>
             ),
@@ -337,7 +337,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     background: '#f8fafc',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
                     Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
                   </span>
                   {unreadNotifCount > 0 && (
@@ -578,7 +578,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     background: '#f8fafc',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
                     Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
                   </span>
                   {unreadNotifCount > 0 && (
@@ -694,7 +694,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     size={30}
                     icon={<UserOutlined />}
                     style={{
-                      backgroundColor: isMerchant ? colors.cobalt : colors.primary,
+                      backgroundColor: isMerchant ? colors.secondary : colors.primary,
                     }}
                   />
                   <span className="navbar-username">
@@ -742,7 +742,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => (open ? handleClose() : handleOpen())}
             style={{
               cursor: 'pointer',
-              backgroundColor: isMerchant ? colors.cobalt : colors.primary,
+              backgroundColor: isMerchant ? colors.secondary : colors.primary,
             }}
           />
         )}

@@ -22,7 +22,7 @@ import {
   AppstoreOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, typography, shadows } from '../../styles/theme';
 import {
   parseCSV,
   getCategoryCsvConfig,
@@ -174,7 +174,11 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         title: 'Product / Item Name',
         dataIndex: 'name',
         key: 'name',
-        render: (text) => <Text strong style={{ color: '#0f172a' }}>{text}</Text>,
+        render: (text) => (
+          <Text strong style={{ color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+            {text}
+          </Text>
+        ),
       },
       {
         title: 'Price (₹)',
@@ -182,9 +186,9 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         key: 'price',
         width: 110,
         render: (val, record) => (
-          <div>
+          <div style={{ fontFamily: typography.fontFamily.body }}>
             <span style={{ fontWeight: 700, color: colors.primary }}>₹{val}</span>
-            {record.unit && <span style={{ color: '#64748b', fontSize: 11 }}> / {record.unit}</span>}
+            {record.unit && <span style={{ color: colors.textMuted, fontSize: 11 }}> / {record.unit}</span>}
           </div>
         ),
       },
@@ -193,13 +197,33 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         dataIndex: 'mrp',
         key: 'mrp',
         width: 90,
-        render: (val) => (val ? <span style={{ textDecoration: 'line-through', color: '#94a3b8' }}>₹{val}</span> : '-'),
+        render: (val) =>
+          val ? (
+            <span style={{ textDecoration: 'line-through', color: colors.textLight }}>₹{val}</span>
+          ) : (
+            '-'
+          ),
       },
       {
         title: 'Section / Shelf',
         dataIndex: 'section',
         key: 'section',
-        render: (val) => (val ? <Tag color="default">{val}</Tag> : <Text type="secondary">-</Text>),
+        render: (val) =>
+          val ? (
+            <Tag
+              style={{
+                background: colors.surfaceContainerLow,
+                borderColor: colors.border,
+                color: colors.textMuted,
+                borderRadius: radii.xs,
+                fontWeight: 600,
+              }}
+            >
+              {val}
+            </Tag>
+          ) : (
+            <Text style={{ color: colors.textLight }}>-</Text>
+          ),
       },
     ];
 
@@ -219,9 +243,29 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
               ? r.metadata.prescription_required
               : r.prescription_required;
             return rx === true || rx === 'true' ? (
-              <Tag color="error" style={{ fontWeight: 700 }}>Rx Required</Tag>
+              <Tag
+                style={{
+                  fontWeight: 700,
+                  borderRadius: radii.xs,
+                  background: colors.semantic.errorLight,
+                  color: colors.semantic.error,
+                  borderColor: colors.semantic.errorBorder,
+                }}
+              >
+                Rx Required
+              </Tag>
             ) : (
-              <Tag color="success">OTC</Tag>
+              <Tag
+                style={{
+                  fontWeight: 600,
+                  borderRadius: radii.xs,
+                  background: colors.semantic.successLight,
+                  color: colors.semantic.successHover,
+                  borderColor: colors.semantic.successBorder,
+                }}
+              >
+                OTC
+              </Tag>
             );
           },
         },
@@ -245,9 +289,29 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           render: (_, r) => {
             const ft = (r.metadata?.food_type || r.food_type || '').toLowerCase();
             return ft === 'veg' ? (
-              <Tag color="green" style={{ fontWeight: 700 }}>🟢 Pure Veg</Tag>
+              <Tag
+                style={{
+                  fontWeight: 700,
+                  borderRadius: radii.xs,
+                  background: colors.semantic.successLight,
+                  color: colors.semantic.successHover,
+                  borderColor: colors.semantic.successBorder,
+                }}
+              >
+                🟢 Pure Veg
+              </Tag>
             ) : (
-              <Tag color="red" style={{ fontWeight: 700 }}>🔴 Non-Veg</Tag>
+              <Tag
+                style={{
+                  fontWeight: 700,
+                  borderRadius: radii.xs,
+                  background: colors.semantic.errorLight,
+                  color: colors.semantic.error,
+                  borderColor: colors.semantic.errorBorder,
+                }}
+              >
+                🔴 Non-Veg
+              </Tag>
             );
           },
         },
@@ -273,11 +337,41 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           render: (_, r) => {
             const sm = r.metadata?.service_mode || r.service_mode;
             return sm === 'doorstep' ? (
-              <Tag color="blue">Doorstep</Tag>
+              <Tag
+                style={{
+                  borderRadius: radii.xs,
+                  fontWeight: 600,
+                  background: colors.verifiedChipBg,
+                  color: colors.verifiedChipText,
+                  borderColor: colors.verifiedChipBorder,
+                }}
+              >
+                Doorstep
+              </Tag>
             ) : sm === 'at_center' ? (
-              <Tag color="cyan">At Center</Tag>
+              <Tag
+                style={{
+                  borderRadius: radii.xs,
+                  fontWeight: 600,
+                  background: colors.primaryLight,
+                  color: colors.primary,
+                  borderColor: colors.verifiedChipBorder,
+                }}
+              >
+                At Center
+              </Tag>
             ) : (
-              <Tag color="purple">Both</Tag>
+              <Tag
+                style={{
+                  borderRadius: radii.xs,
+                  fontWeight: 600,
+                  background: colors.serviceChipBg,
+                  color: colors.serviceChipText,
+                  borderColor: colors.serviceChipBorder,
+                }}
+              >
+                Both
+              </Tag>
             );
           },
         },
@@ -318,16 +412,26 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           const metaEntries = Object.entries(r.metadata || {}).filter(
             ([k]) => k !== 'section' && k !== 'category_id' && k !== 'category_name'
           );
-          if (metaEntries.length === 0) return <Text type="secondary">-</Text>;
+          if (metaEntries.length === 0) return <Text style={{ color: colors.textLight }}>-</Text>;
           return (
             <Flex wrap="wrap" gap={4}>
               {metaEntries.slice(0, 3).map(([k, v]) => (
-                <Tag key={k} style={{ fontSize: 11, margin: 0 }}>
+                <Tag
+                  key={k}
+                  style={{
+                    fontSize: 11,
+                    margin: 0,
+                    borderRadius: radii.xs,
+                    background: colors.surfaceContainerLow,
+                    borderColor: colors.border,
+                    color: colors.textMuted,
+                  }}
+                >
                   <strong>{k}:</strong> {String(v)}
                 </Tag>
               ))}
               {metaEntries.length > 3 && (
-                <Text type="secondary" style={{ fontSize: 11 }}>+{metaEntries.length - 3} more</Text>
+                <Text style={{ fontSize: 11, color: colors.textLight }}>+{metaEntries.length - 3} more</Text>
               )}
             </Flex>
           );
@@ -343,7 +447,9 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
       title={
         <Flex align="center" gap={8}>
           <AppstoreOutlined style={{ color: colors.primary, fontSize: 18 }} />
-          <span>Bulk Import Catalog via CSV</span>
+          <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+            Bulk Import Catalog via CSV
+          </span>
         </Flex>
       }
       open={open}
@@ -352,7 +458,16 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         onClose?.();
       }}
       footer={[
-        <Button key="cancel" onClick={onClose}>
+        <Button
+          key="cancel"
+          onClick={onClose}
+          style={{
+            borderRadius: radii.md,
+            borderColor: colors.border,
+            color: colors.textMain,
+            fontFamily: typography.fontFamily.body,
+          }}
+        >
           Cancel
         </Button>,
         <Button
@@ -366,43 +481,58 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
             background: parsedItems.length > 0 ? colors.primary : undefined,
             borderColor: parsedItems.length > 0 ? colors.primary : undefined,
             borderRadius: radii.md,
+            fontWeight: 600,
+            fontFamily: typography.fontFamily.body,
+            boxShadow: parsedItems.length > 0 ? shadows.primary : 'none',
           }}
         >
           Confirm & Import ({parsedItems.length})
         </Button>,
       ]}
       width={840}
+      style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
       destroyOnClose
     >
       {/* Category Type Context Banner */}
       <div
         style={{
-          background: '#f8fafc',
-          border: '1px solid #e2e8f0',
-          borderRadius: 12,
+          background: colors.surfaceContainerLow,
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.lg,
           padding: '12px 16px',
           marginBottom: 16,
+          fontFamily: typography.fontFamily.body,
         }}
       >
         <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
           <div>
-            <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+            <Text style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted }}>
               Store & Product Category Schema
             </Text>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
               <span style={{ fontSize: 16 }}>{csvConfig.icon}</span>
-              <span style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>
+              <span style={{ fontWeight: 700, fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                 {shop?.shop_name || 'Store'}
               </span>
-              <Tag color={csvConfig.badgeColor} style={{ fontWeight: 600, fontSize: 12, borderRadius: 6, margin: 0 }}>
+              <Tag
+                style={{
+                  fontWeight: 600,
+                  fontSize: 12,
+                  borderRadius: radii.xs,
+                  margin: 0,
+                  background: colors.verifiedChipBg,
+                  color: colors.verifiedChipText,
+                  borderColor: colors.verifiedChipBorder,
+                }}
+              >
                 {csvConfig.label}
               </Tag>
             </div>
           </div>
 
           {/* Template Switcher Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <Text type="secondary" style={{ fontSize: 12 }}>Template Schema:</Text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <Text style={{ fontSize: 12, color: colors.textMuted }}>Template Schema:</Text>
             <Select
               value={currentArchetype}
               onChange={(val) => {
@@ -424,21 +554,21 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
       </div>
 
       {/* Dynamic Headers Explanation */}
-      <div style={{ marginBottom: 16 }}>
-        <Paragraph style={{ marginBottom: 6, fontSize: 13, color: '#334155' }}>
-          Upload a CSV file structured specifically for <strong>{csvConfig.label}</strong> with these column headers:
+      <div style={{ marginBottom: 16, fontFamily: typography.fontFamily.body }}>
+        <Paragraph style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>
+          Upload a CSV file structured specifically for <strong style={{ color: colors.textMain }}>{csvConfig.label}</strong> with these column headers:
         </Paragraph>
         <div
           style={{
-            background: '#f1f5f9',
+            background: colors.surfaceContainerLow,
             padding: '8px 12px',
-            borderRadius: 8,
-            fontFamily: 'monospace',
+            borderRadius: radii.md,
+            fontFamily: typography.fontFamily.mono,
             fontSize: 12,
-            color: '#0f172a',
+            color: colors.textMain,
             overflowX: 'auto',
             whiteSpace: 'nowrap',
-            border: '1px solid #cbd5e1',
+            border: `1px solid ${colors.borderDark}`,
           }}
         >
           {csvConfig.headers.join(', ')}
@@ -452,7 +582,16 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           beforeUpload={handleFileUpload}
           showUploadList={false}
         >
-          <Button icon={<UploadOutlined />} style={{ fontWeight: 600 }}>
+          <Button
+            icon={<UploadOutlined />}
+            style={{
+              fontWeight: 600,
+              borderRadius: radii.md,
+              borderColor: colors.border,
+              color: colors.textMain,
+              fontFamily: typography.fontFamily.body,
+            }}
+          >
             Select CSV File
           </Button>
         </Upload>
@@ -462,10 +601,11 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           onClick={handleDownloadSample}
           style={{
             color: colors.primary,
-            borderColor: colors.border,
+            borderColor: colors.verifiedChipBorder,
             background: colors.primaryLight,
             fontWeight: 600,
             borderRadius: radii.md,
+            fontFamily: typography.fontFamily.body,
           }}
         >
           Download {csvConfig.label} Sample Template (.CSV)
@@ -489,25 +629,25 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
             }
             type="info"
             showIcon
-            style={{ marginBottom: 12, borderRadius: 8 }}
+            style={{ marginBottom: 12, borderRadius: radii.md }}
           />
           <Table
             dataSource={parsedItems.map((it, idx) => ({ ...it, key: idx }))}
             columns={dynamicColumns}
             size="small"
             pagination={{ pageSize: 5 }}
-            scroll={{ x: 750 }}
-            style={{ border: '1px solid #f1f5f9', borderRadius: 8 }}
+            scroll={{ x: 'max-content' }}
+            style={{ border: `1px solid ${colors.border}`, borderRadius: radii.md }}
           />
         </>
       )}
 
       {/* Field Descriptions Tooltip Bar */}
-      <Divider style={{ margin: '12px 0' }} />
-      <div style={{ fontSize: 12, color: '#64748b' }}>
+      <Divider style={{ margin: '12px 0', borderColor: colors.borderLight }} />
+      <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
         <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
           <InfoCircleOutlined style={{ color: colors.primary }} />
-          <Text strong style={{ fontSize: 12, color: '#475569' }}>
+          <Text strong style={{ fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
             {csvConfig.label} Column Guide:
           </Text>
         </Flex>
@@ -518,10 +658,11 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
                 style={{
                   cursor: 'pointer',
                   fontSize: 11,
-                  borderRadius: 4,
-                  background: h === 'name' || h === 'price' ? '#e0e7ff' : '#f8fafc',
-                  color: h === 'name' || h === 'price' ? '#3730a3' : '#475569',
-                  borderColor: h === 'name' || h === 'price' ? '#c7d2fe' : '#e2e8f0',
+                  borderRadius: radii.xs,
+                  fontFamily: typography.fontFamily.mono,
+                  background: h === 'name' || h === 'price' ? colors.primaryLight : colors.surfaceContainerLow,
+                  color: h === 'name' || h === 'price' ? colors.primary : colors.textMuted,
+                  borderColor: h === 'name' || h === 'price' ? colors.verifiedChipBorder : colors.border,
                 }}
               >
                 {h} {h === 'name' || h === 'price' ? '*' : ''}

@@ -890,7 +890,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontWeight: 600,
                     cursor: 'pointer',
                     padding: 0,
@@ -1282,7 +1282,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -1442,7 +1442,7 @@ const HomeScreen = () => {
                         height: 36,
                         borderRadius: '50%',
                         background: '#E6F0FF',
-                        color: colors.cobalt,
+                        color: colors.secondary,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1530,7 +1530,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontWeight: 600,
                     cursor: 'pointer',
                     padding: 0,

@@ -577,8 +577,8 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             {shop.shop_name || 'Neighborhood Store'}
           </span>
           <Flex align="center" gap={3}>
-            <StarFilled style={{ fontSize: 11, color: colors.warmAmber }} />
-            <span style={{ fontSize: 11, fontWeight: 700, color: colors.warmAmber }}>
+            <StarFilled style={{ fontSize: 11, color: colors.semantic.warning }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: colors.tertiary }}>
               {ratingStr}
             </span>
           </Flex>
@@ -646,7 +646,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
       {/* 3. Inset Shelf Price Container */}
       <div
         style={{
-          background: colors.shelfContainer,
+          background: colors.surfaceContainer,
           borderTop: `1px solid ${colors.border}`,
           padding: '8px 14px',
           display: 'flex',

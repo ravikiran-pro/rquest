@@ -117,7 +117,7 @@ export default function AppRoutes() {
   const [drawer, setdrawer] = useState(false);
   const { isChat, unreadTotal, handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
-  const isCartOpen = useCartStore((state) => state.isOpen);
+  const isCartOpen = useCartStore((state) => state.isCartOpen);
   const { isMerchant } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.getItem(storageKeys.auth_token)

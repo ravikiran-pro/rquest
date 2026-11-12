@@ -398,8 +398,19 @@ const ManageStore = ({
           )}
           <div>
             <div style={{ fontWeight: 700, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>{name}</div>
-            <Flex gap={4} align="center" style={{ marginTop: 2 }}>
-              <Tag color="blue" style={{ fontSize: 10, lineHeight: '16px', margin: 0, borderRadius: radii.xs }}>
+            <Flex gap={4} align="center" style={{ marginTop: 2 }} wrap="wrap">
+              <Tag
+                style={{
+                  fontSize: 10,
+                  lineHeight: '16px',
+                  margin: 0,
+                  borderRadius: radii.xs,
+                  fontWeight: 600,
+                  background: colors.verifiedChipBg,
+                  color: colors.verifiedChipText,
+                  borderColor: colors.verifiedChipBorder,
+                }}
+              >
                 {record.listing_type}
               </Tag>
               {record.metadata?.section && (
@@ -627,17 +638,17 @@ const ManageStore = ({
       key: 'status',
       width: 150,
       render: (_, record) => {
-        const statusColors = {
-          placed: 'blue',
-          pending: 'warning',
-          order_prepare: 'processing',
-          preparing: 'processing',
-          accepted: 'processing',
-          ready_for_pickup: 'cyan',
-          open_to_delivery: 'purple',
-          out_for_delivery: 'geekblue',
-          completed: 'success',
-          cancelled: 'error',
+        const statusStyles = {
+          placed: { bg: colors.primaryLight, color: colors.primary, border: colors.verifiedChipBorder },
+          pending: { bg: colors.semantic.warningLight, color: colors.tertiary, border: colors.semantic.warningBorder },
+          order_prepare: { bg: colors.secondaryLight, color: colors.secondary, border: colors.verifiedChipBorder },
+          preparing: { bg: colors.secondaryLight, color: colors.secondary, border: colors.verifiedChipBorder },
+          accepted: { bg: colors.secondaryLight, color: colors.secondary, border: colors.verifiedChipBorder },
+          ready_for_pickup: { bg: colors.verifiedChipBg, color: colors.verifiedChipText, border: colors.verifiedChipBorder },
+          open_to_delivery: { bg: colors.serviceChipBg, color: colors.serviceChipText, border: colors.serviceChipBorder },
+          out_for_delivery: { bg: colors.secondaryLight, color: colors.secondaryHover, border: colors.verifiedChipBorder },
+          completed: { bg: colors.semantic.successLight, color: colors.semantic.successHover, border: colors.semantic.successBorder },
+          cancelled: { bg: colors.semantic.errorLight, color: colors.semantic.error, border: colors.semantic.errorBorder },
         };
         const statusLabels = {
           placed: '📋 Order Placed',
@@ -651,8 +662,21 @@ const ManageStore = ({
           completed: '🎉 Completed',
           cancelled: '❌ Cancelled',
         };
+        const chip = statusStyles[record.status] || {
+          bg: colors.surfaceContainerLow,
+          color: colors.textMuted,
+          border: colors.border,
+        };
         return (
-          <Tag color={statusColors[record.status] || 'default'} style={{ fontWeight: 600, borderRadius: radii.full }}>
+          <Tag
+            style={{
+              fontWeight: 600,
+              borderRadius: radii.full,
+              background: chip.bg,
+              color: chip.color,
+              borderColor: chip.border,
+            }}
+          >
             {statusLabels[record.status] || record.status}
           </Tag>
         );
@@ -1213,16 +1237,16 @@ const ManageStore = ({
                   <Card
                     style={{
                       borderRadius: radii.xl,
-                      border: '1px solid #fee2e8',
-                      background: '#fff5f5',
+                      border: `1px solid ${colors.semantic.errorBorder}`,
+                      background: colors.semantic.errorLight,
                     }}
                   >
                     <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
                       <div>
-                        <Text strong style={{ color: '#b91c1c', fontSize: 14, display: 'block', fontFamily: typography.fontFamily.headline }}>
+                        <Text strong style={{ color: colors.semantic.error, fontSize: 14, display: 'block', fontFamily: typography.fontFamily.headline }}>
                           Danger Zone: Delete Store Outlet
                         </Text>
-                        <Text style={{ fontSize: 12, color: '#991b1b', fontFamily: typography.fontFamily.body }}>
+                        <Text style={{ fontSize: 12, color: colors.semantic.errorHover, fontFamily: typography.fontFamily.body }}>
                           Permanently delete this shop outlet and remove all its catalog items.
                         </Text>
                       </div>
@@ -1282,7 +1306,7 @@ const ManageStore = ({
         width={screens.md ? 540 : '100%'}
         title={
           selectedOrder ? (
-            <Flex justify="space-between" align="center" style={{ width: '100%', paddingRight: 12 }}>
+            <Flex justify="space-between" align="center" wrap="wrap" gap={8} style={{ width: '100%', paddingRight: 12 }}>
               <div>
                 <span style={{ fontSize: 16, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                   Order #{selectedOrder.order_number || selectedOrder.id?.slice(0, 8)}
@@ -1348,7 +1372,7 @@ const ManageStore = ({
                 description="This order was cancelled and is no longer active for fulfillment."
                 type="error"
                 showIcon
-                style={{ borderRadius: 10 }}
+                style={{ borderRadius: radii.md }}
               />
             )}
 
@@ -1360,7 +1384,7 @@ const ManageStore = ({
                   border: `1px solid ${colors.border}`,
                   background: colors.surfaceContainerLow,
                 }}
-                bodyStyle={{ padding: '16px 12px' }}
+                styles={{ body: { padding: '16px 12px' } }}
               >
                 <Steps
                   size="small"
@@ -1493,7 +1517,7 @@ const ManageStore = ({
                             style={{
                               background: colors.semantic.success,
                               borderColor: colors.semantic.success,
-                              color: '#fff',
+                              color: colors.white,
                               fontWeight: 700,
                               borderRadius: radii.md,
                             }}
@@ -1521,9 +1545,16 @@ const ManageStore = ({
 
                       {selectedOrder.status === 'completed' && (
                         <Tag
-                          color="success"
                           icon={<CheckCircleFilled />}
-                          style={{ fontSize: 13, padding: '4px 12px', borderRadius: radii.md }}
+                          style={{
+                            fontSize: 13,
+                            padding: '4px 12px',
+                            borderRadius: radii.md,
+                            background: colors.semantic.successLight,
+                            border: `1px solid ${colors.semantic.successBorder}`,
+                            color: colors.semantic.successHover,
+                            fontWeight: 600,
+                          }}
                         >
                           Order Completed & Fulfilled
                         </Tag>
@@ -1567,7 +1598,7 @@ const ManageStore = ({
                 </span>
               }
               style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
-              bodyStyle={{ padding: 16 }}
+              styles={{ body: { padding: 16 } }}
             >
               <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
                 <Flex align="center" gap={12}>
@@ -1653,11 +1684,11 @@ const ManageStore = ({
                     marginTop: 10,
                     padding: '8px 12px',
                     borderRadius: radii.md,
-                    background: '#fefce8',
-                    border: '1px solid #fef08a',
+                    background: colors.semantic.warningLight,
+                    border: `1px solid ${colors.semantic.warningBorder}`,
                   }}
                 >
-                  <Text style={{ fontSize: 12, color: '#854d0e' }}>
+                  <Text style={{ fontSize: 12, color: colors.tertiary }}>
                     <strong>Note:</strong> {selectedOrder.notes}
                   </Text>
                 </div>
@@ -1672,7 +1703,7 @@ const ManageStore = ({
                 </span>
               }
               style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
-              bodyStyle={{ padding: 16 }}
+              styles={{ body: { padding: 16 } }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                 {selectedOrder.items?.map((item, idx) => (
@@ -1709,7 +1740,7 @@ const ManageStore = ({
                 </span>
               }
               style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}
-              bodyStyle={{ padding: 16 }}
+              styles={{ body: { padding: 16 } }}
             >
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <Flex justify="space-between" align="center">
@@ -1753,23 +1784,59 @@ const ManageStore = ({
                     marginTop: 8,
                     padding: '10px 12px',
                     borderRadius: radii.md,
-                    background: selectedOrder.payment_mode === 'direct_upi' ? '#ecfdf5' : '#fffbeb',
-                    border: selectedOrder.payment_mode === 'direct_upi' ? '1px solid #a7f3d0' : '1px solid #fde68a',
+                    background:
+                      selectedOrder.payment_mode === 'direct_upi'
+                        ? colors.semantic.successLight
+                        : colors.semantic.warningLight,
+                    border:
+                      selectedOrder.payment_mode === 'direct_upi'
+                        ? `1px solid ${colors.semantic.successBorder}`
+                        : `1px solid ${colors.semantic.warningBorder}`,
                   }}
                 >
-                  <Flex justify="space-between" align="center">
+                  <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
                     <div>
-                      <div style={{ fontSize: 11, fontWeight: 700, color: '#065f46', textTransform: 'uppercase' }}>
+                      <div
+                        style={{
+                          fontSize: 11,
+                          fontWeight: 700,
+                          color:
+                            selectedOrder.payment_mode === 'direct_upi'
+                              ? colors.semantic.successHover
+                              : colors.tertiary,
+                          textTransform: 'uppercase',
+                          fontFamily: typography.fontFamily.body,
+                        }}
+                      >
                         Payment Method
                       </div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: '#047857' }}>
+                      <div
+                        style={{
+                          fontWeight: 700,
+                          fontSize: 13,
+                          color:
+                            selectedOrder.payment_mode === 'direct_upi'
+                              ? colors.semantic.successHover
+                              : colors.tertiaryHover,
+                          fontFamily: typography.fontFamily.headline,
+                        }}
+                      >
                         {selectedOrder.payment_mode === 'direct_upi'
                           ? '⚡ Direct Store UPI Payment'
                           : '💵 Cash on Delivery / Counter Pickup'}
                       </div>
                     </div>
                     {selectedOrder.shop_upi_id && (
-                      <Tag color="green" style={{ margin: 0, fontWeight: 600 }}>
+                      <Tag
+                        style={{
+                          margin: 0,
+                          fontWeight: 600,
+                          borderRadius: radii.md,
+                          background: colors.semantic.successLight,
+                          border: `1px solid ${colors.semantic.successBorder}`,
+                          color: colors.semantic.successHover,
+                        }}
+                      >
                         UPI: {selectedOrder.shop_upi_id}
                       </Tag>
                     )}

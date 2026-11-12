@@ -10,3 +10,12 @@
   color: var(--text-main, #1c1c19);
 }
 
+.admin-orders-actions-col {
+  text-align: right;
+}
+
+@media (max-width: 767px) {
+  .admin-orders-actions-col {
+    text-align: left;
+  }
+}

@@ -23,7 +23,7 @@ import {
   UploadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text } = Typography;
 const { Option } = Select;
@@ -316,7 +316,11 @@ const AddProductModal = ({
 
   return (
     <Modal
-      title={modalTitle}
+      title={
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+          {modalTitle}
+        </span>
+      }
       open={open}
       onCancel={onClose}
       footer={null}
@@ -328,38 +332,58 @@ const AddProductModal = ({
         form={form}
         layout="vertical"
         onFinish={handleFinish}
-        style={{ marginTop: 8 }}
+        style={{ marginTop: 8, fontFamily: typography.fontFamily.body }}
       >
         {/* Store Business Category Badge */}
         <div
           style={{
-            background: '#f8fafc',
-            border: '1px solid #e2e8f0',
-            borderRadius: 12,
+            background: colors.surfaceContainerLow,
+            border: `1px solid ${colors.border}`,
+            borderRadius: radii.lg,
             padding: '10px 14px',
             marginBottom: 16,
           }}
         >
           <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
             <div>
-              <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
+              <Text style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 Store Business Category
               </Text>
               <div
                 style={{
                   fontWeight: 700,
                   fontSize: 14,
-                  color: '#0f172a',
+                  color: colors.textMain,
+                  fontFamily: typography.fontFamily.headline,
                   display: 'flex',
                   alignItems: 'center',
                   gap: 8,
                   marginTop: 2,
+                  flexWrap: 'wrap',
                 }}
               >
                 <span>{categoryDisplayName}</span>
                 <Tag
-                  color={storeArchetype === 'service' || storeArchetype === 'wellness' ? 'blue' : 'green'}
-                  style={{ fontSize: 11, padding: '1px 8px', borderRadius: 6, margin: 0, fontWeight: 600 }}
+                  style={{
+                    fontSize: 11,
+                    padding: '1px 8px',
+                    borderRadius: radii.xs,
+                    margin: 0,
+                    fontWeight: 600,
+                    fontFamily: typography.fontFamily.body,
+                    background:
+                      storeArchetype === 'service' || storeArchetype === 'wellness'
+                        ? colors.serviceChipBg
+                        : colors.verifiedChipBg,
+                    borderColor:
+                      storeArchetype === 'service' || storeArchetype === 'wellness'
+                        ? colors.serviceChipBorder
+                        : colors.verifiedChipBorder,
+                    color:
+                      storeArchetype === 'service' || storeArchetype === 'wellness'
+                        ? colors.serviceChipText
+                        : colors.verifiedChipText,
+                  }}
                 >
                   {storeArchetype === 'service' || storeArchetype === 'wellness' ? 'Service Business' : 'Product Store'}
                 </Tag>
@@ -379,6 +403,7 @@ const AddProductModal = ({
                   fontSize: 12,
                   borderColor: colors.primary,
                   color: colors.primary,
+                  fontFamily: typography.fontFamily.body,
                 }}
               >
                 Import via CSV
@@ -490,16 +515,23 @@ const AddProductModal = ({
         {dynamicFields.length > 0 ? (
           <div
             style={{
-              background: '#f8fafc',
+              background: colors.surfaceContainerLow,
               padding: '14px 16px',
-              borderRadius: 12,
-              border: '1px solid #e2e8f0',
+              borderRadius: radii.lg,
+              border: `1px solid ${colors.border}`,
               marginBottom: 16,
             }}
           >
             <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
               <AppstoreOutlined style={{ color: colors.primary }} />
-              <Text strong style={{ fontSize: 13, color: '#1e293b' }}>
+              <Text
+                strong
+                style={{
+                  fontSize: 13,
+                  color: colors.textMain,
+                  fontFamily: typography.fontFamily.headline,
+                }}
+              >
                 {isCustomShopForm ? `${shop?.shop_name || 'Store'} Custom Specifications` : `${categoryDisplayName} Specifications`}
               </Text>
             </Flex>
@@ -690,9 +722,26 @@ const AddProductModal = ({
         </Form.Item>
 
         {/* Customer Interaction Settings */}
-        <div style={{ background: '#f8fafc', padding: '10px 14px', borderRadius: 10, marginBottom: 16 }}>
-          <Text strong style={{ fontSize: 13, display: 'block', marginBottom: 6 }}>
-            Customer Ordering & Enquiry Settings:
+        <div
+          style={{
+            background: colors.surfaceContainerLow,
+            border: `1px solid ${colors.border}`,
+            padding: '10px 14px',
+            borderRadius: radii.md,
+            marginBottom: 16,
+          }}
+        >
+          <Text
+            strong
+            style={{
+              fontSize: 13,
+              display: 'block',
+              marginBottom: 6,
+              color: colors.textMain,
+              fontFamily: typography.fontFamily.headline,
+            }}
+          >
+            Customer Ordering &amp; Enquiry Settings:
           </Text>
           <Space direction="vertical">
             <Form.Item
@@ -716,7 +765,18 @@ const AddProductModal = ({
 
         {/* Submit Buttons */}
         <Flex justify="end" gap={10}>
-          <Button onClick={onClose}>Cancel</Button>
+          <Button
+            onClick={onClose}
+            style={{
+              borderRadius: radii.md,
+              borderColor: colors.border,
+              color: colors.textMain,
+              fontWeight: 600,
+              fontFamily: typography.fontFamily.body,
+            }}
+          >
+            Cancel
+          </Button>
           <Button
             type="primary"
             htmlType="submit"
@@ -726,6 +786,8 @@ const AddProductModal = ({
               background: colors.primary,
               borderColor: colors.primary,
               borderRadius: radii.md,
+              boxShadow: shadows.primary,
+              fontFamily: typography.fontFamily.body,
             }}
           >
             {editingItem ? 'Save Changes' : 'Add to Store Catalog'}

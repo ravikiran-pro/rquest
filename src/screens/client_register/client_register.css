@@ -42,8 +42,7 @@
 }
 
 /* Elevated Warm Card Standards */
-.merchant-clean-card,
-.profile-clean-card {
+.merchant-clean-card {
   background: var(--brand-surface, #ffffff) !important;
   border: 1px solid var(--border-color, #ebe7e0) !important;
   border-radius: var(--radius-xl, 16px) !important;
@@ -55,6 +54,48 @@
 
 .merchant-clean-card:hover {
   border-color: var(--border-color-dark, #c2c6d5) !important;
+}
+
+/* Warm Tactile Onboarding Inputs (aligned with auth.css Stitch aesthetic) */
+.merchant-clean-card .merchant-warm-input.ant-input,
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper {
+  background-color: var(--surface-container-low, #f7f3ee);
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 11px;
+  min-height: 44px;
+  padding: 0 14px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 14px;
+  color: var(--text-main, #1c1c19);
+  box-shadow: none;
+  transition: all 0.2s ease;
+}
+
+.merchant-clean-card .merchant-warm-input.ant-input:hover,
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper:hover {
+  border-color: var(--border-color-dark, #c2c6d5);
+}
+
+.merchant-clean-card .merchant-warm-input.ant-input:focus,
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper:focus,
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper-focused {
+  background-color: var(--surface, #ffffff);
+  border-color: var(--primary, #0B2D6B);
+  box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.1);
+}
+
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper input.ant-input {
+  background: transparent;
+  border: none;
+  padding: 0;
+  box-shadow: none;
+  color: var(--text-main, #1c1c19);
+  font-size: 14px;
+}
+
+.merchant-clean-card .merchant-warm-input.ant-input::placeholder,
+.merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper input::placeholder {
+  color: var(--text-light, #747781);
 }
 
 .merchant-outlet-card {
@@ -264,11 +305,14 @@
    ========================================================================== */
 
 .manage-store-container {
+  position: relative;
+  z-index: 1;
   width: 100%;
   max-width: 1140px;
   margin: 0 auto;
   padding: 20px 16px;
   box-sizing: border-box;
+  font-family: var(--font-body, 'Inter', -apple-system, BlinkMacSystemFont, sans-serif);
 }
 
 @media (max-width: 768px) {
