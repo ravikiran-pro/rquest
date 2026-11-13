@@ -17,6 +17,7 @@ import {
   Flex,
   Grid,
   Segmented,
+  Select,
 } from 'antd';
 import {
   PhoneOutlined,
@@ -35,7 +36,13 @@ import {
   ThunderboltFilled,
   EditOutlined,
 } from '@ant-design/icons';
-import { netWorkCall, apiConfig } from '../../app/utils';
+import {
+  netWorkCall,
+  apiConfig,
+  resolveShopSchema,
+  getAvailableFilters,
+  matchesSchemaFilters,
+} from '../../app/utils';
 import { useGlobalStore, useChatStore, useCartStore } from '../../app/services';
 import Routes from '../../app/routes/routes';
 import { colors, radii } from '../../app/styles/theme';
@@ -57,6 +64,7 @@ const StorefrontScreen = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [foodFilter, setFoodFilter] = useState('all'); // 'all', 'veg', 'non-veg'
+  const [fieldFilters, setFieldFilters] = useState({}); // custom-field filters: { fieldKey: value }
 
   // Quote Request Modal State
   const [quoteModalVisible, setQuoteModalVisible] = useState(false);
@@ -270,11 +278,29 @@ const StorefrontScreen = () => {
         if (foodFilter === 'non-veg' && itemFoodType !== 'non-veg') return false;
       }
 
+      // Filters from the category's custom form fields
+      if (!matchesSchemaFilters(item, fieldFilters)) return false;
+
       return true;
     });
-  }, [listings, activeTab, searchQuery, foodFilter]);
+  }, [listings, activeTab, searchQuery, foodFilter, fieldFilters]);
 
   const hasFoodItems = listings.some((i) => i.listing_type === 'food');
+
+  // Filters built from the form fields the admin marked as filterable. The
+  // dietary tag is left out when the veg / non-veg switch already covers it.
+  const schemaFilters = useMemo(
+    () =>
+      getAvailableFilters(resolveShopSchema(shop), listings).filter(
+        (field) => !(hasFoodItems && field.key === 'food_type')
+      ),
+    [shop, listings, hasFoodItems]
+  );
+  const hasActiveFieldFilters = Object.values(fieldFilters).some(
+    (value) => value !== undefined && value !== null && value !== ''
+  );
+  const setFieldFilter = (key, value) =>
+    setFieldFilters((prev) => ({ ...prev, [key]: value }));
 
   const isOwnStore = Boolean(user_data?.user_id && shop?.owner_id && user_data.user_id === shop.owner_id);
 
@@ -1087,6 +1113,46 @@ const StorefrontScreen = () => {
           </Flex>
         )}
 
+        {/* Filters from the category's custom form fields */}
+        {schemaFilters.length > 0 && (
+          <Flex gap={8} align="center" wrap="wrap" style={{ marginBottom: 14 }}>
+            {schemaFilters.map((field) =>
+              field.type === 'boolean' ? (
+                <Tag.CheckableTag
+                  key={field.key}
+                  checked={fieldFilters[field.key] === true}
+                  onChange={(checked) => setFieldFilter(field.key, checked ? true : undefined)}
+                  style={{
+                    padding: '3px 12px',
+                    borderRadius: 16,
+                    fontWeight: 600,
+                    border: '1px solid #e2e8f0',
+                  }}
+                >
+                  {field.label}
+                </Tag.CheckableTag>
+              ) : (
+                <Select
+                  key={field.key}
+                  allowClear
+                  size="small"
+                  placeholder={field.label}
+                  aria-label={`Filter by ${field.label}`}
+                  value={fieldFilters[field.key]}
+                  onChange={(value) => setFieldFilter(field.key, value)}
+                  options={field.values.map((opt) => ({ label: opt, value: opt }))}
+                  style={{ minWidth: 150 }}
+                />
+              )
+            )}
+            {hasActiveFieldFilters && (
+              <Button type="link" size="small" onClick={() => setFieldFilters({})}>
+                Clear filters
+              </Button>
+            )}
+          </Flex>
+        )}
+
         {/* DYNAMIC CATEGORY TABS (Only relevant sections, NO empty zeros!) */}
         <Tabs
           activeKey={activeTab}
@@ -1109,6 +1175,7 @@ const StorefrontScreen = () => {
                 setActiveTab('all');
                 setSearchQuery('');
                 setFoodFilter('all');
+                setFieldFilters({});
               }}
               style={{ borderRadius: 8, fontWeight: 700 }}
             >

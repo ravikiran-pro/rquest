@@ -47,7 +47,7 @@ import {
   getPreciseUserLocation,
   netWorkCall,
 } from '../../app/utils/helper';
-import { apiConfig } from '../../app/utils';
+import { apiConfig, getAvailableFilters } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
 import { useHistory, useLocation } from 'react-router-dom';
 import { colors, radii, shadows } from '../../app/styles';
@@ -166,6 +166,8 @@ const HomeScreen = () => {
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [itemListings, setItemListings] = useState([]);
+  // Custom-field filters the server offers for the current item results
+  const [filterFields, setFilterFields] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // User Saved Addresses integration
@@ -351,6 +353,19 @@ const HomeScreen = () => {
 
           const response = await netWorkCall(apiConfig.listings_search, 'POST', body, false);
           if (!isCancelled && response?.data) {
+            const offeredFields = Array.isArray(response.filter_fields) ? response.filter_fields : [];
+            setFilterFields(offeredFields);
+            // Drop custom-field filters the new results no longer offer
+            setFilters((prev) => {
+              const kept = Object.fromEntries(
+                Object.entries(prev.fields || {}).filter(([key]) =>
+                  offeredFields.some((field) => field.key === key)
+                )
+              );
+              return Object.keys(kept).length === Object.keys(prev.fields || {}).length
+                ? prev
+                : { ...prev, fields: kept };
+            });
             setItemListings(response.data);
             setSearchError(response.data.length === 0 ? 'No matching items or services found nearby' : '');
           }
@@ -400,6 +415,14 @@ const HomeScreen = () => {
     return new Set(filteredItems.map((i) => i.shop?.id || i.shop_id).filter(Boolean)).size;
   }, [searchMode, filteredShops, filteredItems]);
 
+  // Custom-field filters worth showing: only fields and values present in the
+  // items left after every other filter (distance, price, rating...)
+  const availableFieldFilters = useMemo(() => {
+    if (searchMode !== 'items' || filterFields.length === 0) return [];
+    const itemsBeforeFieldFilters = applySearchFilters(itemListings, { ...filters, fields: {} }, 'items');
+    return getAvailableFilters(filterFields, itemsBeforeFieldFilters);
+  }, [searchMode, filterFields, itemListings, filters]);
+
   // Active filter tags for the dismissible tag strip
   const activeFilterTags = useMemo(() => {
     const tags = [];
@@ -445,6 +468,22 @@ const HomeScreen = () => {
         onRemove: () => setFilters((prev) => ({ ...prev, onlyAvailable: false })),
       });
     }
+    if (searchMode === 'items') {
+      Object.entries(filters.fields || {}).forEach(([key, value]) => {
+        if (value === undefined || value === null || value === '') return;
+        const label = filterFields.find((field) => field.key === key)?.label || key;
+        tags.push({
+          key: `field-${key}`,
+          label: value === true ? label : `${label}: ${value}`,
+          onRemove: () =>
+            setFilters((prev) => {
+              const next = { ...(prev.fields || {}) };
+              delete next[key];
+              return { ...prev, fields: next };
+            }),
+        });
+      });
+    }
     if (filters.verifiedToday) {
       tags.push({
         key: 'verifiedToday',
@@ -473,7 +512,7 @@ const HomeScreen = () => {
       });
     }
     return tags;
-  }, [filters, searchMode]);
+  }, [filters, searchMode, filterFields]);
 
   const currentResults = searchMode === 'shops' ? filteredShops : filteredItems;
   const totalCount = currentResults.length;
@@ -1096,13 +1135,23 @@ const HomeScreen = () => {
           {/* Left Column: Filter Sidebar (Desktop md+) */}
           {!isMobile && (
             <Col md={7} lg={6}>
-              <div style={{ position: 'sticky', top: 20 }}>
+              {/* Scrolls inside itself when the filters are taller than the screen */}
+              <div
+                style={{
+                  position: 'sticky',
+                  top: 20,
+                  maxHeight: 'calc(100vh - 40px)',
+                  overflowY: 'auto',
+                  scrollbarWidth: 'thin',
+                }}
+              >
                 <FilterSidebar
                   filters={filters}
                   onFilterChange={setFilters}
                   onResetFilters={() => setFilters(DEFAULT_FILTERS)}
                   searchMode={searchMode}
                   categoryCounts={categoryCounts}
+                  fieldFilters={availableFieldFilters}
                 />
               </div>
             </Col>
@@ -1563,6 +1612,7 @@ const HomeScreen = () => {
           onResetFilters={() => setFilters(DEFAULT_FILTERS)}
           searchMode={searchMode}
           categoryCounts={categoryCounts}
+          fieldFilters={availableFieldFilters}
         />
       </Drawer>
 

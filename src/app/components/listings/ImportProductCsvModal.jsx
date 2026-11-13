@@ -21,7 +21,7 @@ import {
   InfoCircleOutlined,
   AppstoreOutlined,
 } from '@ant-design/icons';
-import { netWorkCall, apiConfig } from '../../utils';
+import { netWorkCall, apiConfig, resolveShopSchema } from '../../utils';
 import { colors, radii, typography, shadows } from '../../styles/theme';
 import {
   parseCSV,
@@ -111,7 +111,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
     reader.onload = (e) => {
       try {
         const text = e.target.result;
-        const items = parseCSV(text);
+        const items = parseCSV(text, resolveShopSchema(shop, activeCategory));
         if (items.length === 0) {
           message.error('No valid product rows found in CSV. Please verify column headers and data.');
           return;
@@ -152,7 +152,26 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
 
       const res = await netWorkCall(apiConfig.listings_bulk_create, 'POST', JSON.stringify(payload));
       if (res?.success) {
-        message.success(res.message || `Successfully imported ${parsedItems.length} items to catalog!`);
+        const skipped = Array.isArray(res.skipped) ? res.skipped : [];
+        if (skipped.length > 0) {
+          // Some rows broke the category's form rules: say which and why
+          Modal.warning({
+            title: res.message,
+            content: (
+              <div style={{ maxHeight: 260, overflowY: 'auto' }}>
+                {skipped.slice(0, 20).map((row) => (
+                  <div key={row.row} style={{ marginBottom: 6 }}>
+                    <strong>Row {row.row} ({row.name}):</strong>{' '}
+                    {row.errors.map((e) => e.message).join('. ')}
+                  </div>
+                ))}
+                {skipped.length > 20 && <div>…and {skipped.length - 20} more rows.</div>}
+              </div>
+            ),
+          });
+        } else {
+          message.success(res.message || `Successfully imported ${parsedItems.length} items to catalog!`);
+        }
         setParsedItems([]);
         onSuccess?.();
         onClose?.();

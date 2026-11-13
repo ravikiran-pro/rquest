@@ -12,6 +12,7 @@ import {
   Popconfirm,
   message,
   Alert,
+  Tooltip,
 } from 'antd';
 import {
   PlusOutlined,
@@ -22,82 +23,16 @@ import {
   BulbOutlined,
   SaveOutlined,
 } from '@ant-design/icons';
-import { netWorkCall, apiConfig } from '../../app/utils';
+import {
+  netWorkCall,
+  apiConfig,
+  getSchemaIssues,
+  FILTERABLE_FIELD_TYPES,
+} from '../../app/utils';
 import { colors, radii, typography } from '../../app/styles/theme';
 
 const { Text, Paragraph } = Typography;
 const { Option } = Select;
-
-// Quick Domain Presets for 1-click schema generation
-const SCHEMA_PRESETS = {
-  pharmacy: {
-    label: '💊 Pharmacy & Medical Store',
-    fields: [
-      { key: 'dosage_form', label: 'Dosage Form', type: 'select', required: true, options: ['Strip / Tablets', 'Syrup / Liquid', 'Capsules', 'Injection', 'Cream / Ointment', 'Drops', 'Powder', 'Medical Equipment'] },
-      { key: 'expiry_date', label: 'Expiry Date', type: 'date', required: true },
-      { key: 'batch_no', label: 'Batch / Lot Number', type: 'text', placeholder: 'e.g. B-2024-X9', required: false },
-      { key: 'prescription_required', label: 'Prescription Required (Rx)', type: 'boolean', defaultValue: false },
-      { key: 'composition', label: 'Salt / Active Chemical Composition', type: 'text', placeholder: 'e.g. Paracetamol 500mg, Phenylephrine 5mg' },
-      { key: 'schedule_drug', label: 'Schedule H / Controlled Substance', type: 'boolean', defaultValue: false },
-    ],
-  },
-  food: {
-    label: '🍽️ Restaurant & Food Menu',
-    fields: [
-      { key: 'food_type', label: 'Dietary Tag', type: 'radio', options: ['veg', 'non-veg', 'vegan', 'egg'], defaultValue: 'veg', required: true },
-      { key: 'prep_time_mins', label: 'Prep Time (Minutes)', type: 'number', defaultValue: 15, placeholder: '15' },
-      { key: 'spice_level', label: 'Spice Level', type: 'select', options: ['Mild', 'Medium', 'Spicy', 'Extra Hot'], defaultValue: 'Medium' },
-      { key: 'portion_info', label: 'Portion / Serves', type: 'text', placeholder: 'e.g. Serves 1-2 persons' },
-    ],
-  },
-  automotive: {
-    label: '🚗 Automotive & Spare Parts',
-    fields: [
-      { key: 'vehicle_type', label: 'Vehicle Class', type: 'select', options: ['2-Wheeler (Bike/Scooter)', '4-Wheeler (Car/SUV)', 'Commercial / Truck', 'Universal'], defaultValue: '4-Wheeler (Car/SUV)' },
-      { key: 'compatibility', label: 'Compatible Models & Make', type: 'text', placeholder: 'e.g. Honda City 2018-2023, Hyundai Creta' },
-      { key: 'part_number', label: 'OEM / Part Number', type: 'text', placeholder: 'e.g. 12345-ABC-01' },
-      { key: 'warranty_months', label: 'Warranty (Months)', type: 'number', placeholder: '12' },
-      { key: 'condition', label: 'Condition', type: 'select', options: ['Brand New OEM', 'Aftermarket New', 'Refurbished', 'Pre-Owned Tested'], defaultValue: 'Brand New OEM' },
-    ],
-  },
-  electronics: {
-    label: '💻 Electronics & Appliances',
-    fields: [
-      { key: 'brand', label: 'Brand / Manufacturer', type: 'text', placeholder: 'e.g. Sony, Dell, Samsung, Apple' },
-      { key: 'model_number', label: 'Model Number / Specs', type: 'text', placeholder: 'e.g. WH-1000XM5, 16GB RAM / 512GB SSD' },
-      { key: 'warranty_period', label: 'Warranty (Months)', type: 'number', placeholder: '12' },
-      { key: 'condition', label: 'Condition', type: 'select', options: ['Brand New Sealed', 'Open Box', 'Refurbished Certified', 'Pre-Owned'], defaultValue: 'Brand New Sealed' },
-    ],
-  },
-  services: {
-    label: '🔧 Technicians & Home Repairs',
-    fields: [
-      { key: 'service_mode', label: 'Service Mode', type: 'select', options: ['Doorstep / Home Visit', 'Workshop / Site Visit', 'Both Available'], defaultValue: 'Doorstep / Home Visit' },
-      { key: 'visiting_charge', label: 'Visiting / Inspection Fee (₹)', type: 'number', placeholder: '199' },
-      { key: 'duration_mins', label: 'Estimated Duration (Minutes)', type: 'number', defaultValue: 60 },
-      { key: 'warranty_days', label: 'Service Warranty (Days)', type: 'number', placeholder: '30' },
-    ],
-  },
-  rentals: {
-    label: '🏍️ Rentals & Fleet Assets',
-    fields: [
-      { key: 'security_deposit', label: 'Refundable Security Deposit (₹)', type: 'number', placeholder: '2000' },
-      { key: 'min_rental_days', label: 'Minimum Rental Period (Days)', type: 'number', defaultValue: 1 },
-      { key: 'id_proof_required', label: 'Government ID Proof Required', type: 'boolean', defaultValue: true },
-      { key: 'fuel_policy', label: 'Fuel / Usage Policy', type: 'select', options: ['Full-to-Full', 'Same-as-Received', 'Unlimited', 'Capped km/day'], defaultValue: 'Full-to-Full' },
-    ],
-  },
-  medieval: {
-    label: '⚔️ Medieval Armoury & Blacksmith',
-    fields: [
-      { key: 'item_class', label: 'Weapon / Armor Class', type: 'select', options: ['Longsword', 'Battleaxe', 'Plate Armor', 'Chainmail', 'Shield', 'Bow & Arrows', 'Potion / Elixir'], defaultValue: 'Longsword' },
-      { key: 'material', label: 'Forged Material', type: 'select', options: ['Damascus Steel', 'Iron', 'Bronze', 'Mithril', 'Dragon Scale', 'Hardened Leather'], defaultValue: 'Damascus Steel' },
-      { key: 'durability', label: 'Durability / Condition (%)', type: 'number', defaultValue: 100 },
-      { key: 'weight_kg', label: 'Weight (kg)', type: 'number', defaultValue: 2.5 },
-      { key: 'enchantment', label: 'Magical Runes / Enchantment', type: 'text', placeholder: 'e.g. +15 Fire Damage, Frost Resistance' },
-    ],
-  },
-};
 
 const FormSchemaBuilderModal = ({
   open,
@@ -109,6 +44,38 @@ const FormSchemaBuilderModal = ({
   const isShopTarget = !!shop;
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
+  const [templates, setTemplates] = useState([]);
+  const [suggestedTemplate, setSuggestedTemplate] = useState(null);
+  const [serverErrors, setServerErrors] = useState([]);
+
+  // The name the server matches a template against
+  const targetName = isShopTarget
+    ? shop?.shopCategory?.name || shop?.shop_type || ''
+    : category?.name || '';
+
+  // Load the ready-made templates and the one suggested for this category
+  useEffect(() => {
+    if (!open) return undefined;
+    let cancelled = false;
+    setServerErrors([]);
+    netWorkCall(
+      `${apiConfig.master_form_templates}?category_name=${encodeURIComponent(targetName)}`,
+      'GET',
+      null,
+      true
+    )
+      .then((res) => {
+        if (cancelled) return;
+        setTemplates(Array.isArray(res?.data) ? res.data : []);
+        setSuggestedTemplate(res?.suggested || null);
+      })
+      .catch(() => {
+        if (!cancelled) setTemplates([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, targetName]);
 
   useEffect(() => {
     if (open) {
@@ -140,7 +107,13 @@ const FormSchemaBuilderModal = ({
 
   const handleFieldChange = (index, prop, value) => {
     const updated = [...fields];
-    updated[index][prop] = value;
+    updated[index] = { ...updated[index], [prop]: value };
+    setServerErrors([]);
+
+    // Only fields with a fixed set of values can be search filters
+    if (prop === 'type' && !FILTERABLE_FIELD_TYPES.includes(value)) {
+      updated[index].filterable = false;
+    }
 
     // Auto-generate key from label if editing label on newly added field
     if (prop === 'label' && (!updated[index].key || updated[index].key.startsWith('field_'))) {
@@ -159,7 +132,8 @@ const FormSchemaBuilderModal = ({
       .map((s) => s.trim())
       .filter(Boolean);
     const updated = [...fields];
-    updated[index].options = opts;
+    updated[index] = { ...updated[index], options: opts };
+    setServerErrors([]);
     setFields(updated);
   };
 
@@ -178,12 +152,24 @@ const FormSchemaBuilderModal = ({
     setFields(updated);
   };
 
-  const handleApplyPreset = (presetKey) => {
-    const preset = SCHEMA_PRESETS[presetKey];
-    if (preset) {
-      setFields(JSON.parse(JSON.stringify(preset.fields)));
-      message.info(`Applied ${preset.label} template`);
+  const applyTemplate = (template) => {
+    setFields(JSON.parse(JSON.stringify(template.fields)));
+    setServerErrors([]);
+    message.info(`Loaded the ${template.label} template. Review the fields, then save.`);
+  };
+
+  const handleApplyTemplate = (template) => {
+    if (fields.length === 0) {
+      applyTemplate(template);
+      return;
     }
+    Modal.confirm({
+      title: `Replace the current ${fields.length} fields?`,
+      content: `Loading the ${template.label} template replaces the fields in this form. Nothing is saved until you press Save.`,
+      okText: 'Replace fields',
+      cancelText: 'Keep current',
+      onOk: () => applyTemplate(template),
+    });
   };
 
   const handleResetToCategoryDefault = () => {
@@ -196,9 +182,18 @@ const FormSchemaBuilderModal = ({
     }
   };
 
+  // Problems to fix before saving: checked here as the admin types, and again
+  // by the server on save
+  const issues = [...getSchemaIssues(fields), ...serverErrors];
+
   const handleSave = async () => {
     if (isShopTarget && !shop?.id) return;
     if (!isShopTarget && !category?.id) return;
+
+    if (issues.length > 0) {
+      message.error(issues[0].message);
+      return;
+    }
 
     setSaving(true);
     try {
@@ -226,6 +221,7 @@ const FormSchemaBuilderModal = ({
         onSuccess?.();
         onClose();
       } else {
+        setServerErrors(Array.isArray(res?.errors) ? res.errors : []);
         message.error(res?.error || 'Failed to save form configuration');
       }
     } catch (err) {
@@ -340,6 +336,22 @@ const FormSchemaBuilderModal = ({
         <Checkbox
           checked={Boolean(val)}
           onChange={(e) => handleFieldChange(idx, 'required', e.target.checked)}
+        />
+      ),
+    },
+    {
+      title: (
+        <Tooltip title="Show this field as a search filter for shoppers. Available for dropdown, radio and toggle fields.">
+          Filter
+        </Tooltip>
+      ),
+      dataIndex: 'filterable',
+      width: 70,
+      render: (val, record, idx) => (
+        <Checkbox
+          checked={Boolean(val)}
+          disabled={!FILTERABLE_FIELD_TYPES.includes(record.type || 'text')}
+          onChange={(e) => handleFieldChange(idx, 'filterable', e.target.checked)}
         />
       ),
     },
@@ -461,24 +473,31 @@ const FormSchemaBuilderModal = ({
           <BulbOutlined style={{ color: colors.tertiary }} /> Load Ready-Made Industry Template:
         </Text>
         <Space wrap>
-          {Object.entries(SCHEMA_PRESETS).map(([key, item]) => (
-            <Button
-              key={key}
-              size="small"
-              onClick={() => handleApplyPreset(key)}
-              style={{
-                borderRadius: radii.md,
-                fontSize: 12,
-                borderColor: colors.border,
-                background: colors.surface,
-                color: colors.textMain,
-                fontFamily: typography.fontFamily.body,
-                fontWeight: 500,
-              }}
-            >
-              {item.label}
-            </Button>
-          ))}
+          {templates.map((template) => {
+            const isSuggested = template.key === suggestedTemplate;
+            return (
+              <Tooltip
+                key={template.key}
+                title={`${template.description} (${template.fields.length} fields)`}
+              >
+                <Button
+                  size="small"
+                  type={isSuggested ? 'primary' : 'default'}
+                  ghost={isSuggested}
+                  onClick={() => handleApplyTemplate(template)}
+                  style={{ borderRadius: radii.md, fontSize: 12 }}
+                >
+                  {template.icon} {template.label}
+                  {isSuggested ? ' · Suggested' : ''}
+                </Button>
+              </Tooltip>
+            );
+          })}
+          {templates.length === 0 && (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Templates could not be loaded. You can still add fields by hand.
+            </Text>
+          )}
         </Space>
       </div>
 
@@ -501,6 +520,22 @@ const FormSchemaBuilderModal = ({
         </Button>
       </div>
 
+      {issues.length > 0 && (
+        <Alert
+          type="error"
+          showIcon
+          message="Fix these before saving"
+          description={
+            <ul style={{ margin: 0, paddingLeft: 18 }}>
+              {issues.map((issue, i) => (
+                <li key={`${issue.index}-${i}`}>{issue.message}</li>
+              ))}
+            </ul>
+          }
+          style={{ marginBottom: 12, borderRadius: 10 }}
+        />
+      )}
+
       <div
         style={{
           border: `1px solid ${colors.border}`,
@@ -512,7 +547,7 @@ const FormSchemaBuilderModal = ({
         <Table
           dataSource={fields}
           columns={columns}
-          rowKey={(record, idx) => record.key || idx}
+          rowKey={(record) => fields.indexOf(record)}
           pagination={false}
           size="small"
           scroll={{ x: 'max-content' }}

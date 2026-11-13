@@ -125,7 +125,7 @@ const Category = () => {
 
     const handleRowChange = async ({ id, name, img_url, is_active }) => {
         try {
-            await netWorkCall(
+            const res = await netWorkCall(
                 apiConfig.master_categories_create,
                 'POST',
                 JSON.stringify({
@@ -138,11 +138,22 @@ const Category = () => {
                 true
             );
 
+            if (!res?.success) {
+                message.error(res?.error || 'Failed to save category');
+                return;
+            }
+
             // Update the local state
             fetchInitData(pagination.current);
 
-            // Show success message
-            message.success('Category edited successfully');
+            if (res.applied_template && res.data) {
+                // A new category starts with a ready-made form: open it for review
+                message.success(res.message);
+                setSelectedCategoryForSchema(res.data);
+                setIsSchemaModalOpen(true);
+            } else {
+                message.success(res.message || 'Category saved successfully');
+            }
         } catch (error) {
             console.error('Error editing category:', error);
             message.error('Failed to edit category');
