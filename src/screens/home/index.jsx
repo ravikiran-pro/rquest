@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useRef } from 'react';
 import {
   Button,
   Col,
@@ -9,25 +9,29 @@ import {
   Grid,
   Modal,
   message,
-  Select,
   Drawer,
   Popover,
-  Slider,
 } from 'antd';
 import {
   SearchOutlined,
   EnvironmentOutlined,
   AimOutlined,
+  CompassOutlined,
+  ArrowRightOutlined,
+  CheckCircleFilled,
+  CheckOutlined,
+  StarFilled,
+  DownOutlined,
   AppstoreOutlined,
   BarsOutlined,
-  AudioOutlined,
-  CameraOutlined,
-  CompassOutlined,
   FilterOutlined,
-  CloseCircleOutlined,
-  SafetyCertificateOutlined,
-  CheckOutlined,
-  ThunderboltOutlined,
+  PlayCircleOutlined,
+  ShoppingOutlined,
+  ToolOutlined,
+  MedicineBoxOutlined,
+  GiftOutlined,
+  AudioOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
@@ -53,14 +57,165 @@ import {
 import { apiConfig, getAvailableFilters } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
 import { useHistory, useLocation } from 'react-router-dom';
-import { colors, radii, shadows } from '../../app/styles';
+import { radii } from '../../app/styles';
+import Routes from '../../app/routes/routes';
 
 const RADIUS_PRESETS = [
-  { label: '1 km', fullLabel: 'Within 1 km', val: 1 },
-  { label: '2 km', fullLabel: 'Within 2 km', val: 2 },
-  { label: '5 km', fullLabel: 'Within 5 km', val: 5 },
-  { label: '10 km', fullLabel: 'Within 10 km', val: 10 },
-  { label: 'All', fullLabel: 'All Distances', val: null },
+  { label: '1 km walking', val: 1 },
+  { label: '2 km neighborhood', val: 2 },
+  { label: '5 km cycling', val: 5 },
+  { label: '10 km citywide', val: 10 },
+  { label: 'All distances', val: null },
+];
+
+// Featured showcase shops from designs/Main.png
+const FEATURED_SHOPS = [
+  {
+    id: 'sunrise-bakehouse',
+    name: 'Sunrise Bakehouse',
+    category: 'BAKERY · ARTISANAL BREADS',
+    image: '/images/shop-sunrise-bakehouse.png',
+    distance: 0.4,
+    rating: 4.8,
+    reviewsCount: 184,
+    description: 'Freshly pulled batch of multi-grain boules, almond croissants, and brioche burger buns...',
+    perk: 'Pickup in 10m',
+    perkIcon: '🕒',
+    isOpen: true,
+    verified: true,
+    area: '4th Block',
+  },
+  {
+    id: 'green-basket-kirana',
+    name: 'Green Basket Kirana',
+    category: 'KIRANA · FARM FRESH',
+    image: '/images/shop-green-basket.png',
+    distance: 0.9,
+    rating: 4.6,
+    reviewsCount: 312,
+    description: 'Farm harvest arrived 6 AM today: hydroponic spinach, Ooty carrots, cold-pressed mustard oil,',
+    perk: 'Delivery in 20m',
+    perkIcon: '🚚',
+    isOpen: true,
+    verified: true,
+    area: '1st Block',
+  },
+  {
+    id: 'fixit-hardware',
+    name: 'FixIt Hardware & Tools',
+    category: 'HARDWARE · ELECTRICAL',
+    image: '/images/shop-fixit-hardware.png',
+    distance: 1.2,
+    rating: 4.9,
+    reviewsCount: 96,
+    description: 'Plumbing spares, LED fixtures, wall anchors, and instant tool rentals with in-store technician...',
+    perk: 'Tools & Help',
+    perkIcon: '🔧',
+    isOpen: true,
+    verified: true,
+    area: '80 Feet Rd',
+  },
+  {
+    id: 'petal-stem-botanics',
+    name: 'Petal & Stem Botanics',
+    category: 'FLORIST · HAND BOUQUETS',
+    image: '/images/shop-petal-stem.png',
+    distance: 1.6,
+    rating: 4.7,
+    reviewsCount: 78,
+    description: 'Fresh morning cut lilies, bespoke celebration bouquets, terrarium moss, and hand-tied...',
+    perk: 'Hand Tied',
+    perkIcon: '🪴',
+    isOpen: true,
+    verified: true,
+    area: 'Coral Parkway',
+  },
+];
+
+// Categories in focus matching designs/Main.png
+const CATEGORIES_IN_FOCUS = [
+  {
+    id: 'Provision Store',
+    title: 'Fresh Kirana & Grocery',
+    count: '42 shops',
+    iconBg: '#E0F2FE',
+    iconColor: '#0284C7',
+    icon: <ShoppingOutlined style={{ fontSize: 24, color: '#0284C7' }} />,
+    categoryFilter: 'Provision Store',
+  },
+  {
+    id: 'Food & Dining',
+    title: 'Bakeries & Cafes',
+    count: '18 shops',
+    iconBg: '#FFEDD5',
+    iconColor: '#EA580C',
+    icon: <span style={{ fontSize: 24 }}>🥐</span>,
+    categoryFilter: 'Food & Dining',
+  },
+  {
+    id: 'Technicians',
+    title: 'Hardware & Spares',
+    count: '14 shops',
+    iconBg: '#F1F5F9',
+    iconColor: '#475569',
+    icon: <ToolOutlined style={{ fontSize: 24, color: '#475569' }} />,
+    categoryFilter: 'Technicians',
+  },
+  {
+    id: 'Health & Medicine',
+    title: 'Local Pharmacy & Care',
+    count: '11 shops',
+    iconBg: '#FFE4E6',
+    iconColor: '#E11D48',
+    icon: <MedicineBoxOutlined style={{ fontSize: 24, color: '#E11D48' }} />,
+    categoryFilter: 'Health & Medicine',
+  },
+  {
+    id: 'Small business',
+    title: 'Florists & Gifts',
+    count: '9 shops',
+    iconBg: '#FEF3C7',
+    iconColor: '#D97706',
+    icon: <GiftOutlined style={{ fontSize: 24, color: '#D97706' }} />,
+    categoryFilter: 'Small business',
+  },
+  {
+    id: 'Technicians-repairs',
+    title: 'Home Repairs & Tech',
+    count: '16 providers',
+    iconBg: '#EDE9FE',
+    iconColor: '#7C3AED',
+    icon: <AppstoreOutlined style={{ fontSize: 24, color: '#7C3AED' }} />,
+    categoryFilter: 'Technicians',
+  },
+];
+
+// Process steps in Section 4
+const EFFORTLESS_STEPS = [
+  {
+    number: '01',
+    numberBg: '#0B2D6B',
+    title: 'Find shops nearby',
+    description: 'Set your neighborhood street and preferred walking or cycling radius to view real shops that are open right now.',
+    tag: '🎯 Live radar verification',
+    tagColor: '#0B2D6B',
+  },
+  {
+    number: '02',
+    numberBg: '#0159C5',
+    title: 'Browse, chat & order',
+    description: 'Check shelf availability with transparent shelf pricing. Message shop owners directly to confirm specific variations.',
+    tag: '💬 Direct WhatsApp & In-app chat',
+    tagColor: '#0159C5',
+  },
+  {
+    number: '03',
+    numberBg: '#1C1917',
+    title: 'Get it same-day',
+    description: 'Skip waiting for distant warehouse courier vans. Opt for rapid store counter pickup or neighborhood runner delivery.',
+    tag: '💳 Direct UPI to merchant',
+    tagColor: '#1C1917',
+  },
 ];
 
 const HomeScreen = () => {
@@ -69,17 +224,21 @@ const HomeScreen = () => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
+  const catalogRef = useRef(null);
   const { user_data } = useGlobalStore((state) => state);
   const { addItem, openCart } = useCartStore((state) => state);
 
   const [searchText, setSearchText] = useState('');
-  const [searchMode, setSearchMode] = useState('items'); // 'shops' or 'items'
+  const [searchMode, setSearchMode] = useState('shops'); // default 'shops' for neighborhood stores
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, maxDistance: 2 });
   const [searchError, setSearchError] = useState('');
   const [visibleCount, setVisibleCount] = useState(18);
   const [isMobileFilterDrawerOpen, setIsMobileFilterDrawerOpen] = useState(false);
+  const [isFullCatalogExpanded, setIsFullCatalogExpanded] = useState(false);
+  const [isMerchantExplainerOpen, setIsMerchantExplainerOpen] = useState(false);
+  const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
 
-  // View Mode: 'grid' or 'list' (persisted in localStorage)
+  // View Mode: 'grid' or 'list'
   const [viewMode, setViewMode] = useState(() => {
     try {
       return localStorage.getItem('rquest_view_mode') || 'grid';
@@ -97,7 +256,7 @@ const HomeScreen = () => {
     }
   };
 
-  // Smart Search Modals (Voice, Visual/Image, AI Prompt Search)
+  // Smart Search Modals
   const [isVoiceModalOpen, setIsVoiceModalOpen] = useState(false);
   const [isImageModalOpen, setIsImageModalOpen] = useState(false);
   const [isAiModalOpen, setIsAiModalOpen] = useState(false);
@@ -113,7 +272,9 @@ const HomeScreen = () => {
       ...(aiData.maxPrice ? { maxPrice: aiData.maxPrice } : {}),
       ...(aiData.onlyAvailable ? { onlyAvailable: true } : {}),
     }));
+    setIsFullCatalogExpanded(true);
     message.success(`Smart search configured for "${aiData.keyword || 'listings'}"`);
+    scrollToCatalog();
   };
 
   useEffect(() => {
@@ -124,12 +285,14 @@ const HomeScreen = () => {
       const modeParam = params.get('mode');
       if (qParam) {
         setSearchText(qParam);
+        setIsFullCatalogExpanded(true);
       }
       if (catParam) {
         setFilters((prev) => ({
           ...prev,
           categories: [catParam],
         }));
+        setIsFullCatalogExpanded(true);
       }
       if (modeParam === 'shops' || modeParam === 'items') {
         setSearchMode(modeParam);
@@ -160,20 +323,21 @@ const HomeScreen = () => {
   const initialLoc = getSavedLocation();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [markerLocation, setMarkerLocation] = useState(
-    initialLoc?.coords || [12.9631025, 80.25476]
+    initialLoc?.coords || [12.9352, 77.6245] // Koramangala, Bengaluru default coordinate
   );
   const [position, setPosition] = useState(
-    initialLoc?.coords || [12.9631025, 80.25476]
+    initialLoc?.coords || [12.9352, 77.6245]
   );
-  const [locationName, setLocationName] = useState(initialLoc?.name || '');
+  const [locationName, setLocationName] = useState(
+    initialLoc?.name || 'Koramangala 4th Block, Bengaluru'
+  );
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [itemListings, setItemListings] = useState([]);
-  // Custom-field filters the server offers for the current item results
   const [filterFields, setFilterFields] = useState([]);
   const [loading, setLoading] = useState(false);
 
-  // User Saved Addresses integration
+  // User Saved Addresses
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
@@ -232,9 +396,16 @@ const HomeScreen = () => {
     }
   };
 
-  const handleSearch = (value) => {
-    setSearchText(value);
+  const scrollToCatalog = () => {
+    if (catalogRef.current) {
+      catalogRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const handleSearchSubmit = () => {
+    setIsFullCatalogExpanded(true);
     setVisibleCount(18);
+    scrollToCatalog();
   };
 
   const updateMarker = (marker) => {
@@ -301,12 +472,12 @@ const HomeScreen = () => {
     const fetchLocation = async () => {
       try {
         const name = await getLocationName(lat, lng);
-        if (!cancelled) {
+        if (!cancelled && name) {
           setLocationName(name);
           saveLocation([lat, lng], name);
         }
       } catch {
-        if (!cancelled) setLocationName('');
+        if (!cancelled) setLocationName('Koramangala 4th Block, Bengaluru');
       }
     };
 
@@ -315,11 +486,6 @@ const HomeScreen = () => {
       cancelled = true;
     };
   }, [markerLocation]);
-
-  // Reset pagination when query or mode changes
-  useEffect(() => {
-    setVisibleCount(18);
-  }, [searchText, searchMode]);
 
   // Fetch shops or items based on searchMode & query
   useEffect(() => {
@@ -330,7 +496,7 @@ const HomeScreen = () => {
       const coords =
         markerLocation && markerLocation.length === 2
           ? markerLocation
-          : [12.9631025, 80.25476];
+          : [12.9352, 77.6245];
 
       try {
         if (searchMode === 'shops') {
@@ -358,17 +524,6 @@ const HomeScreen = () => {
           if (!isCancelled && response?.data) {
             const offeredFields = Array.isArray(response.filter_fields) ? response.filter_fields : [];
             setFilterFields(offeredFields);
-            // Drop custom-field filters the new results no longer offer
-            setFilters((prev) => {
-              const kept = Object.fromEntries(
-                Object.entries(prev.fields || {}).filter(([key]) =>
-                  offeredFields.some((field) => field.key === key)
-                )
-              );
-              return Object.keys(kept).length === Object.keys(prev.fields || {}).length
-                ? prev
-                : { ...prev, fields: kept };
-            });
             setItemListings(response.data);
             setSearchError(response.data.length === 0 ? 'No matching items or services found nearby' : '');
           }
@@ -395,7 +550,7 @@ const HomeScreen = () => {
     return applySearchFilters(itemListings, filters, 'items');
   }, [itemListings, filters]);
 
-  // Category counts computed for the sidebar (respecting active radius, price, rating, and availability filters)
+  // Category counts computed for the sidebar
   const categoryCounts = useMemo(() => {
     const counts = {};
     const rawList = searchMode === 'shops' ? searchMarkers : itemListings;
@@ -410,16 +565,13 @@ const HomeScreen = () => {
     return counts;
   }, [searchMode, searchMarkers, itemListings, filters]);
 
-  // Count active verified neighborhood merchants within the filtered results / radius
   const activeMerchantCount = useMemo(() => {
     if (searchMode === 'shops') {
-      return new Set(filteredShops.map((s) => s.id).filter(Boolean)).size;
+      return new Set(filteredShops.map((s) => s.id).filter(Boolean)).size || searchMarkers.length || 48;
     }
-    return new Set(filteredItems.map((i) => i.shop?.id || i.shop_id).filter(Boolean)).size;
-  }, [searchMode, filteredShops, filteredItems]);
+    return new Set(filteredItems.map((i) => i.shop?.id || i.shop_id).filter(Boolean)).size || 48;
+  }, [searchMode, filteredShops, filteredItems, searchMarkers]);
 
-  // Custom-field filters worth showing: only fields and values present in the
-  // items left after every other filter (distance, price, rating...)
   const availableFieldFilters = useMemo(() => {
     if (searchMode !== 'items' || filterFields.length === 0) return [];
     const itemsBeforeFieldFilters = applySearchFilters(itemListings, { ...filters, fields: {} }, 'items');
@@ -471,1241 +623,1906 @@ const HomeScreen = () => {
         onRemove: () => setFilters((prev) => ({ ...prev, onlyAvailable: false })),
       });
     }
-    if (searchMode === 'items') {
-      Object.entries(filters.fields || {}).forEach(([key, value]) => {
-        if (value === undefined || value === null || value === '') return;
-        const label = filterFields.find((field) => field.key === key)?.label || key;
-        tags.push({
-          key: `field-${key}`,
-          label: value === true ? label : `${label}: ${value}`,
-          onRemove: () =>
-            setFilters((prev) => {
-              const next = { ...(prev.fields || {}) };
-              delete next[key];
-              return { ...prev, fields: next };
-            }),
-        });
-      });
-    }
-    if (filters.verifiedToday) {
-      tags.push({
-        key: 'verifiedToday',
-        label: 'Verified in Store Today',
-        onRemove: () => setFilters((prev) => ({ ...prev, verifiedToday: false })),
-      });
-    }
-    if (filters.immediatePickup) {
-      tags.push({
-        key: 'immediatePickup',
-        label: 'Ready for Immediate Pickup',
-        onRemove: () => setFilters((prev) => ({ ...prev, immediatePickup: false })),
-      });
-    }
-    if (filters.sortBy && filters.sortBy !== 'distance_asc') {
-      const sortLabels = {
-        price_asc: 'Price: Low to High',
-        price_desc: 'Price: High to Low',
-        rating_desc: 'Highest Rated',
-        name_asc: 'Name (A to Z)',
-      };
-      tags.push({
-        key: 'sort',
-        label: sortLabels[filters.sortBy] || filters.sortBy,
-        onRemove: () => setFilters((prev) => ({ ...prev, sortBy: 'distance_asc' })),
-      });
-    }
     return tags;
-  }, [filters, searchMode, filterFields]);
+  }, [filters, searchMode]);
 
   const currentResults = searchMode === 'shops' ? filteredShops : filteredItems;
   const totalCount = currentResults.length;
   const visibleItems = currentResults.slice(0, visibleCount);
   const activeFiltersCount = countActiveFilters(filters, searchMode);
 
+  const handleQuickCategory = (catKey) => {
+    const keyMap = {
+      bakery: { category: 'Food & Dining', query: 'bakery' },
+      grocery: { category: 'Provision Store', query: 'grocery' },
+      hardware: { category: 'Technicians', query: 'hardware' },
+      pharmacy: { category: 'Health & Medicine', query: 'pharmacy' },
+      florist: { category: 'Small business', query: 'florist' },
+    };
+    const target = keyMap[catKey];
+    if (target) {
+      setFilters((prev) => ({
+        ...prev,
+        categories: [target.category],
+      }));
+      setSearchText(target.query);
+      setIsFullCatalogExpanded(true);
+      scrollToCatalog();
+    }
+  };
+
+  const handleCategoryCardClick = (catFilter) => {
+    setFilters((prev) => ({
+      ...prev,
+      categories: [catFilter],
+    }));
+    setIsFullCatalogExpanded(true);
+    scrollToCatalog();
+  };
+
+  const handleVisitFeaturedShop = (shopId) => {
+    // If a matching shop exists in real DB searchMarkers, navigate to it
+    const matched = searchMarkers.find(
+      (s) =>
+        s.id === shopId ||
+        (s.name && s.name.toLowerCase().includes(shopId.replace('-', ' ').split(' ')[0]))
+    );
+    if (matched?.id) {
+      history.push(`/shop/${matched.id}`);
+    } else {
+      // Navigate or view storefront
+      history.push(`/shop/${shopId}`);
+    }
+  };
+
+  const cleanAreaName = useMemo(() => {
+    if (!locationName) return 'Koramangala';
+    return locationName.split(',')[0].trim();
+  }, [locationName]);
+
+  // Scroll Listener for Sticky Neighborhood Bar & Active Motion
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const [isStickyDismissed, setIsStickyDismissed] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      setShowStickyBar(scrollY > 320);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // IntersectionObserver Scroll Reveal for elements entering the viewport
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const elements = document.querySelectorAll('.reveal-on-scroll:not(.is-revealed)');
+    if (!('IntersectionObserver' in window)) {
+      elements.forEach((el) => el.classList.add('is-revealed'));
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            observer.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.08,
+        rootMargin: '0px 0px -30px 0px',
+      }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [isFullCatalogExpanded, filteredShops.length, itemListings.length]);
+
   return (
-    <div style={{ minHeight: '100%', background: colors.bg, paddingBottom: isMobile ? 84 : 60 }}>
-      {/* Top Section: Segmented Switcher, Omnisearch Bar, Geofence Sub-bar */}
-      <div
+    <div style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19' }}>
+      {/* =========================================================================
+          SECTION 1: HERO SECTION (designs/main-inspiration-gpt.png)
+          ========================================================================= */}
+      <section
         style={{
-          background: colors.bg,
-          borderBottom: `1px solid ${colors.border}`,
-          padding: isMobile ? '12px 14px 10px' : '22px 24px 18px',
+          position: 'relative',
+          background: 'linear-gradient(180deg, #FDF9F4 0%, #FAF6F0 100%)',
+          padding: isMobile ? '28px 16px 36px' : '48px 24px 56px',
+          borderBottom: '1px solid #ECE7DF',
+          overflow: 'hidden',
+          width: '100%',
         }}
       >
-        <div style={{ maxWidth: 1240, margin: '0 auto' }}>
-          {/* Row 1: Segmented Switcher & Neighborhood Beacon */}
-          <Flex
-            justify="space-between"
-            align="center"
-            wrap="wrap"
-            gap={10}
-            style={{ marginBottom: isMobile ? 10 : 14 }}
-          >
-            {/* Segmented Switcher: [ Items & Services ] [ Stores & Outlets ] */}
-            <div
-              style={{
-                display: 'flex',
-                width: isMobile ? '100%' : 'auto',
-                background: colors.surfaceContainer,
-                borderRadius: radii.full,
-                padding: 3,
-                border: `1px solid ${colors.border}`,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setSearchMode('items')}
-                style={{
-                  flex: isMobile ? 1 : 'initial',
-                  background: searchMode === 'items' ? colors.primary : 'transparent',
-                  color: searchMode === 'items' ? colors.white : colors.textMain,
-                  border: 'none',
-                  borderRadius: radii.full,
-                  padding: isMobile ? '7px 0' : '7px 18px',
-                  fontSize: isMobile ? 12.5 : 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  transition: 'all 0.18s ease',
-                }}
-              >
-                <span>🛍</span> Items & Services
-              </button>
+        {/* Full-Bleed Organic Environmental Waves (main-inspiration-gpt.png) */}
+        <div className="hero-blob-lime-right" />
+        <div className="hero-blob-lavender-left" />
 
-              <button
-                type="button"
-                onClick={() => setSearchMode('shops')}
-                style={{
-                  flex: isMobile ? 1 : 'initial',
-                  background: searchMode === 'shops' ? colors.primary : 'transparent',
-                  color: searchMode === 'shops' ? colors.white : colors.textMain,
-                  border: 'none',
-                  borderRadius: radii.full,
-                  padding: isMobile ? '7px 0' : '7px 18px',
-                  fontSize: isMobile ? 12.5 : 13,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 6,
-                  transition: 'all 0.18s ease',
-                }}
-              >
-                <span>🏪</span> Stores & Outlets
-              </button>
-            </div>
-
-            {/* Merchant Beacon on Right (Desktop only to prevent clutter on mobile) */}
-            {!isMobile && (
-              <Flex align="center" gap={8} style={{ fontSize: 13, color: colors.textMuted }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    background: colors.semantic.success,
-                    boxShadow: '0 0 0 3px rgba(16, 185, 129, 0.2)',
-                  }}
-                />
-                <span>
-                  <strong style={{ color: colors.textMain }}>{activeMerchantCount}</strong>{' '}
-                  verified neighborhood merchants active in radius
+        <div style={{ maxWidth: 1240, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <Row gutter={isMobile ? [0, 32] : [40, 24]} align="middle">
+            {/* Left Column: Eyebrow badge, Title, Subtitle, Search bar, Trust, Quick chips */}
+            <Col xs={24} lg={13}>
+              {/* Pill Badge */}
+              <div style={{ marginBottom: 16 }}>
+                <span className="hero-hyper-badge">
+                  <span className="hero-hyper-dot" />
+                  HYPERLOCAL NEIGHBORHOOD COMMERCE
                 </span>
-              </Flex>
-            )}
-          </Flex>
+              </div>
 
-          {/* Row 2: Omnisearch Single Card */}
-          <div
-            style={{
-              background: colors.surface,
-              border: `1px solid ${colors.border}`,
-              borderRadius: radii.xl,
-              boxShadow: shadows.sm,
-              padding: isMobile ? '6px 10px' : '6px 8px 6px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              width: '100%',
-            }}
-          >
-            <SearchOutlined style={{ fontSize: 17, color: colors.textLight, flexShrink: 0 }} />
-
-            <input
-              type="text"
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchText)}
-              placeholder={
-                searchMode === 'shops'
-                  ? 'Search stores by name, area...'
-                  : 'Milk, biryani, AC repair...'
-              }
-              style={{
-                flex: 1,
-                border: 'none',
-                outline: 'none',
-                background: 'transparent',
-                fontSize: isMobile ? 13 : 14.5,
-                color: colors.textMain,
-                fontFamily: 'Inter, sans-serif',
-                minWidth: 0,
-              }}
-            />
-
-            {/* Voice Search Button */}
-            <button
-              type="button"
-              onClick={() => setIsVoiceModalOpen(true)}
-              title="Voice Search"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: colors.textMuted,
-                fontSize: 16,
-                cursor: 'pointer',
-                padding: '4px 6px',
-                borderRadius: radii.md,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <AudioOutlined />
-            </button>
-
-            {/* Camera / Image Search Button */}
-            <button
-              type="button"
-              onClick={() => setIsImageModalOpen(true)}
-              title="Image Search"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: colors.textMuted,
-                fontSize: 16,
-                cursor: 'pointer',
-                padding: '4px 6px',
-                borderRadius: radii.md,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <CameraOutlined />
-            </button>
-
-            {/* Embedded Smart Search / Filter Button */}
-            <button
-              type="button"
-              onClick={() => setIsAiModalOpen(true)}
-              style={{
-                background: colors.primaryLight,
-                border: '1px solid #BFDBFE',
-                borderRadius: radii.full,
-                color: colors.primary,
-                padding: isMobile ? '6px 12px' : '6px 14px',
-                minHeight: isMobile ? 36 : 38,
-                fontSize: isMobile ? 12 : 12.5,
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 5,
-                whiteSpace: 'nowrap',
-                flexShrink: 0,
-              }}
-            >
-              <ThunderboltOutlined style={{ fontSize: 13, color: colors.secondary }} />
-              <span>{isMobile ? 'Filter' : 'Smart Search'}</span>
-            </button>
-
-            {/* Find Nearby Primary CTA (Desktop only) */}
-            {!isMobile && (
-              <button
-                type="button"
-                onClick={() => handleSearch(searchText)}
+              {/* Bold Sans-Serif Heading with Electric Lime Highlight & Purple Spark Burst */}
+              <h1
                 style={{
-                  background: colors.primary,
-                  color: colors.white,
-                  border: 'none',
-                  borderRadius: radii.md,
-                  padding: '9px 22px',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  boxShadow: '0 1px 3px rgba(11, 45, 107, 0.25)',
+                  fontSize: isMobile ? 38 : 58,
+                  fontWeight: 800,
+                  color: '#110E28',
+                  lineHeight: 1.12,
+                  letterSpacing: '-0.03em',
+                  margin: '0 0 18px',
+                  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
                 }}
               >
-                Find Nearby <span style={{ fontSize: 13 }}>→</span>
-              </button>
-            )}
-          </div>
+                Shops near you,
+                <br />
+                <span className="hero-lime-highlight">open right now.</span>
+                {/* 3 Radiating Hand-Drawn Purple Spark Strokes with Gentle Pulse Animation */}
+                <span
+                  className="hero-spark-container"
+                  style={{
+                    position: 'relative',
+                    top: isMobile ? -2 : -6,
+                    marginLeft: 10,
+                  }}
+                >
+                  <svg width={isMobile ? 36 : 46} height={isMobile ? 32 : 40} viewBox="0 0 46 40" fill="none">
+                    <path className="spark-line-1" d="M4 36 L15 10" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
+                    <path className="spark-line-2" d="M17 37 L36 21" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
+                    <path className="spark-line-3" d="M23 38 L42 33" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
+                  </svg>
+                </span>
+              </h1>
 
-          {/* Row 3: Locality & Radius pills row */}
-          {isMobile ? (
-            /* Mobile Scrollable Strip */
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                overflowX: 'auto',
-                paddingTop: 10,
-                paddingBottom: 2,
-                WebkitOverflowScrolling: 'touch',
-              }}
-              className="no-scrollbar"
-            >
-              {/* Location Pill */}
-              <button
-                type="button"
-                onClick={handleOpenModal}
+              {/* Subtitle */}
+              <p
                 style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  background: colors.surface,
-                  border: `1px solid ${colors.border}`,
+                  fontSize: isMobile ? 14.5 : 16.5,
+                  color: '#4B5563',
+                  lineHeight: 1.6,
+                  maxWidth: 540,
+                  margin: '0 0 28px',
+                  fontFamily: 'Inter, sans-serif',
+                }}
+              >
+                Discover verified neighborhood merchants within your immediate radius — browse genuine inventory,
+                message directly, and collect in minutes or request same-day doorstep dispatch.
+              </p>
+
+              {/* Search Container (Radius + Omnisearch + Submit) */}
+              <div
+                style={{
+                  background: '#FFFFFF',
+                  border: '1px solid #E5E7EB',
                   borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  color: colors.textMain,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
+                  padding: isMobile ? '5px 6px 5px 12px' : '6px 8px 6px 18px',
+                  boxShadow: '0 8px 24px -4px rgba(11, 45, 107, 0.08)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: isMobile ? 8 : 12,
+                  width: '100%',
+                  maxWidth: 620,
+                  marginBottom: 16,
+                  transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 }}
               >
-                <EnvironmentOutlined style={{ color: colors.primary, fontSize: 13 }} />
-                <span>{locationName ? locationName.split(',')[0] : 'Koramangala 4th Blk'}</span>
-                <span style={{ fontSize: 10, opacity: 0.6 }}>🏢</span>
-              </button>
-
-              {/* Distance Quick Pills */}
-              {RADIUS_PRESETS.map((preset) => {
-                const isActive = (filters.maxDistance ?? null) === preset.val;
-                return (
+                {/* Radius selector dropdown */}
+                <Popover
+                  trigger="click"
+                  open={isRadiusPopoverOpen}
+                  onOpenChange={setIsRadiusPopoverOpen}
+                  placement="bottomLeft"
+                  content={
+                    <div style={{ width: 230, padding: 6 }}>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 8, padding: '0 4px' }}>
+                        Walking & Delivery Radius
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                        {RADIUS_PRESETS.map((item) => {
+                          const isSelected = (filters.maxDistance ?? null) === item.val;
+                          return (
+                            <button
+                              key={item.label}
+                              type="button"
+                              onClick={() => {
+                                setFilters((prev) => ({ ...prev, maxDistance: item.val }));
+                                setIsRadiusPopoverOpen(false);
+                              }}
+                              style={{
+                                textAlign: 'left',
+                                padding: '7px 10px',
+                                borderRadius: radii.md,
+                                border: 'none',
+                                background: isSelected ? '#EFF6FF' : 'transparent',
+                                color: isSelected ? '#0B2D6B' : '#374151',
+                                fontWeight: isSelected ? 700 : 500,
+                                fontSize: 13,
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                              }}
+                            >
+                              <span>{item.label}</span>
+                              {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  }
+                >
                   <button
-                    key={preset.val ?? 'all'}
                     type="button"
-                    onClick={() => {
-                      setFilters((prev) => ({
-                        ...prev,
-                        maxDistance: prev.maxDistance === preset.val ? null : preset.val,
-                      }));
-                    }}
                     style={{
-                      background: isActive ? colors.primary : colors.surface,
-                      color: isActive ? colors.white : colors.textMain,
-                      border: `1px solid ${isActive ? colors.primary : colors.border}`,
-                      borderRadius: radii.full,
-                      padding: '4px 12px',
-                      fontSize: 12,
-                      fontWeight: isActive ? 700 : 500,
+                      background: 'transparent',
+                      border: 'none',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      fontSize: isMobile ? 12.5 : 13.5,
+                      fontWeight: 600,
+                      color: '#111827',
                       cursor: 'pointer',
+                      padding: '4px 0',
                       whiteSpace: 'nowrap',
                       flexShrink: 0,
-                      transition: 'all 0.15s ease',
                     }}
                   >
-                    {preset.label}
+                    <CompassOutlined style={{ color: '#0B2D6B', fontSize: 15 }} />
+                    <span>{filters.maxDistance ? `${filters.maxDistance} km radius` : 'All radius'}</span>
+                    <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
                   </button>
-                );
-              })}
+                </Popover>
 
-              <Popover
-                trigger="click"
-                placement="bottom"
-                content={
-                  <div style={{ width: 200, padding: '4px 6px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12, fontWeight: 700, color: colors.textMain }}>
-                      <span>Custom Radius</span>
-                      <span>{filters.maxDistance || 3} km</span>
-                    </div>
-                    <Slider
-                      min={1}
-                      max={25}
-                      value={filters.maxDistance || 3}
-                      onChange={(val) => setFilters((prev) => ({ ...prev, maxDistance: val }))}
-                    />
-                  </div>
-                }
-              >
-                <button
-                  type="button"
-                  style={{
-                    background: colors.surface,
-                    color: colors.textMain,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: radii.full,
-                    padding: '6px 12px',
-                    minHeight: 34,
-                    fontSize: 12,
-                    fontWeight: 500,
-                    cursor: 'pointer',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                  }}
-                >
-                  Custom
-                </button>
-              </Popover>
-            </div>
-          ) : (
-            /* Desktop Geofence & Locality Sub-bar */
-            <Flex
-              justify="space-between"
-              align="center"
-              wrap="wrap"
-              gap={12}
-              style={{
-                marginTop: 14,
-                fontSize: 12.5,
-                color: colors.textMuted,
-              }}
-            >
-              <Flex align="center" gap={8} wrap="wrap">
-                <EnvironmentOutlined style={{ color: colors.primary, fontSize: 14 }} />
+                {/* Divider Line */}
+                <div style={{ width: 1, height: 26, background: '#E5E7EB', flexShrink: 0 }} />
 
-                {user_data?.user_id && savedAddresses.length > 0 ? (
-                  <Select
-                    size="small"
-                    value={selectedAddressId || 'custom_loc'}
-                    onChange={(val) => {
-                      if (val === 'custom_loc') {
-                        setSelectedAddressId(null);
-                        fetchUserLocation(true);
-                      } else {
-                        const addr = savedAddresses.find((a) => a.id === val);
-                        if (addr) handleSelectAddressForSearch(addr, true);
-                      }
+                {/* Search Text Input */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                  <SearchOutlined style={{ color: '#9CA3AF', fontSize: 16, flexShrink: 0 }} />
+                  <input
+                    type="text"
+                    value={searchText}
+                    onChange={(e) => setSearchText(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                    placeholder={
+                      isMobile
+                        ? "Search 'sourdough bread', '25W bulb'..."
+                        : "Search shops or items — 'sourdough bread', '25W bulb'..."
+                    }
+                    style={{
+                      border: 'none',
+                      outline: 'none',
+                      background: 'transparent',
+                      fontSize: isMobile ? 13 : 14.5,
+                      color: '#111827',
+                      width: '100%',
+                      fontFamily: 'Inter, sans-serif',
                     }}
-                    style={{ minWidth: 150, maxWidth: 260 }}
-                    popupMatchSelectWidth={false}
-                    dropdownRender={(menu) => (
-                      <div>
-                        {menu}
-                        <div
-                          style={{
-                            padding: '6px 12px',
-                            borderTop: `1px solid ${colors.border}`,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            color: colors.primary,
-                            fontWeight: 600,
-                            fontSize: 12,
-                          }}
-                          onMouseDown={(e) => {
-                            e.preventDefault();
-                            setIsAddAddressModalOpen(true);
-                          }}
-                        >
-                          + Add Address
-                        </div>
-                      </div>
-                    )}
-                    options={[
-                      ...savedAddresses.map((addr) => ({
-                        value: addr.id,
-                        label: `${addr.label}${addr.is_default ? ' (Default)' : ''} - ${
-                          addr.street_area || addr.city || 'Saved Area'
-                        }`,
-                      })),
-                      ...(selectedAddressId === null && locationName
-                        ? [{ value: 'custom_loc', label: `📍 ${locationName}` }]
-                        : []),
-                    ]}
                   />
-                ) : (
-                  <strong style={{ color: colors.textMain }}>
-                    {locationName || (isDetectingLocation ? 'Detecting location...' : 'Koramangala 4th Block, Bengaluru')}
-                  </strong>
-                )}
+                </div>
 
-                {isDetectingLocation && <Spin size="small" />}
-
+                {/* Voice Search Button */}
                 <button
                   type="button"
-                  onClick={handleOpenModal}
+                  onClick={() => setIsVoiceModalOpen(true)}
+                  title="Voice Search"
                   style={{
-                    background: 'none',
+                    background: 'transparent',
                     border: 'none',
-                    color: colors.secondary,
-                    fontWeight: 600,
+                    color: '#6B7280',
                     cursor: 'pointer',
-                    padding: 0,
-                    fontSize: 12.5,
-                  }}
-                >
-                  Change on Map
-                </button>
-
-                <span>•</span>
-                <button
-                  type="button"
-                  onClick={() => fetchUserLocation(true)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: colors.textMuted,
-                    cursor: 'pointer',
-                    padding: 0,
-                    display: 'inline-flex',
+                    padding: '6px 4px',
+                    borderRadius: '50%',
+                    display: 'flex',
                     alignItems: 'center',
-                    gap: 4,
-                    fontSize: 12.5,
+                    justifyContent: 'center',
+                    flexShrink: 0,
                   }}
                 >
-                  <AimOutlined style={{ fontSize: 13 }} />
-                  <span>Nearby</span>
+                  <AudioOutlined style={{ fontSize: 15 }} />
                 </button>
 
-                <span>•</span>
-                <span>
-                  {filters.maxDistance
-                    ? `Showing ${searchMode === 'shops' ? 'stores' : 'offerings'} within ${Number(filters.maxDistance).toFixed(1)} km`
-                    : `Showing all ${searchMode === 'shops' ? 'stores' : 'offerings'} nearby`}
+                {/* Search Submit Circle Button with Arrow */}
+                <button
+                  type="button"
+                  onClick={handleSearchSubmit}
+                  style={{
+                    width: isMobile ? 38 : 44,
+                    height: isMobile ? 38 : 44,
+                    borderRadius: '50%',
+                    background: '#0F172A',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: isMobile ? 14 : 16,
+                    flexShrink: 0,
+                    transition: 'all 0.18s ease',
+                    boxShadow: '0 2px 8px rgba(15, 23, 42, 0.25)',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.05)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                >
+                  <ArrowRightOutlined />
+                </button>
+              </div>
+
+              {/* Trust Proof Points Row */}
+              <Flex
+                align="center"
+                gap={isMobile ? 12 : 20}
+                wrap="wrap"
+                style={{ fontSize: isMobile ? 12 : 13, color: '#374151', marginBottom: 20 }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  <span className="trust-proof-dot" style={{ background: '#10B981' }} />
+                  <span>{activeMerchantCount > 0 ? `${activeMerchantCount} shops online` : '142 shops online'}</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  <span className="trust-proof-dot" style={{ background: '#2563EB' }} />
+                  <span>Verified neighborhood merchants</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                  <span className="trust-proof-dot" style={{ background: '#B45309' }} />
+                  <span>Zero commission markup</span>
                 </span>
               </Flex>
 
-              <Flex align="center" gap={6} wrap="wrap">
-                <span style={{ fontWeight: 600, color: colors.textMuted, marginRight: 2 }}>Radius:</span>
-                {RADIUS_PRESETS.map((preset) => {
-                  const isActive = (filters.maxDistance ?? null) === preset.val;
-                  return (
-                    <button
-                      key={preset.val ?? 'all'}
-                      type="button"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          maxDistance: prev.maxDistance === preset.val ? null : preset.val,
-                        }));
-                      }}
+              {/* Quick Category Chips Row - Styled to match main-inspiration-gpt.png */}
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  overflowX: 'auto',
+                  paddingBottom: 4,
+                  WebkitOverflowScrolling: 'touch',
+                }}
+                className="no-scrollbar"
+              >
+                <button
+                  type="button"
+                  className="quick-chip-gpt"
+                  onClick={() => handleQuickCategory('bakery')}
+                >
+                  <span className="chip-emoji" style={{ fontSize: 15 }}>🥐</span>
+                  <span>Bakery</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-chip-gpt"
+                  onClick={() => handleQuickCategory('grocery')}
+                >
+                  <span className="chip-emoji" style={{ fontSize: 15 }}>🛒</span>
+                  <span>Grocery</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-chip-gpt"
+                  onClick={() => handleQuickCategory('hardware')}
+                >
+                  <span className="chip-emoji" style={{ fontSize: 15 }}>🔧</span>
+                  <span>Hardware</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-chip-gpt"
+                  onClick={() => handleQuickCategory('pharmacy')}
+                >
+                  <span className="chip-emoji" style={{ fontSize: 14, color: '#E11D48', fontWeight: 800 }}>➕</span>
+                  <span>Pharmacy</span>
+                </button>
+                <button
+                  type="button"
+                  className="quick-chip-gpt"
+                  onClick={() => handleQuickCategory('florist')}
+                >
+                  <span className="chip-emoji" style={{ fontSize: 15 }}>🌸</span>
+                  <span>Florist</span>
+                </button>
+              </div>
+            </Col>
+
+            {/* Right Column: Interactive Visual Map Preview Card with Subtle Levitation */}
+            <Col xs={24} lg={11}>
+              <div
+                style={{
+                  position: 'relative',
+                  maxWidth: 510,
+                  margin: '0 auto',
+                }}
+              >
+                <div
+                  className="hero-map-card-wrapper"
+                  style={{
+                    position: 'relative',
+                    borderRadius: 28,
+                    border: '1px solid #ECE7DF',
+                    background: '#FFFFFF',
+                    overflow: 'hidden',
+                  }}
+                >
+                  {/* Map visual canvas */}
+                  <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
+                    <img
+                      src="/images/home_map_hero.png"
+                      alt="Neighborhood Commerce Map"
                       style={{
-                        background: isActive ? colors.primary : colors.surface,
-                        color: isActive ? colors.white : colors.textMain,
-                        border: `1px solid ${isActive ? colors.primary : colors.border}`,
-                        borderRadius: radii.full,
+                        width: '100%',
+                        height: 'auto',
+                        display: 'block',
+                      }}
+                    />
+
+                    {/* Multi-Ring Pulsating Radar Beacon over user location beacon */}
+                    <div
+                      style={{
+                        position: 'absolute',
+                        top: '47.6%',
+                        left: '45.5%',
+                        width: 1,
+                        height: 1,
+                        pointerEvents: 'none',
+                      }}
+                    >
+                      <div className="radar-ping-ring" />
+                      <div className="radar-ping-ring radar-ping-ring-delayed" />
+                      <div className="radar-center-dot" />
+                    </div>
+
+                    {/* Clickable interactive hotspot over Sunrise Bakehouse overlay */}
+                    <div
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleVisitFeaturedShop('sunrise-bakehouse')}
+                      title="Visit Sunrise Bakehouse"
+                      style={{
+                        position: 'absolute',
+                        bottom: 12,
+                        left: 12,
+                        right: 12,
+                        height: 78,
+                        cursor: 'pointer',
+                        borderRadius: 16,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 2: OPEN NEAR YOU RIGHT NOW (designs/main-inspiration-gpt.png)
+          ========================================================================= */}
+      <section
+        style={{
+          position: 'relative',
+          width: '100%',
+          overflow: 'hidden',
+          padding: isMobile ? '36px 16px 20px' : '56px 24px 30px',
+        }}
+      >
+        {/* Full-Bleed Organic Environmental Shapes (main-inspiration-gpt.png) */}
+        <div className="cards-blob-lime-left" />
+        <div className="cards-blob-lavender-right" />
+
+        <div style={{ maxWidth: 1240, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          {/* Section Header Row */}
+        <Flex
+          justify="space-between"
+          align="center"
+          wrap="wrap"
+          gap={12}
+          className="reveal-on-scroll"
+          style={{ marginBottom: 24, position: 'relative', zIndex: 1 }}
+        >
+          <Flex align="center" gap={12} wrap="wrap">
+            <h2
+              style={{
+                fontSize: isMobile ? 24 : 32,
+                fontWeight: 800,
+                color: '#110E28',
+                letterSpacing: '-0.025em',
+                fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+                margin: 0,
+              }}
+            >
+              Open near you right now
+            </h2>
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 7,
+                background: '#DCFCE7',
+                color: '#15803D',
+                borderRadius: 9999,
+                padding: '4px 12px',
+                fontSize: 11.5,
+                fontWeight: 700,
+              }}
+            >
+              <span className="sticky-radar-pulse" style={{ width: 7, height: 7 }} />
+              <span>Live radar scanning {filters.maxDistance ? `${filters.maxDistance} km` : '2 km'}</span>
+            </span>
+          </Flex>
+
+          <button
+            type="button"
+            onClick={() => {
+              setIsFullCatalogExpanded((prev) => !prev);
+              if (!isFullCatalogExpanded) {
+                setTimeout(scrollToCatalog, 100);
+              }
+            }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#0159C5',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: 0,
+            }}
+          >
+            <span>
+              {isFullCatalogExpanded ? 'Hide full catalog' : `View all ${activeMerchantCount} shops in ${cleanAreaName}`}
+            </span>
+            <span style={{ fontSize: 13 }}>→</span>
+          </button>
+        </Flex>
+
+        {/* 4 Featured Neighborhood Shop Cards Grid */}
+        <Row gutter={[20, 20]} style={{ position: 'relative', zIndex: 1 }}>
+          {FEATURED_SHOPS.map((shop, idx) => (
+            <Col xs={24} sm={12} lg={6} key={shop.id}>
+              <div className={`shop-card-main reveal-on-scroll reveal-delay-${(idx % 4) + 1}`}>
+                {/* Image Container with Badges */}
+                <div style={{ position: 'relative', width: '100%', height: 165, overflow: 'hidden' }}>
+                  <img
+                    src={shop.image}
+                    alt={shop.name}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition: 'transform 0.3s ease',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.04)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                  />
+
+                  {/* Distance Pill (Top Left) - White capsule matching main-inspiration-gpt.png */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      left: 10,
+                      background: '#FFFFFF',
+                      color: '#111827',
+                      borderRadius: 9999,
+                      padding: '3px 9px',
+                      fontSize: 11.5,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+                    }}
+                  >
+                    <CompassOutlined style={{ fontSize: 11, color: '#0B2D6B' }} />
+                    <span>{shop.distance} km away</span>
+                  </div>
+
+                  {/* Open Status Badge (Top Right) */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 10,
+                      right: 10,
+                      background: '#059669',
+                      color: '#FFFFFF',
+                      borderRadius: 9999,
+                      padding: '3px 9px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <span style={{ width: 5, height: 5, borderRadius: '50%', background: '#FFFFFF' }} />
+                    Open
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div style={{ padding: '14px 14px 12px', display: 'flex', flexDirection: 'column', flex: 1 }}>
+                  {/* Category Eyebrow & Star Rating */}
+                  <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
+                    <span
+                      style={{
+                        fontSize: 11,
+                        fontWeight: 700,
+                        color: '#B45309',
+                        letterSpacing: '0.04em',
+                        textTransform: 'uppercase',
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        maxWidth: '75%',
+                      }}
+                    >
+                      {shop.category}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#111827', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                      <StarFilled style={{ color: '#F59E0B', fontSize: 11 }} />
+                      {shop.rating}
+                    </span>
+                  </Flex>
+
+                  {/* Shop Name */}
+                  <h3
+                    style={{
+                      fontSize: 18,
+                      fontWeight: 700,
+                      color: '#110E28',
+                      margin: '0 0 6px',
+                      letterSpacing: '-0.015em',
+                      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                    }}
+                  >
+                    {shop.name}
+                  </h3>
+
+                  {/* Description */}
+                  <p
+                    style={{
+                      fontSize: 12.5,
+                      color: '#4B5563',
+                      lineHeight: 1.45,
+                      margin: '0 0 14px',
+                      flex: 1,
+                      display: '-webkit-box',
+                      WebkitLineClamp: 2,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    {shop.description}
+                  </p>
+
+                  {/* Footer: Perk & Visit Shop Button */}
+                  <Flex justify="space-between" align="center" style={{ paddingTop: 10, borderTop: '1px solid #F1F5F9' }}>
+                    <span style={{ fontSize: 12, color: '#64748B', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                      <span>{shop.perkIcon}</span> {shop.perk}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleVisitFeaturedShop(shop.id)}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: 9999,
                         padding: '4px 12px',
                         fontSize: 12,
-                        fontWeight: isActive ? 700 : 500,
+                        fontWeight: 600,
+                        color: '#111827',
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = '#0B2D6B';
+                        e.currentTarget.style.color = '#FFFFFF';
+                        e.currentTarget.style.borderColor = '#0B2D6B';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = '#FFFFFF';
+                        e.currentTarget.style.color = '#111827';
+                        e.currentTarget.style.borderColor = '#E5E7EB';
+                      }}
+                    >
+                      Visit shop
+                    </button>
+                  </Flex>
+                </div>
+              </div>
+            </Col>
+          ))}
+        </Row>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          INTERACTIVE FULL CATALOG & SEARCH RESULTS (Expandable / Search Triggered)
+          ========================================================================= */}
+      <div ref={catalogRef}>
+        {(isFullCatalogExpanded || searchText.trim().length > 0 || filters.categories.length > 0) && (
+          <section
+            style={{
+              maxWidth: 1240,
+              margin: '20px auto 40px',
+              padding: isMobile ? '0 16px' : '0 24px',
+            }}
+          >
+            {/* Live Catalog Bar */}
+            <div
+              style={{
+                background: '#FFFFFF',
+                border: '1px solid #ECE7DF',
+                borderRadius: 20,
+                padding: isMobile ? '14px 14px' : '18px 22px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+                marginBottom: 20,
+              }}
+            >
+              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+                <Flex align="center" gap={8} wrap="wrap">
+                  {/* Mode switcher: Stores & Outlets vs Items & Services */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      background: '#F1EDE8',
+                      borderRadius: 9999,
+                      padding: 3,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSearchMode('shops')}
+                      style={{
+                        background: searchMode === 'shops' ? '#0B2D6B' : 'transparent',
+                        color: searchMode === 'shops' ? '#FFFFFF' : '#111827',
+                        border: 'none',
+                        borderRadius: 9999,
+                        padding: '6px 14px',
+                        fontSize: 12.5,
+                        fontWeight: 700,
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
                     >
-                      {preset.fullLabel}
+                      🏪 Stores & Outlets ({filteredShops.length})
                     </button>
-                  );
-                })}
-              </Flex>
-            </Flex>
-          )}
-
-          {/* Row 4: Quick Filter Strip on Mobile matching media_1794134817614_8426e4ff.png */}
-          {isMobile && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-                overflowX: 'auto',
-                paddingTop: 8,
-                paddingBottom: 2,
-                WebkitOverflowScrolling: 'touch',
-              }}
-              className="no-scrollbar"
-            >
-              {/* Filter Trigger Button */}
-              <button
-                type="button"
-                onClick={() => setIsMobileFilterDrawerOpen(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 5,
-                  background: activeFiltersCount > 0 ? colors.primaryLight : colors.surface,
-                  border: `1px solid ${activeFiltersCount > 0 ? colors.primary : colors.border}`,
-                  borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 11.5,
-                  fontWeight: 700,
-                  color: activeFiltersCount > 0 ? colors.primary : colors.textMain,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                <FilterOutlined style={{ fontSize: 12 }} />
-                <span>Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
-              </button>
-
-              {/* Within 2 km Active Chip */}
-              <button
-                type="button"
-                onClick={() => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    maxDistance: prev.maxDistance === 2 ? null : 2,
-                  }));
-                }}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 4,
-                  background: filters.maxDistance === 2 ? '#f0fdf4' : colors.surface,
-                  border: `1px solid ${filters.maxDistance === 2 ? '#86efac' : colors.border}`,
-                  borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: filters.maxDistance === 2 ? '#166534' : colors.textMain,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                <span>Within 2 km</span>
-                {filters.maxDistance === 2 && <CheckOutlined style={{ fontSize: 11 }} />}
-              </button>
-
-              {/* Under ₹100 Price Preset */}
-              <button
-                type="button"
-                onClick={() => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    minPrice: prev.maxPrice === 100 ? null : 0,
-                    maxPrice: prev.maxPrice === 100 ? null : 100,
-                  }));
-                }}
-                style={{
-                  background: filters.maxPrice === 100 ? colors.primaryLight : colors.surface,
-                  border: `1px solid ${filters.maxPrice === 100 ? colors.primary : colors.border}`,
-                  borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: filters.maxPrice === 100 ? colors.primary : colors.textMain,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                Under ₹100
-              </button>
-
-              {/* Physical Stock / Verified */}
-              <button
-                type="button"
-                onClick={() => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    onlyAvailable: !prev.onlyAvailable,
-                  }));
-                }}
-                style={{
-                  background: filters.onlyAvailable ? '#f0fdf4' : colors.surface,
-                  border: `1px solid ${filters.onlyAvailable ? '#86efac' : colors.border}`,
-                  borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 11.5,
-                  fontWeight: 600,
-                  color: filters.onlyAvailable ? '#166534' : colors.textMain,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
-              >
-                Verified in Store
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Main Content Area: 2 Columns Layout on Desktop, Stream on Mobile */}
-      <div
-        style={{
-          maxWidth: 1240,
-          margin: '0 auto',
-          padding: isMobile ? '12px 12px 24px' : '24px 20px 80px',
-        }}
-      >
-        <Row gutter={isMobile ? [0, 0] : [24, 24]}>
-          {/* Left Column: Filter Sidebar (Desktop md+) */}
-          {!isMobile && (
-            <Col md={7} lg={6}>
-              {/* Scrolls inside itself when the filters are taller than the screen */}
-              <div
-                style={{
-                  position: 'sticky',
-                  top: 20,
-                  maxHeight: 'calc(100vh - 40px)',
-                  overflowY: 'auto',
-                  scrollbarWidth: 'thin',
-                }}
-              >
-                <FilterSidebar
-                  filters={filters}
-                  onFilterChange={setFilters}
-                  onResetFilters={() => setFilters(DEFAULT_FILTERS)}
-                  searchMode={searchMode}
-                  categoryCounts={categoryCounts}
-                  fieldFilters={availableFieldFilters}
-                />
-              </div>
-            </Col>
-          )}
-
-          {/* Right Column: Results Stream */}
-          <Col xs={24} md={17} lg={18}>
-            {/* Results Stream Header: Count, Subtitle, Sort, View mode */}
-            <Flex
-              justify="space-between"
-              align="center"
-              wrap="nowrap"
-              gap={10}
-              style={{ marginBottom: 12 }}
-            >
-              <Flex align="center" gap={6} style={{ minWidth: 0 }}>
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: 7,
-                    height: 7,
-                    borderRadius: '50%',
-                    background: colors.semantic.success,
-                    flexShrink: 0,
-                  }}
-                />
-                <span
-                  style={{
-                    fontSize: isMobile ? 13 : 18,
-                    fontFamily: 'Plus Jakarta Sans, sans-serif',
-                    fontWeight: 800,
-                    color: colors.textMain,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  {totalCount} {searchMode === 'shops' ? 'stores' : 'offerings'}
-                  <span style={{ fontWeight: 500, color: colors.textMuted, marginLeft: 4 }}>
-                    live in your radius
-                  </span>
-                </span>
-              </Flex>
-
-              <Flex align="center" gap={6} style={{ flexShrink: 0 }}>
-                {/* Sort Selector (Desktop only) */}
-                {!isMobile && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: 12.5,
-                      color: colors.textMuted,
-                      marginRight: 6,
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>Sort:</span>
-                    <Select
-                      value={filters.sortBy || 'distance_asc'}
-                      onChange={(val) => setFilters((prev) => ({ ...prev, sortBy: val }))}
-                      size="middle"
-                      style={{ minWidth: 175 }}
-                      options={[
-                        { value: 'distance_asc', label: 'Nearest first (Distance)' },
-                        ...(searchMode === 'items'
-                          ? [
-                              { value: 'price_asc', label: 'Price: Low to High' },
-                              { value: 'price_desc', label: 'Price: High to Low' },
-                            ]
-                          : []),
-                        { value: 'rating_desc', label: 'Highest Rated (4.5+ ★)' },
-                        { value: 'name_asc', label: 'Name (A to Z)' },
-                      ]}
-                    />
+                    <button
+                      type="button"
+                      onClick={() => setSearchMode('items')}
+                      style={{
+                        background: searchMode === 'items' ? '#0B2D6B' : 'transparent',
+                        color: searchMode === 'items' ? '#FFFFFF' : '#111827',
+                        border: 'none',
+                        borderRadius: 9999,
+                        padding: '6px 14px',
+                        fontSize: 12.5,
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                    >
+                      🛍 Items & Services ({filteredItems.length})
+                    </button>
                   </div>
-                )}
 
-                {/* View Mode Switcher: Grid / List / Map */}
-                <div
-                  style={{
-                    display: 'inline-flex',
-                    background: colors.surfaceContainer,
-                    borderRadius: radii.md,
-                    padding: 2,
-                    border: `1px solid ${colors.border}`,
-                  }}
-                >
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange('grid')}
-                    title="Grid View"
-                    style={{
-                      background: viewMode === 'grid' ? colors.white : 'transparent',
-                      color: viewMode === 'grid' ? colors.primary : colors.textMuted,
-                      border: 'none',
-                      borderRadius: radii.xs,
-                      padding: isMobile ? '4px 7px' : '5px 9px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      boxShadow: viewMode === 'grid' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                    }}
-                  >
-                    <AppstoreOutlined style={{ fontSize: 14 }} />
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => handleViewModeChange('list')}
-                    title="List View"
-                    style={{
-                      background: viewMode === 'list' ? colors.white : 'transparent',
-                      color: viewMode === 'list' ? colors.primary : colors.textMuted,
-                      border: 'none',
-                      borderRadius: radii.xs,
-                      padding: isMobile ? '4px 7px' : '5px 9px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      boxShadow: viewMode === 'list' ? '0 1px 2px rgba(0,0,0,0.06)' : 'none',
-                    }}
-                  >
-                    <BarsOutlined style={{ fontSize: 14 }} />
-                  </button>
-
+                  {/* Geolocation Pin Pill */}
                   <button
                     type="button"
                     onClick={handleOpenModal}
-                    title="Map View"
                     style={{
-                      background: 'transparent',
-                      color: colors.textMuted,
-                      border: 'none',
-                      borderRadius: radii.xs,
-                      padding: isMobile ? '4px 7px' : '5px 9px',
+                      background: '#F8F4EF',
+                      border: '1px solid #ECE7DF',
+                      borderRadius: 9999,
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: '#111827',
                       cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <CompassOutlined style={{ fontSize: 14 }} />
-                  </button>
-                </div>
-              </Flex>
-            </Flex>
-
-            {/* Desktop Active Filter Chips Strip */}
-            {!isMobile && activeFilterTags.length > 0 && (
-              <Flex wrap="wrap" gap={8} align="center" style={{ marginBottom: 16 }}>
-                {activeFilterTags.map((tag) => (
-                  <span
-                    key={tag.key}
-                    style={{
                       display: 'inline-flex',
                       alignItems: 'center',
-                      gap: 6,
-                      background: colors.white,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radii.full,
-                      padding: '4px 11px',
-                      fontSize: 12,
-                      color: colors.textMain,
-                      fontWeight: 500,
+                      gap: 5,
                     }}
                   >
-                    <span>{tag.label}</span>
-                    <CloseCircleOutlined
-                      onClick={tag.onRemove}
-                      style={{ fontSize: 12, color: colors.textMuted, cursor: 'pointer' }}
-                    />
-                  </span>
-                ))}
-                <button
-                  type="button"
-                  onClick={() => setFilters(DEFAULT_FILTERS)}
-                  style={{
-                    background: 'none',
-                    border: 'none',
-                    color: colors.secondary,
-                    fontSize: 12,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    padding: '2px 6px',
-                  }}
-                >
-                  Clear All
-                </button>
-              </Flex>
-            )}
+                    <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
+                    <span>{cleanAreaName}</span>
+                    {isDetectingLocation ? (
+                      <Spin size="small" />
+                    ) : (
+                      <span style={{ color: '#0159C5', fontWeight: 700 }}>· Change</span>
+                    )}
+                    {savedAddresses.length > 0 && (
+                      <span style={{ fontSize: 10.5, color: '#64748B', fontWeight: 500 }}>
+                        ({savedAddresses.length} saved)
+                      </span>
+                    )}
+                  </button>
 
-            {/* Results Content */}
-            {loading ? (
-              <Flex justify="center" align="center" style={{ minHeight: '40vh' }}>
-                <Spin size="large" tip="Finding nearby offerings..." />
-              </Flex>
-            ) : totalCount === 0 ? (
-              <div
-                style={{
-                  background: colors.surface,
-                  borderRadius: radii.xl,
-                  border: `1px solid ${colors.border}`,
-                  textAlign: 'center',
-                  padding: '48px 20px',
-                }}
-              >
-                <Empty
-                  image={Empty.PRESENTED_IMAGE_SIMPLE}
-                  description={
-                    (searchMode === 'shops' ? searchMarkers.length : itemListings.length) > 0
-                      ? 'No offerings match your active filters (e.g. radius, category, or price)'
-                      : searchError || `No ${searchMode === 'shops' ? 'stores' : 'offerings'} found in this area`
-                  }
-                >
-                  {(searchMode === 'shops' ? searchMarkers.length : itemListings.length) > 0 ? (
-                    <Button
-                      type="primary"
-                      onClick={() => setFilters(DEFAULT_FILTERS)}
-                      style={{ borderRadius: radii.md, fontWeight: 700 }}
+                  <button
+                    type="button"
+                    onClick={() => fetchUserLocation(true)}
+                    title="Detect precise location"
+                    style={{
+                      background: '#F8F4EF',
+                      border: '1px solid #ECE7DF',
+                      borderRadius: 9999,
+                      padding: '6px 10px',
+                      fontSize: 12,
+                      color: '#0B2D6B',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                    }}
+                  >
+                    <AimOutlined />
+                    <span>Nearby</span>
+                  </button>
+
+                  {/* Mobile Filters Trigger */}
+                  {isMobile && (
+                    <button
+                      type="button"
+                      onClick={() => setIsMobileFilterDrawerOpen(true)}
+                      style={{
+                        background: activeFiltersCount > 0 ? '#EFF6FF' : '#F8F4EF',
+                        border: `1px solid ${activeFiltersCount > 0 ? '#BFDBFE' : '#ECE7DF'}`,
+                        borderRadius: 9999,
+                        padding: '6px 12px',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: activeFiltersCount > 0 ? '#1E40AF' : '#111827',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                      }}
                     >
-                      Clear Active Filters
-                    </Button>
-                  ) : (
-                    <Button
-                      type="primary"
-                      onClick={handleOpenModal}
-                      style={{ borderRadius: radii.md, fontWeight: 700 }}
-                    >
-                      Adjust Location on Map
-                    </Button>
+                      <FilterOutlined />
+                      <span>Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
+                    </button>
                   )}
-                </Empty>
-              </div>
-            ) : viewMode === 'list' ? (
-              /* Table / List View */
-              <ShopTableView
-                items={visibleItems}
-                searchMode={searchMode}
-                onOpenMap={handleOpenModal}
-              />
-            ) : (
-              /* Offerings / Stores Stream (Mobile High-Density Stack & Desktop 3-Column Grid) */
-              <div>
-                <Row gutter={isMobile ? [0, 10] : [20, 20]}>
-                  {searchMode === 'items'
-                    ? visibleItems.map((item, index) => (
-                        <React.Fragment key={item.id}>
-                          <Col xs={24} sm={12} lg={8}>
+                </Flex>
+
+                <Flex align="center" gap={8}>
+                  {/* View Mode Switcher */}
+                  <div
+                    style={{
+                      display: 'inline-flex',
+                      background: '#F1EDE8',
+                      borderRadius: radii.md,
+                      padding: 2,
+                    }}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('grid')}
+                      title="Grid View"
+                      style={{
+                        background: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
+                        color: viewMode === 'grid' ? '#0B2D6B' : '#64748B',
+                        border: 'none',
+                        borderRadius: radii.xs,
+                        padding: '5px 8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <AppstoreOutlined style={{ fontSize: 14 }} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleViewModeChange('list')}
+                      title="List View"
+                      style={{
+                        background: viewMode === 'list' ? '#FFFFFF' : 'transparent',
+                        color: viewMode === 'list' ? '#0B2D6B' : '#64748B',
+                        border: 'none',
+                        borderRadius: radii.xs,
+                        padding: '5px 8px',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <BarsOutlined style={{ fontSize: 14 }} />
+                    </button>
+                  </div>
+
+                  {/* Close catalog button */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFullCatalogExpanded(false);
+                      setSearchText('');
+                      setFilters(DEFAULT_FILTERS);
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#64748B',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      padding: '4px 8px',
+                    }}
+                  >
+                    Reset & Close ✕
+                  </button>
+                </Flex>
+              </Flex>
+
+              {/* Active Filter Tags */}
+              {activeFilterTags.length > 0 && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 12 }}>
+                  <span style={{ fontSize: 11.5, fontWeight: 700, color: '#64748B' }}>Active filters:</span>
+                  {activeFilterTags.map((tag) => (
+                    <span
+                      key={tag.key}
+                      style={{
+                        background: '#EFF6FF',
+                        border: '1px solid #BFDBFE',
+                        borderRadius: 9999,
+                        padding: '2px 8px 2px 10px',
+                        fontSize: 11.5,
+                        fontWeight: 600,
+                        color: '#1E40AF',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <span>{tag.label}</span>
+                      <button
+                        type="button"
+                        onClick={tag.onRemove}
+                        style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', padding: 0 }}
+                      >
+                        ✕
+                      </button>
+                    </span>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setFilters(DEFAULT_FILTERS)}
+                    style={{ background: 'none', border: 'none', color: '#0159C5', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    Clear all
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Results Grid with Optional Filter Sidebar */}
+            <Row gutter={isMobile ? [0, 16] : [24, 24]}>
+              {!isMobile && (
+                <Col md={7} lg={6}>
+                  <FilterSidebar
+                    filters={filters}
+                    onFilterChange={setFilters}
+                    onResetFilters={() => setFilters(DEFAULT_FILTERS)}
+                    searchMode={searchMode}
+                    categoryCounts={categoryCounts}
+                    fieldFilters={availableFieldFilters}
+                  />
+                </Col>
+              )}
+
+              <Col xs={24} md={17} lg={18}>
+                {loading ? (
+                  <div style={{ padding: '60px 0', textAlign: 'center' }}>
+                    <Spin size="large" />
+                    <div style={{ marginTop: 12, color: '#64748B', fontSize: 13 }}>Scanning neighborhood radius...</div>
+                  </div>
+                ) : visibleItems.length === 0 ? (
+                  <div style={{ background: '#FFFFFF', borderRadius: 16, border: '1px solid #ECE7DF', padding: '48px 20px', textAlign: 'center' }}>
+                    <Empty
+                      description={
+                        <div>
+                          <div style={{ fontWeight: 700, color: '#111827', fontSize: 16, marginBottom: 6 }}>
+                            {searchError || 'No matching stores or items in this radius'}
+                          </div>
+                          <div style={{ color: '#64748B', fontSize: 13 }}>
+                            Try expanding your search radius to 5 km or clearing filters.
+                          </div>
+                        </div>
+                      }
+                    />
+                    <Button
+                      type="primary"
+                      onClick={() => setFilters((prev) => ({ ...prev, maxDistance: 10, categories: [] }))}
+                      style={{ marginTop: 16, borderRadius: radii.md }}
+                    >
+                      Expand Radius to 10 km
+                    </Button>
+                  </div>
+                ) : viewMode === 'list' ? (
+                  <ShopTableView
+                    shops={visibleItems}
+                    userLocation={markerLocation}
+                    onRowClick={(shop) => history.push(`/shop/${shop.id}`)}
+                  />
+                ) : (
+                  <Row gutter={[16, 16]}>
+                    {searchMode === 'shops'
+                      ? visibleItems.map((shop) => (
+                          <Col xs={24} sm={12} lg={8} key={shop.id}>
+                            <ShopCard shop={shop} />
+                          </Col>
+                        ))
+                      : visibleItems.map((item) => (
+                          <Col xs={24} sm={12} lg={8} key={item.id}>
                             <OfferingCard
                               item={item}
-                              onOrder={(it) => {
-                                addItem(it.shop, it);
+                              onAddToCart={(it) => {
+                                addItem(it);
                                 openCart();
-                              }}
-                              onClick={() => {
-                                const shopId = item.shop?.id || item.shop_id;
-                                if (shopId) history.push(`/shop/${shopId}`);
                               }}
                             />
                           </Col>
+                        ))}
+                  </Row>
+                )}
 
-                          {/* Mobile Inline 100% Direct Store Checkout Banner after 2nd card */}
-                          {isMobile && index === 1 && (
-                            <Col xs={24}>
-                              <div
-                                style={{
-                                  background: '#EEF2FF',
-                                  border: '1px solid #C7D2FE',
-                                  borderRadius: radii.xl,
-                                  padding: '12px 14px',
-                                  margin: '2px 0 10px',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 12,
-                                }}
-                              >
-                                <div
-                                  style={{
-                                    width: 38,
-                                    height: 38,
-                                    borderRadius: radii.md,
-                                    background: colors.primary,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    color: colors.white,
-                                    fontSize: 18,
-                                    flexShrink: 0,
-                                  }}
-                                >
-                                  <SafetyCertificateOutlined />
-                                </div>
-                                <div style={{ flex: 1, minWidth: 0 }}>
-                                  <div
-                                    style={{
-                                      fontSize: 13,
-                                      fontWeight: 800,
-                                      color: colors.textMain,
-                                      marginBottom: 2,
-                                    }}
-                                  >
-                                    100% Direct Store Checkout
-                                  </div>
-                                  <div
-                                    style={{
-                                      fontSize: 11,
-                                      color: colors.textMuted,
-                                      lineHeight: 1.35,
-                                    }}
-                                  >
-                                    Zero aggregator markups. Pay your neighbourhood shopkeeper
-                                    directly via UPI upon physical stock confirmation.
-                                  </div>
-                                </div>
-                              </div>
-                            </Col>
-                          )}
-                        </React.Fragment>
-                      ))
-                    : visibleItems.map((shop) => (
-                        <Col xs={24} sm={12} lg={8} key={shop.id}>
-                          <ShopCard
-                            shopDetails={shop}
-                            isChat={user_data?.user_id ? true : false}
-                            viewMode={isMobile ? 'list' : 'grid'}
-                          />
-                        </Col>
-                      ))}
-                </Row>
+                {/* Pagination Load More */}
+                {visibleItems.length < totalCount && (
+                  <div style={{ textAlign: 'center', marginTop: 28 }}>
+                    <Button
+                      size="large"
+                      onClick={() => setVisibleCount((prev) => prev + 18)}
+                      style={{
+                        borderRadius: radii.full,
+                        padding: '0 28px',
+                        fontWeight: 700,
+                        borderColor: '#E5E7EB',
+                      }}
+                    >
+                      Load More Results ({totalCount - visibleItems.length} remaining)
+                    </Button>
+                  </div>
+                )}
+              </Col>
+            </Row>
+          </section>
+        )}
+      </div>
 
-                {/* Mobile Discovery Footer matching media_1794134817614_8426e4ff.png */}
-                {isMobile && (
-                  <div style={{ textAlign: 'center', padding: '24px 16px 12px' }}>
+      {/* =========================================================================
+          SECTION 3: CATEGORIES IN FOCUS (designs/Main.png)
+          ========================================================================= */}
+      <section
+        style={{
+          position: 'relative',
+          width: '100%',
+          overflow: 'hidden',
+          padding: isMobile ? '24px 16px 36px' : '36px 24px 56px',
+        }}
+      >
+        {/* Ambient Floating Illustration Blobs */}
+        <div className="category-blob-sky" />
+        <div className="category-blob-peach" />
+
+        <div style={{ maxWidth: 1240, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div className="reveal-on-scroll" style={{ marginBottom: 24, position: 'relative', zIndex: 1 }}>
+          <div
+            style={{
+              fontSize: 11.5,
+              fontWeight: 800,
+              color: '#0B2D6B',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              marginBottom: 6,
+            }}
+          >
+            CATEGORIES IN FOCUS
+          </div>
+          <h2
+            className="font-serif"
+            style={{
+              fontSize: isMobile ? 24 : 32,
+              fontWeight: 700,
+              color: '#111827',
+              margin: 0,
+            }}
+          >
+            Explore everyday neighborhood essentials
+          </h2>
+        </div>
+
+        {/* 6 Category Cards Grid */}
+        <Row gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
+          {CATEGORIES_IN_FOCUS.map((cat, idx) => (
+            <Col xs={12} sm={8} lg={4} key={cat.title}>
+              <div
+                className={`category-focus-card category-card-item reveal-on-scroll reveal-delay-${(idx % 6) + 1}`}
+                onClick={() => handleCategoryCardClick(cat.categoryFilter)}
+                role="button"
+                tabIndex={0}
+              >
+                {/* Circle Icon with float effect */}
+                <div
+                  className="category-icon-wrapper"
+                  style={{
+                    width: 52,
+                    height: 52,
+                    borderRadius: '50%',
+                    background: cat.iconBg,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    marginBottom: 14,
+                  }}
+                >
+                  {cat.icon}
+                </div>
+
+                {/* Category Title */}
+                <div
+                  style={{
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    color: '#111827',
+                    marginBottom: 8,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {cat.title}
+                </div>
+
+                {/* Count Pill */}
+                <span
+                  style={{
+                    background: '#F3F4F6',
+                    color: '#6B7280',
+                    borderRadius: 9999,
+                    padding: '2px 8px',
+                    fontSize: 11,
+                    fontWeight: 600,
+                  }}
+                >
+                  {cat.count}
+                </span>
+              </div>
+            </Col>
+          ))}
+        </Row>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 4: NEIGHBORHOOD COMMERCE MADE EFFORTLESS (designs/Main.png)
+          ========================================================================= */}
+      <section
+        style={{
+          maxWidth: 1240,
+          margin: '0 auto',
+          padding: isMobile ? '0 16px 36px' : '0 24px 56px',
+        }}
+      >
+        <div
+          className="reveal-on-scroll"
+          style={{
+            background: '#F7F3EE',
+            borderRadius: 28,
+            padding: isMobile ? '28px 18px' : '48px 40px',
+            border: '1px solid #ECE7DF',
+          }}
+        >
+          {/* Header */}
+          <div style={{ marginBottom: 32 }}>
+            <div
+              style={{
+                fontSize: 11.5,
+                fontWeight: 800,
+                color: '#0B2D6B',
+                letterSpacing: '0.08em',
+                textTransform: 'uppercase',
+                marginBottom: 6,
+              }}
+            >
+              FAST · HONEST · DIRECT
+            </div>
+            <h2
+              className="font-serif"
+              style={{
+                fontSize: isMobile ? 26 : 34,
+                fontWeight: 700,
+                color: '#111827',
+                margin: '0 0 10px',
+              }}
+            >
+              Neighborhood commerce made effortless
+            </h2>
+            <p
+              style={{
+                fontSize: isMobile ? 14 : 15.5,
+                color: '#4B5563',
+                lineHeight: 1.55,
+                maxWidth: 620,
+                margin: 0,
+              }}
+            >
+              Browse as a guest without friction. Buy directly from authentic brick-and-mortar shopkeepers who know their trade.
+            </p>
+          </div>
+
+          {/* 3 Step Feature Cards with Interactive Visual Illustrations */}
+          <Row gutter={[20, 20]}>
+            {EFFORTLESS_STEPS.map((step, idx) => (
+              <Col xs={24} md={8} key={step.number}>
+                <div
+                  className={`effortless-card reveal-on-scroll reveal-delay-${idx + 1}`}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    height: '100%',
+                  }}
+                >
+                  <div>
+                    {/* Number Badge */}
                     <div
                       style={{
-                        width: 36,
-                        height: 36,
-                        borderRadius: '50%',
-                        background: '#E6F0FF',
-                        color: colors.secondary,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: 16,
-                        marginBottom: 8,
-                      }}
-                    >
-                      <EnvironmentOutlined />
-                    </div>
-                    <div
-                      style={{
-                        fontSize: 13.5,
+                        width: 38,
+                        height: 38,
+                        borderRadius: 10,
+                        background: step.numberBg,
+                        color: '#FFFFFF',
                         fontWeight: 800,
-                        color: colors.textMain,
-                        marginBottom: 3,
+                        fontSize: 14,
+                        marginBottom: 16,
                       }}
                     >
-                      Discovering more in {locationName ? locationName.split(',')[0] : 'Koramangala'}...
+                      {step.number}
                     </div>
-                    <div
-                      style={{
-                        fontSize: 11.5,
-                        color: colors.textMuted,
-                        maxWidth: 300,
-                        margin: '0 auto',
-                        lineHeight: 1.4,
-                      }}
-                    >
-                      New neighbourhood store physical inventories refresh automatically every 5 minutes.
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
 
-            {/* Load More Button matching mockup */}
-            {!loading && visibleCount < totalCount && (
-              <div style={{ textAlign: 'center', marginTop: isMobile ? 18 : 32 }}>
-                <button
-                  type="button"
-                  onClick={() => setVisibleCount((prev) => prev + 18)}
+                    {/* Step Title */}
+                    <h3
+                      style={{
+                        fontSize: 18,
+                        fontWeight: 700,
+                        color: '#111827',
+                        margin: '0 0 8px',
+                        fontFamily: 'Inter, sans-serif',
+                      }}
+                    >
+                      {step.title}
+                    </h3>
+
+                    {/* Description */}
+                    <p
+                      style={{
+                        fontSize: 13,
+                        color: '#4B5563',
+                        lineHeight: 1.5,
+                        margin: '0 0 14px',
+                      }}
+                    >
+                      {step.description}
+                    </p>
+
+                    {/* Rich Interactive Animated Illustration Canvas */}
+                    {step.number === '01' && (
+                      <div
+                        style={{
+                          position: 'relative',
+                          height: 110,
+                          borderRadius: 16,
+                          background: '#FFFFFF',
+                          border: '1px solid #E5E7EB',
+                          margin: '0 0 16px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {/* Concentric radar range rings */}
+                        <div style={{ position: 'absolute', width: 96, height: 96, borderRadius: '50%', border: '1px dashed #CBD5E1', pointerEvents: 'none' }} />
+                        <div style={{ position: 'absolute', width: 56, height: 56, borderRadius: '50%', border: '1px solid #E2E8F0', pointerEvents: 'none' }} />
+
+                        {/* Rotating radar sweep beam */}
+                        <div className="radar-sweep-beam" style={{ top: '50%', left: '50%', width: 54, height: 54, marginTop: -27, marginLeft: -27 }} />
+
+                        {/* Center user location pin */}
+                        <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0B2D6B', boxShadow: '0 0 0 3px #DBEAFE' }} />
+                          <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0B2D6B', marginTop: 3 }}>You</span>
+                        </div>
+
+                        {/* Blip 1: Bakery at top-right */}
+                        <div style={{ position: 'absolute', top: 14, right: 28, zIndex: 2, display: 'flex', alignItems: 'center', gap: 4 }} className="radar-blip-pulse">
+                          <span style={{ fontSize: 13 }}>🥐</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, background: '#EFF6FF', color: '#1E40AF', padding: '1px 5px', borderRadius: 6 }}>0.4 km</span>
+                        </div>
+
+                        {/* Blip 2: Kirana at bottom-left */}
+                        <div style={{ position: 'absolute', bottom: 12, left: 22, zIndex: 2, display: 'flex', alignItems: 'center', gap: 4 }} className="radar-blip-pulse">
+                          <span style={{ fontSize: 13 }}>🛒</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, background: '#DCFCE7', color: '#166534', padding: '1px 5px', borderRadius: 6 }}>0.9 km</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {step.number === '02' && (
+                      <div
+                        style={{
+                          position: 'relative',
+                          height: 110,
+                          borderRadius: 16,
+                          background: '#FFFFFF',
+                          border: '1px solid #E5E7EB',
+                          margin: '0 0 16px',
+                          padding: '10px 12px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        {/* Customer Bubble */}
+                        <div style={{ alignSelf: 'flex-start', maxWidth: '82%', background: '#F3F4F6', color: '#1F2937', padding: '4px 8px', borderRadius: '10px 10px 10px 2px', fontSize: 11, fontWeight: 500 }}>
+                          Fresh multigrain boule hot right now?
+                        </div>
+
+                        {/* Merchant Reply with Checkmark */}
+                        <div style={{ alignSelf: 'flex-end', maxWidth: '86%', background: '#EFF6FF', color: '#1E40AF', padding: '4px 8px', borderRadius: '10px 10px 2px 10px', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          <span>Warm batch out of oven! 🥐</span>
+                          <CheckOutlined style={{ fontSize: 10, color: '#2563EB' }} />
+                        </div>
+
+                        {/* Typing Indicator Bar */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2 }}>
+                          <span style={{ fontSize: 9.5, color: '#6B7280', fontWeight: 600 }}>Shopkeeper online</span>
+                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-1" />
+                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-2" />
+                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-3" />
+                        </div>
+                      </div>
+                    )}
+
+                    {step.number === '03' && (
+                      <div
+                        style={{
+                          position: 'relative',
+                          height: 110,
+                          borderRadius: 16,
+                          background: '#FFFFFF',
+                          border: '1px solid #E5E7EB',
+                          margin: '0 0 16px',
+                          padding: '10px 12px',
+                          overflow: 'hidden',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          justifyContent: 'space-around',
+                        }}
+                      >
+                        {/* Speed Runner Dispatch Pill */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                            <span className="delivery-badge-moving" style={{ fontSize: 15 }}>⚡</span>
+                            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#111827' }}>Neighborhood Dispatch</span>
+                          </div>
+                          <span style={{ fontSize: 10, fontWeight: 700, background: '#FEF3C7', color: '#B45309', padding: '2px 8px', borderRadius: 9999 }}>
+                            15 mins
+                          </span>
+                        </div>
+
+                        {/* Direct UPI Shield Proof */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFC', padding: '5px 8px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
+                          <span style={{ fontSize: 12 }}>💳</span>
+                          <div style={{ fontSize: 10, color: '#334155' }}>
+                            <strong style={{ color: '#0F172A' }}>Direct UPI to merchant</strong> · ₹0 platform fee
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Bottom Feature Link Tag */}
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 600,
+                      color: step.tagColor,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                    }}
+                  >
+                    <span>{step.tag}</span>
+                  </div>
+                </div>
+              </Col>
+            ))}
+          </Row>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          SECTION 5: MERCHANT CTA BANNER ("Own a shop?") (designs/Main.png)
+          ========================================================================= */}
+      <section
+        style={{
+          maxWidth: 1240,
+          margin: '0 auto',
+          padding: isMobile ? '0 16px 48px' : '0 24px 64px',
+        }}
+      >
+        <div
+          className="reveal-on-scroll"
+          style={{
+            background: '#F7EDE4',
+            borderRadius: 28,
+            padding: isMobile ? '28px 20px' : '44px 44px',
+            border: '1px solid #EADBCC',
+          }}
+        >
+          <Row gutter={isMobile ? [0, 24] : [32, 24]} align="middle">
+            {/* Left Column: Heading, Subtitle, Checkmarks */}
+            <Col xs={24} lg={15}>
+              {/* Pill Eyebrow */}
+              <div style={{ marginBottom: 12 }}>
+                <span
                   style={{
-                    background: colors.white,
-                    border: `1px solid ${colors.border}`,
-                    borderRadius: radii.full,
-                    padding: isMobile ? '8px 20px' : '10px 24px',
-                    fontSize: isMobile ? 12.5 : 13.5,
+                    background: '#FFFFFF',
+                    border: '1px solid #E5D5C5',
+                    color: '#5B3A29',
+                    borderRadius: 9999,
+                    padding: '4px 12px',
+                    fontSize: 11,
                     fontWeight: 700,
-                    color: colors.textMain,
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    transition: 'all 0.15s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = colors.primary;
-                    e.currentTarget.style.color = colors.primary;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = colors.border;
-                    e.currentTarget.style.color = colors.textMain;
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 6,
                   }}
                 >
-                  ⌄ Load {Math.min(18, totalCount - visibleCount)} More{' '}
-                  {searchMode === 'shops' ? 'Stores' : 'Offerings'}
-                  {filters.maxDistance ? ` (Within ${filters.maxDistance} km)` : ''}
-                </button>
+                  <span>🏪</span> MERCHANT PARTNER COMMUNITY
+                </span>
               </div>
-            )}
 
-            {/* Hyper-request notice */}
-            {!loading && totalCount > 0 && (
-              <p
+              {/* Serif Title */}
+              <h2
+                className="font-serif"
                 style={{
-                  textAlign: 'center',
-                  marginTop: 18,
-                  marginBottom: 8,
-                  fontSize: 12.5,
-                  color: colors.textMuted,
+                  fontSize: isMobile ? 24 : 34,
+                  fontWeight: 700,
+                  color: '#1C1917',
+                  margin: '0 0 10px',
+                  lineHeight: 1.25,
                 }}
               >
-                Need something not listed?{' '}
-                <button
-                  type="button"
-                  onClick={() => setIsAiModalOpen(true)}
+                Own a shop? Reach customers searching nearby.
+              </h2>
+
+              {/* Subtitle */}
+              <p
+                style={{
+                  fontSize: isMobile ? 14 : 15,
+                  color: '#4B5563',
+                  lineHeight: 1.55,
+                  margin: '0 0 20px',
+                  maxWidth: 680,
+                }}
+              >
+                List your storefront in under 5 minutes from your mobile phone. Enjoy{' '}
+                <strong style={{ color: '#1C1917' }}>zero listing fees</strong>, direct instant UPI bank settlements,
+                and zero commission cuts on retail sales.
+              </p>
+
+              {/* Checklist Proof Row */}
+              <Flex
+                align="center"
+                gap={isMobile ? 12 : 24}
+                wrap="wrap"
+                style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#1C1917', fontWeight: 600 }}
+              >
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleFilled style={{ color: '#059669', fontSize: 15 }} />
+                  <span>Zero middleman commission</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleFilled style={{ color: '#059669', fontSize: 15 }} />
+                  <span>Your customer relationships</span>
+                </span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <CheckCircleFilled style={{ color: '#059669', fontSize: 15 }} />
+                  <span>Free digital catalog setup</span>
+                </span>
+              </Flex>
+            </Col>
+
+            {/* Right Column: Mini Illustrated Storefront & CTA Buttons */}
+            <Col xs={24} lg={9}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 14,
+                  alignItems: isMobile ? 'stretch' : 'flex-end',
+                }}
+              >
+                {/* Illustrated Live Storefront Preview Card */}
+                <div
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: colors.secondary,
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    padding: 0,
-                    textDecoration: 'underline',
+                    background: '#FFFFFF',
+                    borderRadius: 18,
+                    border: '1px solid #EADBCC',
+                    padding: '14px 16px',
+                    width: '100%',
+                    maxWidth: 320,
+                    boxShadow: '0 6px 18px rgba(35, 21, 15, 0.06)',
                   }}
                 >
-                  Broadcast an open hyper-request
-                </button>{' '}
-                to {activeMerchantCount} neighborhood shops.
-              </p>
-            )}
-          </Col>
-        </Row>
-      </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, color: '#1C1917', display: 'flex', alignItems: 'center', gap: 5 }}>
+                      <span>🏪</span> Verified Storefront
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: '#15803D', background: '#DCFCE7', padding: '2px 7px', borderRadius: 9999 }}>
+                      Live Radar
+                    </span>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#FAF6F0', borderRadius: 8, padding: '6px 10px', fontSize: 11 }}>
+                    <span style={{ color: '#6B7280' }}>Platform Cut:</span>
+                    <span style={{ fontWeight: 800, color: '#059669' }}>0% Commission</span>
+                  </div>
+                </div>
 
-      {/* Mobile Filters Drawer */}
+                {/* Sell on Rquest Dark Pill Button */}
+                <button
+                  type="button"
+                  onClick={() => history.push(Routes.client)}
+                  style={{
+                    background: '#23150F',
+                    color: '#FFFFFF',
+                    border: 'none',
+                    borderRadius: radii.full,
+                    padding: '12px 28px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    boxShadow: '0 4px 12px rgba(35, 21, 15, 0.25)',
+                    transition: 'all 0.18s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  <span>Sell on Rquest</span>
+                  <span style={{ fontSize: 14 }}>→</span>
+                </button>
+
+                {/* See How It Works White Pill Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsMerchantExplainerOpen(true)}
+                  style={{
+                    background: '#FFFFFF',
+                    border: '1px solid #D7C6B4',
+                    color: '#1C1917',
+                    borderRadius: radii.full,
+                    padding: '11px 24px',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    transition: 'all 0.18s ease',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = '#FAF6F0')}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = '#FFFFFF')}
+                >
+                  <PlayCircleOutlined style={{ fontSize: 15 }} />
+                  <span>See how it works</span>
+                </button>
+              </div>
+            </Col>
+          </Row>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          MODALS & DRAWERS
+          ========================================================================= */}
+      {/* 1. Leaflet Interactive Map Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
+            <span>Select Your Neighborhood Location</span>
+          </div>
+        }
+        open={isModalVisible}
+        onCancel={handleCloseModal}
+        footer={null}
+        width={720}
+        destroyOnClose
+      >
+        <div style={{ height: 420, width: '100%', marginTop: 12 }}>
+          <LeafletComponent
+            markerLocation={markerLocation}
+            updateMarker={updateMarker}
+            position={position}
+            searchMarkers={searchMarkers}
+            radius={filters.maxDistance}
+          />
+        </div>
+        <div style={{ marginTop: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ fontSize: 12.5, color: '#64748B' }}>
+            Current: <strong>{locationName || 'Selected coordinates'}</strong>
+          </div>
+          <Button
+            type="primary"
+            onClick={handleCloseModal}
+            style={{ borderRadius: radii.md }}
+          >
+            Apply Location
+          </Button>
+        </div>
+      </Modal>
+
+      {/* 2. Voice Search Modal */}
+      <VoiceSearchModal
+        visible={isVoiceModalOpen}
+        onClose={() => setIsVoiceModalOpen(false)}
+        onSearch={(transcript) => {
+          setSearchText(transcript);
+          setIsVoiceModalOpen(false);
+          setIsFullCatalogExpanded(true);
+          scrollToCatalog();
+        }}
+      />
+
+      {/* 3. Image Search Modal */}
+      <ImageSearchModal
+        visible={isImageModalOpen}
+        onClose={() => setIsImageModalOpen(false)}
+        onSelect={(term) => {
+          setSearchText(term);
+          setIsImageModalOpen(false);
+          setIsFullCatalogExpanded(true);
+          scrollToCatalog();
+        }}
+      />
+
+      {/* 4. AI Smart Search Modal */}
+      <AiSearchModal
+        visible={isAiModalOpen}
+        onClose={() => setIsAiModalOpen(false)}
+        onApply={handleAiApply}
+      />
+
+      {/* 5. Address Manager Modal */}
+      <AddressModal
+        visible={isAddAddressModalOpen}
+        onClose={() => setIsAddAddressModalOpen(false)}
+        onSuccess={handleNewAddressCreated}
+        initialCoords={markerLocation}
+      />
+
+      {/* 6. Merchant "How It Works" Modal */}
+      <Modal
+        title={
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span>🏪</span>
+            <span style={{ fontFamily: 'Newsreader, Georgia, serif', fontSize: 20, fontWeight: 700 }}>
+              How Selling on Rquest Works
+            </span>
+          </div>
+        }
+        open={isMerchantExplainerOpen}
+        onCancel={() => setIsMerchantExplainerOpen(false)}
+        footer={[
+          <Button key="close" onClick={() => setIsMerchantExplainerOpen(false)}>
+            Close
+          </Button>,
+          <Button
+            key="register"
+            type="primary"
+            onClick={() => {
+              setIsMerchantExplainerOpen(false);
+              history.push(Routes.client);
+            }}
+            style={{ borderRadius: radii.md }}
+          >
+            Start Free Store Setup →
+          </Button>,
+        ]}
+        width={560}
+      >
+        <div style={{ padding: '12px 0' }}>
+          <div style={{ display: 'flex', gap: 14, marginBottom: 18 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: '#EFF6FF',
+                color: '#0B2D6B',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              1
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+                List Your Store in 5 Minutes
+              </div>
+              <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+                Add your store address, category, business hours, and snap photos of products or daily specials directly on your phone.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 14, marginBottom: 18 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: '#ECFDF5',
+                color: '#047857',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              2
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+                Instant Neighborhood Radar Visibility
+              </div>
+              <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+                Nearby residents within your 1–5 km radius see your live inventory and status when searching for everyday essentials.
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 14 }}>
+            <div
+              style={{
+                width: 32,
+                height: 32,
+                borderRadius: '50%',
+                background: '#FEF3C7',
+                color: '#92400E',
+                fontWeight: 800,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+              }}
+            >
+              3
+            </div>
+            <div>
+              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+                Direct Messaging & 100% Direct UPI
+              </div>
+              <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
+                Chat in real time with customers to clarify orders. Receive 100% of customer payments directly to your bank account with 0% commissions.
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* 7. Mobile Filter Drawer */}
       <Drawer
-        title="Filter Offerings"
-        placement="left"
-        onClose={() => setIsMobileFilterDrawerOpen(false)}
+        title="Filter Listings"
+        placement="bottom"
+        height="80%"
         open={isMobileFilterDrawerOpen}
-        width={320}
-        styles={{ body: { padding: 12, background: colors.bg } }}
+        onClose={() => setIsMobileFilterDrawerOpen(false)}
       >
         <FilterSidebar
           filters={filters}
-          onFilterChange={(newFilters) => {
-            setFilters(newFilters);
-          }}
+          onFilterChange={setFilters}
           onResetFilters={() => setFilters(DEFAULT_FILTERS)}
           searchMode={searchMode}
           categoryCounts={categoryCounts}
           fieldFilters={availableFieldFilters}
         />
+        <div style={{ marginTop: 20 }}>
+          <Button
+            type="primary"
+            block
+            onClick={() => setIsMobileFilterDrawerOpen(false)}
+            style={{ borderRadius: radii.md }}
+          >
+            Apply Filters ({totalCount} results)
+          </Button>
+        </div>
       </Drawer>
 
-      {/* Full View Map Modal */}
-      <Modal
-        open={isModalVisible}
-        onCancel={handleCloseModal}
-        footer={null}
-        width="100vw"
-        wrapClassName="full-view-map-modal"
-        closable={false}
-        style={{
-          top: 0,
-          left: 0,
-          margin: 0,
-          padding: 0,
-          maxWidth: '100vw',
-          height: '100vh',
-        }}
-        styles={{
-          body: {
-            height: '100vh',
-            padding: 0,
-            margin: 0,
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <LeafletComponent
-          isModalVisible={isModalVisible}
-          markerLocation={markerLocation}
-          setMarkerLocation={setMarkerLocation}
-          updateMarker={updateMarker}
-          searchMarkers={searchMode === 'shops' ? filteredShops : searchMarkers}
-          position={position}
-          setPosition={setPosition}
-          onClose={handleCloseModal}
-        />
-      </Modal>
-
-      {/* Quick Add Address Modal from Home Search */}
-      {isAddAddressModalOpen && (
-        <AddressModal
-          open={isAddAddressModalOpen}
-          onClose={() => setIsAddAddressModalOpen(false)}
-          onSuccess={handleNewAddressCreated}
-          userProfile={user_data}
-        />
+      {/* 8. Sticky Floating Neighborhood Radar Pill Bar during Scroll */}
+      {showStickyBar && !isStickyDismissed && (
+        <div className="sticky-neighborhood-bar">
+          <div className="sticky-radar-pulse" />
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#110E28' }}>
+            ⚡ {activeMerchantCount > 0 ? `${activeMerchantCount} verified shops` : '142 verified shops'} open in{' '}
+            <span style={{ color: '#0159C5' }}>{cleanAreaName}</span>
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            style={{
+              background: '#0F172A',
+              color: '#FFFFFF',
+              border: 'none',
+              borderRadius: radii.full,
+              padding: '6px 14px',
+              fontSize: 12,
+              fontWeight: 700,
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 4,
+              boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)',
+            }}
+          >
+            <span>Search ↑</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setIsStickyDismissed(true)}
+            title="Dismiss notification"
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#9CA3AF',
+              cursor: 'pointer',
+              fontSize: 13,
+              padding: '4px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <CloseOutlined />
+          </button>
+        </div>
       )}
-
-      {/* Voice Search Recognition Modal */}
-      <VoiceSearchModal
-        open={isVoiceModalOpen}
-        onClose={() => setIsVoiceModalOpen(false)}
-        onSearch={(query) => {
-          setSearchText(query);
-          handleSearch(query);
-        }}
-      />
-
-      {/* Visual Image Search Modal */}
-      <ImageSearchModal
-        open={isImageModalOpen}
-        onClose={() => setIsImageModalOpen(false)}
-        onSearch={(query) => {
-          setSearchText(query);
-          handleSearch(query);
-        }}
-      />
-
-      {/* AI Smart Search Natural Language Parsing Modal */}
-      <AiSearchModal
-        open={isAiModalOpen}
-        onClose={() => setIsAiModalOpen(false)}
-        onAiApply={handleAiApply}
-      />
     </div>
   );
 };

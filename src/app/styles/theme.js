@@ -25,6 +25,17 @@ export const colors = {
   secondaryContainer: '#5690fe',
   secondaryLight: '#d8e2ff',
 
+  // Signature Accent from designs/Main.png - High-Impact Electric Lime / Chartreuse
+  lime: '#D2F82E',
+  limeHover: '#c5ea24',
+  limeLight: '#f6fee7',
+  limeText: '#111827',
+
+  // Hyperlocal Badge - Pastel Lavender & Rich Violet
+  hyperBadgeBg: '#ECE6F8',
+  hyperBadgeText: '#4C1D95',
+  hyperBadgeDot: '#7C3AED',
+
   // Tertiary - Roasted Amber-Brown & Craft Accents
   tertiary: '#5B3A29',
   tertiaryHover: '#472919',
@@ -34,6 +45,9 @@ export const colors = {
 
   // Warm Parchment & Neutral Surface Scales
   surface: '#ffffff',
+  surfaceWarm: '#F7F3EE',
+  surfacePeach: '#F7EDE4',
+  surfacePeachBorder: '#EADBCC',
   surfaceContainer: '#f1ede8',
   surfaceContainerLow: '#f7f3ee',
   surfaceContainerLowest: '#ffffff',
@@ -41,13 +55,16 @@ export const colors = {
   surfaceContainerHighest: '#e6e2dd',
 
   // Canvas & Layout Aliases
-  bg: '#F8F4EF',
+  bg: '#FDF9F4',
+  bgHero: '#FDF9F4',
   bgDim: '#ddd9d5',
   bgBright: '#fdf9f4',
   brandDark: '#0B2D6B',
   brandSurface: '#ffffff',
-  brandBg: '#F8F4EF',
+  brandBg: '#FDF9F4',
   brandMuted: '#f1ede8',
+  darkPill: '#1C1917',
+  darkButton: '#0F172A',
 
   // Fine Hairline Borders & Outlines
   border: '#ebe7e0',
@@ -99,7 +116,10 @@ export const colors = {
 
 export const typography = {
   fontFamily: {
-    headline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    serif: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
+    display: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
+    headline: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
+    sansHeadline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     sans: "'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     mono: "'Fira Code', source-code-pro, Menlo, Monaco, Consolas, monospace",
