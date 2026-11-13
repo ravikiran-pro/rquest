@@ -21,6 +21,10 @@ import {
 import {
   AppstoreOutlined,
   UploadOutlined,
+  PlusOutlined,
+  PlusCircleOutlined,
+  SaveOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 import { colors, radii, typography, shadows } from '../../styles/theme';
@@ -111,7 +115,6 @@ export const getListingTypeFromArchetype = (archetype) => {
 const TYPE_CONFIG = {
   food: {
     label: 'Food Dish / Menu Item',
-    icon: '🍽️',
     defaultUnit: 'plate',
     unitOptions: ['plate', 'portion', 'pack', 'kg', 'piece'],
     sectionPlaceholder: 'e.g. Biryani & Rice, Starters & Fry, Gravies, Beverages',
@@ -119,7 +122,6 @@ const TYPE_CONFIG = {
   },
   medical: {
     label: 'Pharmacy & Healthcare Item',
-    icon: '💊',
     defaultUnit: 'strip',
     unitOptions: ['strip', 'bottle', 'piece', 'box', 'pack', 'tube'],
     sectionPlaceholder: 'e.g. Prescription Drugs, OTC & First Aid, Baby Care, Wellness',
@@ -127,7 +129,6 @@ const TYPE_CONFIG = {
   },
   product: {
     label: 'Retail / Physical Product',
-    icon: '🛒',
     defaultUnit: 'piece',
     unitOptions: ['piece', 'kg', 'pack', 'box', 'meter', 'liter'],
     sectionPlaceholder: 'e.g. Staples & Grains, Cooking Oils, Snacks, Dairy',
@@ -135,7 +136,6 @@ const TYPE_CONFIG = {
   },
   service: {
     label: 'Service Package / Visit',
-    icon: '🔧',
     defaultUnit: 'visit',
     unitOptions: ['visit', 'service', 'session', 'hour'],
     sectionPlaceholder: 'e.g. Diagnostics & Inspection, Repair, Installation',
@@ -143,7 +143,6 @@ const TYPE_CONFIG = {
   },
   rental: {
     label: 'Rental Asset / Equipment',
-    icon: '🏍️',
     defaultUnit: 'day',
     unitOptions: ['day', 'hour', 'week', 'month'],
     sectionPlaceholder: 'e.g. Bikes & Scooters, DJ & Audio Equipment, Event Lighting',
@@ -334,7 +333,8 @@ const AddProductModal = ({
   return (
     <Modal
       title={
-        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          {editingItem ? <EditOutlined style={{ color: colors.primary }} /> : <PlusCircleOutlined style={{ color: colors.primary }} />}
           {modalTitle}
         </span>
       }
@@ -671,8 +671,8 @@ const AddProductModal = ({
                 <Col xs={24} sm={12}>
                   <Form.Item name={['metadata', 'food_type']} label="Dietary Tag" initialValue="veg">
                     <Radio.Group>
-                      <Radio.Button value="veg">🟢 Pure Veg</Radio.Button>
-                      <Radio.Button value="non-veg">🔴 Non-Veg</Radio.Button>
+                      <Radio.Button value="veg">Pure Veg</Radio.Button>
+                      <Radio.Button value="non-veg">Non-Veg</Radio.Button>
                     </Radio.Group>
                   </Form.Item>
                 </Col>
@@ -797,6 +797,7 @@ const AddProductModal = ({
           <Button
             type="primary"
             htmlType="submit"
+            icon={editingItem ? <SaveOutlined /> : <PlusOutlined />}
             loading={submitting}
             style={{
               fontWeight: 700,

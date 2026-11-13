@@ -596,8 +596,9 @@ const LeafletComponent = (props) => {
             pointerEvents: 'none',
           }}
         >
-          <Text strong style={{ color: '#0f172a', fontSize: 13 }}>
-            📍 {currentAddress || `${currentCoords[0]?.toFixed(4)}, ${currentCoords[1]?.toFixed(4)}`}
+          <Text strong style={{ color: colors.textMain || '#0f172a', fontSize: 13, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <EnvironmentOutlined style={{ color: colors.primary }} />
+            <span>{currentAddress || `${currentCoords[0]?.toFixed(4)}, ${currentCoords[1]?.toFixed(4)}`}</span>
           </Text>
         </div>
       </div>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Space, Table, Tag, Input, Button, Row, Col, Avatar, Upload } from 'antd';
 import { apiConfig, config } from '../../utils';
-import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
+import { PlusOutlined, PictureOutlined, CloseOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { colors, typography, radii } from '../../styles/theme';
 
 const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableChange, handleStatusChange, handleRowChange, handleDelete }) => {
@@ -105,6 +105,7 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
         return (
           <Button
             type="default"
+            icon={<ShoppingOutlined style={{ color: colors.secondary }} />}
             style={{
               borderColor: colors.border,
               color: colors.primary,
@@ -214,17 +215,17 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
             <Col>
               <Button
                 type="primary"
+                icon={isNew ? <CloseOutlined /> : <PlusOutlined />}
                 style={{
-                  background: colors.primary,
-                  borderColor: colors.primary,
+                  background: isNew ? colors.textMuted : colors.primary,
+                  borderColor: isNew ? colors.textMuted : colors.primary,
                   borderRadius: radii.md,
                   fontWeight: 600,
                   boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
                 }}
                 onClick={handleToggleNew}
               >
-                {isNew ? 'Cancel New' : 'Add New'}
-                <PlusOutlined />
+                {isNew ? 'Cancel' : 'Add New'}
               </Button>
             </Col>
           </Row>

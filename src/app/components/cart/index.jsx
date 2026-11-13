@@ -32,6 +32,12 @@ import {
   LockOutlined,
   ThunderboltFilled,
   MessageOutlined,
+  InboxOutlined,
+  ClockCircleOutlined,
+  QrcodeOutlined,
+  ToolOutlined,
+  EditOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
 import { useCartStore, useGlobalStore, useChatStore, subscribeToPushNotifications, requestPushPermission } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storageKeys, SOCKET } from '../../utils';
@@ -44,27 +50,27 @@ const { Text, Title } = Typography;
 
 const PREBUILT_QUERIES = [
   {
-    icon: '📦',
+    icon: <InboxOutlined style={{ fontSize: 13, color: colors.primary }} />,
     label: 'In stock & fresh?',
-    text: 'Hi! Is this item available in stock and fresh for immediate dispatch / pickup?',
+    text: 'Hi! Is this item available in stock and ready for immediate dispatch / pickup?',
   },
   {
-    icon: '⏱️',
+    icon: <ClockCircleOutlined style={{ fontSize: 13, color: colors.secondary }} />,
     label: 'Preparation time?',
     text: 'Hi! How long will it take to prepare and pack this order?',
   },
   {
-    icon: '📍',
+    icon: <EnvironmentOutlined style={{ fontSize: 13, color: colors.semantic.success }} />,
     label: 'Delivery feasibility?',
     text: 'Can you deliver to my location landmark? What is the delivery timeline?',
   },
   {
-    icon: '💳',
+    icon: <QrcodeOutlined style={{ fontSize: 13, color: colors.primary }} />,
     label: 'Pay UPI on counter?',
-    text: 'Can I pay directly via GPay / PhonePe UPI QR code upon arrival / pickup?',
+    text: 'Can I pay directly via UPI QR code upon arrival / pickup?',
   },
   {
-    icon: '🛠️',
+    icon: <ToolOutlined style={{ fontSize: 13, color: colors.tertiary }} />,
     label: 'Service inspection / Quote?',
     text: 'Hi, I need an inspection or quote estimate before confirming this service booking.',
   },
@@ -360,8 +366,8 @@ const CartDrawer = () => {
     try {
       const itemsSummary = cart.items.map((i) => `${i.quantity}x ${i.item_name}`).join(', ');
       const messageContent = itemsSummary
-        ? `💬 Customer Pre-order Inquiry regarding [${itemsSummary}]:\n\n"${queryText.trim()}"`
-        : `💬 Customer Pre-order Inquiry:\n\n"${queryText.trim()}"`;
+        ? `Customer Pre-order Inquiry regarding [${itemsSummary}]:\n\n"${queryText.trim()}"`
+        : `Customer Pre-order Inquiry:\n\n"${queryText.trim()}"`;
 
       await netWorkCall(
         apiConfig.chat_create,
@@ -728,9 +734,9 @@ const CartDrawer = () => {
                     <Button
                       type="text"
                       size="small"
-                      icon={<MinusOutlined style={{ fontSize: 10, color: colors.textMain }} />}
+                      icon={<MinusOutlined style={{ fontSize: 11, color: colors.textMain }} />}
                       onClick={() => updateQuantity(item.listing_id, -1)}
-                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                       aria-label="Decrease quantity"
                     />
                     <span
@@ -749,9 +755,9 @@ const CartDrawer = () => {
                     <Button
                       type="text"
                       size="small"
-                      icon={<PlusOutlined style={{ fontSize: 10, color: colors.textMain }} />}
+                      icon={<PlusOutlined style={{ fontSize: 11, color: colors.textMain }} />}
                       onClick={() => updateQuantity(item.listing_id, 1)}
-                      style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                      style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
                       aria-label="Increase quantity"
                     />
                   </div>
@@ -762,9 +768,9 @@ const CartDrawer = () => {
                     icon={<DeleteOutlined style={{ fontSize: 14 }} />}
                     onClick={() => removeItem(item.listing_id)}
                     style={{
-                      width: 28,
-                      height: 28,
-                      display: 'flex',
+                      width: 32,
+                      height: 32,
+                      display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       borderRadius: radii.md,
@@ -806,7 +812,9 @@ const CartDrawer = () => {
                       boxShadow: orderType === 'pickup' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
                     }}
                   >
-                    <div style={{ fontSize: 18, marginBottom: 4 }}>🏬</div>
+                    <div style={{ marginBottom: 4 }}>
+                      <ShopOutlined style={{ fontSize: 20, color: orderType === 'pickup' ? colors.primary : colors.textMuted }} />
+                    </div>
                     <div
                       style={{
                         fontFamily: typography.fontFamily.body,
@@ -836,7 +844,9 @@ const CartDrawer = () => {
                       boxShadow: orderType === 'delivery' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
                     }}
                   >
-                    <div style={{ fontSize: 18, marginBottom: 4 }}>🛵</div>
+                    <div style={{ marginBottom: 4 }}>
+                      <CarOutlined style={{ fontSize: 20, color: orderType === 'delivery' ? colors.primary : colors.textMuted }} />
+                    </div>
                     <div
                       style={{
                         fontFamily: typography.fontFamily.body,
@@ -1254,7 +1264,7 @@ const CartDrawer = () => {
                     border: `1px solid ${colors.verifiedChipBorder}`,
                   }}
                 >
-                  ₹0 (Zero Markup)
+                  Free (₹0)
                 </span>
               </div>
 
@@ -1318,7 +1328,7 @@ const CartDrawer = () => {
                     border: `1px solid ${colors.verifiedChipBorder}`,
                   }}
                 >
-                  Pre-built Chat
+                  Direct Inquiry
                 </Tag>
               </div>
 
@@ -1331,6 +1341,7 @@ const CartDrawer = () => {
                   <Button
                     key={idx}
                     size="small"
+                    icon={q.icon}
                     loading={querySending === q.text}
                     disabled={loading || !!querySending}
                     onClick={() => handleSendPrebuiltInquiry(q.text)}
@@ -1341,15 +1352,14 @@ const CartDrawer = () => {
                       background: colors.surface,
                       borderColor: colors.border,
                       color: colors.textMain,
-                      display: 'flex',
+                      display: 'inline-flex',
                       alignItems: 'center',
                       gap: 4,
                       boxShadow: shadows.sm,
                       fontFamily: typography.fontFamily.body,
                     }}
                   >
-                    <span>{q.icon}</span>
-                    <span>{q.label}</span>
+                    {q.label}
                   </Button>
                 ))}
               </div>
@@ -1402,10 +1412,11 @@ const CartDrawer = () => {
                 <Button
                   type="link"
                   size="small"
+                  icon={<EditOutlined style={{ fontSize: 12, marginRight: 4 }} />}
                   onClick={() => setShowCustomQuery(true)}
-                  style={{ padding: 0, fontSize: 11, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
+                  style={{ padding: 0, fontSize: 11, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body, display: 'inline-flex', alignItems: 'center' }}
                 >
-                  ✏️ Type a custom question for this store...
+                  Type a custom question for this store...
                 </Button>
               )}
             </div>
@@ -1449,7 +1460,7 @@ const CartDrawer = () => {
                 fontFamily: typography.fontFamily.body,
               }}
             >
-              💬 Inquire with Store Owner Instead
+              Inquire with Store Owner Instead
             </Button>
           </div>
         </div>

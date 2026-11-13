@@ -594,7 +594,10 @@ const SearchFilterBar = ({
                 });
               }}
             >
-              <span>💰 Under ₹100</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                <DollarOutlined style={{ fontSize: 12 }} />
+                <span>Under ₹100</span>
+              </span>
             </button>
           )}
 

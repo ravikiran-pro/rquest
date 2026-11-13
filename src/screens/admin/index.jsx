@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import Category from './category';
 import ShopsManager from './shops_manager';
 import AdminOrdersAccounts from './orders_accounts';
+import Products from './products';
 import { Tabs, Card, Typography, Tag, Flex, Grid } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
   SafetyCertificateOutlined,
   DatabaseOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import { colors, typography, radii } from '../../app/styles/theme';
 import './index.css';
@@ -49,6 +51,15 @@ const Admin = () => {
         </span>
       ),
       children: <AdminOrdersAccounts />,
+    },
+    {
+      key: '4',
+      label: (
+        <span style={{ fontWeight: 600, fontSize: 14, fontFamily: typography.fontFamily.headline }}>
+          <ShoppingOutlined /> Master Products Catalog
+        </span>
+      ),
+      children: <Products />,
     },
   ];
 

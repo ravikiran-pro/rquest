@@ -6,6 +6,9 @@ import {
   CheckCircleOutlined,
   ClockCircleOutlined,
   FireOutlined,
+  SafetyCertificateOutlined,
+  AlertOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons';
 import { colors, radii } from '../../styles';
 import { distanceConvertor } from '../../utils';
@@ -165,9 +168,9 @@ const resolveMobileStatus = (item) => {
 
   if (type === 'food' || name.includes('idli')) {
     return {
-      icon: '🔥',
-      left: 'Hot breakfast batch actively steaming',
-      right: 'Fresh made',
+      icon: <FireOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+      left: 'Fresh batch prepared today',
+      right: 'Freshly Made',
       bg: '#fefce8',
       border: '#fef08a',
       color: '#b45309',
@@ -175,9 +178,9 @@ const resolveMobileStatus = (item) => {
   }
   if (type === 'service' || name.includes('ac')) {
     return {
-      icon: '🛡',
-      left: 'Background Verified · 7 yr exp',
-      right: 'Earliest: 3:30 PM',
+      icon: <SafetyCertificateOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+      left: 'Verified local technician',
+      right: 'Bookable Today',
       bg: '#eff6ff',
       border: '#dbeafe',
       color: '#1d4ed8',
@@ -185,9 +188,9 @@ const resolveMobileStatus = (item) => {
   }
   if (name.includes('charger') || name.includes('cable') || name.includes('usb')) {
     return {
-      icon: '⚠️',
-      left: 'Only 2 units left in counter stock',
-      right: 'Fast selling',
+      icon: <AlertOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+      left: 'Limited counter stock available',
+      right: 'In Demand',
       bg: '#fef2f2',
       border: '#fee2e2',
       color: '#dc2626',
@@ -195,18 +198,18 @@ const resolveMobileStatus = (item) => {
   }
   if (name.includes('oil') || name.includes('organic')) {
     return {
-      icon: '✓',
-      left: 'Verified on wooden shelf 12m ago',
-      right: '6 bottles left',
+      icon: <CheckCircleOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+      left: 'In-store verified inventory',
+      right: 'In Stock',
       bg: '#ecfdf5',
       border: '#d1fae5',
       color: '#059669',
     };
   }
   return {
-    icon: '✓',
-    left: 'Confirmed in physical crates 4m ago',
-    right: '18 units left',
+    icon: <CheckCircleOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+    left: 'Available for immediate store pickup',
+    right: 'In Stock',
     bg: '#ecfdf5',
     border: '#d1fae5',
     color: '#059669',
@@ -218,26 +221,24 @@ const resolveFulfillmentText = (item) => {
   const type = (item.listing_type || '').toLowerCase();
 
   if (type === 'food' || name.includes('idli')) {
-    return '🛵 Direct kitchen checkout · No markup';
+    return 'Direct kitchen checkout · No markup';
   }
   if (type === 'service' || name.includes('ac')) {
-    return '📅 Available slot today from 3:30 PM';
+    return 'Available today for booking';
   }
   if (name.includes('charger') || name.includes('cable') || name.includes('usb')) {
-    return '⚡ Instant counter pickup';
+    return 'Instant counter pickup';
   }
   if (name.includes('oil') || name.includes('organic')) {
-    return '🏪 Wood pressed · Instant pickup';
+    return 'Direct pickup available';
   }
-  return '🏪 Pay at shop or UPI delivery';
+  return 'Pay at shop or UPI delivery';
 };
 
 const resolveActionBtn = (item) => {
   const type = (item.listing_type || '').toLowerCase();
-  if (type === 'service') return 'Request →';
-  if (type === 'food') return 'Order 🛍';
-  if (item.name?.toLowerCase().includes('charger')) return 'Order ⚡';
-  return 'Order →';
+  if (type === 'service') return 'Request Quote';
+  return 'Order Now';
 };
 
 const OfferingCard = ({ item, onOrder, onClick }) => {
@@ -536,7 +537,8 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
           }}
         >
-          <span>📍 {distanceStr} • {areaStr}</span>
+          <EnvironmentOutlined style={{ color: colors.semantic?.success || '#059669', fontSize: 11 }} />
+          <span>{distanceStr} • {areaStr}</span>
         </div>
 
         {/* Top-Right Assurance Badge */}

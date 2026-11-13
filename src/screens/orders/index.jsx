@@ -34,10 +34,15 @@ import {
   ShoppingOutlined,
   SearchOutlined,
   ReloadOutlined,
+  EnvironmentOutlined,
+  FileTextOutlined,
+  QrcodeOutlined,
+  WalletOutlined,
+  ToolOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig, checkUserRole } from '../../app/utils';
 import { useGlobalStore, useChatStore } from '../../app/services';
-import { colors, typography, radii } from '../../app/styles/theme';
+import { colors, typography, radii, shadows } from '../../app/styles/theme';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../app/routes/routes';
 import AdminOrdersAccounts from '../admin/orders_accounts';
@@ -332,13 +337,13 @@ const OrdersScreen = () => {
 
     const timeStr = createdAt
       ? new Date(createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      : '10:14 AM';
+      : 'Placed';
 
     const steps = [
       { key: 'placed', label: 'Placed', sub: timeStr, done: true, active: isPlaced },
-      { key: 'prep', label: 'Confirmed', sub: isPreparing || isReadyOrDispatched || isCompleted ? '10:16 AM' : 'Pending', done: isPreparing || isReadyOrDispatched || isCompleted, active: isPreparing },
-      { key: 'ready', label: 'Fulfilling', sub: isReadyOrDispatched ? 'Active' : isCompleted ? 'Done' : 'Active', done: isCompleted, active: isReadyOrDispatched || isPreparing },
-      { key: 'done', label: 'Delivery', sub: isCompleted ? 'Delivered' : '~10:45 AM', done: isCompleted, active: isCompleted },
+      { key: 'prep', label: 'Confirmed', sub: isPreparing || isReadyOrDispatched || isCompleted ? 'Confirmed' : 'Pending', done: isPreparing || isReadyOrDispatched || isCompleted, active: isPreparing },
+      { key: 'ready', label: 'Fulfilling', sub: isReadyOrDispatched ? 'In Progress' : isCompleted ? 'Ready' : 'Pending', done: isCompleted, active: isReadyOrDispatched || isPreparing },
+      { key: 'done', label: 'Delivery', sub: isCompleted ? 'Delivered' : 'Pending', done: isCompleted, active: isCompleted },
     ];
 
     let fillPercent = '66%';
@@ -475,6 +480,20 @@ const OrdersScreen = () => {
       return true;
     });
   }, [storeOrders, selectedShopFilter, storeOrderFilter, storeSearchTerm]);
+
+  // Merchant aggregate metrics for store orders
+  const storeMetrics = useMemo(() => {
+    const total = storeOrders.length;
+    const actionRequired = storeOrders.filter(
+      (o) => o.status === 'placed' || o.status === 'pending' || o.status === 'order_prepare' || o.status === 'preparing'
+    ).length;
+    const inFulfillment = storeOrders.filter(
+      (o) => o.status === 'ready_for_pickup' || o.status === 'open_to_delivery' || o.status === 'out_for_delivery'
+    ).length;
+    const completedOrders = storeOrders.filter((o) => o.status === 'completed');
+    const revenue = completedOrders.reduce((sum, o) => sum + (parseFloat(o.total_amount) || 0), 0);
+    return { total, actionRequired, inFulfillment, revenue };
+  }, [storeOrders]);
 
   if (loading) {
     return (
@@ -617,9 +636,85 @@ const OrdersScreen = () => {
       {/* ========================================================= */}
       {activeTab === 'store_orders' && (
         <div>
+          {/* Quick Metrics Bar for Store Orders Dashboard */}
+          <Row gutter={[12, 12]} style={{ marginBottom: 16 }}>
+            <Col xs={12} sm={6}>
+              <Card
+                bodyStyle={{ padding: '12px 16px' }}
+                style={{
+                  borderRadius: radii.lg,
+                  border: `1px solid ${colors.borderLight}`,
+                  background: colors.surface,
+                  boxShadow: shadows.sm,
+                }}
+              >
+                <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Total Orders
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                  {storeMetrics.total}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card
+                bodyStyle={{ padding: '12px 16px' }}
+                style={{
+                  borderRadius: radii.lg,
+                  border: `1px solid ${colors.borderLight}`,
+                  background: colors.surface,
+                  boxShadow: shadows.sm,
+                }}
+              >
+                <div style={{ fontSize: 11, color: colors.semantic.warning, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Action Needed
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: colors.semantic.warning, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                  {storeMetrics.actionRequired}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card
+                bodyStyle={{ padding: '12px 16px' }}
+                style={{
+                  borderRadius: radii.lg,
+                  border: `1px solid ${colors.borderLight}`,
+                  background: colors.surface,
+                  boxShadow: shadows.sm,
+                }}
+              >
+                <div style={{ fontSize: 11, color: colors.secondary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  In Fulfillment
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: colors.secondary, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                  {storeMetrics.inFulfillment}
+                </div>
+              </Card>
+            </Col>
+            <Col xs={12} sm={6}>
+              <Card
+                bodyStyle={{ padding: '12px 16px' }}
+                style={{
+                  borderRadius: radii.lg,
+                  border: `1px solid ${colors.borderLight}`,
+                  background: colors.surface,
+                  boxShadow: shadows.sm,
+                }}
+              >
+                <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  Total Revenue
+                </div>
+                <div style={{ fontSize: 22, fontWeight: 800, color: colors.semantic.success, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                  ₹{storeMetrics.revenue.toFixed(0)}
+                </div>
+              </Card>
+            </Col>
+          </Row>
+
           {/* Store switcher & Filter bar */}
           <Card
-            style={{ borderRadius: 14, border: '1px solid #e2e8f0', marginBottom: 16 }}
+            style={{ borderRadius: radii.lg, border: `1px solid ${colors.borderLight}`, background: colors.surfaceContainerLow, marginBottom: 16 }}
             bodyStyle={{ padding: 14 }}
           >
             <Row gutter={[10, 10]} align="middle" justify="space-between">
@@ -627,10 +722,10 @@ const OrdersScreen = () => {
                 <Space wrap style={{ width: '100%' }}>
                   <Input
                     placeholder="Search Order #, Customer, Phone..."
-                    prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
+                    prefix={<SearchOutlined style={{ color: colors.textMuted }} />}
                     value={storeSearchTerm}
                     onChange={(e) => setStoreSearchTerm(e.target.value)}
-                    style={{ width: 220, borderRadius: 8 }}
+                    style={{ width: 220, borderRadius: radii.md }}
                     allowClear
                   />
                   {myShops.length > 1 && (
@@ -650,7 +745,7 @@ const OrdersScreen = () => {
                   <Select
                     value={storeOrderFilter}
                     onChange={setStoreOrderFilter}
-                    style={{ width: 150 }}
+                    style={{ width: 160 }}
                   >
                     <Option value="all">All Statuses ({storeOrders.length})</Option>
                     <Option value="active">
@@ -673,7 +768,7 @@ const OrdersScreen = () => {
                   icon={<ReloadOutlined />}
                   onClick={fetchOrdersData}
                   loading={loading}
-                  style={{ borderRadius: 8 }}
+                  style={{ borderRadius: radii.md, fontWeight: 600 }}
                 >
                   Refresh Live Orders
                 </Button>
@@ -682,7 +777,7 @@ const OrdersScreen = () => {
           </Card>
 
           {filteredStoreOrders.length === 0 ? (
-            <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
+            <Card style={{ borderRadius: radii.xl, textAlign: 'center', padding: '40px 16px', border: `1px solid ${colors.borderLight}` }}>
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="No customer orders received in this filter"
@@ -693,7 +788,7 @@ const OrdersScreen = () => {
                 <Button
                   type="primary"
                   onClick={() => history.push(Routes.client)}
-                  style={{ borderRadius: 8, fontWeight: 700 }}
+                  style={{ borderRadius: radii.md, fontWeight: 700, background: colors.primary, borderColor: colors.primary }}
                 >
                   Go to Store Management
                 </Button>
@@ -714,7 +809,8 @@ const OrdersScreen = () => {
                     style={{
                       borderRadius: radii.xl,
                       border: ord.status === 'placed' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
+                      boxShadow: shadows.sm,
+                      background: colors.surface,
                     }}
                     bodyStyle={{ padding: 16 }}
                   >
@@ -732,15 +828,15 @@ const OrdersScreen = () => {
                           {(ord.customer?.username || 'C').charAt(0).toUpperCase()}
                         </Avatar>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>
+                          <div style={{ fontWeight: 800, fontSize: 15, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                             Customer: {ord.customer?.username || 'Guest Customer'}
                           </div>
-                          <div style={{ fontSize: 12, color: '#64748b' }}>
+                          <div style={{ fontSize: 12, color: colors.textMuted }}>
                             #{ord.order_number} • {new Date(ord.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
                           </div>
                           {ord.shop?.shop_name && (
-                            <div style={{ fontSize: 11, color: colors.primary, fontWeight: 600 }}>
-                              🏪 Outlet: {ord.shop.shop_name}
+                            <div style={{ fontSize: 11, color: colors.primary, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                              <ShopOutlined /> Outlet: {ord.shop.shop_name}
                             </div>
                           )}
                         </div>
@@ -750,10 +846,11 @@ const OrdersScreen = () => {
                         {getStatusBadge(ord.status)}
                         <div style={{ marginTop: 4 }}>
                           <Tag
+                            icon={ord.order_type === 'delivery' ? <CarOutlined /> : ord.order_type === 'service' ? <ToolOutlined /> : <ShopOutlined />}
                             color={ord.order_type === 'delivery' ? 'purple' : ord.order_type === 'service' ? 'cyan' : 'green'}
-                            style={{ fontSize: 11, fontWeight: 700, margin: 0 }}
+                            style={{ fontSize: 11, fontWeight: 700, margin: 0, borderRadius: radii.xs }}
                           >
-                            {ord.order_type === 'delivery' ? '🚚 Delivery' : ord.order_type === 'service' ? '🛠️ Service' : '🏬 Counter Pickup'}
+                            {ord.order_type === 'delivery' ? 'Delivery' : ord.order_type === 'service' ? 'Service' : 'Counter Pickup'}
                           </Tag>
                         </div>
                       </div>
@@ -765,14 +862,14 @@ const OrdersScreen = () => {
                     {/* Items Receipt Box */}
                     <div
                       style={{
-                        background: '#f8fafc',
-                        borderRadius: 12,
-                        padding: '10px 12px',
-                        border: '1px solid #f1f5f9',
+                        background: colors.surfaceContainerLow,
+                        borderRadius: radii.md,
+                        padding: '12px 14px',
+                        border: `1px solid ${colors.borderLight}`,
                         marginBottom: 12,
                       }}
                     >
-                      <div style={{ fontWeight: 700, fontSize: 12, color: '#475569', marginBottom: 6 }}>
+                      <div style={{ fontWeight: 700, fontSize: 12, color: colors.textMuted, marginBottom: 6, letterSpacing: '0.02em' }}>
                         ORDER ITEMS ({items.length})
                       </div>
                       {displayedItems.map((it, idx) => (
@@ -783,26 +880,27 @@ const OrdersScreen = () => {
                             justifyContent: 'space-between',
                             alignItems: 'center',
                             fontSize: 13,
-                            color: '#334155',
+                            color: colors.textMain,
                             padding: '4px 0',
                           }}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                             <span
                               style={{
-                                background: '#e2e8f0',
-                                color: '#0f172a',
+                                background: colors.surface,
+                                border: `1px solid ${colors.borderLight}`,
+                                color: colors.textMain,
                                 fontWeight: 800,
                                 fontSize: 11,
                                 padding: '1px 6px',
-                                borderRadius: 4,
+                                borderRadius: radii.xs,
                               }}
                             >
                               {it.quantity}x
                             </span>
                             <span style={{ fontWeight: 600 }}>{it.item_name}</span>
                           </div>
-                          <span style={{ fontWeight: 700, color: '#0f172a' }}>
+                          <span style={{ fontWeight: 700, color: colors.textMain }}>
                             ₹{it.subtotal ? it.subtotal.toFixed(2) : (it.unit_price * it.quantity).toFixed(2)}
                           </span>
                         </div>
@@ -813,7 +911,7 @@ const OrdersScreen = () => {
                           type="link"
                           size="small"
                           onClick={() => toggleExpand(ord.id)}
-                          style={{ padding: '4px 0', fontSize: 12, fontWeight: 700 }}
+                          style={{ padding: '4px 0', fontSize: 12, fontWeight: 700, color: colors.secondary }}
                         >
                           {isExpanded ? (
                             <>Show less <UpOutlined /></>
@@ -823,13 +921,17 @@ const OrdersScreen = () => {
                         </Button>
                       )}
 
-                      <Divider style={{ margin: '8px 0' }} />
+                      <Divider style={{ margin: '8px 0', borderColor: colors.borderLight }} />
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ fontSize: 13, color: '#64748b' }}>
-                          Customer Payment ({ord.payment_mode === 'direct_upi' ? '💳 Direct UPI' : '💵 Cash'})
+                        <span style={{ fontSize: 12, color: colors.textMuted, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                          Payment: {ord.payment_mode === 'direct_upi' ? (
+                            <><QrcodeOutlined style={{ color: colors.primary }} /> Direct UPI</>
+                          ) : (
+                            <><WalletOutlined style={{ color: colors.semantic.warning }} /> Cash</>
+                          )}
                         </span>
-                        <span style={{ fontSize: 17, fontWeight: 800, color: '#0f172a' }}>
+                        <span style={{ fontSize: 17, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                           ₹{ord.total_amount?.toFixed(2)}
                         </span>
                       </div>
@@ -839,24 +941,28 @@ const OrdersScreen = () => {
                     <div
                       style={{
                         background: colors.surfaceContainerLow,
-                        padding: '10px 12px',
+                        padding: '12px 14px',
                         borderRadius: radii.md,
                         border: `1px solid ${colors.borderLight}`,
                         marginBottom: 12,
                         fontSize: 12,
+                        fontFamily: typography.fontFamily.body,
                       }}
                     >
-                      <div style={{ color: colors.primary, fontWeight: 600, marginBottom: 2 }}>
-                        📞 Customer Phone: <strong>{ord.customer_phone || ord.customer?.mobile || 'Provided via Chat'}</strong>
+                      <div style={{ color: colors.primary, fontWeight: 600, marginBottom: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <PhoneOutlined />
+                        <span>Customer Phone: <strong>{ord.customer_phone || ord.customer?.mobile || 'Provided via Chat'}</strong></span>
                       </div>
                       {ord.delivery_address && (
-                        <div style={{ color: '#475569' }}>
-                          📍 Delivery Address: <strong>{ord.delivery_address}</strong>
+                        <div style={{ color: colors.textMain, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                          <EnvironmentOutlined style={{ color: colors.semantic.success }} />
+                          <span>Delivery Address: <strong>{ord.delivery_address}</strong></span>
                         </div>
                       )}
                       {ord.notes && (
-                        <div style={{ color: '#b45309', marginTop: 2 }}>
-                          📝 Customer Note: &quot;{ord.notes}&quot;
+                        <div style={{ color: colors.semantic.warning, display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <FileTextOutlined />
+                          <span>Customer Note: &quot;{ord.notes}&quot;</span>
                         </div>
                       )}
                     </div>
@@ -1168,7 +1274,7 @@ const OrdersScreen = () => {
                         {/* Order Progress Stepper */}
                         {renderProgressTracker(ord.status, ord.createdAt)}
 
-                        {/* Action Buttons: [ 📞 Call Shop ] & [ 📄 View Summary ] */}
+                        {/* Action Buttons: [ Call Shop ] & [ View Summary ] */}
                         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                           <Button
                             icon={<PhoneOutlined />}
@@ -1337,8 +1443,8 @@ const OrdersScreen = () => {
                           >
                             <span>
                               {ord.order_type === 'pickup'
-                                ? `🏪 Self-Pickup OTP: ${ord.order_number ? ord.order_number.slice(-4) : '4921'}`
-                                : '🛵 Dunzo / Local Valet arriving shortly'}
+                                ? `Self-Pickup OTP: ${ord.order_number ? ord.order_number.slice(-4) : '4921'}`
+                                : 'Local courier / delivery runner dispatched'}
                             </span>
                             <span style={{ fontWeight: 800, color: colors.textMain }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
@@ -1350,10 +1456,11 @@ const OrdersScreen = () => {
                               <Button
                                 size="small"
                                 type="link"
+                                icon={<ShopOutlined />}
                                 onClick={() => handleSwitchToPickup(ord.id)}
                                 style={{ padding: 0, fontSize: 11, fontWeight: 700, color: colors.primary }}
                               >
-                                🏬 Switch to Self-Pickup
+                                Switch to Self-Pickup
                               </Button>
                             </div>
                           )}
@@ -1610,8 +1717,8 @@ const OrdersScreen = () => {
               {/* If merchant received quotes for their services */}
               {storeQuotes.length > 0 && (
                 <div>
-                  <Title level={5} style={{ margin: '8px 0 12px 0' }}>
-                    🛠️ Service Quote Requests for Your Stores ({storeQuotes.length})
+                  <Title level={5} style={{ margin: '8px 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <ToolOutlined style={{ color: colors.secondary }} /> Service Quote Requests for Your Stores ({storeQuotes.length})
                   </Title>
                   <Space direction="vertical" style={{ width: '100%' }} size={12}>
                     {storeQuotes.map((q) => (
@@ -1665,8 +1772,8 @@ const OrdersScreen = () => {
               {customerQuotes.length > 0 && (
                 <div>
                   {storeQuotes.length > 0 && (
-                    <Title level={5} style={{ margin: '0 0 12px 0' }}>
-                      📋 Your Requested Service Quotes ({customerQuotes.length})
+                    <Title level={5} style={{ margin: '0 0 12px 0', display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <FileTextOutlined style={{ color: colors.primary }} /> Your Requested Service Quotes ({customerQuotes.length})
                     </Title>
                   )}
                   <Space direction="vertical" style={{ width: '100%' }} size={12}>

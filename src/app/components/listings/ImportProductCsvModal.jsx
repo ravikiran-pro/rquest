@@ -317,7 +317,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
                   borderColor: colors.semantic.successBorder,
                 }}
               >
-                🟢 Pure Veg
+                Pure Veg
               </Tag>
             ) : (
               <Tag
@@ -329,7 +329,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
                   borderColor: colors.semantic.errorBorder,
                 }}
               >
-                🔴 Non-Veg
+                Non-Veg
               </Tag>
             );
           },
@@ -561,12 +561,12 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
               size="small"
               style={{ width: 190 }}
             >
-              <Option value="medical">💊 Pharmacy & Medical</Option>
-              <Option value="food">🍽️ Food & Restaurant</Option>
-              <Option value="grocery">🛒 Grocery & Staples</Option>
-              <Option value="service">🔧 Services & Repair</Option>
-              <Option value="rental">🏍️ Rentals & Assets</Option>
-              <Option value="product">🛍️ General Retail</Option>
+              <Option value="medical">Pharmacy & Medical</Option>
+              <Option value="food">Food & Restaurant</Option>
+              <Option value="grocery">Grocery & Staples</Option>
+              <Option value="service">Services & Repair</Option>
+              <Option value="rental">Rentals & Assets</Option>
+              <Option value="product">General Retail</Option>
             </Select>
           </div>
         </Flex>

@@ -41,6 +41,10 @@ import {
   UserOutlined,
   CopyOutlined,
   ToolOutlined,
+  PlusOutlined,
+  SyncOutlined,
+  QrcodeOutlined,
+  WalletOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
@@ -570,8 +574,9 @@ const ManageStore = ({
                 ? colors.serviceChipBorder
                 : 'rgba(11, 45, 107, 0.2)',
           }}
+          icon={type === 'delivery' ? <CarOutlined /> : type === 'service' ? <ToolOutlined /> : <ShopOutlined />}
         >
-          {type === 'delivery' ? '🚚 Delivery' : type === 'service' ? '🛠️ Service' : '🛍️ Pickup'}
+          {type === 'delivery' ? 'Delivery' : type === 'service' ? 'Service' : 'Pickup'}
         </Tag>
       ),
     },
@@ -651,16 +656,16 @@ const ManageStore = ({
           cancelled: { bg: colors.semantic.errorLight, color: colors.semantic.error, border: colors.semantic.errorBorder },
         };
         const statusLabels = {
-          placed: '📋 Order Placed',
-          pending: '⏳ Pending',
-          order_prepare: '🍳 Order Prepare',
-          preparing: '🍳 Preparing',
-          accepted: '✅ Accepted',
-          ready_for_pickup: '🛍️ Ready for Pickup',
-          open_to_delivery: '🚚 Open to Delivery',
-          out_for_delivery: '🛵 Out for Delivery',
-          completed: '🎉 Completed',
-          cancelled: '❌ Cancelled',
+          placed: 'Order Placed',
+          pending: 'Pending',
+          order_prepare: 'Preparing',
+          preparing: 'Preparing',
+          accepted: 'Accepted',
+          ready_for_pickup: 'Ready for Pickup',
+          open_to_delivery: 'Open to Delivery',
+          out_for_delivery: 'Out for Delivery',
+          completed: 'Completed',
+          cancelled: 'Cancelled',
         };
         const chip = statusStyles[record.status] || {
           bg: colors.surfaceContainerLow,
@@ -713,10 +718,11 @@ const ManageStore = ({
               <Button
                 type="primary"
                 size="small"
+                icon={<SyncOutlined />}
                 style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'order_prepare')}
               >
-                🍳 Order Prepare
+                Order Prepare
               </Button>
             )}
 
@@ -730,10 +736,11 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
+                    icon={<CheckCircleFilled />}
                     style={{ background: colors.primary, borderColor: colors.primary, fontWeight: 600, borderRadius: radii.md }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'ready_for_pickup')}
                   >
-                    🛍️ Ready for Pickup
+                    Ready for Pickup
                   </Button>
                 )}
 
@@ -742,10 +749,11 @@ const ManageStore = ({
                   <Button
                     type="primary"
                     size="small"
+                    icon={<CarOutlined />}
                     style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 600, borderRadius: radii.md }}
                     onClick={() => handleUpdateOrderStatus(record.id, 'open_to_delivery')}
                   >
-                    🚚 Move to Open to Delivery
+                    Open to Delivery
                   </Button>
                 )}
 
@@ -827,10 +835,10 @@ const ManageStore = ({
 
   // Dynamic titles tailored to Product vs Service store
   const catalogTabLabel = isServiceStore
-    ? `🔧 Services & Packages (${listings.length})`
+    ? `Services & Packages (${listings.length})`
     : storeArchetype === 'food'
-    ? `🍽️ Food Menu & Dishes (${listings.length})`
-    : `🛒 Products & Inventory (${listings.length})`;
+    ? `Food Menu & Dishes (${listings.length})`
+    : `Products & Inventory (${listings.length})`;
 
   const catalogTitle = isServiceStore
     ? 'Services & Rate Card'
@@ -845,14 +853,14 @@ const ManageStore = ({
     : 'Manage retail products, stock availability, and unit pricing for local customers.';
 
   const addItemButtonLabel = isServiceStore
-    ? '+ Add Service Package'
+    ? 'Add Service Package'
     : storeArchetype === 'food'
-    ? '+ Add Dish / Beverage'
-    : '+ Add Product';
+    ? 'Add Dish / Beverage'
+    : 'Add Product';
 
   const ordersTabLabel = isServiceStore
-    ? `🛠️ Service Bookings (${orders.length})`
-    : `📦 Customer Orders (${orders.length})`;
+    ? `Service Bookings (${orders.length})`
+    : `Customer Orders (${orders.length})`;
 
   const ordersTitle = isServiceStore
     ? 'Direct Service Bookings'
@@ -906,6 +914,7 @@ const ManageStore = ({
                 {shop.area} • {shop.shopCategory?.name || shop.shop_type || 'Store Outlet'}
               </Text>
               <Tag
+                icon={isServiceStore ? <ToolOutlined /> : <ShopOutlined />}
                 style={{
                   fontSize: 11,
                   margin: 0,
@@ -916,7 +925,7 @@ const ManageStore = ({
                   color: isServiceStore ? colors.serviceChipText : colors.verifiedChipText,
                 }}
               >
-                {isServiceStore ? '🔧 Service Business' : '🛒 Product Store'}
+                {isServiceStore ? 'Service Business' : 'Product Store'}
               </Tag>
             </div>
           </div>
@@ -994,6 +1003,7 @@ const ManageStore = ({
                     <Space wrap>
                       <Button
                         type="primary"
+                        icon={<PlusOutlined />}
                         onClick={handleOpenAddModal}
                         className="manage-store-add-item-btn"
                         style={{
@@ -1348,12 +1358,13 @@ const ManageStore = ({
                       ? colors.serviceChipBorder
                       : 'rgba(11, 45, 107, 0.2)',
                 }}
+                icon={selectedOrder.order_type === 'delivery' ? <CarOutlined /> : selectedOrder.order_type === 'service' ? <ToolOutlined /> : <ShopOutlined />}
               >
                 {selectedOrder.order_type === 'delivery'
-                  ? '🚚 Delivery'
+                  ? 'Delivery'
                   : selectedOrder.order_type === 'service'
-                  ? '🛠️ Service'
-                  : '🛍️ Self-Pickup'}
+                  ? 'Service'
+                  : 'Self-Pickup'}
               </Tag>
             </Flex>
           ) : (
@@ -1405,6 +1416,7 @@ const ManageStore = ({
                         <>
                           <Button
                             type="primary"
+                            icon={<SyncOutlined />}
                             style={{
                               background: colors.secondary,
                               borderColor: colors.secondary,
@@ -1413,7 +1425,7 @@ const ManageStore = ({
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'order_prepare')}
                           >
-                            🍳 Start Preparing (Order Prepare)
+                            Start Preparing (Order Prepare)
                           </Button>
                           <Button
                             danger
@@ -1432,6 +1444,7 @@ const ManageStore = ({
                           {selectedOrder.order_type === 'pickup' && (
                             <Button
                               type="primary"
+                              icon={<CheckCircleFilled />}
                               style={{
                                 background: colors.primary,
                                 borderColor: colors.primary,
@@ -1440,13 +1453,14 @@ const ManageStore = ({
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'ready_for_pickup')}
                             >
-                              🛍️ Ready for Counter Pickup
+                              Ready for Counter Pickup
                             </Button>
                           )}
 
                           {selectedOrder.order_type === 'delivery' && (
                             <Button
                               type="primary"
+                              icon={<CarOutlined />}
                               style={{
                                 background: colors.secondary,
                                 borderColor: colors.secondary,
@@ -1455,13 +1469,14 @@ const ManageStore = ({
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'open_to_delivery')}
                             >
-                              🚚 Move to Open to Delivery
+                              Move to Open to Delivery
                             </Button>
                           )}
 
                           {selectedOrder.order_type === 'service' && (
                             <Button
                               type="primary"
+                              icon={<CheckCircleFilled />}
                               style={{
                                 background: colors.semantic.success,
                                 borderColor: colors.semantic.success,
@@ -1470,16 +1485,17 @@ const ManageStore = ({
                               }}
                               onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                             >
-                              ✅ Mark Service Completed
+                              Mark Service Completed
                             </Button>
                           )}
 
                           <Button
                             size="small"
+                            icon={<ArrowLeftOutlined />}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'placed')}
                             style={{ borderRadius: radii.sm, borderColor: colors.border, color: colors.textMuted }}
                           >
-                            ↩️ Revert to Placed
+                            Revert to Placed
                           </Button>
                         </>
                       )}
@@ -1487,6 +1503,7 @@ const ManageStore = ({
                       {selectedOrder.status === 'ready_for_pickup' && (
                         <Button
                           type="primary"
+                          icon={<CheckCircleFilled />}
                           style={{
                             background: colors.semantic.success,
                             borderColor: colors.semantic.success,
@@ -1495,7 +1512,7 @@ const ManageStore = ({
                           }}
                           onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                         >
-                          ✅ Hand Over to Customer (Complete)
+                          Hand Over to Customer (Complete)
                         </Button>
                       )}
 
@@ -1503,6 +1520,7 @@ const ManageStore = ({
                         <>
                           <Button
                             type="primary"
+                            icon={<CarOutlined />}
                             style={{
                               background: colors.secondary,
                               borderColor: colors.secondary,
@@ -1511,9 +1529,10 @@ const ManageStore = ({
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'out_for_delivery')}
                           >
-                            🛵 Mark Out for Delivery
+                            Mark Out for Delivery
                           </Button>
                           <Button
+                            icon={<CheckCircleFilled />}
                             style={{
                               background: colors.semantic.success,
                               borderColor: colors.semantic.success,
@@ -1523,7 +1542,7 @@ const ManageStore = ({
                             }}
                             onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                           >
-                            ✅ Mark Delivered
+                            Mark Delivered
                           </Button>
                         </>
                       )}
@@ -1821,9 +1840,15 @@ const ManageStore = ({
                           fontFamily: typography.fontFamily.headline,
                         }}
                       >
-                        {selectedOrder.payment_mode === 'direct_upi'
-                          ? '⚡ Direct Store UPI Payment'
-                          : '💵 Cash on Delivery / Counter Pickup'}
+                        {selectedOrder.payment_mode === 'direct_upi' ? (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <QrcodeOutlined style={{ color: colors.semantic.success }} /> Direct Store UPI Payment
+                          </span>
+                        ) : (
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                            <WalletOutlined style={{ color: colors.tertiary }} /> Cash on Delivery / Counter Pickup
+                          </span>
+                        )}
                       </div>
                     </div>
                     {selectedOrder.shop_upi_id && (

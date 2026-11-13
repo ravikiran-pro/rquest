@@ -1374,16 +1374,16 @@ function ChatApp() {
                 <div className="rquest-chat-quick-replies">
                   {(user_data?.role === 'customer'
                     ? [
-                        '👋 Hi, is this available?',
-                        '🕒 What are your store hours?',
-                        '📍 Do you deliver to my location?',
-                        '📦 Can I pick this up today?',
+                        'Hi, is this item available?',
+                        'What are your store hours?',
+                        'Do you deliver to my location?',
+                        'Can I pick this up today?',
                       ]
                     : [
-                        '✅ Yes, this is currently in stock!',
-                        '📦 Preparing your order now.',
-                        '🚚 Out for delivery.',
-                        '🙏 Thank you for contacting us!',
+                        'Yes, this is currently in stock.',
+                        'Preparing your order now.',
+                        'Order is out for delivery.',
+                        'Thank you for reaching out!',
                       ]
                   ).map((quickText, qIdx) => (
                     <button

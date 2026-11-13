@@ -507,6 +507,7 @@ const FormSchemaBuilderModal = ({
         </Text>
         <Button
           type="primary"
+          icon={<PlusOutlined />}
           onClick={handleAddField}
           style={{
             borderRadius: radii.md,
@@ -516,7 +517,7 @@ const FormSchemaBuilderModal = ({
             fontFamily: typography.fontFamily.body,
           }}
         >
-          + Add Custom Field
+          Add Custom Field
         </Button>
       </div>
 

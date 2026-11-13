@@ -35,6 +35,9 @@ import {
   StarFilled,
   ThunderboltFilled,
   EditOutlined,
+  ShopOutlined,
+  EyeOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
 import {
   netWorkCall,
@@ -453,7 +456,7 @@ const StorefrontScreen = () => {
           }}
         >
           <Flex align="center" gap={10}>
-            <span style={{ fontSize: 22 }}>🏪</span>
+            <ShopOutlined style={{ fontSize: 22, color: '#047857' }} />
             <div>
               <div style={{ fontWeight: 700, color: '#065f46', fontSize: 13 }}>
                 Storefront Preview Mode
@@ -586,7 +589,9 @@ const StorefrontScreen = () => {
                   fontWeight: 700,
                 }}
               >
-                <span>👁️ Owner Preview Mode</span>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                  <EyeOutlined /> Owner Preview Mode
+                </span>
               </div>
             ) : (
               <div
@@ -1105,8 +1110,8 @@ const StorefrontScreen = () => {
               onChange={setFoodFilter}
               options={[
                 { label: 'All Items', value: 'all' },
-                { label: '🟢 Pure Veg', value: 'veg' },
-                { label: '🔴 Non-Veg', value: 'non-veg' },
+                { label: 'Pure Veg', value: 'veg' },
+                { label: 'Non-Veg', value: 'non-veg' },
               ]}
               style={{ fontWeight: 700, padding: 3, background: '#f1f5f9' }}
             />
@@ -1304,7 +1309,7 @@ const StorefrontScreen = () => {
 
                         {item.metadata?.dosage_form && (
                           <Tag color="cyan" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            💊 {item.metadata.dosage_form}
+                            Dosage: {item.metadata.dosage_form}
                           </Tag>
                         )}
 
@@ -1315,14 +1320,14 @@ const StorefrontScreen = () => {
                         )}
 
                         {(item.metadata?.warranty_period || item.metadata?.warranty_months) && (
-                          <Tag color="green" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            🛡️ {item.metadata.warranty_period || item.metadata.warranty_months}m Warranty
+                          <Tag color="green" icon={<SafetyCertificateFilled style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.warranty_period || item.metadata.warranty_months}m Warranty
                           </Tag>
                         )}
 
                         {item.metadata?.vehicle_type && (
-                          <Tag color="geekblue" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            🚗 {item.metadata.vehicle_type}
+                          <Tag color="geekblue" icon={<CarOutlined style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.vehicle_type}
                           </Tag>
                         )}
 
@@ -1400,7 +1405,7 @@ const StorefrontScreen = () => {
                         marginBottom: 10,
                       }}
                     >
-                      🛡️ Refundable Deposit: ₹{deposit}
+                      <SafetyCertificateFilled style={{ marginRight: 6, color: '#166534' }} /> Refundable Deposit: ₹{deposit}
                     </div>
                   )}
 
