@@ -18,10 +18,10 @@ module.exports = {
     dialect: 'postgres',
   },
   production: {
-    username: process.env.DB_USER || 'request_db_4cxm_user',
-    password: process.env.DB_PASSWORD || 'c8u79iclSJIIuRpzYiEa8e2opPNCmadu',
-    database: process.env.DB_NAME || 'request_db_4cxm',
-    host: process.env.DB_HOST || 'dpg-db5smn2d0e5s738isrkg-a.oregon-postgres.render.com',
+    username: process.env.DB_USER || 'rquest_db_user',
+    password: process.env.DB_PASSWORD || 'hRfFXFiA3nyL0D3dzDQHwKqxjcraDykC',
+    database: process.env.DB_NAME || 'rquest_db',
+    host: process.env.DB_HOST || 'dpg-dbrab6lckfvc73dmkrmg-a.oregon-postgres.render.com',
     port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
     dialectOptions: {
