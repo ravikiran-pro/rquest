@@ -113,17 +113,17 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
           </div>
           <div>
             <Title level={4} style={{ margin: 0, color: '#0f172a' }}>
-              AI Smart Search
+              Smart Filter Search
             </Title>
             <Text type="secondary" style={{ fontSize: 13 }}>
-              Describe what you need in plain words, our AI auto-configures filters.
+              Describe what you need in plain language; filters are configured automatically.
             </Text>
           </div>
         </Flex>
 
         <Input.TextArea
           rows={3}
-          placeholder="e.g. I need an emergency plumber near me under ₹400 visiting charge..."
+          placeholder="e.g. Plumber near me under ₹400 visiting charge..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
           onPressEnter={(e) => {
@@ -142,7 +142,7 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
 
         <div>
           <Text type="secondary" style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase' }}>
-            Try these AI prompts:
+            Example searches:
           </Text>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6 }}>
             {AI_PROMPT_PRESETS.map((p) => (
@@ -160,7 +160,7 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
                 }}
                 onClick={() => setPrompt(p)}
               >
-                ✨ {p}
+                {p}
               </Tag>
             ))}
           </div>

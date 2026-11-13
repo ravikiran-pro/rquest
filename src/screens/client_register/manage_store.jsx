@@ -1195,8 +1195,8 @@ const ManageStore = ({
                           </Text>
                           <Text style={{ fontSize: 12, display: 'block', marginTop: 4, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                             {isServiceStore
-                              ? 'Configured as a Service Business — Catalog is streamlined for service packages, rate cards, and appointment bookings.'
-                              : 'Configured as a Product Store — Catalog is streamlined for retail items, in-stock inventory, and order fulfillment.'}
+                              ? 'Configured for service businesses: catalog supports service packages, rate cards, and appointment bookings.'
+                              : 'Configured for retail stores: catalog supports in-stock inventory, item variants, and local orders.'}
                           </Text>
                         </div>
                         <Tag

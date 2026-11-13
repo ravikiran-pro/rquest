@@ -47,7 +47,7 @@
   --outline-variant: #c2c6d5;
   --text-main: #1c1c19;
   --text-muted: #444650;
-  --text-light: #747781;
+  --text-light: #575a65;
   --white: #ffffff;
 
   /* Hyperlocal Badges & Status Chips */
@@ -721,4 +721,36 @@ code {
 .ant-modal-close:hover {
   background: var(--surface-container) !important;
   color: var(--text-main) !important;
+}
+
+/* ==========================================================================
+   Accessibility & Focus System (WCAG 2.1 / 2.2 Standards)
+   ========================================================================== */
+
+/* 1. Visible Focus Indicator for Keyboard Navigation */
+:focus-visible {
+  outline: 2px solid var(--primary, #0B2D6B) !important;
+  outline-offset: 2px !important;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[tabindex]:focus-visible {
+  outline: 2px solid var(--primary, #0B2D6B) !important;
+  outline-offset: 2px !important;
+}
+
+/* 2. Vestibular Motion Sensitivity Support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

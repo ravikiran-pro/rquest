@@ -90,7 +90,7 @@ const STORE_CATEGORIES = [
     title: 'Technician & Home Repairs',
     icon: <ToolOutlined />,
     desc: 'Electricians, plumbers, AC service, appliance repair',
-    shop_type: 'Hardawers and tools',
+    shop_type: 'Hardware and tools',
     category_id: 4,
     defaultImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
     starters: [

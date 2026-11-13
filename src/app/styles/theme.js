@@ -59,7 +59,7 @@ export const colors = {
   // Typography Content Colors
   textMain: '#1c1c19',
   textMuted: '#444650',
-  textLight: '#747781',
+  textLight: '#575a65',
   white: '#ffffff',
 
   // Hyperlocal Specialized Badges & Chips

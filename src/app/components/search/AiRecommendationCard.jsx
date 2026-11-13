@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Card, Flex, Typography, Button, Popover, Tag, Grid } from 'antd';
 import {
-  RobotOutlined,
+  CompassFilled,
   DownOutlined,
   CheckCircleFilled,
   ThunderboltFilled,
@@ -30,11 +30,11 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
   const explanationContent = (
     <div style={{ maxWidth: 280, padding: 4 }}>
       <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block', marginBottom: 8 }}>
-        Why our AI picked this match:
+        Why this store is recommended:
       </Text>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontSize: 12, color: '#475569' }}>
         <Flex align="center" gap={6}>
-          <EnvironmentFilled style={{ color: '#10b981' }} />
+          <EnvironmentFilled style={{ color: '#059669' }} />
           <span>Closest proximity: <strong>{distKm} km</strong> (~{etaMinutes} min away)</span>
         </Flex>
         <Flex align="center" gap={6}>
@@ -43,7 +43,7 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
         </Flex>
         <Flex align="center" gap={6}>
           <ThunderboltFilled style={{ color: colors.primary }} />
-          <span>Instant availability & fast response time</span>
+          <span>Quick response time and direct service</span>
         </Flex>
         <Flex align="center" gap={6}>
           <CheckCircleFilled style={{ color: '#059669' }} />
@@ -80,7 +80,7 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
               width: 38,
               height: 38,
               borderRadius: 10,
-              background: '#22c55e',
+              background: '#059669',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -89,13 +89,13 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
               flexShrink: 0,
             }}
           >
-            <RobotOutlined />
+            <CompassFilled />
           </div>
 
           <Flex vertical style={{ minWidth: 0 }}>
             <Flex align="center" gap={6}>
-              <Text strong style={{ color: '#15803d', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
-                AI Recommendation
+              <Text strong style={{ color: '#059669', fontSize: 13, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+                Top Local Match
               </Text>
               <Tag color="success" style={{ fontSize: 10, lineHeight: '16px', padding: '0 5px', margin: 0, borderRadius: 4 }}>
                 Best Match
@@ -109,7 +109,7 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
                 lineHeight: 1.4,
               }}
             >
-              <strong>{name}</strong> is the best match based on your location ({distKm} km), high rating ({rating}★), and fast arrival (~{etaMinutes} min).
+              <strong>{name}</strong> is recommended based on proximity ({distKm} km), verified status, and customer rating ({rating}★).
             </Text>
           </Flex>
         </Flex>

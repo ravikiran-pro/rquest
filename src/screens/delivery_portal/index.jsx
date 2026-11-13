@@ -30,42 +30,6 @@ import { colors, radii } from '../../app/styles/theme';
 
 const { Title, Text, Paragraph } = Typography;
 
-const FALLBACK_DELIVERY_TASKS = [
-  {
-    id: 'task-mock-1',
-    order_number: 'RQ-84291',
-    status: 'ready_for_pickup',
-    delivery_fee: '45.00',
-    total_amount: '380.00',
-    shop: {
-      shop_name: 'Amma Chettinad Kitchen',
-      address: '14, 2nd Main Rd, Anna Nagar',
-      mobile_number: '+91 98410 22334',
-    },
-    customer: { username: 'Deepak V', mobile: '+91 98765 12345' },
-    customer_phone: '+91 98765 12345',
-    delivery_address: 'Flat 3B, Sunshine Apts, 4th Cross St, Anna Nagar (0.8 km)',
-    items: [{ id: 1 }, { id: 2 }],
-  },
-  {
-    id: 'task-mock-2',
-    order_number: 'RQ-84295',
-    status: 'out_for_delivery',
-    delivery_partner_id: 'test-driver-uuid',
-    delivery_fee: '50.00',
-    total_amount: '620.00',
-    shop: {
-      shop_name: 'Sri Krishna Sweets & Bakery',
-      address: '88, Gandhi Road',
-      mobile_number: '+91 98401 55667',
-    },
-    customer: { username: 'Ananya S', mobile: '+91 98840 99887' },
-    customer_phone: '+91 98840 99887',
-    delivery_address: '12/4, Emerald Enclave, 1st Avenue (1.4 km)',
-    items: [{ id: 1 }],
-  },
-];
-
 const DeliveryPortalScreen = () => {
   const history = useHistory();
   const { user_data } = useGlobalStore((state) => state);
@@ -80,13 +44,13 @@ const DeliveryPortalScreen = () => {
     setLoading(true);
     try {
       const res = await netWorkCall(apiConfig.orders_delivery_feed, 'GET', null, true);
-      if (res?.data && Array.isArray(res.data) && res.data.length > 0) {
+      if (res?.data && Array.isArray(res.data)) {
         setAvailableFeed(res.data);
       } else {
-        setAvailableFeed(FALLBACK_DELIVERY_TASKS);
+        setAvailableFeed([]);
       }
     } catch (err) {
-      setAvailableFeed(FALLBACK_DELIVERY_TASKS);
+      setAvailableFeed([]);
     } finally {
       setLoading(false);
     }

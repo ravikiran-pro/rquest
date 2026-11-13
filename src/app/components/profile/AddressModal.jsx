@@ -316,7 +316,7 @@ const AddressModal = ({
                 {initialData ? 'Edit Address' : 'Add New Address'}
               </div>
               <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-                Provide precise delivery details for seamless order delivery
+                Provide accurate address details for local doorstep delivery
               </Text>
             </div>
           </Flex>

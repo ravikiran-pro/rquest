@@ -45,112 +45,6 @@ import AdminOrdersAccounts from '../admin/orders_accounts';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
-// Fallback high-fidelity seed datasets matching Stitch hyperlocal orders visual design
-const MOCK_ACTIVE_ORDER = {
-  id: 'mock-rq-84291',
-  order_number: 'RQ-84291',
-  status: 'placed',
-  total_amount: 523,
-  payment_mode: 'direct_upi',
-  timeAgo: '12m ago',
-  stores_count: 2,
-  stores: [
-    {
-      id: 'mock-shop-1',
-      shop_name: 'Sri Krishna Provisio',
-      distance: '350m away · Provision Store',
-      status_label: 'Pickup Requested',
-      status_type: 'amber',
-      img_url: 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
-      items_text: 'Aavin Fresh Milk (x2), Stone-Pressed Gingelly Oil 500ml (x1)',
-      items_count: 2,
-      logistics_text: '🛵 Dunzo Valet arriving in 6 mins',
-      logistics_price: '₹224',
-      phone: '+91 98400 12345',
-      action_type: 'order',
-      action_label: 'Order',
-    },
-    {
-      id: 'mock-shop-2',
-      shop_name: 'Madras Tiffin Room',
-      distance: '600m away · South Indian Eatery',
-      status_label: 'Placed',
-      status_type: 'blue',
-      img_url: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
-      items_text: 'Fresh Ghee Podi Idli (x2 plates)',
-      items_count: 1,
-      otp_code: '4921',
-      logistics_price: '₹299',
-      phone: '+91 98400 67890',
-      action_type: 'request',
-      action_label: 'Request',
-    },
-  ],
-  progress: {
-    status: 'In Progress',
-    steps: [
-      { key: 'placed', label: 'Placed', time: '10:14 AM', state: 'done' },
-      { key: 'confirmed', label: 'Confirmed', time: '10:16 AM', state: 'done' },
-      { key: 'fulfilling', label: 'Fulfilling', time: 'Active', state: 'active' },
-      { key: 'delivery', label: 'Delivery', time: '~10:45 AM', state: 'pending' },
-    ],
-  },
-  items: [
-    { name: 'Aavin Fresh Milk', quantity: 2, subtotal: 48 },
-    { name: 'Stone-Pressed Gingelly Oil 500ml', quantity: 1, subtotal: 176 },
-    { name: 'Fresh Ghee Podi Idli (2 pcs)', quantity: 2, subtotal: 120 },
-  ],
-  platform_fee: 0,
-  delivery_fee: 179,
-};
-
-const MOCK_PAST_ORDERS = [
-  {
-    id: 'mock-past-1',
-    type: 'service',
-    dateStr: 'Yesterday, 8:45 AM • ',
-    typeLabel: 'Service',
-    statusLabel: 'Completed',
-    statusType: 'amber',
-    shop_name: 'Indiranagar AC Solutions',
-    service_title: 'Split AC Jet Cleaning (1 unit)',
-    payment_note: 'Paid directly via UPI',
-    price: 299,
-    reference_id: 'Service ID: #RQ-79012',
-    action_label: 'Request',
-    img_url: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
-  },
-  {
-    id: 'mock-past-2',
-    type: 'bundle',
-    dateStr: '2 Nov 2026, 7:15 PM • 2 Stores Bundle',
-    statusLabel: 'Completed',
-    statusType: 'blue',
-    bundle_items: [
-      { name: 'Sri Krishna Provisions (Dairy, Snacks)', price: 180 },
-      { name: 'Apex Peripheral (GaN 65W Charger)', price: 850 },
-    ],
-    payment_note: 'Total Paid (Shop UPI)',
-    price: 1030,
-    action_label: 'Order',
-  },
-  {
-    id: 'mock-past-3',
-    type: 'single',
-    dateStr: '28 Oct 2026, 11:30 AM • Single Store',
-    statusLabel: 'Completed',
-    statusType: 'blue',
-    shop_name: 'Gramam Organic Store',
-    product_title: '100% Pure Gingelly Oil 500ml',
-    payment_note: 'UPI Settled direct',
-    payment_note_blue: true,
-    price: 340,
-    reference_id: 'Order ID: #RQ-74198',
-    action_label: 'Order',
-    img_url: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&w=600&q=80',
-  },
-];
-
 const OrdersScreen = () => {
   const history = useHistory();
   const { user_data } = useGlobalStore((state) => state);
@@ -1180,7 +1074,7 @@ const OrdersScreen = () => {
                 boxShadow: customerOrderFilter === 'completed' ? '0 2px 6px rgba(11, 45, 107, 0.2)' : 'none',
               }}
             >
-              Past Orders ({pastCustomerOrders.length > 0 ? pastCustomerOrders.length : MOCK_PAST_ORDERS.length})
+              Past Orders ({pastCustomerOrders.length})
             </button>
           </div>
 
@@ -1188,375 +1082,33 @@ const OrdersScreen = () => {
           {customerOrderFilter === 'active' && (
             <div>
               {activeCustomerOrders.length === 0 ? (
-                /* Fallback High-Fidelity Mockup Active Order matching Stitch visual mockup */
-                <div
+                <Card
                   style={{
-                    background: '#FFFFFF',
-                    borderRadius: 20,
+                    borderRadius: 16,
+                    textAlign: 'center',
+                    padding: '36px 16px',
                     border: '1px solid #ECE7DF',
-                    boxShadow: '0 2px 8px rgba(11, 45, 107, 0.04)',
-                    padding: 16,
-                    marginBottom: 16,
+                    background: '#FFFFFF',
                   }}
                 >
-                  {/* Header Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 2 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontWeight: 800, fontSize: 18, color: '#0B2D6B' }}>
-                        #{MOCK_ACTIVE_ORDER.order_number}
-                      </span>
-                      <span
-                        style={{
-                          background: '#FEF3C7',
-                          color: '#92400E',
-                          fontWeight: 700,
-                          fontSize: 11,
-                          borderRadius: 8,
-                          padding: '2px 8px',
-                        }}
-                      >
-                        Placed
-                      </span>
-                    </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontSize: 22, color: '#0B2D6B', lineHeight: 1.1 }}>
-                        ₹{MOCK_ACTIVE_ORDER.total_amount}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Subtitle Row */}
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-                    <div style={{ fontSize: 12, color: '#667085' }}>
-                      Placed {MOCK_ACTIVE_ORDER.timeAgo} • {MOCK_ACTIVE_ORDER.stores_count} Neighborhood Stores
-                    </div>
-                    <span
-                      style={{
-                        background: '#EBF3FE',
-                        color: '#0056bd',
-                        fontSize: 11,
-                        fontWeight: 700,
-                        borderRadius: 6,
-                        padding: '2px 8px',
-                      }}
-                    >
-                      UPI Confirmed
-                    </span>
-                  </div>
-
-                  {/* Progress Tracker */}
-                  {renderProgressTracker('order_prepare', new Date(Date.now() - 12 * 60000))}
-
-                  {/* Action Buttons inside Order Progress */}
-                  <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-                    <Button
-                      icon={<PhoneOutlined />}
-                      onClick={() => message.info('Calling neighborhood merchant dispatch...')}
-                      style={{
-                        flex: 1,
-                        height: 40,
-                        borderRadius: 9999,
-                        border: '1.5px solid #D0D5DD',
-                        background: '#FFFFFF',
-                        color: '#1D2939',
-                        fontWeight: 700,
-                        fontSize: 13,
-                      }}
-                    >
-                      Call Shop
-                    </Button>
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No active orders right now"
+                  >
                     <Button
                       type="primary"
-                      icon={<FileDoneOutlined />}
-                      onClick={() => toggleExpand('mock-active-1')}
+                      onClick={() => history.push(Routes.home)}
                       style={{
-                        flex: 1,
-                        height: 40,
-                        borderRadius: 9999,
+                        borderRadius: 8,
+                        fontWeight: 700,
                         background: '#0B2D6B',
                         borderColor: '#0B2D6B',
-                        color: '#FFFFFF',
-                        fontWeight: 700,
-                        fontSize: 13,
                       }}
                     >
-                      {expandedOrders['mock-active-1'] ? 'Hide Summary' : 'View Summary'}
+                      Explore Nearby Stores
                     </Button>
-                  </div>
-
-                  {/* Expanded Receipt Breakdown if toggled */}
-                  {expandedOrders['mock-active-1'] && (
-                    <div
-                      style={{
-                        background: '#F9F8F5',
-                        borderRadius: 14,
-                        padding: '12px 14px',
-                        border: '1px solid #ECE7DF',
-                        marginBottom: 16,
-                      }}
-                    >
-                      <div style={{ fontWeight: 700, fontSize: 12, color: '#667085', marginBottom: 8, letterSpacing: '0.04em' }}>
-                        ORDER SUMMARY BREAKDOWN
-                      </div>
-                      <div style={{ fontSize: 12.5, color: '#344054', display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>2x Aavin Fresh Milk (Sri Krishna Provisions)</span>
-                          <span style={{ fontWeight: 700 }}>₹48.00</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>1x Stone-Pressed Gingelly Oil 500ml (Sri Krishna Provisions)</span>
-                          <span style={{ fontWeight: 700 }}>₹176.00</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span>2x Fresh Ghee Podi Idli (Madras Tiffin Room)</span>
-                          <span style={{ fontWeight: 700 }}>₹120.00</span>
-                        </div>
-                        <Divider style={{ margin: '8px 0' }} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#667085', fontSize: 12 }}>
-                          <span>Dunzo Valet Logistics</span>
-                          <span>₹179.00</span>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', color: '#667085', fontSize: 12 }}>
-                          <span>Platform Micro-Fee</span>
-                          <span>₹0.00 (Zero Markup Direct Checkout)</span>
-                        </div>
-                        <Divider style={{ margin: '8px 0' }} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 14, fontWeight: 800, color: '#0B2D6B' }}>
-                          <span>Total Settled via UPI</span>
-                          <span>₹523.00</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* STORE FULFILLMENT SECTION */}
-                  <div
-                    style={{
-                      fontSize: 11,
-                      fontWeight: 800,
-                      color: '#667085',
-                      letterSpacing: '0.06em',
-                      textTransform: 'uppercase',
-                      marginBottom: 10,
-                    }}
-                  >
-                    STORE FULFILLMENT
-                  </div>
-
-                  {/* Subcard 1: Sri Krishna Provisions */}
-                  <div
-                    style={{
-                      border: '1px solid #ECE7DF',
-                      borderRadius: 16,
-                      padding: 12,
-                      marginBottom: 12,
-                      background: '#FFFFFF',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <img
-                          src={MOCK_ACTIVE_ORDER.stores[0].img_url}
-                          alt="Sri Krishna Provisions"
-                          style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }}
-                        />
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#0B2D6B', lineHeight: 1.2 }}>
-                            {MOCK_ACTIVE_ORDER.stores[0].shop_name}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: '#667085', marginTop: 2 }}>
-                            {MOCK_ACTIVE_ORDER.stores[0].distance}
-                          </div>
-                        </div>
-                      </div>
-                      <span
-                        style={{
-                          background: '#FEF3C7',
-                          color: '#92400E',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          borderRadius: 8,
-                          padding: '2px 8px',
-                        }}
-                      >
-                        {MOCK_ACTIVE_ORDER.stores[0].status_label}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#F7F5F0',
-                        borderRadius: 10,
-                        padding: '8px 10px',
-                        fontSize: 12,
-                        color: '#344054',
-                        marginBottom: 8,
-                      }}
-                    >
-                      <strong>2 items:</strong> {MOCK_ACTIVE_ORDER.stores[0].items_text}
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#EBF3FE',
-                        borderRadius: 10,
-                        padding: '8px 12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 10,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 600, color: '#0056bd', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        {MOCK_ACTIVE_ORDER.stores[0].logistics_text}
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0056bd' }}>
-                        {MOCK_ACTIVE_ORDER.stores[0].logistics_price}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <Button
-                        icon={<PhoneOutlined />}
-                        onClick={() => message.info('Calling Sri Krishna Provisions (+91 98400 12345)...')}
-                        style={{
-                          flex: 1,
-                          height: 36,
-                          borderRadius: 9999,
-                          border: '1px solid #D0D5DD',
-                          color: '#1D2939',
-                          fontWeight: 700,
-                          fontSize: 12,
-                        }}
-                      >
-                        Call Shop
-                      </Button>
-                      <Button
-                        type="primary"
-                        onClick={() => history.push(Routes.home)}
-                        style={{
-                          flex: 1,
-                          height: 36,
-                          borderRadius: 9999,
-                          background: '#0B2D6B',
-                          borderColor: '#0B2D6B',
-                          color: '#FFFFFF',
-                          fontWeight: 700,
-                          fontSize: 12,
-                        }}
-                      >
-                        Order
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Subcard 2: Madras Tiffin Room */}
-                  <div
-                    style={{
-                      border: '1px solid #ECE7DF',
-                      borderRadius: 16,
-                      padding: 12,
-                      background: '#FFFFFF',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <img
-                          src={MOCK_ACTIVE_ORDER.stores[1].img_url}
-                          alt="Madras Tiffin Room"
-                          style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover' }}
-                        />
-                        <div>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#0B2D6B', lineHeight: 1.2 }}>
-                            {MOCK_ACTIVE_ORDER.stores[1].shop_name}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: '#667085', marginTop: 2 }}>
-                            {MOCK_ACTIVE_ORDER.stores[1].distance}
-                          </div>
-                        </div>
-                      </div>
-                      <span
-                        style={{
-                          background: '#EBF3FE',
-                          color: '#0056bd',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          borderRadius: 8,
-                          padding: '2px 8px',
-                        }}
-                      >
-                        {MOCK_ACTIVE_ORDER.stores[1].status_label}
-                      </span>
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#F7F5F0',
-                        borderRadius: 10,
-                        padding: '8px 10px',
-                        fontSize: 12,
-                        color: '#344054',
-                        marginBottom: 8,
-                      }}
-                    >
-                      <strong>1 item:</strong> {MOCK_ACTIVE_ORDER.stores[1].items_text}
-                    </div>
-
-                    <div
-                      style={{
-                        background: '#F7F5F0',
-                        borderRadius: 10,
-                        padding: '8px 12px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        marginBottom: 10,
-                      }}
-                    >
-                      <span style={{ fontSize: 12, fontWeight: 500, color: '#344054', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        🏪 Self-Pickup OTP: <strong style={{ color: '#0f172a', letterSpacing: '0.5px' }}>{MOCK_ACTIVE_ORDER.stores[1].otp_code}</strong>
-                      </span>
-                      <span style={{ fontSize: 13, fontWeight: 800, color: '#0f172a' }}>
-                        {MOCK_ACTIVE_ORDER.stores[1].logistics_price}
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: 8 }}>
-                      <Button
-                        icon={<PhoneOutlined />}
-                        onClick={() => message.info('Calling Madras Tiffin Room kitchen (+91 98400 67890)...')}
-                        style={{
-                          flex: 1,
-                          height: 36,
-                          borderRadius: 9999,
-                          border: '1px solid #D0D5DD',
-                          color: '#1D2939',
-                          fontWeight: 700,
-                          fontSize: 12,
-                        }}
-                      >
-                        Call Kitchen
-                      </Button>
-                      <Button
-                        type="primary"
-                        onClick={() => history.push(Routes.home)}
-                        style={{
-                          flex: 1,
-                          height: 36,
-                          borderRadius: 9999,
-                          background: '#0B2D6B',
-                          borderColor: '#0B2D6B',
-                          color: '#FFFFFF',
-                          fontWeight: 700,
-                          fontSize: 12,
-                        }}
-                      >
-                        Request
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              ) : (
+                  </Empty>
+                </Card>) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
                   {activeCustomerOrders.map((ord) => {
                     const isExpanded = expandedOrders[ord.id];
@@ -2000,230 +1552,33 @@ const OrdersScreen = () => {
                   })}
                 </div>
               ) : (
-                /* Fallback High-Fidelity Mockup Past Orders List from Stitch visual mockup */
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {/* Past Order 1: Indiranagar AC Solutions */}
-                  <div
-                    style={{
-                      background: '#FFFFFF',
-                      borderRadius: 18,
-                      border: '1px solid #ECE7DF',
-                      padding: 14,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                    }}
+                <Card
+                  style={{
+                    borderRadius: 16,
+                    textAlign: 'center',
+                    padding: '36px 16px',
+                    border: '1px solid #ECE7DF',
+                    background: '#FFFFFF',
+                  }}
+                >
+                  <Empty
+                    image={Empty.PRESENTED_IMAGE_SIMPLE}
+                    description="No past orders found"
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, color: '#667085' }}>
-                        {MOCK_PAST_ORDERS[0].dateStr}<span style={{ color: '#0056bd', fontWeight: 700 }}>{MOCK_PAST_ORDERS[0].typeLabel}</span>
-                      </span>
-                      <span
-                        style={{
-                          background: '#FEF3C7',
-                          color: '#92400E',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        ✓ Completed
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                        <img
-                          src={MOCK_PAST_ORDERS[0].img_url}
-                          alt="Indiranagar AC Solutions"
-                          style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
-                        />
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#0B2D6B' }}>
-                            {MOCK_PAST_ORDERS[0].shop_name}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#475467' }}>
-                            {MOCK_PAST_ORDERS[0].service_title}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: '#667085' }}>
-                            {MOCK_PAST_ORDERS[0].payment_note}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#0B2D6B', flexShrink: 0, marginLeft: 8 }}>
-                        ₹{MOCK_PAST_ORDERS[0].price}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #F2EFE9' }}>
-                      <span style={{ fontSize: 11.5, color: '#667085' }}>
-                        {MOCK_PAST_ORDERS[0].reference_id}
-                      </span>
-                      <Button
-                        type="primary"
-                        onClick={() => history.push(Routes.home)}
-                        style={{
-                          background: '#0B2D6B',
-                          borderColor: '#0B2D6B',
-                          color: '#FFFFFF',
-                          borderRadius: 9999,
-                          fontWeight: 700,
-                          height: 32,
-                          padding: '0 18px',
-                          fontSize: 12,
-                        }}
-                      >
-                        Request
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Past Order 2: 2 Stores Bundle */}
-                  <div
-                    style={{
-                      background: '#FFFFFF',
-                      borderRadius: 18,
-                      border: '1px solid #ECE7DF',
-                      padding: 14,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <span style={{ fontSize: 12, color: '#475467' }}>
-                        {MOCK_PAST_ORDERS[1].dateStr}
-                      </span>
-                      <span
-                        style={{
-                          background: '#EBF3FE',
-                          color: '#0056bd',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        ✓ Completed
-                      </span>
-                    </div>
-
-                    <div style={{ fontSize: 12.5, color: '#344054', marginBottom: 6 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                        <span>{MOCK_PAST_ORDERS[1].bundle_items[0].name}</span>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{MOCK_PAST_ORDERS[1].bundle_items[0].price}</span>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 0' }}>
-                        <span>{MOCK_PAST_ORDERS[1].bundle_items[1].name}</span>
-                        <span style={{ fontWeight: 700, color: '#0f172a' }}>₹{MOCK_PAST_ORDERS[1].bundle_items[1].price}</span>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', paddingTop: 8, borderTop: '1px solid #F2EFE9' }}>
-                      <div>
-                        <div style={{ fontSize: 11, color: '#667085' }}>{MOCK_PAST_ORDERS[1].payment_note}</div>
-                        <div style={{ fontSize: 18, fontWeight: 800, color: '#0B2D6B' }}>₹{MOCK_PAST_ORDERS[1].price.toLocaleString()}</div>
-                      </div>
-                      <Button
-                        type="primary"
-                        onClick={() => history.push(Routes.home)}
-                        style={{
-                          background: '#0B2D6B',
-                          borderColor: '#0B2D6B',
-                          color: '#FFFFFF',
-                          borderRadius: 9999,
-                          fontWeight: 700,
-                          height: 32,
-                          padding: '0 18px',
-                          fontSize: 12,
-                        }}
-                      >
-                        Order
-                      </Button>
-                    </div>
-                  </div>
-
-                  {/* Past Order 3: Gramam Organic Store */}
-                  <div
-                    style={{
-                      background: '#FFFFFF',
-                      borderRadius: 18,
-                      border: '1px solid #ECE7DF',
-                      padding: 14,
-                      boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-                      <span style={{ fontSize: 12, color: '#475467' }}>
-                        {MOCK_PAST_ORDERS[2].dateStr}
-                      </span>
-                      <span
-                        style={{
-                          background: '#EBF3FE',
-                          color: '#0056bd',
-                          borderRadius: 6,
-                          padding: '2px 8px',
-                          fontSize: 11,
-                          fontWeight: 700,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 4,
-                        }}
-                      >
-                        ✓ Completed
-                      </span>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0 }}>
-                        <img
-                          src={MOCK_PAST_ORDERS[2].img_url}
-                          alt="Gramam Organic Store"
-                          style={{ width: 48, height: 48, borderRadius: 12, objectFit: 'cover', flexShrink: 0 }}
-                        />
-                        <div style={{ minWidth: 0, flex: 1 }}>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: '#0B2D6B' }}>
-                            {MOCK_PAST_ORDERS[2].shop_name}
-                          </div>
-                          <div style={{ fontSize: 12, color: '#475467' }}>
-                            {MOCK_PAST_ORDERS[2].product_title}
-                          </div>
-                          <div style={{ fontSize: 11.5, color: '#0056bd', fontWeight: 600 }}>
-                            {MOCK_PAST_ORDERS[2].payment_note}
-                          </div>
-                        </div>
-                      </div>
-                      <div style={{ fontSize: 18, fontWeight: 800, color: '#0B2D6B', flexShrink: 0, marginLeft: 8 }}>
-                        ₹{MOCK_PAST_ORDERS[2].price}
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #F2EFE9' }}>
-                      <span style={{ fontSize: 11.5, color: '#667085' }}>
-                        {MOCK_PAST_ORDERS[2].reference_id}
-                      </span>
-                      <Button
-                        type="primary"
-                        onClick={() => history.push(Routes.home)}
-                        style={{
-                          background: '#0B2D6B',
-                          borderColor: '#0B2D6B',
-                          color: '#FFFFFF',
-                          borderRadius: 9999,
-                          fontWeight: 700,
-                          height: 32,
-                          padding: '0 18px',
-                          fontSize: 12,
-                        }}
-                      >
-                        Order
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+                    <Button
+                      type="primary"
+                      onClick={() => history.push(Routes.home)}
+                      style={{
+                        borderRadius: 8,
+                        fontWeight: 700,
+                        background: '#0B2D6B',
+                        borderColor: '#0B2D6B',
+                      }}
+                    >
+                      Start Shopping
+                    </Button>
+                  </Empty>
+                </Card>
               )}
             </div>
           )}

@@ -11,6 +11,8 @@ import {
   message,
   Select,
   Drawer,
+  Popover,
+  Slider,
 } from 'antd';
 import {
   SearchOutlined,
@@ -25,6 +27,7 @@ import {
   CloseCircleOutlined,
   SafetyCertificateOutlined,
   CheckOutlined,
+  ThunderboltOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
@@ -699,28 +702,29 @@ const HomeScreen = () => {
               <CameraOutlined />
             </button>
 
-            {/* Embedded AI Smart Finder Button (+ AI on mobile) */}
+            {/* Embedded Smart Search / Filter Button */}
             <button
               type="button"
               onClick={() => setIsAiModalOpen(true)}
               style={{
-                background: '#EEF2FF',
-                border: '1px solid #C7D2FE',
+                background: colors.primaryLight,
+                border: '1px solid #BFDBFE',
                 borderRadius: radii.full,
-                color: '#4338CA',
-                padding: isMobile ? '4px 10px' : '6px 14px',
-                fontSize: isMobile ? 11.5 : 12,
+                color: colors.primary,
+                padding: isMobile ? '6px 12px' : '6px 14px',
+                minHeight: isMobile ? 36 : 38,
+                fontSize: isMobile ? 12 : 12.5,
                 fontWeight: 700,
                 cursor: 'pointer',
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: 4,
+                gap: 5,
                 whiteSpace: 'nowrap',
                 flexShrink: 0,
               }}
             >
-              <span>✨</span>
-              <span>{isMobile ? '+ AI' : 'AI Smart Finder'}</span>
+              <ThunderboltOutlined style={{ fontSize: 13, color: colors.secondary }} />
+              <span>{isMobile ? 'Filter' : 'Smart Search'}</span>
             </button>
 
             {/* Find Nearby Primary CTA (Desktop only) */}
@@ -822,32 +826,45 @@ const HomeScreen = () => {
                 );
               })}
 
-              <button
-                type="button"
-                onClick={() => {
-                  const customVal = window.prompt(
-                    'Enter search radius in km:',
-                    filters.maxDistance || '3'
-                  );
-                  if (customVal && !isNaN(parseFloat(customVal))) {
-                    setFilters((prev) => ({ ...prev, maxDistance: parseFloat(customVal) }));
-                  }
-                }}
-                style={{
-                  background: colors.surface,
-                  color: colors.textMain,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radii.full,
-                  padding: '4px 10px',
-                  fontSize: 12,
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                }}
+              <Popover
+                trigger="click"
+                placement="bottom"
+                content={
+                  <div style={{ width: 200, padding: '4px 6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6, fontSize: 12, fontWeight: 700, color: colors.textMain }}>
+                      <span>Custom Radius</span>
+                      <span>{filters.maxDistance || 3} km</span>
+                    </div>
+                    <Slider
+                      min={1}
+                      max={25}
+                      value={filters.maxDistance || 3}
+                      onChange={(val) => setFilters((prev) => ({ ...prev, maxDistance: val }))}
+                    />
+                  </div>
+                }
               >
-                Custom 🎚
-              </button>
+                <button
+                  type="button"
+                  style={{
+                    background: colors.surface,
+                    color: colors.textMain,
+                    border: `1px solid ${colors.border}`,
+                    borderRadius: radii.full,
+                    padding: '6px 12px',
+                    minHeight: 34,
+                    fontSize: 12,
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  Custom
+                </button>
+              </Popover>
             </div>
           ) : (
             /* Desktop Geofence & Locality Sub-bar */

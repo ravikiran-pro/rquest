@@ -52,25 +52,32 @@ const resolveImage = (item) => {
 };
 
 const resolveTopRightBadge = (item) => {
-  const name = (item.name || '').toLowerCase();
-  const type = (item.listing_type || '').toLowerCase();
+  if (item.badge) {
+    return { text: item.badge, bg: colors.primary, color: colors.white };
+  }
+  if (item.metadata?.badge) {
+    return { text: item.metadata.badge, bg: colors.primary, color: colors.white };
+  }
 
-  if (name.includes('milk')) {
-    return { text: 'Zero Markup', bg: colors.primary, color: colors.white };
+  // Real discount calculation if MRP is provided and greater than price
+  if (item.mrp && item.price && Number(item.mrp) > Number(item.price)) {
+    const discount = Math.round(((Number(item.mrp) - Number(item.price)) / Number(item.mrp)) * 100);
+    if (discount > 0) {
+      return { text: `${discount}% OFF`, bg: colors.semantic.success, color: colors.white };
+    }
   }
-  if (name.includes('oil') || name.includes('organic')) {
-    return { text: 'Organic Certified', bg: colors.semantic.success, color: colors.white };
+
+  const type = (item.listing_type || '').toLowerCase();
+  if (type === 'service') {
+    return { text: 'Service', bg: colors.primary, color: colors.white };
   }
-  if (type === 'service' || name.includes('ac') || name.includes('repair')) {
-    return { text: 'Verified Pro', bg: colors.primary, color: colors.white };
-  }
-  if (type === 'food' || name.includes('idli') || name.includes('tiffin')) {
-    return { text: 'Hot Serving', bg: '#e05e00', color: colors.white };
+  if (type === 'food') {
+    return { text: 'Fresh Food', bg: '#e05e00', color: colors.white };
   }
   if (type === 'rental') {
-    return { text: 'Daily Rental', bg: colors.primary, color: colors.white };
+    return { text: 'Rental', bg: colors.primary, color: colors.white };
   }
-  return { text: 'Verified Stock', bg: colors.primary, color: colors.white };
+  return { text: 'In Stock', bg: colors.primary, color: colors.white };
 };
 
 const resolveStatusChip = (item) => {
@@ -79,8 +86,8 @@ const resolveStatusChip = (item) => {
   if (type === 'food') {
     return {
       icon: <FireOutlined style={{ fontSize: 12 }} />,
-      text: 'Live Batch Serving Now',
-      sub: 'Closes 11:30 AM',
+      text: 'Freshly Prepared',
+      sub: 'Direct Kitchen',
       bg: colors.serviceChipBg,
       border: colors.serviceChipBorder,
       color: colors.serviceChipText,
@@ -89,8 +96,8 @@ const resolveStatusChip = (item) => {
   if (type === 'service') {
     return {
       icon: <ClockCircleOutlined style={{ fontSize: 12 }} />,
-      text: 'Slot: Today, 3:30 PM',
-      sub: 'Direct Tech',
+      text: 'Direct Booking',
+      sub: 'Local Partner',
       bg: colors.verifiedChipBg,
       border: colors.verifiedChipBorder,
       color: colors.verifiedChipText,
@@ -100,7 +107,7 @@ const resolveStatusChip = (item) => {
     return {
       icon: <CheckCircleOutlined style={{ fontSize: 12 }} />,
       text: 'Available for Pickup',
-      sub: 'Deposit ₹1,500',
+      sub: item.unit ? `Per ${item.unit}` : 'Flexible',
       bg: colors.surfaceContainerLow,
       border: colors.border,
       color: colors.textMuted,
@@ -108,8 +115,8 @@ const resolveStatusChip = (item) => {
   }
   return {
     icon: <CheckCircleOutlined style={{ fontSize: 12 }} />,
-    text: 'Physical Stock Confirmed',
-    sub: '4m ago',
+    text: 'Available in Store',
+    sub: 'Direct Pickup & Delivery',
     bg: colors.verifiedChipBg,
     border: colors.verifiedChipBorder,
     color: colors.verifiedChipText,

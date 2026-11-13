@@ -141,10 +141,16 @@ const ShopCard = ({
                   </Tag>
                 )}
 
-                <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
-                  <StarFilled style={{ fontSize: 12 }} />
-                  <span>{rating || 5}.0</span>
-                </Flex>
+                {rating && Number(rating) > 0 ? (
+                  <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
+                    <StarFilled style={{ fontSize: 12 }} />
+                    <span>{Number(rating).toFixed(1)}</span>
+                  </Flex>
+                ) : (
+                  <Tag style={{ fontSize: 10, padding: '0 5px', margin: 0, fontWeight: 600, color: colors.textMuted }}>
+                    New
+                  </Tag>
+                )}
               </Flex>
 
               <Flex
@@ -153,7 +159,7 @@ const ShopCard = ({
                 style={{
                   marginTop: 4,
                   fontSize: 12,
-                  color: '#64748b',
+                  color: colors.textMuted,
                   whiteSpace: 'nowrap',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -164,7 +170,7 @@ const ShopCard = ({
                   {area || 'Local'}
                 </span>
                 {distance !== undefined && distance !== null && (
-                  <span style={{ fontWeight: 700, color: '#10b981', flexShrink: 0 }}>
+                  <span style={{ fontWeight: 700, color: '#047857', flexShrink: 0 }}>
                     • {distanceConvertor(distance)} km
                   </span>
                 )}
@@ -176,7 +182,7 @@ const ShopCard = ({
                   ellipsis={{ rows: 1 }}
                   style={{
                     fontSize: 12,
-                    color: '#94a3b8',
+                    color: colors.textMuted,
                     marginTop: 2,
                     maxWidth: 520,
                   }}
@@ -377,10 +383,16 @@ const ShopCard = ({
               </Tag>
             )}
 
-            <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
-              <StarFilled style={{ fontSize: 12 }} />
-              <span>{rating || 5}.0</span>
-            </Flex>
+            {rating && Number(rating) > 0 ? (
+              <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
+                <StarFilled style={{ fontSize: 12 }} />
+                <span>{Number(rating).toFixed(1)}</span>
+              </Flex>
+            ) : (
+              <Tag style={{ fontSize: 10, padding: '0 5px', margin: 0, fontWeight: 600, color: colors.textMuted }}>
+                New
+              </Tag>
+            )}
           </Flex>
 
           <Flex
@@ -389,7 +401,7 @@ const ShopCard = ({
             style={{
               marginTop: 4,
               fontSize: 12,
-              color: '#64748b',
+              color: colors.textMuted,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -400,7 +412,7 @@ const ShopCard = ({
               {area || 'Local'}
             </span>
             {distance !== undefined && distance !== null && (
-              <span style={{ fontWeight: 700, color: '#10b981', flexShrink: 0 }}>
+              <span style={{ fontWeight: 700, color: '#047857', flexShrink: 0 }}>
                 • {distanceConvertor(distance)} km
               </span>
             )}
@@ -414,7 +426,7 @@ const ShopCard = ({
         ellipsis={{ rows: 2 }}
         style={{
           fontSize: 12,
-          color: '#64748b',
+          color: colors.textMuted,
           marginBottom: 12,
           minHeight: screens.xs ? 32 : 36,
           lineHeight: '18px',
