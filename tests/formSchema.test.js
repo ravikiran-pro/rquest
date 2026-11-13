@@ -8,6 +8,7 @@ const {
   normalizeSchema,
   validateMetadata,
   resolveSchema,
+  mergeFilterFields,
   buildMetadataFilter,
 } = require('../src/api/services/formSchema');
 
@@ -150,4 +151,26 @@ test('buildMetadataFilter accepts only filterable fields and converts values', (
   assert.equal(buildMetadataFilter({ 'bad key': 'x' }, null).errors.length, 1);
   assert.equal(buildMetadataFilter({ food_type: { $ne: 1 } }, null).errors.length, 1);
   assert.deepEqual(buildMetadataFilter(undefined, pharmacy), { filter: {}, errors: [] });
+});
+
+test('mergeFilterFields merges filterable fields across forms by key', () => {
+  const bakery = normalizeSchema(FORM_TEMPLATES.find((t) => t.key === 'bakery').fields).schema;
+  const food = normalizeSchema(FORM_TEMPLATES.find((t) => t.key === 'food').fields).schema;
+  const fields = mergeFilterFields([food, bakery, pharmacy, null]);
+  assert.deepEqual(
+    fields.map((f) => f.key),
+    ['food_type', 'spice_level', 'made_to_order', 'dosage_form', 'prescription_required']
+  );
+  // options from both forms, first label kept, no duplicates
+  assert.deepEqual(fields[0].options, ['veg', 'non-veg', 'vegan', 'egg', 'eggless']);
+  assert.equal(fields[0].label, 'Dietary Tag');
+  assert.equal(fields[2].options, undefined); // toggles have no options
+  // a toggle and a dropdown sharing a key stay as the first one seen
+  const clash = mergeFilterFields([
+    [{ key: 'organic', label: 'Organic', type: 'boolean', filterable: true }],
+    [{ key: 'organic', label: 'Organic', type: 'select', options: ['Yes', 'No'], filterable: true }],
+  ]);
+  assert.deepEqual(clash, [{ key: 'organic', label: 'Organic', type: 'boolean', filterable: true }]);
+  assert.deepEqual(mergeFilterFields([]), []);
+  assert.deepEqual(mergeFilterFields(undefined), []);
 });

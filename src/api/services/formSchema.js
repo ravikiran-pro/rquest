@@ -455,6 +455,39 @@ const getFilterableFields = (schema) =>
   );
 
 /**
+ * One list of filter fields for search results that span several forms.
+ * Fields sharing a key are merged: the first label wins and choice options
+ * are combined, so "Condition" from two categories shows as one filter.
+ */
+const mergeFilterFields = (schemas) => {
+  const merged = new Map();
+  (Array.isArray(schemas) ? schemas : []).forEach((schema) => {
+    getFilterableFields(schema).forEach((field) => {
+      const existing = merged.get(field.key);
+      if (!existing) {
+        const entry = {
+          key: field.key,
+          label: field.label || field.key,
+          type: field.type,
+          filterable: true,
+        };
+        if (CHOICE_TYPES.includes(field.type)) entry.options = [...(field.options || [])];
+        merged.set(field.key, entry);
+        return;
+      }
+      // A toggle and a dropdown with the same key cannot share one filter
+      if (!existing.options || !CHOICE_TYPES.includes(field.type)) return;
+      (field.options || []).forEach((opt) => {
+        if (!existing.options.some((o) => String(o).toLowerCase() === String(opt).toLowerCase())) {
+          existing.options.push(opt);
+        }
+      });
+    });
+  });
+  return [...merged.values()];
+};
+
+/**
  * Turn search filters ({ key: value }) into a typed object for a JSONB
  * containment query. With a schema, only its filterable fields are accepted and
  * values are converted to the field's type. Returns { filter, errors }.
@@ -520,5 +553,6 @@ module.exports = {
   validateMetadata,
   resolveSchema,
   getFilterableFields,
+  mergeFilterFields,
   buildMetadataFilter,
 };

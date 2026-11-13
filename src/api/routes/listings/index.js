@@ -5,6 +5,7 @@ const { authMiddleware } = require('../../auth');
 const {
   validateMetadata,
   resolveSchema,
+  mergeFilterFields,
   buildMetadataFilter,
 } = require('../../services/formSchema');
 
@@ -23,6 +24,47 @@ const loadListingSchema = async (shop, metadata) => {
     attributes: ['id', 'form_schema'],
   });
   return resolveSchema(null, category);
+};
+
+// The custom-field filters that apply to a set of search results: the
+// filterable fields of every form those listings follow, merged by key.
+const loadFilterFields = async (items) => {
+  const shopIds = [...new Set(items.map((item) => item.shop_id).filter(Boolean))];
+  if (shopIds.length === 0) return [];
+
+  const shopRows = await shops.findAll({
+    attributes: ['id', 'category_id', 'form_schema'],
+    where: { id: shopIds },
+  });
+  const shopById = new Map(shopRows.map((shop) => [shop.id, shop]));
+
+  // Each listing follows its shop's own form, else its category's form
+  const shopSchemas = [];
+  const categoryIds = new Set();
+  const seenShops = new Set();
+  items.forEach((item) => {
+    const shop = shopById.get(item.shop_id);
+    if (!shop) return;
+    if (Array.isArray(shop.form_schema) && shop.form_schema.length > 0) {
+      if (!seenShops.has(shop.id)) {
+        seenShops.add(shop.id);
+        shopSchemas.push(shop.form_schema);
+      }
+      return;
+    }
+    const categoryId = Number.parseInt(item.metadata?.category_id, 10) || shop.category_id;
+    if (categoryId) categoryIds.add(categoryId);
+  });
+
+  const categoryRows = categoryIds.size
+    ? await categories.findAll({
+        attributes: ['id', 'form_schema'],
+        where: { id: [...categoryIds] },
+        order: [['id', 'ASC']],
+      })
+    : [];
+
+  return mergeFilterFields([...categoryRows.map((c) => c.form_schema), ...shopSchemas]);
 };
 
 const fieldErrorResponse = (res, errors) =>
@@ -149,6 +191,8 @@ router.post('/search', async (req, res) => {
     res.status(200).json({
       success: true,
       data: items,
+      // Custom-field filters the client can offer for these results
+      filter_fields: await loadFilterFields(items),
     });
   } catch (err) {
     console.error('Error in searchListings:', err);

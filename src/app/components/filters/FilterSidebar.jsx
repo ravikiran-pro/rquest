@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Checkbox, Flex } from 'antd';
 import {
@@ -10,12 +10,16 @@ import {
 import { FILTER_CATEGORIES, countActiveFilters } from './filterUtils';
 import { colors, radii } from '../../styles';
 
+// Custom-field filter groups shown before "more details" is opened
+const MAX_FIELD_GROUPS = 3;
+
 const FilterSidebar = ({
   filters,
   onFilterChange,
   onResetFilters,
   searchMode = 'items',
   categoryCounts = {},
+  fieldFilters = [],
   style = {},
 }) => {
   const activeCount = countActiveFilters(filters, searchMode);
@@ -45,6 +49,27 @@ const FilterSidebar = ({
       onFilterChange?.({ ...filters, minPrice: min, maxPrice: max });
     }
   };
+
+  // Category custom-field filters: picking the active value again clears it
+  const activeFields = filters.fields || {};
+  const selectFieldValue = (key, value) => {
+    const next = { ...activeFields };
+    if (next[key] === value) {
+      delete next[key];
+    } else {
+      next[key] = value;
+    }
+    updateFilter('fields', next);
+  };
+  const showFieldFilters = searchMode === 'items' && fieldFilters.length > 0;
+  // Keep the panel short: show the first few groups (and any in use), the rest on demand
+  const [showAllFields, setShowAllFields] = useState(false);
+  const isFieldActive = (field) =>
+    activeFields[field.key] !== undefined && activeFields[field.key] !== null && activeFields[field.key] !== '';
+  const visibleFieldFilters = showAllFields
+    ? fieldFilters
+    : fieldFilters.filter((field, index) => index < MAX_FIELD_GROUPS || isFieldActive(field));
+  const hiddenFieldCount = fieldFilters.length - visibleFieldFilters.length;
 
   const selectRating = (val) => {
     if (filters.minRating === val) {
@@ -213,6 +238,101 @@ const FilterSidebar = ({
         </div>
       </div>
 
+      {/* CATEGORY CUSTOM-FIELD FILTERS (only when the results have them) */}
+      {showFieldFilters && (
+        <div style={{ marginBottom: 18 }} data-testid="field-filters">
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '0.6px',
+              textTransform: 'uppercase',
+              color: colors.textMuted,
+              marginBottom: 10,
+            }}
+          >
+            Refine By Details
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {visibleFieldFilters.map((field) =>
+              field.type === 'boolean' ? (
+                <Flex key={field.key} gap={6} wrap="wrap">
+                  <button
+                    aria-pressed={activeFields[field.key] === true}
+                    onClick={() => selectFieldValue(field.key, true)}
+                    style={{
+                        padding: '5px 10px',
+                        borderRadius: radii.full,
+                        border: `1px solid ${activeFields[field.key] === true ? colors.primary : colors.border}`,
+                        background: activeFields[field.key] === true ? colors.primaryLight : colors.surface,
+                        color: activeFields[field.key] === true ? colors.primary : colors.textMain,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                  >
+                    {field.label}
+                  </button>
+                </Flex>
+              ) : (
+                <div key={field.key}>
+                  <div
+                    style={{
+                      fontSize: 12,
+                      fontWeight: 600,
+                      color: colors.textMain,
+                      marginBottom: 6,
+                    }}
+                  >
+                    {field.label}
+                  </div>
+                  <Flex gap={6} wrap="wrap">
+                    {field.values.map((value) => (
+                      <button
+                        key={value}
+                        aria-pressed={activeFields[field.key] === value}
+                        onClick={() => selectFieldValue(field.key, value)}
+                        style={{
+                        padding: '5px 10px',
+                        borderRadius: radii.full,
+                        border: `1px solid ${activeFields[field.key] === value ? colors.primary : colors.border}`,
+                        background: activeFields[field.key] === value ? colors.primaryLight : colors.surface,
+                        color: activeFields[field.key] === value ? colors.primary : colors.textMain,
+                        fontSize: 12,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                      }}
+                      >
+                        {value}
+                      </button>
+                    ))}
+                  </Flex>
+                </div>
+              )
+            )}
+          </div>
+          {(hiddenFieldCount > 0 || showAllFields) && fieldFilters.length > MAX_FIELD_GROUPS && (
+            <button
+              onClick={() => setShowAllFields(!showAllFields)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: colors.primary,
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                padding: 0,
+                marginTop: 10,
+              }}
+            >
+              {showAllFields ? 'Show fewer details' : `+ ${hiddenFieldCount} more details`}
+            </button>
+          )}
+        </div>
+      )}
+
       {/* PRICE RANGE */}
       <div style={{ marginBottom: 18 }}>
         <Flex justify="space-between" align="center" style={{ marginBottom: 10 }}>
@@ -376,6 +496,14 @@ FilterSidebar.propTypes = {
   onResetFilters: PropTypes.func.isRequired,
   searchMode: PropTypes.string,
   categoryCounts: PropTypes.object,
+  fieldFilters: PropTypes.arrayOf(
+    PropTypes.shape({
+      key: PropTypes.string.isRequired,
+      label: PropTypes.string,
+      type: PropTypes.string,
+      values: PropTypes.array,
+    })
+  ),
   style: PropTypes.object,
 };
 

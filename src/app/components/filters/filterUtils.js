@@ -1,3 +1,5 @@
+import { matchesSchemaFilters } from '../../utils/form_schema';
+
 export const DEFAULT_FILTERS = {
   maxDistance: null, // null = unlimited / any distance, or number in km
   categories: [],    // array of category IDs/keys
@@ -7,7 +9,10 @@ export const DEFAULT_FILTERS = {
   listingType: 'all',// 'all', 'product', 'service', 'food', 'rentals'
   onlyAvailable: false,
   sortBy: 'distance_asc', // 'distance_asc' | 'price_asc' | 'price_desc' | 'rating_desc' | 'name_asc'
+  fields: {},        // category custom-field filters for items: { fieldKey: value }
 };
+
+const isFieldFilterSet = (value) => value !== undefined && value !== null && value !== '';
 
 export const DISTANCE_PRESETS = [
   { label: 'Within 2 km', shortLabel: '2 km', value: 2, icon: null},
@@ -124,6 +129,9 @@ export const applySearchFilters = (items, filters, searchMode = 'items') => {
         const itemType = (item.listing_type || '').toLowerCase();
         if (itemType !== filters.listingType.toLowerCase()) return false;
       }
+
+      // 7. Category custom-field filters (e.g. Dietary Tag, Condition)
+      if (!matchesSchemaFilters(item, filters.fields)) return false;
     }
 
     return true;
@@ -174,6 +182,7 @@ export const countActiveFilters = (filters, searchMode = 'items') => {
   if (searchMode === 'items') {
     if (filters.minPrice !== null || filters.maxPrice !== null) count++;
     if (filters.listingType && filters.listingType !== 'all') count++;
+    count += Object.values(filters.fields || {}).filter(isFieldFilterSet).length;
   }
   return count;
 };
