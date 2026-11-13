@@ -1,35 +1,35 @@
 import React, { useEffect, useState } from 'react';
-import { Space, Table, Tag, Form, Input, Button, Row, Col } from 'antd';
-import { Avatar } from 'antd';
-import { Upload } from 'antd';
-import { apiConfig, config, netWorkCall } from '../../utils';
-import { PlusOutlined } from '@ant-design/icons';
+import PropTypes from 'prop-types';
+import { Space, Table, Tag, Input, Button, Row, Col, Avatar, Upload } from 'antd';
+import { apiConfig, config } from '../../utils';
+import { PlusOutlined, PictureOutlined } from '@ant-design/icons';
+import { colors, typography, radii } from '../../styles/theme';
 
 const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableChange, handleStatusChange, handleRowChange, handleDelete }) => {
-  const [data, setData] = useState(rows);
+  const [data, setData] = useState(Array.isArray(rows) ? rows : []);
   const [editableRow, setEditableRow] = useState(null);
-  const [isNew, setIsNew] = useState(false)
+  const [isNew, setIsNew] = useState(false);
 
   useEffect(() => {
-    setData(rows);
+    setData(Array.isArray(rows) ? rows : []);
+    setEditableRow(null);
+    setIsNew(false);
   }, [rows]);
 
-
   const handleStateUpdate = (updatedState, index) => {
-    const newData = data;
-    newData[index] = {
-      ...newData[index],
-      ...updatedState
+    const nextRow = {
+      ...(data?.[index] || {}),
+      ...updatedState,
     };
-    setData([...newData])
-    return newData[index]
-  }
+    setData((prev) => (prev || []).map((row, idx) => (idx === index ? nextRow : row)));
+    return nextRow;
+  };
 
   const handleChange = (keyName, value, index) => {
     if (keyName === 'is_active') {
-      handleStatusChange({ category_id: data[index]?.id, is_active: value })
+      handleStatusChange({ category_id: data[index]?.id, is_active: value });
     }
-    handleStateUpdate({ [keyName]: value }, index)
+    handleStateUpdate({ [keyName]: value }, index);
   };
 
   const handleEdit = (index) => {
@@ -37,9 +37,24 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
   };
 
   const handleSave = (index) => {
-    const newData = data;
-    handleRowChange({ ...newData[index] })
-    setEditableRow(null)
+    const currentRow = data?.[index];
+    if (currentRow) {
+      handleRowChange({ ...currentRow });
+    }
+    setEditableRow(null);
+    setIsNew(false);
+  };
+
+  const handleToggleNew = () => {
+    if (isNew) {
+      setData(Array.isArray(rows) ? [...rows] : []);
+      setEditableRow(null);
+      setIsNew(false);
+    } else {
+      setData((prev) => [{ ...(initRow || {}), __tempKey: `new-${Date.now()}` }, ...(prev || [])]);
+      setEditableRow(0);
+      setIsNew(true);
+    }
   };
 
   const onImageUpload = async (file, index) => {
@@ -51,11 +66,12 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
         method: 'POST',
         body: formData,
       });
-      const { data } = await response.json();
-      handleStateUpdate({ 'img_url': data?.Location }, index)
+      const resJson = await response.json();
+      handleStateUpdate({ img_url: resJson?.data?.Location }, index);
     } catch (error) {
       console.error(error);
     }
+    return false;
   };
 
   const renderCell = (item, value, record, index) => {
@@ -67,93 +83,189 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
 
     switch (key) {
       case 'img_url':
-        return isEditable ? <Upload
-          listType="picture"
-          beforeUpload={(file) => onImageUpload(file, index)}
-          maxCount={1}
-        >
-          <Space size="middle">
-            <a>upload</a>
-          </Space>
-        </Upload> :
-          <Avatar src={value || 'data:image/jpeg;base64,/9j/4AAQ...'} alt='none' />
+        return isEditable ? (
+          <Upload
+            listType="picture"
+            beforeUpload={(file) => onImageUpload(file, index)}
+            maxCount={1}
+          >
+            <Button type="link" size="small" style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}>
+              Upload
+            </Button>
+          </Upload>
+        ) : (
+          <Avatar
+            src={value || undefined}
+            icon={!value ? <PictureOutlined /> : undefined}
+            alt={record?.name || 'Item'}
+            style={{ backgroundColor: colors.primaryLight, color: colors.primary }}
+          />
+        );
       case 'menu':
-        return <Button style={{ color: '#fff' }} onClick={() => item?.onClick(record)}> Add {item?.title} </Button>
+        return (
+          <Button
+            type="default"
+            style={{
+              borderColor: colors.border,
+              color: colors.primary,
+              fontWeight: 600,
+              borderRadius: radii.md,
+            }}
+            onClick={() => item?.onClick(record)}
+          >
+            Add {item?.title}
+          </Button>
+        );
       case 'createdBy':
-        return <span>Admin</span>;
+        return <span style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>Admin</span>;
       case 'is_active':
         return (
-          <Tag color={value ? 'green' : 'red'} onClick={() => handleChange("is_active", !value, index)}>
-            {value ? 'Active' : 'In Active'}
+          <Tag
+            style={{
+              cursor: 'pointer',
+              borderRadius: radii.full,
+              fontWeight: 600,
+              fontSize: 12,
+              padding: '2px 10px',
+              background: value ? colors.semantic.successLight : colors.semantic.errorLight,
+              color: value ? colors.semantic.success : colors.semantic.error,
+              borderColor: value ? colors.semantic.successBorder : colors.semantic.errorBorder,
+            }}
+            onClick={() => handleChange('is_active', !value, index)}
+          >
+            {value ? 'Active' : 'Inactive'}
           </Tag>
         );
       case 'action':
         return isEditable ? (
           <Space size="middle">
-            <a onClick={() => handleSave(index)}>Save</a>
-            <a onClick={() => {
-              setData(rows);
-              setEditableRow(null);
-              setIsNew(false)
-            }}>Cancel</a>
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}
+              onClick={() => handleSave(index)}
+            >
+              Save
+            </Button>
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.textMuted, fontWeight: 500, padding: 0 }}
+              onClick={() => {
+                setData(Array.isArray(rows) ? [...rows] : []);
+                setEditableRow(null);
+                setIsNew(false);
+              }}
+            >
+              Cancel
+            </Button>
           </Space>
         ) : (
-          <>
-            <Space size="middle" onClick={() => handleEdit(index)}>
-              <a>Edit</a>
-            </Space>
-            <Space size="middle" style={{marginLeft: 10}} onClick={() => handleDelete(record)}>
-            <a>Delete</a>
+          <Space size="middle">
+            <Button
+              type="link"
+              size="small"
+              style={{ color: colors.secondary, fontWeight: 600, padding: 0 }}
+              onClick={() => handleEdit(index)}
+            >
+              Edit
+            </Button>
+            <Button
+              type="link"
+              danger
+              size="small"
+              style={{ color: colors.semantic.error, fontWeight: 600, padding: 0 }}
+              onClick={() => handleDelete(record)}
+            >
+              Delete
+            </Button>
           </Space>
-          </>
         );
       default:
         return isEditable ? (
-          <Input defaultValue={value} onChange={(e) => handleChange(key, e.target.value, index)} />
+          <Input
+            value={value ?? ''}
+            style={{ borderRadius: radii.md, borderColor: colors.border }}
+            onChange={(e) => handleChange(key, e.target.value, index)}
+          />
         ) : (
-          value
+          <span style={{ color: colors.textMain, fontFamily: typography.fontFamily.body }}>{value}</span>
         );
     }
   };
 
   const columnsRender = columns.map((item) => ({
-    title: item.title,
+    ...item,
+    title: (
+      <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
+        {item.title}
+      </span>
+    ),
     dataIndex: item.key,
     key: item.key,
     render: (value, record, index) => renderCell(item, value, record, index),
   }));
 
+  return (
+    <>
+      <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
+        {isAddNew && (
+          <Row>
+            <Col>
+              <Button
+                type="primary"
+                style={{
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  borderRadius: radii.md,
+                  fontWeight: 600,
+                  boxShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
+                }}
+                onClick={handleToggleNew}
+              >
+                {isNew ? 'Cancel New' : 'Add New'}
+                <PlusOutlined />
+              </Button>
+            </Col>
+          </Row>
+        )}
+      </Col>
+      <div
+        style={{
+          border: `1px solid ${colors.border}`,
+          borderRadius: radii.lg,
+          overflow: 'hidden',
+          background: colors.surface,
+        }}
+      >
+        <Table
+          rowKey={(record, idx) =>
+            record?.id !== undefined && record?.id !== null
+              ? record.id
+              : record?.__tempKey || `row-${idx}`
+          }
+          columns={columnsRender}
+          dataSource={data}
+          pagination={pagination}
+          onChange={handleTableChange}
+          scroll={{ x: 'max-content' }}
+        />
+      </div>
+    </>
+  );
+};
 
-  React.useEffect(() => {
-    if (isNew) {
-      setData([initRow, ...data]);
-      setEditableRow(0)
-    } else {
-      setData([...rows]);
-      setEditableRow(null)
-    }
-  }, [isNew])
-
-  return <>
-    <Col span={24} style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
-      {
-        isAddNew && <Row>
-          <Col>
-            <Button type='primary' onClick={() => setIsNew(!isNew)}>
-              Add New
-              <PlusOutlined />
-            </Button>
-          </Col>
-        </Row>
-      }
-    </Col>
-    <Table
-      columns={columnsRender}
-      dataSource={data}
-      pagination={pagination}
-      onChange={handleTableChange}
-    />
-  </>
+DataTable.propTypes = {
+  rows: PropTypes.array,
+  columns: PropTypes.array,
+  initRow: PropTypes.object,
+  isAddNew: PropTypes.bool,
+  pagination: PropTypes.object,
+  handleTableChange: PropTypes.func,
+  handleStatusChange: PropTypes.func,
+  handleRowChange: PropTypes.func,
+  handleDelete: PropTypes.func,
 };
 
 export default DataTable;
+

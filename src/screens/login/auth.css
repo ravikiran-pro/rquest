@@ -24,8 +24,8 @@
 
 @media (max-width: 767px) {
   .rq-auth-page {
-    min-height: calc(100vh - 58px - 64px - env(safe-area-inset-bottom, 0px));
-    min-height: calc(100dvh - 58px - 64px - env(safe-area-inset-bottom, 0px));
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 }
 
@@ -295,6 +295,10 @@
   margin: 0 auto;
 }
 
+.rq-auth-mobile-top-nav {
+  display: none;
+}
+
 /* OTP Inline Back Link & Target Info */
 .rq-otp-inline-back-row {
   display: flex;
@@ -314,6 +318,7 @@
   font-size: 12.5px;
   font-weight: 600;
   color: #0B2D6B;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -897,7 +902,14 @@
 
 @media (max-width: 767px) {
   .rq-auth-desktop-shell {
-    padding: 18px 16px 24px;
+    padding: 16px 16px 24px;
+  }
+
+  .rq-auth-mobile-top-nav {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 14px;
   }
 
   .rq-auth-hero {

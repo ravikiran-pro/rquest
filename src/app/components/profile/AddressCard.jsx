@@ -12,7 +12,7 @@ import {
   UserOutlined,
   StarOutlined,
 } from '@ant-design/icons';
-import { colors, radii } from '../../styles/theme';
+import { colors, radii, shadows, typography } from '../../styles/theme';
 
 const { Text } = Typography;
 
@@ -30,6 +30,29 @@ const AddressCard = ({
     if (l === 'home') return <HomeOutlined />;
     if (l === 'work' || l === 'office') return <ShopOutlined />;
     return <EnvironmentOutlined />;
+  };
+
+  const getLabelChipStyle = (label) => {
+    const l = (label || '').toLowerCase();
+    if (l === 'home') {
+      return {
+        background: colors.verifiedChipBg,
+        color: colors.verifiedChipText,
+        border: `1px solid ${colors.verifiedChipBorder}`,
+      };
+    }
+    if (l === 'work' || l === 'office') {
+      return {
+        background: colors.serviceChipBg,
+        color: colors.serviceChipText,
+        border: `1px solid ${colors.serviceChipBorder}`,
+      };
+    }
+    return {
+      background: colors.surfaceContainerLow,
+      color: colors.textMuted,
+      border: `1px solid ${colors.border}`,
+    };
   };
 
   const formatted =
@@ -51,32 +74,29 @@ const AddressCard = ({
       style={{
         borderRadius: radii.xl,
         border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-        background: isSelected ? colors.primaryLight : '#ffffff',
+        background: isSelected ? colors.primaryLight : colors.surface,
         boxShadow: isSelected
           ? '0 4px 14px rgba(11, 45, 107, 0.08)'
-          : '0 1px 3px rgba(15, 23, 42, 0.04)',
+          : shadows.card,
         transition: 'all 0.2s ease',
         cursor: isSelectable ? 'pointer' : 'default',
         position: 'relative',
+        fontFamily: typography.fontFamily.body,
       }}
       styles={{ body: { padding: '16px' } }}
     >
-      <Flex justify="space-between" align="flex-start" style={{ marginBottom: 10 }}>
+      <Flex justify="space-between" align="flex-start" style={{ marginBottom: 10 }} wrap="wrap" gap={8}>
         <Flex align="center" gap={8} wrap="wrap">
           <Tag
-            color={
-              (address.label || '').toLowerCase() === 'home'
-                ? 'blue'
-                : (address.label || '').toLowerCase() === 'work'
-                ? 'purple'
-                : 'default'
-            }
             icon={getIcon(address.label)}
             style={{
-              borderRadius: 6,
+              ...getLabelChipStyle(address.label),
+              borderRadius: radii.xs,
               fontWeight: 700,
               fontSize: 12,
               padding: '2px 8px',
+              margin: 0,
+              fontFamily: typography.fontFamily.body,
             }}
           >
             {address.label || 'Address'}
@@ -84,13 +104,17 @@ const AddressCard = ({
 
           {address.is_default && (
             <Tag
-              color="green"
               icon={<CheckCircleFilled />}
               style={{
-                borderRadius: 6,
+                background: colors.semantic.successLight,
+                color: colors.semantic.successHover,
+                border: `1px solid ${colors.semantic.successBorder}`,
+                borderRadius: radii.xs,
                 fontWeight: 600,
                 fontSize: 11,
                 padding: '2px 8px',
+                margin: 0,
+                fontFamily: typography.fontFamily.body,
               }}
             >
               Default
@@ -104,13 +128,13 @@ const AddressCard = ({
             <Button
               type="text"
               size="small"
-              icon={<StarOutlined style={{ color: '#d97706' }} />}
+              icon={<StarOutlined style={{ color: colors.semantic.warningHover }} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onSetDefault(address);
               }}
               title="Set as Default"
-              style={{ fontSize: 12 }}
+              style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}
             >
               Make Default
             </Button>
@@ -159,16 +183,16 @@ const AddressCard = ({
         <Flex align="center" gap={12} style={{ marginBottom: 6 }} wrap="wrap">
           {address.recipient_name && (
             <Flex align="center" gap={4}>
-              <UserOutlined style={{ color: '#64748b', fontSize: 12 }} />
-              <Text strong style={{ fontSize: 13, color: '#0f172a' }}>
+              <UserOutlined style={{ color: colors.textMuted, fontSize: 12 }} />
+              <Text strong style={{ fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                 {address.recipient_name}
               </Text>
             </Flex>
           )}
           {address.recipient_phone && (
             <Flex align="center" gap={4}>
-              <PhoneOutlined style={{ color: '#64748b', fontSize: 12 }} />
-              <Text type="secondary" style={{ fontSize: 12 }}>
+              <PhoneOutlined style={{ color: colors.textMuted, fontSize: 12 }} />
+              <Text style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 {address.recipient_phone}
               </Text>
             </Flex>
@@ -177,15 +201,15 @@ const AddressCard = ({
       )}
 
       {/* Formatted Address */}
-      <div style={{ color: '#334155', fontSize: 13, lineHeight: 1.45, marginBottom: 8 }}>
+      <div style={{ color: colors.textMuted, fontSize: 13, lineHeight: 1.45, marginBottom: 8, fontFamily: typography.fontFamily.body }}>
         {formatted}
       </div>
 
       {/* Coordinates / Map Pinpoint */}
       {address.latitude && address.longitude && (
         <Flex align="center" gap={4}>
-          <EnvironmentOutlined style={{ color: '#94a3b8', fontSize: 11 }} />
-          <Text type="secondary" style={{ fontSize: 11 }}>
+          <EnvironmentOutlined style={{ color: colors.textLight, fontSize: 11 }} />
+          <Text style={{ fontSize: 11, color: colors.textLight, fontFamily: typography.fontFamily.mono }}>
             Coordinates: {Number(address.latitude).toFixed(4)}, {Number(address.longitude).toFixed(4)}
           </Text>
         </Flex>
@@ -203,12 +227,13 @@ const AddressCard = ({
               onSelect(address);
             }}
             style={{
-              borderRadius: 6,
+              borderRadius: radii.md,
               fontWeight: 600,
               fontSize: 12,
+              fontFamily: typography.fontFamily.body,
               ...(isSelected
-                ? { background: colors.primary, borderColor: colors.primary }
-                : {}),
+                ? { background: colors.primary, borderColor: colors.primary, boxShadow: shadows.primary }
+                : { borderColor: colors.border, color: colors.textMain }),
             }}
           >
             {isSelected ? 'Delivering Here' : 'Deliver Here'}

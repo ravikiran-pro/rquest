@@ -222,7 +222,7 @@ const StorefrontScreen = () => {
       return [
         { key: 'all', label: `All Items (${listings.length})` },
         ...typesPresent.map((t) => {
-          const count = listings.filter((it) => it.listing_type === t).length;
+          const count = listings.filter((it) => (it.listing_type || 'product') === t).length;
           return {
             key: `type:${t}`,
             label: `${typeLabels[t] || t} (${count})`,

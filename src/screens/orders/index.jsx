@@ -304,7 +304,7 @@ const OrdersScreen = () => {
           <span
             style={{
               background: colors.primaryLight,
-              color: colors.cobalt,
+              color: colors.secondary,
               border: `1px solid #bfdbfe`,
               borderRadius: 6,
               fontWeight: 700,
@@ -454,11 +454,11 @@ const OrdersScreen = () => {
     else if (isPlaced) fillPercent = '33%';
 
     return (
-      <div style={{ background: '#F9F8F5', border: '1px solid #ECE7DF', borderRadius: 16, padding: '14px 14px', margin: '12px 0 16px 0' }}>
+      <div style={{ background: colors.surfaceContainerLow || '#F9F8F5', border: `1px solid ${colors.border || '#ECE7DF'}`, borderRadius: radii.xl, padding: '14px 14px', margin: '12px 0 16px 0' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#1D2939' }}>Order Progress</span>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#0056bd', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#0056bd', display: 'inline-block' }} />
+          <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMain || '#1D2939' }}>Order Progress</span>
+          <span style={{ fontSize: 12, fontWeight: 700, color: colors.secondary, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.secondary, display: 'inline-block' }} />
             {isCompleted ? 'Completed' : '● In Progress'}
           </span>
         </div>
@@ -481,7 +481,7 @@ const OrdersScreen = () => {
               left: '20px',
               width: fillPercent,
               height: '2px',
-              background: '#0056bd',
+              background: colors.secondary,
               zIndex: 2,
               transition: 'width 0.3s ease',
             }}
@@ -498,15 +498,15 @@ const OrdersScreen = () => {
                       height: 24,
                       borderRadius: '50%',
                       background: '#ffffff',
-                      border: '3px solid #0056bd',
-                      boxShadow: '0 0 0 3px rgba(46, 111, 219, 0.25)',
+                      border: `3px solid ${colors.secondary}`,
+                      boxShadow: '0 0 0 3px rgba(1, 89, 197, 0.25)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
                       margin: '0 auto 4px auto',
                     }}
                   >
-                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#0056bd' }} />
+                    <div style={{ width: 8, height: 8, borderRadius: '50%', background: colors.secondary }} />
                   </div>
                 ) : (
                   <div
@@ -514,7 +514,7 @@ const OrdersScreen = () => {
                       width: 24,
                       height: 24,
                       borderRadius: '50%',
-                      background: step.done ? '#0056bd' : '#F2F4F7',
+                      background: step.done ? colors.secondary : '#F2F4F7',
                       border: step.done ? 'none' : '2px solid #D0D5DD',
                       color: '#ffffff',
                       fontSize: 12,
@@ -529,11 +529,11 @@ const OrdersScreen = () => {
                     {step.done ? '✓' : <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#98A2B3' }} />}
                   </div>
                 )}
-                <div style={{ fontSize: 11, fontWeight: isBeacon || step.done ? 700 : 600, color: isBeacon ? '#0056bd' : step.done ? '#1D2939' : '#667085' }}>
+                <div style={{ fontSize: 11, fontWeight: isBeacon || step.done ? 700 : 600, color: isBeacon ? colors.secondary : step.done ? '#1D2939' : '#667085' }}>
                   {step.label}
                 </div>
                 {step.sub && (
-                  <div style={{ fontSize: 10, color: isBeacon ? '#0056bd' : '#667085', fontWeight: isBeacon ? 700 : 500 }}>
+                  <div style={{ fontSize: 10, color: isBeacon ? colors.secondary : '#667085', fontWeight: isBeacon ? 700 : 500 }}>
                     {step.sub}
                   </div>
                 )}
@@ -1001,7 +1001,7 @@ const OrdersScreen = () => {
                             icon={<CarOutlined />}
                             loading={isActionBusy}
                             onClick={() => handleUpdateStoreOrderStatus(ord.id, 'open_to_delivery')}
-                            style={{ background: colors.cobalt, borderColor: colors.cobalt, fontWeight: 700, borderRadius: 8 }}
+                            style={{ background: colors.secondary, borderColor: colors.secondary, fontWeight: 700, borderRadius: 8 }}
                           >
                             Open to Delivery Runner
                           </Button>
@@ -1180,7 +1180,7 @@ const OrdersScreen = () => {
                 boxShadow: customerOrderFilter === 'completed' ? '0 2px 6px rgba(11, 45, 107, 0.2)' : 'none',
               }}
             >
-              Past Orders ({pastCustomerOrders.length > 0 ? pastCustomerOrders.length : 4})
+              Past Orders ({pastCustomerOrders.length > 0 ? pastCustomerOrders.length : MOCK_PAST_ORDERS.length})
             </button>
           </div>
 
@@ -1561,6 +1561,7 @@ const OrdersScreen = () => {
                   {activeCustomerOrders.map((ord) => {
                     const isExpanded = expandedOrders[ord.id];
                     const items = ord.items || [];
+                    const totalItemQty = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
                     const timeAgo = ord.createdAt
                       ? `${Math.max(1, Math.round((Date.now() - new Date(ord.createdAt).getTime()) / 60000))}m ago`
                       : 'Just now';
@@ -1759,7 +1760,9 @@ const OrdersScreen = () => {
                               marginBottom: 8,
                             }}
                           >
-                            <strong>{items.length || 1} items:</strong>{' '}
+                            <strong>
+                              {totalItemQty} {totalItemQty === 1 ? 'item' : 'items'}:
+                            </strong>{' '}
                             {items.length > 0
                               ? items.map((it) => `${it.item_name} (x${it.quantity})`).join(', ')
                               : 'Order placed with merchant'}

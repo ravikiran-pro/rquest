@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 
 const useChatStore = create(
   persist(
-    (set, get) => ({
+    (set) => ({
       isChat: false,
       receiver_id: null,
       shop_id: null,
@@ -33,10 +33,12 @@ const useChatStore = create(
           receiver_id: receiver_id,
         })),
 
-      setUnreadTotal: (count) =>
-        set(() => ({
-          unreadTotal: Math.max(0, Number(count) || 0),
-        })),
+      setUnreadTotal: (countOrFn) =>
+        set((state) => {
+          const next =
+            typeof countOrFn === 'function' ? countOrFn(state.unreadTotal) : countOrFn;
+          return { unreadTotal: Math.max(0, Number(next) || 0) };
+        }),
 
       decrementUnread: (count = 1) =>
         set((state) => ({

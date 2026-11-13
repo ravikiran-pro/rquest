@@ -3,6 +3,7 @@ import { Input, Button, message } from 'antd';
 import {
   UserOutlined,
   LockOutlined,
+  ArrowLeftOutlined,
   ArrowRightOutlined,
   ShopOutlined,
   ShoppingOutlined,
@@ -116,6 +117,12 @@ const RegisterScreen = () => {
         {/* RIGHT COLUMN: Registration Card Stack */}
         <div className="rq-auth-form-col">
           <div className="rq-auth-card-wrapper">
+            <div className="rq-auth-mobile-top-nav">
+              <Link to={Routes.home} className="rq-otp-inline-back-btn">
+                <ArrowLeftOutlined />
+                <span>Back to Market</span>
+              </Link>
+            </div>
             {/* Centered Brand Hero */}
             <div className="rq-auth-hero">
               <div className="rq-auth-logo-badge-wrap">
@@ -124,12 +131,6 @@ const RegisterScreen = () => {
                   <CheckCircleFilled />
                 </span>
               </div>
-
-              <div className="rq-auth-pill-badge">
-                <EnvironmentFilled className="rq-auth-pill-icon" />
-                <span>One Neighbourhood ID</span>
-              </div>
-
               <h2 className="rq-auth-hero-heading">Create your account</h2>
               <p className="rq-auth-hero-sub">
                 Join as a neighbourhood shopper or register your store.
@@ -140,7 +141,7 @@ const RegisterScreen = () => {
             <div className="rq-auth-box">
               <form onSubmit={onFinish} className="rq-auth-form-stack">
                 {/* Account Role Selector */}
-                <div className="rq-role-selector">
+                {/* <div className="rq-role-selector">
                   <div
                     className={`rq-role-option ${selectedRole === CUSTOMER_ROLE_ID ? 'selected' : ''}`}
                     onClick={() => handleRoleSelect(CUSTOMER_ROLE_ID)}
@@ -176,7 +177,7 @@ const RegisterScreen = () => {
                     <div className="rq-role-option-title">Store Owner</div>
                     <div className="rq-role-option-desc">List products &amp; orders</div>
                   </div>
-                </div>
+                </div> */}
 
                 {/* Full Name / Store Name */}
                 <div>
@@ -250,16 +251,6 @@ const RegisterScreen = () => {
                     </span>
                     <ArrowRightOutlined />
                   </Button>
-
-                  {/* Zero Spam Direct Guarantee Strip */}
-                  <div className="rq-auth-zero-spam-pill">
-                    <span className="rq-zero-spam-icon">
-                      <CheckCircleFilled />
-                    </span>
-                    <span className="rq-zero-spam-text">
-                      Zero spam · Direct neighbourhood connection
-                    </span>
-                  </div>
                 </div>
               </form>
             </div>

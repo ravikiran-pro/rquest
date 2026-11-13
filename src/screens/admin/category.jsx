@@ -3,7 +3,7 @@ import DataTable from '../../app/components/datatable';
 import { Button, message } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { SettingOutlined } from '@ant-design/icons';
-import { colors } from '../../app/styles/theme';
+import { colors, radii, typography, shadows } from '../../app/styles/theme';
 import FormSchemaBuilderModal from './form_schema_builder';
 
 const Category = () => {
@@ -32,11 +32,13 @@ const Category = () => {
                             setIsSchemaModalOpen(true);
                         }}
                         style={{
-                            borderRadius: 6,
+                            borderRadius: radii.md,
                             fontWeight: 600,
-                            background: fieldCount > 0 ? colors.primary : undefined,
-                            borderColor: fieldCount > 0 ? colors.primary : undefined,
-                            color: fieldCount > 0 ? '#fff' : undefined,
+                            fontFamily: typography.fontFamily.body,
+                            background: fieldCount > 0 ? colors.primary : colors.surface,
+                            borderColor: fieldCount > 0 ? colors.primary : colors.border,
+                            color: fieldCount > 0 ? colors.white : colors.textMain,
+                            boxShadow: fieldCount > 0 ? shadows.primary : 'none',
                         }}
                     >
                         {fieldCount > 0 ? `Configured (${fieldCount} fields)` : '+ Configure Form'}

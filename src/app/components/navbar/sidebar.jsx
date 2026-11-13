@@ -53,9 +53,13 @@ const SideBar = ({ open, handleClose }) => {
   );
 
   const currentPath = location.pathname;
+  const isMobile = !screens.md;
+  const isAuthRoute =
+    currentPath === Routes.login || currentPath === Routes.register;
 
   const logout = () => {
     update_user_data({});
+    useChatStore.getState().setUnreadTotal(0);
     sessionStorage.clear();
     handleClose();
     history.push(Routes.login);
@@ -75,6 +79,10 @@ const SideBar = ({ open, handleClose }) => {
     handleClose();
     handleChatOpen(null, null);
   };
+
+  if (isMobile && isAuthRoute) {
+    return null;
+  }
 
   return (
     <Drawer
@@ -140,7 +148,7 @@ const SideBar = ({ open, handleClose }) => {
               size={42}
               icon={<UserOutlined />}
               style={{
-                backgroundColor: isMerchant ? colors.cobalt : colors.primary,
+                backgroundColor: isMerchant ? colors.secondary : colors.primary,
                 boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
                 flexShrink: 0,
               }}
@@ -386,9 +394,9 @@ const SideBar = ({ open, handleClose }) => {
         {isLoggedIn && (isAdmin || user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin' || user_data?.username === 'root') && (
           <Button
             type="text"
-            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: colors.cobalt }} />}
+            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: colors.secondary }} />}
             className={`drawer-nav-item ${currentPath === Routes.admin ? 'active' : ''}`}
-            style={{ color: colors.cobalt }}
+            style={{ color: colors.secondary }}
             onClick={() => handleNavigate(Routes.admin)}
           >
             <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>

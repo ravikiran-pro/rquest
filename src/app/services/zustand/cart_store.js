@@ -63,6 +63,7 @@ const useCartStore = create(
             ...cart,
             shop_id: items.length === 0 ? null : cart.shop_id,
             shop_name: items.length === 0 ? '' : cart.shop_name,
+            owner_id: items.length === 0 ? null : cart.owner_id,
             items,
           },
         });
@@ -76,6 +77,7 @@ const useCartStore = create(
             ...cart,
             shop_id: items.length === 0 ? null : cart.shop_id,
             shop_name: items.length === 0 ? '' : cart.shop_name,
+            owner_id: items.length === 0 ? null : cart.owner_id,
             items,
           },
         });
@@ -86,12 +88,12 @@ const useCartStore = create(
           cart: {
             shop_id: null,
             shop_name: '',
+            owner_id: null,
             items: [],
           },
           isCartOpen: false,
           pendingCheckout: false,
-        },
-        );
+        });
       },
 
       pendingCheckout: false,

@@ -34,6 +34,7 @@ import {
   DEFAULT_FILTERS,
   applySearchFilters,
   countActiveFilters,
+  matchesCategoryFilter,
   FILTER_CATEGORIES,
   VoiceSearchModal,
   ImageSearchModal,
@@ -56,6 +57,7 @@ const RADIUS_PRESETS = [
   { label: '2 km', fullLabel: 'Within 2 km', val: 2 },
   { label: '5 km', fullLabel: 'Within 5 km', val: 5 },
   { label: '10 km', fullLabel: 'Within 10 km', val: 10 },
+  { label: 'All', fullLabel: 'All Distances', val: null },
 ];
 
 const HomeScreen = () => {
@@ -346,6 +348,7 @@ const HomeScreen = () => {
             lat: coords[0],
             lon: coords[1],
             search: searchText || '',
+            limit: 200,
           });
 
           const response = await netWorkCall(apiConfig.listings_search, 'POST', body, false);
@@ -389,35 +392,28 @@ const HomeScreen = () => {
     return applySearchFilters(itemListings, filters, 'items');
   }, [itemListings, filters]);
 
-  // Category counts computed for the sidebar
+  // Category counts computed for the sidebar (respecting active radius, price, rating, and availability filters)
   const categoryCounts = useMemo(() => {
     const counts = {};
-    const list = searchMode === 'shops' ? searchMarkers : itemListings;
-    list.forEach((item) => {
+    const rawList = searchMode === 'shops' ? searchMarkers : itemListings;
+    const facetedList = applySearchFilters(rawList, { ...filters, categories: [] }, searchMode);
+    facetedList.forEach((item) => {
       FILTER_CATEGORIES.forEach((cat) => {
-        const targetStr =
-          searchMode === 'shops'
-            ? `${item.shop_type || ''} ${item.shopCategory?.name || ''} ${item.shopSubCategory?.name || ''} ${item.shop_name || ''}`.toLowerCase()
-            : `${item.shop?.shop_type || ''} ${item.shop?.shopCategory?.name || ''} ${item.listing_type || ''} ${item.name || ''}`.toLowerCase();
-        const matches = cat.aliases
-          ? cat.aliases.some((alias) => targetStr.includes(alias.toLowerCase()))
-          : targetStr.includes(cat.id.toLowerCase());
-        if (matches) {
+        if (matchesCategoryFilter(item, cat.id, searchMode)) {
           counts[cat.id] = (counts[cat.id] || 0) + 1;
         }
       });
     });
     return counts;
-  }, [searchMode, searchMarkers, itemListings]);
+  }, [searchMode, searchMarkers, itemListings, filters]);
 
-  // Count active verified neighborhood merchants
+  // Count active verified neighborhood merchants within the filtered results / radius
   const activeMerchantCount = useMemo(() => {
     if (searchMode === 'shops') {
-      return searchMarkers.length || 48;
+      return new Set(filteredShops.map((s) => s.id).filter(Boolean)).size;
     }
-    const uniqueShops = new Set(itemListings.map((i) => i.shop?.id || i.shop_id).filter(Boolean));
-    return uniqueShops.size || 48;
-  }, [searchMode, searchMarkers, itemListings]);
+    return new Set(filteredItems.map((i) => i.shop?.id || i.shop_id).filter(Boolean)).size;
+  }, [searchMode, filteredShops, filteredItems]);
 
   // Custom-field filters worth showing: only fields and values present in the
   // items left after every other filter (distance, price, rating...)
@@ -451,7 +447,7 @@ const HomeScreen = () => {
         });
       });
     }
-    if (filters.minPrice !== null || filters.maxPrice !== null) {
+    if (searchMode === 'items' && (filters.minPrice !== null || filters.maxPrice !== null)) {
       tags.push({
         key: 'price',
         label: `₹${filters.minPrice || 0} - ₹${filters.maxPrice || '1,000+'}`,
@@ -468,7 +464,7 @@ const HomeScreen = () => {
     if (filters.onlyAvailable) {
       tags.push({
         key: 'available',
-        label: 'Stock Verified Today',
+        label: 'Physical Shelf Stock',
         onRemove: () => setFilters((prev) => ({ ...prev, onlyAvailable: false })),
       });
     }
@@ -486,6 +482,20 @@ const HomeScreen = () => {
               return { ...prev, fields: next };
             }),
         });
+      });
+    }
+    if (filters.verifiedToday) {
+      tags.push({
+        key: 'verifiedToday',
+        label: 'Verified in Store Today',
+        onRemove: () => setFilters((prev) => ({ ...prev, verifiedToday: false })),
+      });
+    }
+    if (filters.immediatePickup) {
+      tags.push({
+        key: 'immediatePickup',
+        label: 'Ready for Immediate Pickup',
+        onRemove: () => setFilters((prev) => ({ ...prev, immediatePickup: false })),
       });
     }
     if (filters.sortBy && filters.sortBy !== 'distance_asc') {
@@ -782,11 +792,10 @@ const HomeScreen = () => {
 
               {/* Distance Quick Pills */}
               {RADIUS_PRESETS.map((preset) => {
-                const isActive =
-                  filters.maxDistance === preset.val || (!filters.maxDistance && preset.val === 2);
+                const isActive = (filters.maxDistance ?? null) === preset.val;
                 return (
                   <button
-                    key={preset.val}
+                    key={preset.val ?? 'all'}
                     type="button"
                     onClick={() => {
                       setFilters((prev) => ({
@@ -920,7 +929,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontWeight: 600,
                     cursor: 'pointer',
                     padding: 0,
@@ -951,17 +960,20 @@ const HomeScreen = () => {
                 </button>
 
                 <span>•</span>
-                <span>Showing offerings within {filters.maxDistance ? `${filters.maxDistance}.0 km` : '2.0 km'}</span>
+                <span>
+                  {filters.maxDistance
+                    ? `Showing ${searchMode === 'shops' ? 'stores' : 'offerings'} within ${Number(filters.maxDistance).toFixed(1)} km`
+                    : `Showing all ${searchMode === 'shops' ? 'stores' : 'offerings'} nearby`}
+                </span>
               </Flex>
 
               <Flex align="center" gap={6} wrap="wrap">
                 <span style={{ fontWeight: 600, color: colors.textMuted, marginRight: 2 }}>Radius:</span>
                 {RADIUS_PRESETS.map((preset) => {
-                  const isActive =
-                    filters.maxDistance === preset.val || (!filters.maxDistance && preset.val === 2);
+                  const isActive = (filters.maxDistance ?? null) === preset.val;
                   return (
                     <button
-                      key={preset.val}
+                      key={preset.val ?? 'all'}
                       type="button"
                       onClick={() => {
                         setFilters((prev) => ({
@@ -1319,7 +1331,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontSize: 12,
                     fontWeight: 600,
                     cursor: 'pointer',
@@ -1479,7 +1491,7 @@ const HomeScreen = () => {
                         height: 36,
                         borderRadius: '50%',
                         background: '#E6F0FF',
-                        color: colors.cobalt,
+                        color: colors.secondary,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -1542,8 +1554,9 @@ const HomeScreen = () => {
                     e.currentTarget.style.color = colors.textMain;
                   }}
                 >
-                  ⌄ Load {Math.min(18, totalCount - visibleCount)} More Offerings (Within{' '}
-                  {filters.maxDistance || 2}.0 km)
+                  ⌄ Load {Math.min(18, totalCount - visibleCount)} More{' '}
+                  {searchMode === 'shops' ? 'Stores' : 'Offerings'}
+                  {filters.maxDistance ? ` (Within ${filters.maxDistance} km)` : ''}
                 </button>
               </div>
             )}
@@ -1566,7 +1579,7 @@ const HomeScreen = () => {
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: colors.cobalt,
+                    color: colors.secondary,
                     fontWeight: 600,
                     cursor: 'pointer',
                     padding: 0,

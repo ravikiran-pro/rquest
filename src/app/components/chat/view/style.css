@@ -1,46 +1,67 @@
 .message-header-root {
   display: flex;
   cursor: pointer;
-  /* justify-content: space-around; */
+  border-radius: var(--radius-lg, 12px) !important;
+  border: 1px solid var(--border-color, #ebe7e0) !important;
+  background: var(--surface, #ffffff) !important;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.message-header-root:hover {
+  background: var(--surface-container-low, #f7f3ee) !important;
+  border-color: var(--border-color-dark, #c2c6d5) !important;
 }
 
 .message-header-root .ant-card-body {
   display: flex;
   align-items: center;
-  padding: 15px;
+  padding: 14px 16px;
   width: 100%;
 }
 
-.badge {
+.message-header-root .badge {
   height: 8px;
   width: 8px;
-  margin-left: 5px;
+  margin-left: 6px;
   border-radius: 50%;
+  display: inline-block;
 }
 
-.badge.online {
-  background-color: var(--success);
+.message-header-root .badge.online {
+  background-color: var(--success, #059669);
 }
 
-.badge.offline {
-  background-color: var(--error);
+.message-header-root .badge.offline {
+  background-color: var(--outline-variant, #c2c6d5);
 }
 
-
-.title {
-  font-size: 18px;
+.message-header-root .title {
+  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-size: 15px;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  color: rgba(0, 0, 0, 0.786);
+  color: var(--text-main, #1c1c19);
+  letter-spacing: -0.01em;
 }
 
-.title .ant-badge {
+.message-header-root .title .ant-badge {
   margin-left: 5px;
   margin-bottom: 2px;
+}
+
+.message-header-root .sub-title {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 12.5px;
+  color: var(--text-muted, #444650);
+  margin-top: 2px;
 }
 
 .message-header-edge {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 11px;
+  color: var(--text-light, #747781);
 }

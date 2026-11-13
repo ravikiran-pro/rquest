@@ -1,24 +1,28 @@
+require('dotenv').config();
+
 module.exports = {
   local: {
-    username: 'postgres',
-    password: 'postgres',
-    database: 'rquest',
-    host: 'localhost',
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'rquest',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
   },
   test: {
-    username: 'postgres',
-    password: '12345678',
-    database: 'rquest',
-    host: 'localhost',
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || '12345678',
+    database: process.env.DB_NAME || 'rquest',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
   },
   production: {
-    username: 'request_db_4cxm_user',
-    password: 'c8u79iclSJIIuRpzYiEa8e2opPNCmadu',
-    database: 'request_db_4cxm',
-    host: 'dpg-db5smn2d0e5s738isrkg-a.oregon-postgres.render.com',
-    port: 5432,
+    username: process.env.DB_USER || 'rquest_db_user',
+    password: process.env.DB_PASSWORD || 'hRfFXFiA3nyL0D3dzDQHwKqxjcraDykC',
+    database: process.env.DB_NAME || 'rquest_db',
+    host: process.env.DB_HOST || 'dpg-dbrab6lckfvc73dmkrmg-a.oregon-postgres.render.com',
+    port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
@@ -28,17 +32,11 @@ module.exports = {
     },
   },
   development: {
-    username: 'request_db_4cxm_user',
-    password: 'c8u79iclSJIIuRpzYiEa8e2opPNCmadu',
-    database: 'request_db_4cxm',
-    host: 'dpg-db5smn2d0e5s738isrkg-a.oregon-postgres.render.com',
-    port: 5432,
+    username: process.env.DB_USER || 'postgres',
+    password: process.env.DB_PASSWORD || 'postgres',
+    database: process.env.DB_NAME || 'request_db_4cxm',
+    host: process.env.DB_HOST || 'localhost',
+    port: process.env.DB_PORT || 5432,
     dialect: 'postgres',
-    dialectOptions: {
-      ssl: {
-        require: true,
-        rejectUnauthorized: false,
-      },
-    },
   },
 };

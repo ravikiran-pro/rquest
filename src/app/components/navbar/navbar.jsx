@@ -68,7 +68,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       const res = await netWorkCall(apiConfig.notifications_list, 'GET', null, true);
       if (res?.success && Array.isArray(res?.data)) {
         setNotificationsList(res.data);
-        setUnreadNotifCount(res.unreadCount || res.data.filter((n) => !n.is_read).length);
+        setUnreadNotifCount(
+          res.unreadCount !== undefined
+            ? res.unreadCount
+            : res.data.filter((n) => !n.is_read).length
+        );
       }
     } catch (e) {
       // Ignore notification fetch error
@@ -78,6 +82,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   useEffect(() => {
     if (isLoggedIn) {
       loadNotifications();
+    } else {
+      setNotificationsList([]);
+      setUnreadNotifCount(0);
     }
   }, [isLoggedIn, user_data?.user_id]);
 
@@ -87,7 +94,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       loadNotifications();
     });
     return () => unsub();
-  }, []);
+  }, [user_data?.user_id]);
 
   const handleEnablePush = async () => {
     const perm = await requestPushPermission(user_data);
@@ -111,6 +118,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
 
   const logout = () => {
     update_user_data({});
+    useChatStore.getState().setUnreadTotal(0);
+    setNotificationsList([]);
+    setUnreadNotifCount(0);
     sessionStorage.clear();
     history.push(Routes.login);
   };
@@ -243,9 +253,9 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
       ? [
           {
             key: 'admin-console',
-            icon: <SafetyCertificateOutlined style={{ color: colors.cobalt }} />,
+            icon: <SafetyCertificateOutlined style={{ color: colors.secondary }} />,
             label: (
-              <span style={{ color: colors.cobalt, fontWeight: 700 }}>
+              <span style={{ color: colors.secondary, fontWeight: 700 }}>
                 Platform Admin Console
               </span>
             ),
@@ -264,6 +274,12 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
   ];
 
   const isOrdersRoute = currentPath === Routes.orders;
+  const isAuthRoute =
+    currentPath === Routes.login || currentPath === Routes.register;
+
+  if (isMobile && isAuthRoute) {
+    return null;
+  }
 
   if (isMobile && isOrdersRoute) {
     return (
@@ -321,7 +337,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     background: '#f8fafc',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
                     Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
                   </span>
                   {unreadNotifCount > 0 && (
@@ -562,7 +578,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     background: '#f8fafc',
                   }}
                 >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.text }}>
+                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
                     Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
                   </span>
                   {unreadNotifCount > 0 && (
@@ -678,7 +694,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
                     size={30}
                     icon={<UserOutlined />}
                     style={{
-                      backgroundColor: isMerchant ? colors.cobalt : colors.primary,
+                      backgroundColor: isMerchant ? colors.secondary : colors.primary,
                     }}
                   />
                   <span className="navbar-username">
@@ -726,7 +742,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             onClick={() => (open ? handleClose() : handleOpen())}
             style={{
               cursor: 'pointer',
-              backgroundColor: isMerchant ? colors.cobalt : colors.primary,
+              backgroundColor: isMerchant ? colors.secondary : colors.primary,
             }}
           />
         )}

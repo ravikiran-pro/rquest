@@ -36,7 +36,7 @@ import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
 import { useLocation } from 'react-router-dom';
 import ManageStore from './manage_store';
-import { radii } from '../../app/styles/theme';
+import { colors, radii, typography, shadows } from '../../app/styles/theme';
 import './client_register.css';
 
 const { Title, Text, Paragraph } = Typography;
@@ -348,624 +348,826 @@ const ClientRegister = () => {
     }
   };
 
-  // If a store is selected, open the ManageStore hub
+  // If a store is selected, open the ManageStore hub inside the warm merchant canvas
   if (managedShop) {
     return (
-      <ManageStore
-        shop={managedShop}
-        allShops={allShops}
-        onSwitchShop={(target) => setManagedShop(target)}
-        onClose={() => setManagedShop(null)}
-        onRefreshShop={fetchAllShops}
-      />
+      <div className="merchant-page-wrapper">
+        <div className="merchant-ambient-dots" />
+        <ManageStore
+          shop={managedShop}
+          allShops={allShops}
+          onSwitchShop={(target) => setManagedShop(target)}
+          onClose={() => setManagedShop(null)}
+          onRefreshShop={fetchAllShops}
+        />
+      </div>
     );
   }
 
   const activeCategoryObj = STORE_CATEGORIES.find((c) => c.id === selectedCategory);
 
   return (
-    <div className="merchant-page-shell">
-      {/* VIEW A: Merchant Outlets Hub (When not onboarding) */}
-      {!isFormEnable && (
-        <div>
-          {/* Header Card */}
-          <Card
-            className="profile-clean-card"
-            styles={{ body: { padding: screens.xs ? '18px 14px' : '22px 24px' } }}
-          >
-            <Flex justify="space-between" align="center" wrap="wrap" gap={14}>
-              <div>
-                <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  Merchant Studio &amp; Outlets
+    <div className="merchant-page-wrapper">
+      <div className="merchant-ambient-dots" />
+      <div className="merchant-page-shell">
+        {/* VIEW A: Merchant Outlets Hub (When not onboarding) */}
+        {!isFormEnable && (
+          <div>
+            {/* Header Card */}
+            <Card
+              className="merchant-clean-card"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: radii.xl,
+                boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
+                marginBottom: 20,
+              }}
+              styles={{ body: { padding: screens.xs ? '18px 14px' : '22px 24px' } }}
+            >
+              <Flex justify="space-between" align="center" wrap="wrap" gap={14}>
+                <div>
+                  <Title
+                    level={3}
+                    style={{
+                      margin: 0,
+                      fontWeight: 800,
+                      color: colors.textMain,
+                      fontFamily: typography.fontFamily.headline,
+                      letterSpacing: '-0.02em',
+                    }}
+                  >
+                    Merchant Studio &amp; Outlets
+                  </Title>
+                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 4, display: 'block' }}>
+                    Manage your direct stores ({allShops.length} active), live customer orders &amp; catalog.
+                  </Text>
+                </div>
+
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => {
+                    setIsFormEnable(true);
+                    setCurrentStep(0);
+                  }}
+                  style={{
+                    borderRadius: radii.md,
+                    fontWeight: 700,
+                    background: colors.primary,
+                    borderColor: colors.primary,
+                    boxShadow: shadows.primary,
+                    height: 42,
+                    padding: '0 20px',
+                  }}
+                >
+                  + Register New Outlet
+                </Button>
+              </Flex>
+            </Card>
+
+            {/* Outlets Grid */}
+            {loadingShops ? (
+              <Flex justify="center" align="center" style={{ minHeight: '30vh' }}>
+                <Spin size="large" tip="Loading Your Stores..." />
+              </Flex>
+            ) : allShops.length === 0 ? (
+              <Card
+                className="merchant-clean-card"
+                style={{
+                  textAlign: 'center',
+                  background: colors.surface,
+                  border: `1px solid ${colors.border}`,
+                  borderRadius: radii.xl,
+                  boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
+                }}
+                styles={{ body: { padding: screens.xs ? '32px 16px' : '48px 24px' } }}
+              >
+                <div
+                  style={{
+                    width: 54,
+                    height: 54,
+                    borderRadius: radii.lg,
+                    background: colors.surfaceContainerLow,
+                    border: `1px solid ${colors.border}`,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: 24,
+                    color: colors.primary,
+                    marginBottom: 16,
+                  }}
+                >
+                  <ShopOutlined />
+                </div>
+                <Title
+                  level={4}
+                  style={{
+                    color: colors.textMain,
+                    fontWeight: 800,
+                    fontFamily: typography.fontFamily.headline,
+                    letterSpacing: '-0.02em',
+                    marginBottom: 8,
+                  }}
+                >
+                  No Stores Registered Yet
                 </Title>
-                <Text type="secondary" style={{ fontSize: 13 }}>
-                  Manage your direct stores ({allShops.length} active), live customer orders &amp; catalog.
+                <Paragraph
+                  style={{
+                    fontSize: 13,
+                    color: colors.textMuted,
+                    maxWidth: 440,
+                    margin: '0 auto 20px',
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Put your store in front of nearby customers. List your products, receive orders and connect directly with your neighbourhood.
+                </Paragraph>
+                <Button
+                  type="primary"
+                  size="large"
+                  onClick={() => setIsFormEnable(true)}
+                  style={{
+                    borderRadius: radii.md,
+                    fontWeight: 700,
+                    background: colors.primary,
+                    borderColor: colors.primary,
+                    boxShadow: shadows.primary,
+                    height: 42,
+                    padding: '0 22px',
+                  }}
+                >
+                  Start Storefront Setup
+                </Button>
+              </Card>
+            ) : (
+              <Row gutter={screens.xs ? [12, 12] : [16, 16]}>
+                {allShops.map((shop) => (
+                  <Col xs={24} sm={12} md={8} key={shop.id}>
+                    <Card
+                      hoverable
+                      className="merchant-outlet-card"
+                      style={{
+                        background: colors.surface,
+                        border: `1px solid ${colors.border}`,
+                        borderRadius: radii.lg,
+                        boxShadow: shadows.card,
+                      }}
+                      styles={{ body: { padding: '16px' } }}
+                    >
+                      <Flex gap={12} align="start" style={{ marginBottom: 12 }}>
+                        <img
+                          src={shop.img_url || STORE_CATEGORIES[0].defaultImage}
+                          alt={shop.shop_name}
+                          style={{
+                            width: 60,
+                            height: 60,
+                            borderRadius: radii.md,
+                            objectFit: 'cover',
+                            flexShrink: 0,
+                            border: `1px solid ${colors.border}`,
+                          }}
+                        />
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <Title
+                            level={5}
+                            ellipsis
+                            style={{
+                              margin: 0,
+                              fontWeight: 700,
+                              color: colors.textMain,
+                              fontFamily: typography.fontFamily.headline,
+                            }}
+                          >
+                            {shop.shop_name}
+                          </Title>
+                          <Tag
+                            style={{
+                              marginTop: 4,
+                              fontSize: 11,
+                              borderRadius: radii.xs,
+                              background: colors.serviceChipBg,
+                              color: colors.serviceChipText,
+                              border: `1px solid ${colors.serviceChipBorder}`,
+                              fontWeight: 600,
+                            }}
+                          >
+                            {shop.shop_type || 'Store Outlet'}
+                          </Tag>
+                          <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                            <EnvironmentOutlined style={{ color: colors.secondary, marginRight: 4 }} />
+                            {shop.area || 'Local Outlet'}
+                          </div>
+                        </div>
+                      </Flex>
+
+                      <Paragraph
+                        ellipsis={{ rows: 2 }}
+                        style={{
+                          fontSize: 12,
+                          color: colors.textMuted,
+                          marginBottom: 14,
+                          minHeight: 36,
+                          lineHeight: 1.45,
+                        }}
+                      >
+                        {shop.address || 'Address not set'}
+                      </Paragraph>
+
+                      <Button
+                        type="primary"
+                        block
+                        icon={<EditOutlined />}
+                        onClick={() => setManagedShop(shop)}
+                        style={{
+                          borderRadius: radii.md,
+                          fontWeight: 700,
+                          height: 38,
+                          background: colors.primary,
+                          borderColor: colors.primary,
+                          boxShadow: shadows.primary,
+                        }}
+                      >
+                        Open Store Studio
+                      </Button>
+                    </Card>
+                  </Col>
+                ))}
+              </Row>
+            )}
+          </div>
+        )}
+
+        {/* VIEW B: Interactive Guided Store Onboarding Wizard */}
+        {isFormEnable && (
+          <div style={{ maxWidth: 740, margin: '0 auto' }}>
+            {allShops.length > 0 && (
+              <Button
+                type="text"
+                icon={<ArrowLeftOutlined />}
+                onClick={() => setIsFormEnable(false)}
+                style={{
+                  marginBottom: 14,
+                  fontWeight: 600,
+                  color: colors.textMuted,
+                  paddingLeft: 0,
+                }}
+              >
+                Back to Merchant Studio
+              </Button>
+            )}
+
+            <Card
+              className="merchant-clean-card"
+              style={{
+                background: colors.surface,
+                border: `1px solid ${colors.border}`,
+                borderRadius: radii.xl,
+                boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
+              }}
+              styles={{ body: { padding: screens.xs ? '18px 14px' : '26px 28px' } }}
+            >
+              {/* Header */}
+              <div style={{ textAlign: 'center', marginBottom: 20 }}>
+                <Title
+                  level={3}
+                  style={{
+                    margin: 0,
+                    fontWeight: 800,
+                    color: colors.textMain,
+                    fontFamily: typography.fontFamily.headline,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  Storefront Registration
+                </Title>
+                <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 4, display: 'inline-block' }}>
+                  Step {currentStep + 1} of 4 • {
+                    currentStep === 0
+                      ? 'Business Details'
+                      : currentStep === 1
+                      ? 'Store Location'
+                      : currentStep === 2
+                      ? 'Fulfillment & Payments'
+                      : 'Review & Launch'
+                  }
                 </Text>
               </div>
 
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => {
-                  setIsFormEnable(true);
-                  setCurrentStep(0);
-                }}
-                style={{
-                  borderRadius: 10,
-                  fontWeight: 700,
-                  background: '#0B2D6B',
-                  borderColor: '#0B2D6B',
-                  height: 42,
-                }}
-              >
-                + Register New Outlet
-              </Button>
-            </Flex>
-          </Card>
+              {/* Mobile-Friendly Step Dots Indicator */}
+              <div className="store-step-indicator">
+                {[0, 1, 2, 3].map((stepIdx) => (
+                  <div
+                    key={stepIdx}
+                    className={`store-step-dot ${
+                      currentStep === stepIdx
+                        ? 'active'
+                        : currentStep > stepIdx
+                        ? 'completed'
+                        : ''
+                    }`}
+                  />
+                ))}
+              </div>
 
-          {/* Outlets Grid */}
-          {loadingShops ? (
-            <Flex justify="center" align="center" style={{ minHeight: '30vh' }}>
-              <Spin size="large" tip="Loading Your Stores..." />
-            </Flex>
-          ) : allShops.length === 0 ? (
-            <Card
-              className="profile-clean-card"
-              style={{ textAlign: 'center', padding: screens.xs ? '30px 16px' : '50px 20px' }}
-            >
-              <Title level={4} style={{ color: '#1C1C19', fontWeight: 800, fontFamily: 'var(--font-headline)' }}>
-                No Stores Registered Yet
-              </Title>
-              <Paragraph type="secondary" style={{ fontSize: 13, maxWidth: 440, margin: '0 auto 20px' }}>
-                Put your store in front of nearby customers. List your products, receive orders and connect directly with your neighbourhood.
-              </Paragraph>
-              <Button
-                type="primary"
-                size="large"
-                onClick={() => setIsFormEnable(true)}
-                style={{
-                  borderRadius: 10,
-                  fontWeight: 700,
-                  background: '#0B2D6B',
-                  borderColor: '#0B2D6B',
-                  height: 42,
-                }}
-              >
-                Start Storefront Setup
-              </Button>
-            </Card>
-          ) : (
-            <Row gutter={screens.xs ? [12, 12] : [16, 16]}>
-              {allShops.map((shop) => (
-                <Col xs={24} sm={12} md={8} key={shop.id}>
-                  <Card
-                    hoverable
-                    className="profile-clean-card"
-                    styles={{ body: { padding: '16px' } }}
+              {/* STEP 0: Business Category & Identity */}
+              {currentStep === 0 && (
+                <div>
+                  <Title
+                    level={5}
+                    style={{
+                      marginBottom: 4,
+                      fontWeight: 700,
+                      color: colors.textMain,
+                      fontFamily: typography.fontFamily.headline,
+                    }}
                   >
-                    <Flex gap={12} align="start" style={{ marginBottom: 12 }}>
+                    1. Choose Your Business Category
+                  </Title>
+                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 14, color: colors.textMuted }}>
+                    Select the category that best describes what you sell.
+                  </Text>
+
+                  <div className="store-category-grid">
+                    {STORE_CATEGORIES.map((cat) => {
+                      const isSelected = selectedCategory === cat.id;
+                      return (
+                        <div
+                          key={cat.id}
+                          onClick={() => handleSelectCategory(cat.id)}
+                          className={`store-category-card ${isSelected ? 'selected' : ''}`}
+                        >
+                          <div className="store-category-icon">{cat.icon}</div>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div className="store-category-title">{cat.title}</div>
+                            <div className="store-category-desc">{cat.desc}</div>
+                          </div>
+                          {isSelected && <CheckOutlined style={{ color: colors.primary, fontSize: 13, fontWeight: 700 }} />}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <Form layout="vertical">
+                    <Form.Item
+                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Store / Outlet Name</span>}
+                      required
+                      style={{ marginBottom: 14 }}
+                    >
+                      <Input
+                        className="merchant-warm-input"
+                        size="large"
+                        placeholder="e.g. City Supermarket, Biryani Pot, HealthPlus Pharmacy"
+                        value={onboardingData.shop_name}
+                        onChange={(e) =>
+                          setOnboardingData({ ...onboardingData, shop_name: e.target.value })
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Orders Phone / WhatsApp Number</span>}
+                      required
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input
+                        className="merchant-warm-input"
+                        size="large"
+                        prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
+                        placeholder="10-digit mobile number for order notifications"
+                        value={onboardingData.mobile_number}
+                        onChange={(e) =>
+                          setOnboardingData({ ...onboardingData, mobile_number: e.target.value })
+                        }
+                      />
+                    </Form.Item>
+                  </Form>
+                </div>
+              )}
+
+              {/* STEP 1: Store Location & Neighborhood */}
+              {currentStep === 1 && (
+                <div>
+                  <Title
+                    level={5}
+                    style={{
+                      marginBottom: 4,
+                      fontWeight: 700,
+                      color: colors.textMain,
+                      fontFamily: typography.fontFamily.headline,
+                    }}
+                  >
+                    2. Store Physical Location
+                  </Title>
+                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
+                    Pin your shop on the map so nearby shoppers can find you within 1–5 km.
+                  </Text>
+
+                  {/* 1-Tap GPS Detection Box */}
+                  <div
+                    style={{
+                      background: colors.surfaceContainerLow,
+                      padding: '14px 16px',
+                      borderRadius: radii.lg,
+                      border: `1px solid ${colors.border}`,
+                      marginBottom: 16,
+                    }}
+                  >
+                    <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
+                      <div>
+                        <div style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
+                          <EnvironmentOutlined style={{ color: colors.primary, marginRight: 6 }} /> Store GPS Coordinates
+                        </div>
+                        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
+                          Lat: {position[0]?.toFixed(4)}, Lon: {position[1]?.toFixed(4)}
+                        </div>
+                      </div>
+                      <Flex gap={8}>
+                        <Button
+                          size="small"
+                          icon={<AimOutlined />}
+                          loading={detectingGps}
+                          onClick={handleAutoDetectGps}
+                          style={{
+                            borderRadius: radii.sm,
+                            fontWeight: 600,
+                            fontSize: 12,
+                            borderColor: colors.border,
+                            color: colors.textMain,
+                          }}
+                        >
+                          Auto-Detect GPS
+                        </Button>
+                        <Button
+                          size="small"
+                          type="primary"
+                          ghost
+                          onClick={() => setIsMapModalVisible(true)}
+                          style={{
+                            borderRadius: radii.sm,
+                            fontWeight: 600,
+                            fontSize: 12,
+                            borderColor: colors.primary,
+                            color: colors.primary,
+                          }}
+                        >
+                          Adjust Pin
+                        </Button>
+                      </Flex>
+                    </Flex>
+                  </div>
+
+                  <Form layout="vertical">
+                    <Form.Item
+                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Street Address</span>}
+                      required
+                      style={{ marginBottom: 14 }}
+                    >
+                      <Input
+                        className="merchant-warm-input"
+                        size="large"
+                        placeholder="e.g. 24/A Perambur Barracks Road"
+                        value={onboardingData.address}
+                        onChange={(e) =>
+                          setOnboardingData({ ...onboardingData, address: e.target.value })
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Locality / Neighborhood</span>}
+                      required
+                      style={{ marginBottom: 14 }}
+                    >
+                      <Input
+                        className="merchant-warm-input"
+                        size="large"
+                        placeholder="e.g. Indiranagar, Anna Nagar, HSR Layout"
+                        value={onboardingData.area}
+                        onChange={(e) =>
+                          setOnboardingData({ ...onboardingData, area: e.target.value })
+                        }
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Google Maps Link (Optional)</span>}
+                      style={{ marginBottom: 0 }}
+                    >
+                      <Input
+                        className="merchant-warm-input"
+                        placeholder="https://maps.app.goo.gl/..."
+                        value={onboardingData.directions}
+                        onChange={(e) =>
+                          setOnboardingData({ ...onboardingData, directions: e.target.value })
+                        }
+                      />
+                    </Form.Item>
+                  </Form>
+                </div>
+              )}
+
+              {/* STEP 2: Fulfillment & Payments */}
+              {currentStep === 2 && (
+                <div>
+                  <Title
+                    level={5}
+                    style={{
+                      marginBottom: 4,
+                      fontWeight: 700,
+                      color: colors.textMain,
+                      fontFamily: typography.fontFamily.headline,
+                    }}
+                  >
+                    3. Fulfillment &amp; Payments
+                  </Title>
+                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
+                    Choose how neighborhood customers will order and pay.
+                  </Text>
+
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: colors.textMain }}>
+                      Order Fulfillment Options
+                    </label>
+                    <div className="toggle-option-grid">
+                      <div
+                        onClick={() => handleToggleFulfillment('pickup')}
+                        className={`toggle-option-card ${
+                          onboardingData.fulfillment_modes.includes('pickup') ? 'active' : ''
+                        }`}
+                      >
+                        <div>
+                          <div className="toggle-option-title">Store Pickup</div>
+                          <div className="toggle-option-desc">Customers collect orders at your counter</div>
+                        </div>
+                        {onboardingData.fulfillment_modes.includes('pickup') && (
+                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
+                        )}
+                      </div>
+
+                      <div
+                        onClick={() => handleToggleFulfillment('delivery')}
+                        className={`toggle-option-card ${
+                          onboardingData.fulfillment_modes.includes('delivery') ? 'active' : ''
+                        }`}
+                      >
+                        <div>
+                          <div className="toggle-option-title">Local Delivery</div>
+                          <div className="toggle-option-desc">Direct neighborhood delivery dispatch</div>
+                        </div>
+                        {onboardingData.fulfillment_modes.includes('delivery') && (
+                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div style={{ marginBottom: 18 }}>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: colors.textMain }}>
+                      Accepted Payment Methods
+                    </label>
+                    <div className="toggle-option-grid">
+                      <div
+                        onClick={() => handleTogglePayment('direct_upi')}
+                        className={`toggle-option-card ${
+                          onboardingData.payment_modes.includes('direct_upi') ? 'active' : ''
+                        }`}
+                      >
+                        <div>
+                          <div className="toggle-option-title">Direct UPI / QR (0% Fee)</div>
+                          <div className="toggle-option-desc">PhonePe, GPay, Paytm direct to your bank</div>
+                        </div>
+                        {onboardingData.payment_modes.includes('direct_upi') && (
+                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
+                        )}
+                      </div>
+
+                      <div
+                        onClick={() => handleTogglePayment('cod')}
+                        className={`toggle-option-card ${
+                          onboardingData.payment_modes.includes('cod') ? 'active' : ''
+                        }`}
+                      >
+                        <div>
+                          <div className="toggle-option-title">Cash on Delivery / Counter</div>
+                          <div className="toggle-option-desc">Pay cash when collecting or receiving</div>
+                        </div>
+                        {onboardingData.payment_modes.includes('cod') && (
+                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6, color: colors.textMain }}>
+                      Store Cover Photo URL (Optional)
+                    </label>
+                    <Input
+                      className="merchant-warm-input"
+                      placeholder="https://images.unsplash.com/..."
+                      value={onboardingData.img_url}
+                      onChange={(e) =>
+                        setOnboardingData({ ...onboardingData, img_url: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: Review & Launch */}
+              {currentStep === 3 && (
+                <div>
+                  <Title
+                    level={5}
+                    style={{
+                      marginBottom: 4,
+                      fontWeight: 700,
+                      color: colors.textMain,
+                      fontFamily: typography.fontFamily.headline,
+                    }}
+                  >
+                    4. Review Storefront
+                  </Title>
+                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
+                    Preview how your outlet card will appear to nearby customers.
+                  </Text>
+
+                  {/* Live Storefront Card Preview */}
+                  <div className="store-preview-card">
+                    <Flex gap={12} align="start">
                       <img
-                        src={shop.img_url || STORE_CATEGORIES[0].defaultImage}
-                        alt={shop.shop_name}
+                        src={onboardingData.img_url}
+                        alt="Store Cover"
+                        className="store-preview-media"
                         style={{
-                          width: 60,
-                          height: 60,
-                          borderRadius: 10,
+                          width: 72,
+                          height: 72,
+                          borderRadius: radii.md,
                           objectFit: 'cover',
                           flexShrink: 0,
-                          border: '1px solid #EAE4DA',
+                          border: `1px solid ${colors.border}`,
                         }}
                       />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <Title level={5} ellipsis style={{ margin: 0, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                          {shop.shop_name}
+                        <Title
+                          level={5}
+                          style={{
+                            margin: 0,
+                            fontWeight: 800,
+                            color: colors.textMain,
+                            fontFamily: typography.fontFamily.headline,
+                          }}
+                        >
+                          {onboardingData.shop_name || 'My Local Store'}
                         </Title>
                         <Tag
                           style={{
                             marginTop: 4,
                             fontSize: 11,
-                            borderRadius: 6,
-                            background: '#FAF7F2',
-                            color: '#5B3A29',
-                            border: '1px solid #EAE4DA',
-                            fontWeight: 600,
+                            borderRadius: radii.xs,
+                            background: colors.verifiedChipBg,
+                            color: colors.verifiedChipText,
+                            border: `1px solid ${colors.verifiedChipBorder}`,
+                            fontWeight: 700,
                           }}
                         >
-                          {shop.shop_type || 'Store Outlet'}
+                          {activeCategoryObj?.title}
                         </Tag>
-                        <div style={{ fontSize: 12, color: '#5C5E66', marginTop: 4 }}>
-                          <EnvironmentOutlined /> {shop.area || 'Local Outlet'}
+                        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                          <EnvironmentOutlined style={{ color: colors.secondary, marginRight: 4 }} />
+                          {onboardingData.address || 'Address'}, {onboardingData.area || 'Neighborhood'}
+                        </div>
+                        <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 600, marginTop: 4 }}>
+                          Direct Orders • Contact: {onboardingData.mobile_number}
                         </div>
                       </div>
                     </Flex>
-
-                    <Paragraph
-                      type="secondary"
-                      ellipsis={{ rows: 2 }}
-                      style={{ fontSize: 12, marginBottom: 14, minHeight: 36 }}
-                    >
-                      {shop.address || 'Address not set'}
-                    </Paragraph>
-
-                    <Button
-                      type="primary"
-                      block
-                      icon={<EditOutlined />}
-                      onClick={() => setManagedShop(shop)}
-                      style={{
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        height: 38,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
-                      }}
-                    >
-                      Open Store Studio
-                    </Button>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          )}
-        </div>
-      )}
-
-      {/* VIEW B: Interactive Guided Store Onboarding Wizard */}
-      {isFormEnable && (
-        <div style={{ maxWidth: 740, margin: '0 auto' }}>
-          {allShops.length > 0 && (
-            <Button
-              type="text"
-              icon={<ArrowLeftOutlined />}
-              onClick={() => setIsFormEnable(false)}
-              style={{ marginBottom: 14, fontWeight: 600, color: '#5C5E66' }}
-            >
-              Back to Merchant Studio
-            </Button>
-          )}
-
-          <Card
-            className="profile-clean-card"
-            styles={{ body: { padding: screens.xs ? '18px 14px' : '26px 28px' } }}
-          >
-            {/* Header */}
-            <div style={{ textAlign: 'center', marginBottom: 20 }}>
-              <Title level={3} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                Storefront Registration
-              </Title>
-              <Text type="secondary" style={{ fontSize: 13 }}>
-                Step {currentStep + 1} of 4 • {
-                  currentStep === 0
-                    ? 'Business Details'
-                    : currentStep === 1
-                    ? 'Store Location'
-                    : currentStep === 2
-                    ? 'Fulfillment & Payments'
-                    : 'Review & Launch'
-                }
-              </Text>
-            </div>
-
-            {/* Mobile-Friendly Step Dots Indicator */}
-            <div className="store-step-indicator">
-              {[0, 1, 2, 3].map((stepIdx) => (
-                <div
-                  key={stepIdx}
-                  className={`store-step-dot ${
-                    currentStep === stepIdx
-                      ? 'active'
-                      : currentStep > stepIdx
-                      ? 'completed'
-                      : ''
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* STEP 0: Business Category & Identity */}
-            {currentStep === 0 && (
-              <div>
-                <Title level={5} style={{ marginBottom: 8, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  1. Choose Your Business Category
-                </Title>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 14 }}>
-                  Select the category that best describes what you sell.
-                </Text>
-
-                <div className="store-category-grid">
-                  {STORE_CATEGORIES.map((cat) => {
-                    const isSelected = selectedCategory === cat.id;
-                    return (
-                      <div
-                        key={cat.id}
-                        onClick={() => handleSelectCategory(cat.id)}
-                        className={`store-category-card ${isSelected ? 'selected' : ''}`}
-                      >
-                        <div className="store-category-icon">{cat.icon}</div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <div className="store-category-title">{cat.title}</div>
-                          <div className="store-category-desc">{cat.desc}</div>
-                        </div>
-                        {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                <Form layout="vertical">
-                  <Form.Item label="Store / Outlet Name" required style={{ marginBottom: 14 }}>
-                    <Input
-                      size="large"
-                      placeholder="e.g. City Supermarket, Biryani Pot, HealthPlus Pharmacy"
-                      value={onboardingData.shop_name}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, shop_name: e.target.value })
-                      }
-                      style={{ borderRadius: 10 }}
-                    />
-                  </Form.Item>
-
-                  <Form.Item label="Orders Phone / WhatsApp Number" required style={{ marginBottom: 0 }}>
-                    <Input
-                      size="large"
-                      prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
-                      placeholder="10-digit mobile number for order notifications"
-                      value={onboardingData.mobile_number}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, mobile_number: e.target.value })
-                      }
-                      style={{ borderRadius: 10 }}
-                    />
-                  </Form.Item>
-                </Form>
-              </div>
-            )}
-
-            {/* STEP 1: Store Location & Neighborhood */}
-            {currentStep === 1 && (
-              <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  2. Store Physical Location
-                </Title>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
-                  Pin your shop on the map so nearby shoppers can find you within 1–5 km.
-                </Text>
-
-                {/* 1-Tap GPS Detection Box */}
-                <div
-                  style={{
-                    background: '#FAF7F2',
-                    padding: '14px 16px',
-                    borderRadius: 12,
-                    border: '1px solid #EAE4DA',
-                    marginBottom: 16,
-                  }}
-                >
-                  <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: 13, color: '#1C1C19' }}>
-                        <EnvironmentOutlined style={{ color: '#0B2D6B' }} /> Store GPS Coordinates
-                      </div>
-                      <div style={{ fontSize: 12, color: '#64748b' }}>
-                        Lat: {position[0]?.toFixed(4)}, Lon: {position[1]?.toFixed(4)}
-                      </div>
-                    </div>
-                    <Flex gap={8}>
-                      <Button
-                        size="small"
-                        icon={<AimOutlined />}
-                        loading={detectingGps}
-                        onClick={handleAutoDetectGps}
-                        style={{ borderRadius: 6, fontWeight: 600, fontSize: 12 }}
-                      >
-                        Auto-Detect GPS
-                      </Button>
-                      <Button
-                        size="small"
-                        type="primary"
-                        ghost
-                        onClick={() => setIsMapModalVisible(true)}
-                        style={{ borderRadius: 6, fontWeight: 600, fontSize: 12 }}
-                      >
-                        Adjust Pin
-                      </Button>
-                    </Flex>
-                  </Flex>
-                </div>
-
-                <Form layout="vertical">
-                  <Form.Item label="Street Address" required style={{ marginBottom: 14 }}>
-                    <Input
-                      size="large"
-                      placeholder="e.g. 24/A Perambur Barracks Road"
-                      value={onboardingData.address}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, address: e.target.value })
-                      }
-                      style={{ borderRadius: 8 }}
-                    />
-                  </Form.Item>
-
-                  <Form.Item label="Locality / Neighborhood" required style={{ marginBottom: 14 }}>
-                    <Input
-                      size="large"
-                      placeholder="e.g. Indiranagar, Anna Nagar, HSR Layout"
-                      value={onboardingData.area}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, area: e.target.value })
-                      }
-                      style={{ borderRadius: 8 }}
-                    />
-                  </Form.Item>
-
-                  <Form.Item label="Google Maps Link (Optional)" style={{ marginBottom: 0 }}>
-                    <Input
-                      placeholder="https://maps.app.goo.gl/..."
-                      value={onboardingData.directions}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, directions: e.target.value })
-                      }
-                      style={{ borderRadius: 8 }}
-                    />
-                  </Form.Item>
-                </Form>
-              </div>
-            )}
-
-            {/* STEP 2: Fulfillment & Payments */}
-            {currentStep === 2 && (
-              <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  3. Fulfillment &amp; Payments
-                </Title>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
-                  Choose how neighborhood customers will order and pay.
-                </Text>
-
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1C1C19' }}>
-                    Order Fulfillment Options
-                  </label>
-                  <div className="toggle-option-grid">
-                    <div
-                      onClick={() => handleToggleFulfillment('pickup')}
-                      className={`toggle-option-card ${
-                        onboardingData.fulfillment_modes.includes('pickup') ? 'active' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="toggle-option-title">Store Pickup</div>
-                        <div className="toggle-option-desc">Customers collect orders at your counter</div>
-                      </div>
-                      {onboardingData.fulfillment_modes.includes('pickup') && (
-                        <CheckOutlined style={{ color: '#0B2D6B' }} />
-                      )}
-                    </div>
-
-                    <div
-                      onClick={() => handleToggleFulfillment('delivery')}
-                      className={`toggle-option-card ${
-                        onboardingData.fulfillment_modes.includes('delivery') ? 'active' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="toggle-option-title">Local Delivery</div>
-                        <div className="toggle-option-desc">Direct neighborhood delivery dispatch</div>
-                      </div>
-                      {onboardingData.fulfillment_modes.includes('delivery') && (
-                        <CheckOutlined style={{ color: '#0B2D6B' }} />
-                      )}
-                    </div>
                   </div>
-                </div>
 
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: '#1C1C19' }}>
-                    Accepted Payment Methods
-                  </label>
-                  <div className="toggle-option-grid">
-                    <div
-                      onClick={() => handleTogglePayment('direct_upi')}
-                      className={`toggle-option-card ${
-                        onboardingData.payment_modes.includes('direct_upi') ? 'active' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="toggle-option-title">Direct UPI / QR (0% Fee)</div>
-                        <div className="toggle-option-desc">PhonePe, GPay, Paytm direct to your bank</div>
-                      </div>
-                      {onboardingData.payment_modes.includes('direct_upi') && (
-                        <CheckOutlined style={{ color: '#0B2D6B' }} />
-                      )}
-                    </div>
-
-                    <div
-                      onClick={() => handleTogglePayment('cod')}
-                      className={`toggle-option-card ${
-                        onboardingData.payment_modes.includes('cod') ? 'active' : ''
-                      }`}
-                    >
-                      <div>
-                        <div className="toggle-option-title">Cash on Delivery / Counter</div>
-                        <div className="toggle-option-desc">Pay cash when collecting or receiving</div>
-                      </div>
-                      {onboardingData.payment_modes.includes('cod') && (
-                        <CheckOutlined style={{ color: '#0B2D6B' }} />
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6, color: '#1C1C19' }}>
-                    Store Cover Photo URL (Optional)
-                  </label>
-                  <Input
-                    placeholder="https://images.unsplash.com/..."
-                    value={onboardingData.img_url}
-                    onChange={(e) =>
-                      setOnboardingData({ ...onboardingData, img_url: e.target.value })
-                    }
-                    style={{ borderRadius: 10 }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* STEP 3: Review & Launch */}
-            {currentStep === 3 && (
-              <div>
-                <Title level={5} style={{ marginBottom: 4, fontWeight: 700, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  4. Review Storefront
-                </Title>
-                <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 16 }}>
-                  Preview how your outlet card will appear to nearby customers.
-                </Text>
-
-                {/* Live Storefront Card Preview */}
-                <div className="store-preview-card">
-                  <Flex gap={12} align="start">
-                    <img
-                      src={onboardingData.img_url}
-                      alt="Store Cover"
-                      className="store-preview-media"
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <Title level={5} style={{ margin: 0, fontWeight: 800, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                        {onboardingData.shop_name || 'My Local Store'}
-                      </Title>
-                      <Tag
-                        style={{
-                          marginTop: 4,
-                          fontSize: 11,
-                          borderRadius: radii.sm,
-                          background: '#E6EEF9',
-                          color: '#0B2D6B',
-                          border: 'none',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {activeCategoryObj?.title}
-                      </Tag>
-                      <div style={{ fontSize: 12, color: '#5C5E66', marginTop: 4 }}>
-                        <EnvironmentOutlined /> {onboardingData.address || 'Address'}, {onboardingData.area || 'Neighborhood'}
-                      </div>
-                      <div style={{ fontSize: 11, color: '#0E7A43', fontWeight: 600, marginTop: 4 }}>
-                        Direct Orders • Contact: {onboardingData.mobile_number}
-                      </div>
-                    </div>
-                  </Flex>
-                </div>
-
-                {/* Pre-populate Starter Items Checkbox */}
-                <div
-                  style={{
-                    background: '#FAF7F2',
-                    border: '1px solid #EAE4DA',
-                    borderRadius: 12,
-                    padding: '12px 14px',
-                    marginBottom: 16,
-                  }}
-                >
-                  <Checkbox
-                    checked={onboardingData.populate_starters}
-                    onChange={(e) =>
-                      setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })
-                    }
+                  {/* Pre-populate Starter Items Checkbox */}
+                  <div
+                    style={{
+                      background: colors.surfaceContainerLow,
+                      border: `1px solid ${colors.border}`,
+                      borderRadius: radii.lg,
+                      padding: '12px 14px',
+                      marginBottom: 16,
+                    }}
                   >
-                    <span style={{ fontWeight: 600, color: '#1C1C19', fontSize: 13 }}>
-                      Pre-load starter sample catalog ({activeCategoryObj?.starters?.length} items)
-                    </span>
-                  </Checkbox>
-                  <div style={{ fontSize: 11, color: '#5C5E66', marginTop: 3, marginLeft: 24 }}>
-                    Your store launches with realistic catalog items that you can edit anytime.
+                    <Checkbox
+                      checked={onboardingData.populate_starters}
+                      onChange={(e) =>
+                        setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })
+                      }
+                    >
+                      <span style={{ fontWeight: 600, color: colors.textMain, fontSize: 13 }}>
+                        Pre-load starter sample catalog ({activeCategoryObj?.starters?.length} items)
+                      </span>
+                    </Checkbox>
+                    <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 3, marginLeft: 24 }}>
+                      Your store launches with realistic catalog items that you can edit anytime.
+                    </div>
                   </div>
                 </div>
+              )}
+
+              {/* Stepper Navigation */}
+              <div className="store-step-nav">
+                {currentStep > 0 ? (
+                  <Button
+                    onClick={handlePrevStep}
+                    style={{
+                      borderRadius: radii.md,
+                      fontWeight: 600,
+                      borderColor: colors.border,
+                      color: colors.textMain,
+                      height: 40,
+                    }}
+                  >
+                    <ArrowLeftOutlined /> Previous
+                  </Button>
+                ) : (
+                  <div />
+                )}
+
+                {currentStep < 3 ? (
+                  <Button
+                    type="primary"
+                    onClick={handleNextStep}
+                    style={{
+                      borderRadius: radii.md,
+                      fontWeight: 700,
+                      background: colors.primary,
+                      borderColor: colors.primary,
+                      boxShadow: shadows.primary,
+                      padding: '0 24px',
+                      height: 40,
+                    }}
+                  >
+                    Continue <ArrowRightOutlined />
+                  </Button>
+                ) : (
+                  <Button
+                    type="primary"
+                    icon={<RocketOutlined />}
+                    loading={submitting}
+                    onClick={handleFinishOnboarding}
+                    style={{
+                      borderRadius: radii.md,
+                      fontWeight: 700,
+                      background: colors.primary,
+                      borderColor: colors.primary,
+                      boxShadow: shadows.primary,
+                      padding: '0 24px',
+                      height: 40,
+                    }}
+                  >
+                    Launch Storefront &amp; Studio
+                  </Button>
+                )}
               </div>
-            )}
+            </Card>
+          </div>
+        )}
 
-            {/* Stepper Navigation */}
-            <div className="store-step-nav">
-              {currentStep > 0 ? (
-                <Button onClick={handlePrevStep} style={{ borderRadius: 10, fontWeight: 600 }}>
-                  <ArrowLeftOutlined /> Previous
-                </Button>
-              ) : (
-                <div />
-              )}
-
-              {currentStep < 3 ? (
-                <Button
-                  type="primary"
-                  onClick={handleNextStep}
-                  style={{
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    background: '#0B2D6B',
-                    borderColor: '#0B2D6B',
-                    padding: '0 24px',
-                  }}
-                >
-                  Continue <ArrowRightOutlined />
-                </Button>
-              ) : (
-                <Button
-                  type="primary"
-                  icon={<RocketOutlined />}
-                  loading={submitting}
-                  onClick={handleFinishOnboarding}
-                  style={{
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    background: '#0B2D6B',
-                    borderColor: '#0B2D6B',
-                    padding: '0 24px',
-                  }}
-                >
-                  Launch Storefront &amp; Studio
-                </Button>
-              )}
-            </div>
-          </Card>
-        </div>
-      )}
-
-      {/* Full View Map Pin Modal */}
-      <Modal
-        open={isMapModalVisible}
-        onCancel={() => setIsMapModalVisible(false)}
-        footer={null}
-        width="100vw"
-        wrapClassName="full-view-map-modal"
-        closable={false}
-        style={{
-          top: 0,
-          left: 0,
-          margin: 0,
-          padding: 0,
-          maxWidth: '100vw',
-          height: '100vh',
-        }}
-        styles={{
-          body: {
-            height: '100vh',
-            padding: 0,
+        {/* Full View Map Pin Modal */}
+        <Modal
+          open={isMapModalVisible}
+          onCancel={() => setIsMapModalVisible(false)}
+          footer={null}
+          width="100vw"
+          wrapClassName="full-view-map-modal"
+          closable={false}
+          style={{
+            top: 0,
+            left: 0,
             margin: 0,
-            overflow: 'hidden',
-          },
-        }}
-      >
-        <LeafletComponent
-          isModalVisible={isMapModalVisible}
-          markerLocation={position}
-          setMarkerLocation={setPosition}
-          updateMarker={(marker) => setPosition(marker)}
-          searchMarkers={null}
-          position={position}
-          setPosition={setPosition}
-          onClose={() => setIsMapModalVisible(false)}
-        />
-      </Modal>
+            padding: 0,
+            maxWidth: '100vw',
+            height: '100vh',
+          }}
+          styles={{
+            body: {
+              height: '100vh',
+              padding: 0,
+              margin: 0,
+              overflow: 'hidden',
+            },
+          }}
+        >
+          <LeafletComponent
+            isModalVisible={isMapModalVisible}
+            markerLocation={position}
+            setMarkerLocation={setPosition}
+            updateMarker={(marker) => setPosition(marker)}
+            searchMarkers={null}
+            position={position}
+            setPosition={setPosition}
+            onClose={() => setIsMapModalVisible(false)}
+          />
+        </Modal>
+      </div>
     </div>
   );
 };
