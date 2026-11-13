@@ -11,4 +11,5 @@ dev-dist
 backups/
 *.sql
 docs/
+mmux*
 .agents/
