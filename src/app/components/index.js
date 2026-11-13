@@ -10,3 +10,4 @@ export * from './profile';
 export { default as ErrorBoundary } from './common/ErrorBoundary';
 export * from './filters';
 export * from './search';
+export * from './motion';

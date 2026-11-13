@@ -48,6 +48,14 @@ import {
   AiSearchModal,
   OfferingCard,
   FilterSidebar,
+  KineticHeadline,
+  ShopperCursors,
+  FloatingArtifacts,
+  LivingRadarMap,
+  TiltCard,
+  CategoryStall,
+  NightShiftSection,
+  LiveDashboardMock,
 } from '../../app/components';
 import {
   getLocationName,
@@ -744,6 +752,12 @@ const HomeScreen = () => {
         <div className="hero-blob-lime-right" />
         <div className="hero-blob-lavender-left" />
 
+        {/* Floating Ambient Neighborhood Artifacts with Parallax & Hover */}
+        <FloatingArtifacts onSelectCategory={handleQuickCategory} />
+
+        {/* Ambient Real-Time Shopper Presence Cursors */}
+        <ShopperCursors />
+
         <div style={{ maxWidth: 1240, margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <Row gutter={isMobile ? [0, 32] : [40, 24]} align="middle">
             {/* Left Column: Eyebrow badge, Title, Subtitle, Search bar, Trust, Quick chips */}
@@ -756,37 +770,8 @@ const HomeScreen = () => {
                 </span>
               </div>
 
-              {/* Bold Sans-Serif Heading with Electric Lime Highlight & Purple Spark Burst */}
-              <h1
-                style={{
-                  fontSize: isMobile ? 38 : 58,
-                  fontWeight: 800,
-                  color: '#110E28',
-                  lineHeight: 1.12,
-                  letterSpacing: '-0.03em',
-                  margin: '0 0 18px',
-                  fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
-                }}
-              >
-                Shops near you,
-                <br />
-                <span className="hero-lime-highlight">open right now.</span>
-                {/* 3 Radiating Hand-Drawn Purple Spark Strokes with Gentle Pulse Animation */}
-                <span
-                  className="hero-spark-container"
-                  style={{
-                    position: 'relative',
-                    top: isMobile ? -2 : -6,
-                    marginLeft: 10,
-                  }}
-                >
-                  <svg width={isMobile ? 36 : 46} height={isMobile ? 32 : 40} viewBox="0 0 46 40" fill="none">
-                    <path className="spark-line-1" d="M4 36 L15 10" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
-                    <path className="spark-line-2" d="M17 37 L36 21" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
-                    <path className="spark-line-3" d="M23 38 L42 33" stroke="#7C3AED" strokeWidth="4.5" strokeLinecap="round" />
-                  </svg>
-                </span>
-              </h1>
+              {/* Dynamic Living Headline with Kinetic Typewriter, Lime Highlight & Spark Bursts */}
+              <KineticHeadline isMobile={isMobile} />
 
               {/* Subtitle */}
               <p
@@ -1041,7 +1026,7 @@ const HomeScreen = () => {
               </div>
             </Col>
 
-            {/* Right Column: Interactive Visual Map Preview Card with Subtle Levitation */}
+            {/* Right Column: Living Interactive Animated Radar Map */}
             <Col xs={24} lg={11}>
               <div
                 style={{
@@ -1050,62 +1035,7 @@ const HomeScreen = () => {
                   margin: '0 auto',
                 }}
               >
-                <div
-                  className="hero-map-card-wrapper"
-                  style={{
-                    position: 'relative',
-                    borderRadius: 28,
-                    border: '1px solid #ECE7DF',
-                    background: '#FFFFFF',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {/* Map visual canvas */}
-                  <div style={{ position: 'relative', width: '100%', overflow: 'hidden' }}>
-                    <img
-                      src="/images/home_map_hero.png"
-                      alt="Neighborhood Commerce Map"
-                      style={{
-                        width: '100%',
-                        height: 'auto',
-                        display: 'block',
-                      }}
-                    />
-
-                    {/* Multi-Ring Pulsating Radar Beacon over user location beacon */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '47.6%',
-                        left: '45.5%',
-                        width: 1,
-                        height: 1,
-                        pointerEvents: 'none',
-                      }}
-                    >
-                      <div className="radar-ping-ring" />
-                      <div className="radar-ping-ring radar-ping-ring-delayed" />
-                      <div className="radar-center-dot" />
-                    </div>
-
-                    {/* Clickable interactive hotspot over Sunrise Bakehouse overlay */}
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => handleVisitFeaturedShop('sunrise-bakehouse')}
-                      title="Visit Sunrise Bakehouse"
-                      style={{
-                        position: 'absolute',
-                        bottom: 12,
-                        left: 12,
-                        right: 12,
-                        height: 78,
-                        cursor: 'pointer',
-                        borderRadius: 16,
-                      }}
-                    />
-                  </div>
-                </div>
+                <LivingRadarMap onSelectShop={handleVisitFeaturedShop} />
               </div>
             </Col>
           </Row>
@@ -1200,7 +1130,8 @@ const HomeScreen = () => {
         <Row gutter={[20, 20]} style={{ position: 'relative', zIndex: 1 }}>
           {FEATURED_SHOPS.map((shop, idx) => (
             <Col xs={24} sm={12} lg={6} key={shop.id}>
-              <div className={`shop-card-main reveal-on-scroll reveal-delay-${(idx % 4) + 1}`}>
+              <TiltCard maxTilt={5} scale={1.02}>
+                <div className={`shop-card-main reveal-on-scroll reveal-delay-${(idx % 4) + 1}`} style={{ height: '100%' }}>
                 {/* Image Container with Badges */}
                 <div style={{ position: 'relative', width: '100%', height: 165, overflow: 'hidden' }}>
                   <img
@@ -1355,7 +1286,8 @@ const HomeScreen = () => {
                   </Flex>
                 </div>
               </div>
-            </Col>
+            </TiltCard>
+          </Col>
           ))}
         </Row>
         </div>
@@ -1750,59 +1682,19 @@ const HomeScreen = () => {
           </h2>
         </div>
 
-        {/* 6 Category Cards Grid */}
+        {/* 6 Category Stalls Grid with Micro-Animations */}
         <Row gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
           {CATEGORIES_IN_FOCUS.map((cat, idx) => (
             <Col xs={12} sm={8} lg={4} key={cat.title}>
-              <div
-                className={`category-focus-card category-card-item reveal-on-scroll reveal-delay-${(idx % 6) + 1}`}
-                onClick={() => handleCategoryCardClick(cat.categoryFilter)}
-                role="button"
-                tabIndex={0}
-              >
-                {/* Circle Icon with float effect */}
-                <div
-                  className="category-icon-wrapper"
-                  style={{
-                    width: 52,
-                    height: 52,
-                    borderRadius: '50%',
-                    background: cat.iconBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: 14,
-                  }}
-                >
-                  {cat.icon}
-                </div>
-
-                {/* Category Title */}
-                <div
-                  style={{
-                    fontSize: 13.5,
-                    fontWeight: 700,
-                    color: '#111827',
-                    marginBottom: 8,
-                    lineHeight: 1.3,
-                  }}
-                >
-                  {cat.title}
-                </div>
-
-                {/* Count Pill */}
-                <span
-                  style={{
-                    background: '#F3F4F6',
-                    color: '#6B7280',
-                    borderRadius: 9999,
-                    padding: '2px 8px',
-                    fontSize: 11,
-                    fontWeight: 600,
-                  }}
-                >
-                  {cat.count}
-                </span>
+              <div className={`reveal-on-scroll reveal-delay-${(idx % 6) + 1}`}>
+                <CategoryStall
+                  title={cat.title}
+                  count={cat.count}
+                  icon={cat.icon}
+                  iconBg={cat.iconBg}
+                  iconColor={cat.iconColor}
+                  onClick={() => handleCategoryCardClick(cat.categoryFilter)}
+                />
               </div>
             </Col>
           ))}
@@ -1811,257 +1703,12 @@ const HomeScreen = () => {
       </section>
 
       {/* =========================================================================
-          SECTION 4: NEIGHBORHOOD COMMERCE MADE EFFORTLESS (designs/Main.png)
+          SECTION 4: THE NIGHT SHIFT NOCTURNE (AgentPark-Inspired Cinematic Chapter)
           ========================================================================= */}
-      <section
-        style={{
-          maxWidth: 1240,
-          margin: '0 auto',
-          padding: isMobile ? '0 16px 36px' : '0 24px 56px',
-        }}
-      >
-        <div
-          className="reveal-on-scroll"
-          style={{
-            background: '#F7F3EE',
-            borderRadius: 28,
-            padding: isMobile ? '28px 18px' : '48px 40px',
-            border: '1px solid #ECE7DF',
-          }}
-        >
-          {/* Header */}
-          <div style={{ marginBottom: 32 }}>
-            <div
-              style={{
-                fontSize: 11.5,
-                fontWeight: 800,
-                color: '#0B2D6B',
-                letterSpacing: '0.08em',
-                textTransform: 'uppercase',
-                marginBottom: 6,
-              }}
-            >
-              FAST · HONEST · DIRECT
-            </div>
-            <h2
-              className="font-serif"
-              style={{
-                fontSize: isMobile ? 26 : 34,
-                fontWeight: 700,
-                color: '#111827',
-                margin: '0 0 10px',
-              }}
-            >
-              Neighborhood commerce made effortless
-            </h2>
-            <p
-              style={{
-                fontSize: isMobile ? 14 : 15.5,
-                color: '#4B5563',
-                lineHeight: 1.55,
-                maxWidth: 620,
-                margin: 0,
-              }}
-            >
-              Browse as a guest without friction. Buy directly from authentic brick-and-mortar shopkeepers who know their trade.
-            </p>
-          </div>
-
-          {/* 3 Step Feature Cards with Interactive Visual Illustrations */}
-          <Row gutter={[20, 20]}>
-            {EFFORTLESS_STEPS.map((step, idx) => (
-              <Col xs={24} md={8} key={step.number}>
-                <div
-                  className={`effortless-card reveal-on-scroll reveal-delay-${idx + 1}`}
-                  style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    height: '100%',
-                  }}
-                >
-                  <div>
-                    {/* Number Badge */}
-                    <div
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: 38,
-                        height: 38,
-                        borderRadius: 10,
-                        background: step.numberBg,
-                        color: '#FFFFFF',
-                        fontWeight: 800,
-                        fontSize: 14,
-                        marginBottom: 16,
-                      }}
-                    >
-                      {step.number}
-                    </div>
-
-                    {/* Step Title */}
-                    <h3
-                      style={{
-                        fontSize: 18,
-                        fontWeight: 700,
-                        color: '#111827',
-                        margin: '0 0 8px',
-                        fontFamily: 'Inter, sans-serif',
-                      }}
-                    >
-                      {step.title}
-                    </h3>
-
-                    {/* Description */}
-                    <p
-                      style={{
-                        fontSize: 13,
-                        color: '#4B5563',
-                        lineHeight: 1.5,
-                        margin: '0 0 14px',
-                      }}
-                    >
-                      {step.description}
-                    </p>
-
-                    {/* Rich Interactive Animated Illustration Canvas */}
-                    {step.number === '01' && (
-                      <div
-                        style={{
-                          position: 'relative',
-                          height: 110,
-                          borderRadius: 16,
-                          background: '#FFFFFF',
-                          border: '1px solid #E5E7EB',
-                          margin: '0 0 16px',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        {/* Concentric radar range rings */}
-                        <div style={{ position: 'absolute', width: 96, height: 96, borderRadius: '50%', border: '1px dashed #CBD5E1', pointerEvents: 'none' }} />
-                        <div style={{ position: 'absolute', width: 56, height: 56, borderRadius: '50%', border: '1px solid #E2E8F0', pointerEvents: 'none' }} />
-
-                        {/* Rotating radar sweep beam */}
-                        <div className="radar-sweep-beam" style={{ top: '50%', left: '50%', width: 54, height: 54, marginTop: -27, marginLeft: -27 }} />
-
-                        {/* Center user location pin */}
-                        <div style={{ position: 'relative', zIndex: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                          <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#0B2D6B', boxShadow: '0 0 0 3px #DBEAFE' }} />
-                          <span style={{ fontSize: 9.5, fontWeight: 700, color: '#0B2D6B', marginTop: 3 }}>You</span>
-                        </div>
-
-                        {/* Blip 1: Bakery at top-right */}
-                        <div style={{ position: 'absolute', top: 14, right: 28, zIndex: 2, display: 'flex', alignItems: 'center', gap: 4 }} className="radar-blip-pulse">
-                          <span style={{ fontSize: 13 }}>🥐</span>
-                          <span style={{ fontSize: 9, fontWeight: 700, background: '#EFF6FF', color: '#1E40AF', padding: '1px 5px', borderRadius: 6 }}>0.4 km</span>
-                        </div>
-
-                        {/* Blip 2: Kirana at bottom-left */}
-                        <div style={{ position: 'absolute', bottom: 12, left: 22, zIndex: 2, display: 'flex', alignItems: 'center', gap: 4 }} className="radar-blip-pulse">
-                          <span style={{ fontSize: 13 }}>🛒</span>
-                          <span style={{ fontSize: 9, fontWeight: 700, background: '#DCFCE7', color: '#166534', padding: '1px 5px', borderRadius: 6 }}>0.9 km</span>
-                        </div>
-                      </div>
-                    )}
-
-                    {step.number === '02' && (
-                      <div
-                        style={{
-                          position: 'relative',
-                          height: 110,
-                          borderRadius: 16,
-                          background: '#FFFFFF',
-                          border: '1px solid #E5E7EB',
-                          margin: '0 0 16px',
-                          padding: '10px 12px',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        {/* Customer Bubble */}
-                        <div style={{ alignSelf: 'flex-start', maxWidth: '82%', background: '#F3F4F6', color: '#1F2937', padding: '4px 8px', borderRadius: '10px 10px 10px 2px', fontSize: 11, fontWeight: 500 }}>
-                          Fresh multigrain boule hot right now?
-                        </div>
-
-                        {/* Merchant Reply with Checkmark */}
-                        <div style={{ alignSelf: 'flex-end', maxWidth: '86%', background: '#EFF6FF', color: '#1E40AF', padding: '4px 8px', borderRadius: '10px 10px 2px 10px', fontSize: 11, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
-                          <span>Warm batch out of oven! 🥐</span>
-                          <CheckOutlined style={{ fontSize: 10, color: '#2563EB' }} />
-                        </div>
-
-                        {/* Typing Indicator Bar */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 4, paddingLeft: 2 }}>
-                          <span style={{ fontSize: 9.5, color: '#6B7280', fontWeight: 600 }}>Shopkeeper online</span>
-                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-1" />
-                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-2" />
-                          <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#0159C5' }} className="typing-dot-3" />
-                        </div>
-                      </div>
-                    )}
-
-                    {step.number === '03' && (
-                      <div
-                        style={{
-                          position: 'relative',
-                          height: 110,
-                          borderRadius: 16,
-                          background: '#FFFFFF',
-                          border: '1px solid #E5E7EB',
-                          margin: '0 0 16px',
-                          padding: '10px 12px',
-                          overflow: 'hidden',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-around',
-                        }}
-                      >
-                        {/* Speed Runner Dispatch Pill */}
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                            <span className="delivery-badge-moving" style={{ fontSize: 15 }}>⚡</span>
-                            <span style={{ fontSize: 11.5, fontWeight: 700, color: '#111827' }}>Neighborhood Dispatch</span>
-                          </div>
-                          <span style={{ fontSize: 10, fontWeight: 700, background: '#FEF3C7', color: '#B45309', padding: '2px 8px', borderRadius: 9999 }}>
-                            15 mins
-                          </span>
-                        </div>
-
-                        {/* Direct UPI Shield Proof */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F8FAFC', padding: '5px 8px', borderRadius: 8, border: '1px solid #E2E8F0' }}>
-                          <span style={{ fontSize: 12 }}>💳</span>
-                          <div style={{ fontSize: 10, color: '#334155' }}>
-                            <strong style={{ color: '#0F172A' }}>Direct UPI to merchant</strong> · ₹0 platform fee
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Bottom Feature Link Tag */}
-                  <div
-                    style={{
-                      fontSize: 12.5,
-                      fontWeight: 600,
-                      color: step.tagColor,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                    }}
-                  >
-                    <span>{step.tag}</span>
-                  </div>
-                </div>
-              </Col>
-            ))}
-          </Row>
-        </div>
-      </section>
+      <NightShiftSection
+        onOpenRadar={handleOpenModal}
+        onOpenChat={() => useChatStore.getState().handleChatOpen(null, null)}
+      />
 
       {/* =========================================================================
           SECTION 5: MERCHANT CTA BANNER ("Own a shop?") (designs/Main.png)
@@ -2158,94 +1805,85 @@ const HomeScreen = () => {
               </Flex>
             </Col>
 
-            {/* Right Column: Mini Illustrated Storefront & CTA Buttons */}
+            {/* Right Column: Interactive Live Merchant Console Mock & CTA Buttons */}
             <Col xs={24} lg={9}>
               <div
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: 14,
+                  gap: 16,
                   alignItems: isMobile ? 'stretch' : 'flex-end',
                 }}
               >
-                {/* Illustrated Live Storefront Preview Card */}
-                <div
-                  style={{
-                    background: '#FFFFFF',
-                    borderRadius: 18,
-                    border: '1px solid #EADBCC',
-                    padding: '14px 16px',
-                    width: '100%',
-                    maxWidth: 320,
-                    boxShadow: '0 6px 18px rgba(35, 21, 15, 0.06)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, color: '#1C1917', display: 'flex', alignItems: 'center', gap: 5 }}>
-                      <span>🏪</span> Verified Storefront
-                    </span>
-                    <span style={{ fontSize: 10, fontWeight: 700, color: '#15803D', background: '#DCFCE7', padding: '2px 7px', borderRadius: 9999 }}>
-                      Live Radar
-                    </span>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', background: '#FAF6F0', borderRadius: 8, padding: '6px 10px', fontSize: 11 }}>
-                    <span style={{ color: '#6B7280' }}>Platform Cut:</span>
-                    <span style={{ fontWeight: 800, color: '#059669' }}>0% Commission</span>
-                  </div>
+                {/* Live Console with Animated Tickers & Order Toasts */}
+                <div style={{ width: '100%', maxWidth: 360 }}>
+                  <LiveDashboardMock />
                 </div>
 
-                {/* Sell on Rquest Dark Pill Button */}
-                <button
-                  type="button"
-                  onClick={() => history.push(Routes.client)}
+                <div
                   style={{
-                    background: '#23150F',
-                    color: '#FFFFFF',
-                    border: 'none',
-                    borderRadius: radii.full,
-                    padding: '12px 28px',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    boxShadow: '0 4px 12px rgba(35, 21, 15, 0.25)',
-                    transition: 'all 0.18s ease',
+                    display: 'flex',
+                    gap: 12,
+                    flexWrap: 'wrap',
+                    justifyContent: isMobile ? 'stretch' : 'flex-end',
+                    width: '100%',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
                 >
-                  <span>Sell on Rquest</span>
-                  <span style={{ fontSize: 14 }}>→</span>
-                </button>
+                  {/* Sell on Rquest Dark Pill Button */}
+                  <button
+                    type="button"
+                    onClick={() => history.push(Routes.client)}
+                    style={{
+                      background: '#23150F',
+                      color: '#FFFFFF',
+                      border: 'none',
+                      borderRadius: radii.full,
+                      padding: '12px 26px',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      boxShadow: '0 4px 12px rgba(35, 21, 15, 0.25)',
+                      transition: 'all 0.18s ease',
+                      flex: isMobile ? '1 1 100%' : 'initial',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.transform = 'translateY(-1px)')}
+                    onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
+                  >
+                    <span>Sell on Rquest</span>
+                    <span style={{ fontSize: 14 }}>→</span>
+                  </button>
 
-                {/* See How It Works White Pill Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsMerchantExplainerOpen(true)}
-                  style={{
-                    background: '#FFFFFF',
-                    border: '1px solid #D7C6B4',
-                    color: '#1C1917',
-                    borderRadius: radii.full,
-                    padding: '11px 24px',
-                    fontSize: 14,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: 8,
-                    transition: 'all 0.18s ease',
-                  }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = '#FAF6F0')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = '#FFFFFF')}
-                >
-                  <PlayCircleOutlined style={{ fontSize: 15 }} />
-                  <span>See how it works</span>
-                </button>
+                  {/* See How It Works White Pill Button */}
+                  <button
+                    type="button"
+                    onClick={() => setIsMerchantExplainerOpen(true)}
+                    style={{
+                      background: '#FFFFFF',
+                      border: '1px solid #D7C6B4',
+                      color: '#1C1917',
+                      borderRadius: radii.full,
+                      padding: '11px 22px',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
+                      transition: 'all 0.18s ease',
+                      flex: isMobile ? '1 1 100%' : 'initial',
+                    }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = '#FAF6F0')}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = '#FFFFFF')}
+                  >
+                    <PlayCircleOutlined style={{ fontSize: 15 }} />
+                    <span>See how it works</span>
+                  </button>
+                </div>
               </div>
             </Col>
           </Row>

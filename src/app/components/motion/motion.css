@@ -1,0 +1,457 @@
+/* ==========================================================================
+   Rquest Immersive Motion System ("The Living High Street")
+   Hardware accelerated, 60fps, responsive, reduced-motion compliant
+   ========================================================================== */
+
+/* 1. Kinetic Cursor & Highlight Animations */
+@keyframes cursorBlink {
+  0%, 45% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+
+.kinetic-cursor {
+  display: inline-block;
+  width: 3px;
+  height: 1em;
+  background-color: #110E28;
+  margin-left: 4px;
+  vertical-align: -0.1em;
+  animation: cursorBlink 0.9s infinite ease-in-out;
+  border-radius: 1px;
+}
+
+.kinetic-highlight-lime {
+  position: relative;
+  display: inline-block;
+  white-space: nowrap;
+  color: #110E28;
+  z-index: 1;
+}
+
+.kinetic-highlight-lime::before {
+  content: '';
+  position: absolute;
+  left: -6px;
+  right: -6px;
+  bottom: 4px;
+  height: 42%;
+  background: #D2F82E;
+  z-index: -1;
+  border-radius: 4px;
+  transform: skewX(-6deg) scaleX(0.98);
+  box-shadow: 0 0 24px rgba(210, 248, 46, 0.45);
+  transition: transform 0.3s ease;
+}
+
+/* 2. Floating Shopper Cursor Tags */
+.shopper-cursor-tag {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px 5px 8px;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(229, 231, 235, 0.9);
+  box-shadow: 0 8px 20px -4px rgba(17, 14, 40, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04);
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #110E28;
+  pointer-events: none;
+  z-index: 12;
+  white-space: nowrap;
+  user-select: none;
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0.2, 1);
+  will-change: transform;
+}
+
+.shopper-cursor-pointer {
+  position: absolute;
+  top: -8px;
+  left: 2px;
+  width: 0;
+  height: 0;
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-bottom: 9px solid;
+  transform: rotate(-35deg);
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+}
+
+.shopper-avatar-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #FFFFFF;
+}
+
+/* 3. Floating 3D Neighborhood Artifacts */
+.floating-artifact {
+  position: absolute;
+  pointer-events: auto;
+  cursor: pointer;
+  z-index: 8;
+  filter: drop-shadow(0 14px 28px rgba(17, 14, 40, 0.14));
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), filter 0.35s ease;
+  will-change: transform;
+}
+
+.floating-artifact:hover {
+  filter: drop-shadow(0 20px 36px rgba(124, 58, 237, 0.28));
+  transform: scale(1.15) translateY(-6px) !important;
+}
+
+.floating-artifact-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 8px 24px rgba(11, 45, 107, 0.08);
+  font-size: 26px;
+  position: relative;
+}
+
+.floating-artifact-label {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #110E28;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  pointer-events: none;
+}
+
+.floating-artifact:hover .floating-artifact-label {
+  opacity: 1;
+  transform: translateX(-50%) translateY(2px);
+}
+
+/* 4. Living Radar Map Canvas */
+.radar-interactive-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 28px;
+  overflow: hidden;
+  background: #F4EFE6;
+  border: 1px solid #E6DFD5;
+  box-shadow: 0 24px 50px -12px rgba(17, 14, 40, 0.12), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.radar-sweep-beam-active {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 380px;
+  height: 380px;
+  transform-origin: 0 0;
+  background: conic-gradient(from 0deg, rgba(210, 248, 46, 0.42) 0deg, rgba(210, 248, 46, 0.12) 35deg, rgba(1, 89, 197, 0.04) 65deg, transparent 85deg);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.radar-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px dashed rgba(11, 45, 107, 0.18);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.radar-ring-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 2px solid rgba(210, 248, 46, 0.8);
+  pointer-events: none;
+  z-index: 2;
+  animation: radarRingPulse 3.5s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+}
+
+@keyframes radarRingPulse {
+  0% {
+    width: 20px;
+    height: 20px;
+    opacity: 0.95;
+    border-color: #D2F82E;
+  }
+  100% {
+    width: 380px;
+    height: 380px;
+    opacity: 0;
+    border-color: #0159C5;
+  }
+}
+
+.radar-merchant-pin {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 6;
+  cursor: pointer;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.radar-merchant-pin:hover {
+  transform: translate(-50%, -115%) scale(1.12);
+  z-index: 15;
+}
+
+.radar-pin-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #110E28;
+  color: #FFFFFF;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  box-shadow: 0 6px 16px rgba(17, 14, 40, 0.28);
+  border: 1.5px solid #D2F82E;
+  white-space: nowrap;
+}
+
+.radar-pin-pointer {
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 6px solid #110E28;
+  margin: 0 auto;
+}
+
+/* 5. 3D Tilt Card & Specular Sheen */
+.tilt-card-wrapper {
+  perspective: 1200px;
+  transform-style: preserve-3d;
+  height: 100%;
+}
+
+.tilt-card-inner {
+  position: relative;
+  height: 100%;
+  background: #FFFFFF;
+  border: 1px solid #EBE7E0;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 16px -2px rgba(17, 14, 40, 0.05);
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+
+.tilt-card-inner:hover {
+  border-color: #D2E3FC;
+  box-shadow: 0 22px 42px -10px rgba(11, 45, 107, 0.14), 0 8px 18px -4px rgba(17, 14, 40, 0.06);
+}
+
+.tilt-card-sheen {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle 240px at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(255, 255, 255, 0.45), transparent 80%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  z-index: 10;
+}
+
+.tilt-card-inner:hover .tilt-card-sheen {
+  opacity: 1;
+}
+
+/* 6. Category Stalls with Micro-Animation */
+.category-stall-card {
+  position: relative;
+  background: #FFFFFF;
+  border: 1px solid #ECE7DF;
+  border-radius: 20px;
+  padding: 22px 18px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow: hidden;
+}
+
+.category-stall-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: #0159C5;
+  box-shadow: 0 16px 36px -8px rgba(1, 89, 197, 0.16);
+}
+
+.category-stall-card::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 20%;
+  right: 20%;
+  height: 3px;
+  background: #D2F82E;
+  border-radius: 3px 3px 0 0;
+  opacity: 0;
+  transform: scaleX(0.3);
+  transition: all 0.25s ease;
+}
+
+.category-stall-card:hover::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+/* 7. The Night Shift Nocturne (Cinematic Chapter) */
+.nightshift-container {
+  position: relative;
+  background: linear-gradient(180deg, #110E28 0%, #0B081E 100%);
+  color: #FFFFFF;
+  padding: 80px 24px;
+  border-radius: 36px;
+  margin: 40px auto;
+  max-width: 1240px;
+  overflow: hidden;
+  box-shadow: 0 32px 70px -16px rgba(17, 14, 40, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.nightshift-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 50% 0%, rgba(124, 58, 237, 0.22) 0%, transparent 60%),
+    radial-gradient(circle at 85% 100%, rgba(210, 248, 46, 0.12) 0%, transparent 45%),
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 36px 36px, 36px 36px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.nightshift-neon-track {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2px;
+  background: linear-gradient(90deg, #D2F82E 0%, #0159C5 50%, #7C3AED 100%);
+  opacity: 0.35;
+  filter: drop-shadow(0 0 6px #D2F82E);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nightshift-step-card {
+  position: relative;
+  background: rgba(23, 20, 48, 0.75);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+  padding: 28px 24px;
+  z-index: 2;
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.nightshift-step-card:hover {
+  transform: translateY(-8px);
+  border-color: #D2F82E;
+  box-shadow: 0 16px 36px -6px rgba(210, 248, 46, 0.2);
+}
+
+/* 8. Live Merchant Dashboard Mockup & Ticker */
+.seller-dashboard-chrome {
+  background: #FFFFFF;
+  border: 1px solid #EADBCC;
+  border-radius: 22px;
+  overflow: hidden;
+  box-shadow: 0 20px 45px -10px rgba(35, 21, 15, 0.14);
+}
+
+.chrome-traffic-lights {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chrome-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+}
+
+.ticker-metric {
+  font-feature-settings: 'tnum';
+  font-variant-numeric: tabular-nums;
+}
+
+.incoming-order-toast {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: #110E28;
+  color: #FFFFFF;
+  border: 1px solid #D2F82E;
+  padding: 10px 16px;
+  border-radius: 14px;
+  box-shadow: 0 12px 28px rgba(17, 14, 40, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  font-weight: 600;
+  animation: slideInToast 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 20;
+}
+
+@keyframes slideInToast {
+  from {
+    transform: translateY(20px) scale(0.92);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+/* 9. Accessibility: Reduced-Motion Overrides */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .shopper-cursor-tag,
+  .floating-artifact,
+  .radar-sweep-beam-active,
+  .radar-ring-pulse {
+    animation: none !important;
+    transform: none !important;
+  }
+}
