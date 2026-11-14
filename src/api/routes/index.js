@@ -8,6 +8,7 @@ const ordersRouter = require('./orders');
 const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
 const notificationsRouter = require('./notifications');
+const aiRouter = require('./ai');
 const { authMiddleware } = require('../auth');
 
 const router = express.Router();
@@ -24,5 +25,8 @@ router.use('/notifications', notificationsRouter);
 router.use(authMiddleware);
 
 router.use('/chat', chatRouter);
+
+// AI gateway (voice / ocr / smart-search) — authenticated; these calls cost money.
+router.use('/ai', aiRouter);
 
 module.exports = router;
