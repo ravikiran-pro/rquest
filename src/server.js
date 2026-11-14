@@ -76,6 +76,7 @@ server.listen(PORT, async () => {
       await db.sequelize.query('ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "form_schema" JSONB DEFAULT \'[]\'::jsonb;');
       if (db.push_subscriptions) await db.push_subscriptions.sync();
       if (db.notifications) await db.notifications.sync();
+      if (db.otp_codes) await db.otp_codes.sync();
     }
   } catch (dbErr) {
     console.warn('DB self-heal check:', dbErr.message);

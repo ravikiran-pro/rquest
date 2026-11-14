@@ -1,5 +1,6 @@
 const { validateUser, generateJwt, generateHash } = require('../../auth');
 const { users, Sequelize } = require('../../models');
+const { checkOtp } = require('../../services/otp');
 
 const login = async (req, res) => {
   try {
@@ -67,6 +68,24 @@ const login = async (req, res) => {
 
     // OTP Verification Flow
     if (isOtpLogin) {
+      // SECURITY: the submitted OTP must match a real, unexpired, unconsumed
+      // code issued by the gateway for this identifier. The identifier used at
+      // request time is what we verify against (mobile/email/telegram id).
+      const otpIdentifier = (userDetails.identifier || identifier).toString().trim();
+      const otpResult = await checkOtp({
+        identifier: otpIdentifier,
+        code: userDetails.otp,
+        purpose: 'login',
+      });
+
+      if (!otpResult.valid) {
+        return res.status(401).json({
+          success: false,
+          error: 'OTP verification failed',
+          message: otpResult.reason || 'Invalid or expired code',
+        });
+      }
+
       // If user does not exist yet, auto-provision a verified shopper account
       if (!user) {
         const fallbackPhone = cleanMobile || '9876543210';
