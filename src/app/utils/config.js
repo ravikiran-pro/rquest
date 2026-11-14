@@ -15,6 +15,9 @@ export const config = {
 export const apiConfig = {
   login: 'user/login',
   register: 'user/register',
+  otp_request: 'user/otp/request',
+  otp_verify: 'user/otp/verify',
+  otp_status: 'user/otp/status',
   track_ip: '/user/trace_ip',
   location_reverse: 'location/reverse',
   location_search: 'location/search',

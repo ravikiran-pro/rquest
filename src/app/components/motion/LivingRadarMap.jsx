@@ -61,7 +61,21 @@ const PINS = [
 export const LivingRadarMap = ({ onSelectShop }) => {
   const [activePin, setActivePin] = useState(PINS[0]);
   const [rotationDeg, setRotationDeg] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   const animRef = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia) return undefined;
+    const mq = window.matchMedia('(max-width: 767px)');
+    const update = () => setIsMobile(mq.matches);
+    update();
+    if (mq.addEventListener) {
+      mq.addEventListener('change', update);
+      return () => mq.removeEventListener('change', update);
+    }
+    mq.addListener(update);
+    return () => mq.removeListener(update);
+  }, []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -88,7 +102,9 @@ export const LivingRadarMap = ({ onSelectShop }) => {
         position: 'relative',
         borderRadius: 28,
         border: '1px solid #ECE7DF',
-        background: '#FFFFFF',
+        background: 'rgba(255, 255, 255, 0.88)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
         overflow: 'hidden',
         boxShadow: '0 24px 50px -12px rgba(17, 14, 40, 0.12)',
       }}
@@ -151,8 +167,10 @@ export const LivingRadarMap = ({ onSelectShop }) => {
           />
         </div>
 
-        {/* Interactive Levitating Merchant Pins */}
-        {PINS.map((pin) => {
+        {/* Interactive Levitating Merchant Pins (desktop only — the mobile
+            base map already carries legible baked-in labels, and overlaying
+            these on the narrow canvas crowds/duplicates them) */}
+        {!isMobile && PINS.map((pin) => {
           const isSelected = activePin?.id === pin.id;
           return (
             <div
@@ -191,7 +209,9 @@ export const LivingRadarMap = ({ onSelectShop }) => {
           );
         })}
 
-        {/* Top-Right: Floating 15-min delivery speed pill */}
+        {/* Top-Right: Floating 15-min delivery speed pill (desktop only — the
+            mobile base map already carries this detail baked in) */}
+        {!isMobile && (
         <div
           style={{
             position: 'absolute',
@@ -234,9 +254,11 @@ export const LivingRadarMap = ({ onSelectShop }) => {
             </div>
           </div>
         </div>
+        )}
 
-        {/* Bottom Spotlight Mini Card */}
-        {activePin && (
+        {/* Bottom Spotlight Mini Card (desktop only — the mobile base map
+            already shows a baked-in spotlight card) */}
+        {!isMobile && activePin && (
           <div
             onClick={() => onSelectShop && onSelectShop(activePin.id)}
             style={{

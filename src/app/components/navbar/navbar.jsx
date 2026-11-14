@@ -442,11 +442,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
         {/* Guest: Show Explore Market, Sell with Us */}
         {!isLoggedIn && (
           <>
-            <Link to={Routes.home}>
+            <Link to={Routes.search}>
               <Button
                 type="text"
                 icon={<CompassOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.home || currentPath === '/app' || currentPath === '/home' ? 'active' : ''}`}
+                className={`nav-item-btn ${currentPath === Routes.search || currentPath === '/search' ? 'active' : ''}`}
               >
                 Explore Market
               </Button>
@@ -472,7 +472,7 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
               <Button
                 type="text"
                 icon={<CompassOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.app || currentPath === '/home' ? 'active' : ''}`}
+                className={`nav-item-btn ${currentPath === Routes.app || currentPath === Routes.search || currentPath === '/search' ? 'active' : ''}`}
               >
                 Explore App
               </Button>

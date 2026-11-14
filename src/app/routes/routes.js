@@ -1,6 +1,7 @@
 const Routes = {
   home: '/',
-  app: '/',
+  app: '/search',
+  search: '/search',
   login: '/login',
   client: '/client_register',
   clientShop: '/client?shop_id=:shop_id',

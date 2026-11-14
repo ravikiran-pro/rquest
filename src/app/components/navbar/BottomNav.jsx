@@ -37,13 +37,16 @@ const BottomNav = () => {
     return null;
   }
 
+  const isSearch =
+    currentPath === Routes.search ||
+    currentPath === '/search' ||
+    currentPath === '/app';
   const isHome =
     currentPath === Routes.home ||
-    currentPath === '/app' ||
     currentPath === '/home';
   const isShopsMode =
-    isHome && new URLSearchParams(location.search).get('mode') === 'shops';
-  const isExplore = isHome && !isShopsMode;
+    (isSearch || isHome) && new URLSearchParams(location.search).get('mode') === 'shops';
+  const isExplore = (isHome || isSearch) && !isShopsMode;
   const isMerchantStores =
     currentPath === Routes.client || currentPath === Routes.clientShop;
   const isOrders = currentPath === Routes.orders;
@@ -56,7 +59,7 @@ const BottomNav = () => {
         type="button"
         className={`mobile-nav-item ${isExplore ? 'active' : ''}`}
         onClick={() => {
-          if (isExplore) {
+          if (isHome) {
             window.scrollTo({ top: 0, behavior: 'smooth' });
           } else {
             history.push(Routes.home);
@@ -77,11 +80,11 @@ const BottomNav = () => {
               : ''
             : isShopsMode
             ? 'active'
-            : ''
+              : ''
         }`}
         onClick={() => {
           history.push(
-            isLoggedIn && isMerchant ? Routes.client : `${Routes.home}?mode=shops`
+            isLoggedIn && isMerchant ? Routes.client : `${Routes.search}?mode=shops`
           );
         }}
       >

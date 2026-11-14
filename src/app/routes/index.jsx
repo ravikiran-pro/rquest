@@ -12,6 +12,7 @@ import { default as routes } from './routes';
 import {
   LoginScreen,
   HomeScreen,
+  SearchScreen,
   ClientRegister,
   RegisterScreen,
   StorefrontScreen,
@@ -203,6 +204,9 @@ export default function AppRoutes() {
           <Route exact path="/landing">
             <Redirect to="/" />
           </Route>
+          <Route exact path="/search">
+            <SearchScreen />
+          </Route>
           <Route exact path={routes.login}>
             {isLoggedIn ? (
               <Redirect to={isMerchant ? routes.client : routes.app} />
@@ -211,7 +215,7 @@ export default function AppRoutes() {
             )}
           </Route>
           <Route exact path="/app">
-            <Redirect to="/" />
+            <Redirect to="/search" />
           </Route>
           <Route exact path="/home">
             <Redirect to="/" />

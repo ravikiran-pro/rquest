@@ -984,24 +984,26 @@ textarea:focus-visible,
   position: absolute;
   top: -80px;
   right: -100px;
-  width: min(720px, 48vw);
-  height: min(680px, 50vw);
+  width: min(650px, 44vw);
+  height: min(620px, 44vw);
   border-radius: 46% 54% 68% 32% / 52% 44% 56% 48%;
-  background: #E4FB3E;
+  background: radial-gradient(circle at 60% 40%, rgba(228, 251, 62, 0.45) 0%, rgba(228, 251, 62, 0.15) 60%, transparent 80%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.95;
+  opacity: 0.6;
+  filter: blur(20px);
   animation: floatLimeBlob 18s ease-in-out infinite alternate;
   will-change: transform, border-radius;
 }
 
 @media (max-width: 992px) {
   .hero-blob-lime-right {
-    top: -40px;
+    top: -20px;
     right: -60px;
-    width: 380px;
-    height: 380px;
-    opacity: 0.88;
+    width: 240px;
+    height: 240px;
+    opacity: 0.35;
+    filter: blur(28px);
   }
 }
 
@@ -1010,13 +1012,14 @@ textarea:focus-visible,
   top: 48%;
   left: -160px;
   transform: translateY(-50%);
-  width: min(580px, 40vw);
-  height: min(600px, 42vw);
+  width: min(520px, 36vw);
+  height: min(540px, 38vw);
   border-radius: 54% 46% 42% 58% / 48% 58% 42% 52%;
-  background: #E5DBF5;
+  background: radial-gradient(circle at 40% 50%, rgba(229, 219, 245, 0.6) 0%, rgba(229, 219, 245, 0.2) 60%, transparent 80%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.82;
+  opacity: 0.55;
+  filter: blur(18px);
   animation: floatLavenderBlob 22s ease-in-out infinite alternate;
   will-change: transform, border-radius;
 }
@@ -1024,10 +1027,11 @@ textarea:focus-visible,
 @media (max-width: 992px) {
   .hero-blob-lavender-left {
     top: 60%;
-    left: -100px;
-    width: 280px;
-    height: 300px;
-    opacity: 0.72;
+    left: -80px;
+    width: 200px;
+    height: 220px;
+    opacity: 0.30;
+    filter: blur(24px);
   }
 }
 
@@ -1035,13 +1039,14 @@ textarea:focus-visible,
   position: absolute;
   bottom: -100px;
   left: -120px;
-  width: min(500px, 35vw);
-  height: min(500px, 35vw);
+  width: min(450px, 32vw);
+  height: min(450px, 32vw);
   border-radius: 48% 52% 65% 35% / 42% 56% 44% 58%;
-  background: #E4FB3E;
+  background: radial-gradient(circle at 50% 50%, rgba(228, 251, 62, 0.4) 0%, rgba(228, 251, 62, 0.1) 65%, transparent 85%);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.90;
+  opacity: 0.5;
+  filter: blur(20px);
   animation: floatCardsBlob 16s ease-in-out infinite alternate;
   will-change: transform;
 }
@@ -1049,10 +1054,11 @@ textarea:focus-visible,
 @media (max-width: 992px) {
   .cards-blob-lime-left {
     bottom: -60px;
-    left: -80px;
-    width: 280px;
-    height: 280px;
-    opacity: 0.8;
+    left: -60px;
+    width: 200px;
+    height: 200px;
+    opacity: 0.25;
+    filter: blur(24px);
   }
 }
 
@@ -1369,6 +1375,17 @@ textarea:focus-visible,
 
 .sticky-neighborhood-bar:hover {
   box-shadow: 0 18px 40px -6px rgba(17, 14, 40, 0.22);
+}
+
+@media (max-width: 768px) {
+  .sticky-neighborhood-bar {
+    bottom: 74px !important;
+    max-width: calc(100vw - 28px) !important;
+    padding: 7px 12px 7px 12px !important;
+    gap: 8px !important;
+    box-shadow: 0 10px 28px rgba(17, 14, 40, 0.25) !important;
+    white-space: nowrap !important;
+  }
 }
 
 .sticky-radar-pulse {

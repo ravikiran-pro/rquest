@@ -12,10 +12,8 @@ import {
   Card,
   Empty,
   Flex,
-  Modal,
   Row,
   Col,
-  Form,
 } from 'antd';
 import {
   DeleteOutlined,
@@ -27,9 +25,7 @@ import {
   CloseOutlined,
   EnvironmentOutlined,
   AimOutlined,
-  UserOutlined,
   PhoneOutlined,
-  LockOutlined,
   ThunderboltFilled,
   MessageOutlined,
   InboxOutlined,
@@ -39,11 +35,12 @@ import {
   EditOutlined,
   CarOutlined,
 } from '@ant-design/icons';
-import { useCartStore, useGlobalStore, useChatStore, subscribeToPushNotifications, requestPushPermission } from '../../services';
-import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName, storageKeys, SOCKET } from '../../utils';
+import { useCartStore, useGlobalStore, useChatStore } from '../../services';
+import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal } from '../profile';
+import { AuthModal } from '../auth';
 import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text, Title } = Typography;
@@ -80,7 +77,7 @@ const CartDrawer = () => {
   const history = useHistory();
   const { cart, isCartOpen, closeCart, updateQuantity, removeItem, clearCart } =
     useCartStore((state) => state);
-  const { user_data, update_user_data } = useGlobalStore((state) => state);
+  const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
 
   const [orderType, setOrderType] = useState('delivery');
@@ -99,7 +96,6 @@ const CartDrawer = () => {
   // Authentication modal state for guest checkout
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
-  const [authLoading, setAuthLoading] = useState(false);
 
   // Address integration state
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -189,85 +185,6 @@ const CartDrawer = () => {
   const deliveryFee = orderType === 'delivery' ? 30.0 : 0.0;
   const platformFee = 0.0; // 0% commission direct commerce
   const finalTotal = itemsTotal + deliveryFee;
-
-  const handleLoginSubmit = async (values) => {
-    setAuthLoading(true);
-    try {
-      const identifier = (values.identifier || values.username || values.mobile || '').trim();
-      const res = await netWorkCall(
-        apiConfig.login,
-        'POST',
-        JSON.stringify({
-          identifier,
-          mobile: identifier,
-          username: identifier,
-          password: values.password?.trim(),
-        })
-      );
-      if (res?.success === true) {
-        sessionStorage.setItem(storageKeys.auth_token, res.token);
-        localStorage.setItem(storageKeys.auth_token, res.token);
-        update_user_data(res.user_data);
-        SOCKET.emit('connect_user', res.user_data);
-
-        // Auto-subscribe to push notifications if permission already granted
-        if ('Notification' in window && Notification.permission === 'granted') {
-          subscribeToPushNotifications(res.user_data).catch(() => {});
-        }
-
-        message.success('Logged in successfully!');
-        setIsOnboardingModalOpen(false);
-        setPhone(res.user_data.mobile || identifier);
-        fetchSavedAddresses();
-      } else {
-        message.error(res?.message || 'Login failed. Please check credentials.');
-      }
-    } catch (err) {
-      console.error('Login error:', err);
-      message.error('An error occurred during login. Please try again.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleRegisterSubmit = async (values) => {
-    setAuthLoading(true);
-    try {
-      const res = await netWorkCall(
-        apiConfig.register,
-        'POST',
-        JSON.stringify({
-          username: values.username?.trim(),
-          mobile: values.mobile?.trim(),
-          password: values.password?.trim(),
-          userRole: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
-        })
-      );
-      if (res?.success === true) {
-        sessionStorage.setItem(storageKeys.auth_token, res.token);
-        localStorage.setItem(storageKeys.auth_token, res.token);
-        update_user_data(res.user_data);
-        SOCKET.emit('connect_user', res.user_data);
-
-        // Request push notification permission upon registration
-        if ('Notification' in window) {
-          requestPushPermission(res.user_data).catch(() => {});
-        }
-
-        message.success('Account created!');
-        setIsOnboardingModalOpen(false);
-        setPhone(res.user_data.mobile || values.mobile);
-        fetchSavedAddresses();
-      } else {
-        message.error(res?.message || 'Registration failed');
-      }
-    } catch (err) {
-      console.error('Registration error:', err);
-      message.error('An error occurred during registration. Please try again.');
-    } finally {
-      setAuthLoading(false);
-    }
-  };
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
@@ -783,6 +700,50 @@ const CartDrawer = () => {
 
             <Divider style={{ margin: '16px 0', borderColor: colors.borderLight }} />
 
+            {/* Guest Sign In Prompt Banner */}
+            {!user_data?.user_id && (
+              <div
+                style={{
+                  background: '#EFF6FF',
+                  border: '1px solid #BFDBFE',
+                  borderRadius: radii.lg,
+                  padding: '12px 14px',
+                  marginBottom: 16,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 10,
+                }}
+              >
+                <div>
+                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1E3A8A', fontFamily: typography.fontFamily.body }}>
+                    Sign in to your account
+                  </div>
+                  <div style={{ fontSize: 11.5, color: '#3B82F6', fontFamily: typography.fontFamily.body }}>
+                    Use mobile OTP to access saved addresses and track orders.
+                  </div>
+                </div>
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setIsOnboardingModalOpen(true);
+                  }}
+                  style={{
+                    borderRadius: radii.full,
+                    background: '#0B2D6B',
+                    borderColor: '#0B2D6B',
+                    fontWeight: 700,
+                    fontSize: 12,
+                    boxShadow: shadows.primary,
+                  }}
+                >
+                  Sign In / Register
+                </Button>
+              </div>
+            )}
+
             {/* Order Fulfillment Type */}
             <div style={{ marginBottom: 16 }}>
               <div
@@ -1037,7 +998,13 @@ const CartDrawer = () => {
                         </div>
                         <Button
                           type="primary"
-                          onClick={() => setIsAddAddressModalOpen(true)}
+                          onClick={() => {
+                            if (!user_data?.user_id) {
+                              setIsOnboardingModalOpen(true);
+                            } else {
+                              setIsAddAddressModalOpen(true);
+                            }
+                          }}
                           style={{
                             background: colors.primary,
                             borderColor: colors.primary,
@@ -1467,167 +1434,16 @@ const CartDrawer = () => {
       )}
     </Drawer>
 
-      {/* Login / Register Modal for Guest Checkout */}
-      <Modal
-        title={
-          <div style={{ textAlign: 'center', paddingTop: 8, paddingBottom: 4 }}>
-            <Typography.Title
-              level={4}
-              style={{
-                margin: 0,
-                fontFamily: typography.fontFamily.headline,
-                fontWeight: 800,
-                letterSpacing: '-0.02em',
-                color: colors.textMain,
-              }}
-            >
-              {authMode === 'login' ? 'Login' : 'Create an Account'}
-            </Typography.Title>
-          </div>
-        }
+      {/* Unified Login / Register Modal for Guest Checkout */}
+      <AuthModal
         open={isOnboardingModalOpen}
-        onCancel={() => setIsOnboardingModalOpen(false)}
-        footer={null}
-        width={400}
-        destroyOnHidden
-        centered
-        zIndex={1400}
-      >
-        {authMode === 'login' ? (
-          <Form onFinish={handleLoginSubmit} layout="vertical" style={{ marginTop: 16 }}>
-            <Form.Item
-              name="mobile"
-              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Mobile Number or Username</span>}
-              rules={[{ required: true, message: 'Please enter your mobile number or username' }]}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: colors.textLight }} />}
-                placeholder="Mobile number or username"
-                size="large"
-                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Password</span>}
-              rules={[{ required: true, message: 'Please enter your password' }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: colors.textLight }} />}
-                placeholder="Password"
-                size="large"
-                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
-              />
-            </Form.Item>
-            <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={authLoading}
-                size="large"
-                block
-                style={{
-                  height: 44,
-                  borderRadius: radii.md,
-                  background: colors.primary,
-                  borderColor: colors.primary,
-                  boxShadow: shadows.primary,
-                  fontWeight: 700,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                Log in
-              </Button>
-            </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
-              <span style={{ color: colors.textMuted }}>Don&apos;t have an account?</span>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => setAuthMode('register')}
-                style={{ padding: 0, height: 'auto', marginLeft: 6, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
-              >
-                Register Here
-              </Button>
-            </div>
-          </Form>
-        ) : (
-          <Form
-            onFinish={handleRegisterSubmit}
-            layout="vertical"
-            style={{ marginTop: 16 }}
-            initialValues={{ userRole: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d' }}
-          >
-            <Form.Item
-              name="username"
-              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Username</span>}
-              rules={[{ required: true, message: 'Please enter your username' }]}
-            >
-              <Input
-                prefix={<UserOutlined style={{ color: colors.textLight }} />}
-                placeholder="Username"
-                size="large"
-                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="mobile"
-              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Mobile Number</span>}
-              rules={[{ required: true, message: 'Please enter your mobile number' }]}
-            >
-              <Input
-                prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
-                placeholder="Mobile number"
-                size="large"
-                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
-              />
-            </Form.Item>
-            <Form.Item
-              name="password"
-              label={<span style={{ fontFamily: typography.fontFamily.body, fontWeight: 600, color: colors.textMain }}>Password</span>}
-              rules={[{ required: true, message: 'Please enter your password' }]}
-            >
-              <Input.Password
-                prefix={<LockOutlined style={{ color: colors.textLight }} />}
-                placeholder="Password"
-                size="large"
-                style={{ borderRadius: radii.md, fontFamily: typography.fontFamily.body }}
-              />
-            </Form.Item>
-            <Form.Item style={{ marginTop: 24, marginBottom: 12 }}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={authLoading}
-                size="large"
-                block
-                style={{
-                  height: 44,
-                  borderRadius: radii.md,
-                  background: colors.primary,
-                  borderColor: colors.primary,
-                  boxShadow: shadows.primary,
-                  fontWeight: 700,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                Register
-              </Button>
-            </Form.Item>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: 12, fontFamily: typography.fontFamily.body }}>
-              <span style={{ color: colors.textMuted }}>Already have an account?</span>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => setAuthMode('login')}
-                style={{ padding: 0, height: 'auto', marginLeft: 6, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body }}
-              >
-                Login Here
-              </Button>
-            </div>
-          </Form>
-        )}
-      </Modal>
+        onClose={() => setIsOnboardingModalOpen(false)}
+        initialMode={authMode}
+        onSuccess={(userData) => {
+          setPhone(userData.mobile || '');
+          fetchSavedAddresses();
+        }}
+      />
 
       {isAddAddressModalOpen && (
         <AddressModal

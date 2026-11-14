@@ -455,3 +455,11 @@
     transform: none !important;
   }
 }
+
+/* Mobile Clutter Reduction */
+@media (max-width: 768px) {
+  .shopper-cursor-tag,
+  .floating-artifact {
+    display: none !important;
+  }
+}
