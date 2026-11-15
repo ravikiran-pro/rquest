@@ -193,6 +193,7 @@ const HomeScreen = () => {
   const { user_data } = useGlobalStore((state) => state);
 
   const [searchText, setSearchText] = useState('');
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [filters, setFilters] = useState({ ...DEFAULT_FILTERS, maxDistance: 2 });
   const [isMerchantExplainerOpen, setIsMerchantExplainerOpen] = useState(false);
   const [isRadiusPopoverOpen, setIsRadiusPopoverOpen] = useState(false);
@@ -592,91 +593,122 @@ const HomeScreen = () => {
                   transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                 }}
               >
-                {/* Radius selector dropdown */}
-                <Popover
-                  trigger="click"
-                  open={isRadiusPopoverOpen}
-                  onOpenChange={setIsRadiusPopoverOpen}
-                  placement="bottomLeft"
-                  content={
-                    <div style={{ width: 230, padding: 6 }}>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 8, padding: '0 4px' }}>
-                        Walking & Delivery Radius
-                      </div>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                        {RADIUS_PRESETS.map((item) => {
-                          const isSelected = (filters.maxDistance ?? null) === item.val;
-                          return (
-                            <button
-                              key={item.label}
-                              type="button"
-                              onClick={() => {
-                                setFilters((prev) => ({ ...prev, maxDistance: item.val }));
-                                setIsRadiusPopoverOpen(false);
-                              }}
-                              style={{
-                                textAlign: 'left',
-                                padding: '7px 10px',
-                                borderRadius: radii.md,
-                                border: 'none',
-                                background: isSelected ? '#EFF6FF' : 'transparent',
-                                color: isSelected ? '#0B2D6B' : '#374151',
-                                fontWeight: isSelected ? 700 : 500,
-                                fontSize: 13,
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                              }}
-                            >
-                              <span>{item.label}</span>
-                              {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
-                            </button>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  }
+                {/* Collapsible Radius Selector & Divider */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: isMobile ? 8 : 12,
+                    maxWidth: isSearchFocused ? 0 : 200,
+                    opacity: isSearchFocused ? 0 : 1,
+                    overflow: 'hidden',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    pointerEvents: isSearchFocused ? 'none' : 'auto',
+                    flexShrink: 0,
+                  }}
                 >
-                  <button
-                    type="button"
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      fontSize: isMobile ? 12.5 : 13.5,
-                      fontWeight: 600,
-                      color: '#111827',
-                      cursor: 'pointer',
-                      padding: '4px 0',
-                      whiteSpace: 'nowrap',
-                      flexShrink: 0,
-                    }}
+                  <Popover
+                    trigger="click"
+                    open={isRadiusPopoverOpen}
+                    onOpenChange={setIsRadiusPopoverOpen}
+                    placement="bottomLeft"
+                    content={
+                      <div style={{ width: 230, padding: 6 }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 8, padding: '0 4px' }}>
+                          Walking & Delivery Radius
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {RADIUS_PRESETS.map((item) => {
+                            const isSelected = (filters.maxDistance ?? null) === item.val;
+                            return (
+                              <button
+                                key={item.label}
+                                type="button"
+                                onClick={() => {
+                                  setFilters((prev) => ({ ...prev, maxDistance: item.val }));
+                                  setIsRadiusPopoverOpen(false);
+                                }}
+                                style={{
+                                  textAlign: 'left',
+                                  padding: '7px 10px',
+                                  borderRadius: radii.md,
+                                  border: 'none',
+                                  background: isSelected ? '#EFF6FF' : 'transparent',
+                                  color: isSelected ? '#0B2D6B' : '#374151',
+                                  fontWeight: isSelected ? 700 : 500,
+                                  fontSize: 13,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                }}
+                              >
+                                <span>{item.label}</span>
+                                {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    }
                   >
-                    <CompassOutlined style={{ color: '#0B2D6B', fontSize: 15 }} />
-                    <span>{filters.maxDistance ? `${filters.maxDistance} km radius` : 'All radius'}</span>
-                    <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
-                  </button>
-                </Popover>
+                    <button
+                      type="button"
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontSize: isMobile ? 12.5 : 13.5,
+                        fontWeight: 600,
+                        color: '#111827',
+                        cursor: 'pointer',
+                        padding: '4px 0',
+                        whiteSpace: 'nowrap',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <CompassOutlined style={{ color: '#0B2D6B', fontSize: 15 }} />
+                      <span>{filters.maxDistance ? `${filters.maxDistance} km radius` : 'All radius'}</span>
+                      <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
+                    </button>
+                  </Popover>
 
-                {/* Divider Line */}
-                <div style={{ width: 1, height: 26, background: '#E5E7EB', flexShrink: 0 }} />
+                  {/* Divider Line */}
+                  <div style={{ width: 1, height: 26, background: '#E5E7EB', flexShrink: 0 }} />
+                </div>
 
-                {/* Search Text Input */}
+                {/* Search Text Input (Takes full space when selected) */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                  <SearchOutlined style={{ color: '#9CA3AF', fontSize: 16, flexShrink: 0 }} />
+                  <SearchOutlined
+                    style={{
+                      color: isSearchFocused ? '#0B2D6B' : '#9CA3AF',
+                      fontSize: 16,
+                      flexShrink: 0,
+                      transition: 'color 0.2s ease',
+                    }}
+                  />
                   <input
                     type="text"
                     className="rquest-search-input"
                     value={searchText}
+                    onFocus={() => setIsSearchFocused(true)}
+                    onBlur={() => setTimeout(() => setIsSearchFocused(false), 180)}
                     onChange={(e) => setSearchText(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') handleSearchSubmit();
+                      if (e.key === 'Escape') {
+                        setIsSearchFocused(false);
+                        e.target.blur();
+                      }
+                    }}
                     placeholder={
-                      isMobile
-                        ? "Search 'sourdough bread', '25W bulb'..."
-                        : "Search shops or items — 'sourdough bread', '25W bulb'..."
+                      isSearchFocused
+                        ? "Search shops, products, brands, services..."
+                        : isMobile
+                          ? "Search 'sourdough bread', '25W bulb'..."
+                          : "Search shops or items — 'sourdough bread', '25W bulb'..."
                     }
                     style={{
                       border: 'none',
@@ -688,32 +720,78 @@ const HomeScreen = () => {
                       fontFamily: 'Inter, sans-serif',
                     }}
                   />
+                  {searchText && (
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSearchText('');
+                        setIsSearchFocused(true);
+                      }}
+                      title="Clear search"
+                      style={{
+                        background: '#E5E7EB',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: 20,
+                        height: 20,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#4B5563',
+                        cursor: 'pointer',
+                        fontSize: 11,
+                        fontWeight: 700,
+                        flexShrink: 0,
+                        padding: 0,
+                        transition: 'background 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => (e.currentTarget.style.background = '#D1D5DB')}
+                      onMouseLeave={(e) => (e.currentTarget.style.background = '#E5E7EB')}
+                    >
+                      ✕
+                    </button>
+                  )}
                 </div>
 
-                {/* Voice Search Button */}
-                <button
-                  type="button"
-                  onClick={() => setIsVoiceModalOpen(true)}
-                  title="Voice Search"
+                {/* Collapsible Voice Search Button */}
+                <div
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    color: '#6B7280',
-                    cursor: 'pointer',
-                    padding: '6px 4px',
-                    borderRadius: '50%',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
+                    maxWidth: (isSearchFocused || searchText) ? 0 : 40,
+                    opacity: (isSearchFocused || searchText) ? 0 : 1,
+                    overflow: 'hidden',
+                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                    pointerEvents: (isSearchFocused || searchText) ? 'none' : 'auto',
                     flexShrink: 0,
                   }}
                 >
-                  <AudioOutlined style={{ fontSize: 15 }} />
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsVoiceModalOpen(true)}
+                    title="Voice Search"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#6B7280',
+                      cursor: 'pointer',
+                      padding: '6px 4px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <AudioOutlined style={{ fontSize: 15 }} />
+                  </button>
+                </div>
 
                 {/* Search Submit Circle Button with Arrow */}
                 <button
                   type="button"
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSearchSubmit}
                   style={{
                     width: isMobile ? 38 : 44,
