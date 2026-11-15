@@ -1,0 +1,37 @@
+# Brand spellings that must collapse into one brand. Matching ignores case, accents and
+# punctuation, so only list genuinely different strings (company names, abbreviations).
+# The `brand` column is the display name used for the canonical brand.
+alias,brand
+Amul Gujarat Co-operative Milk Marketing Federation,Amul
+GCMMF,Amul
+Britannia Industries,Britannia
+Britannia Industries Ltd,Britannia
+Haldiram's,Haldiram's
+Haldirams,Haldiram's
+Haldiram,Haldiram's
+Parle Products,Parle
+Parle Agro,Parle Agro
+ITC Limited,ITC
+ITC Ltd,ITC
+Nestle India,Nestlé
+Nestle,Nestlé
+Hindustan Unilever,Hindustan Unilever
+HUL,Hindustan Unilever
+Tata Consumer Products,Tata
+Tata Sampann,Tata Sampann
+Patanjali Ayurved,Patanjali
+MTR Foods,MTR
+Mother Dairy Fruit & Vegetable,Mother Dairy
+Bikanervala,Bikanervala
+Bikano,Bikano
+Lay's,Lay's
+Lays,Lay's
+Kurkure,Kurkure
+Cadbury India,Cadbury
+Mondelez India,Cadbury
+Dabur India,Dabur
+Everest Spices,Everest
+MDH Spices,MDH
+Aashirvaad,Aashirvaad
+Fortune Foods,Fortune
+Adani Wilmar,Fortune

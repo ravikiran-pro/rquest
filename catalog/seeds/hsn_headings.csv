@@ -1,0 +1,7 @@
+# Curated titles for HSN headings/subheadings (4 or 6 digits) whose description cannot be
+# derived from the source's item texts. Each fallback label ("Heading 1234") is listed in the
+# review queue as `hsn_description_fallback`: add the official title here to resolve it.
+code,title,reference
+2106,Food preparations not elsewhere specified or included,WCO HS heading 21.06
+8517,"Telephone sets, including smartphones and other telephones for cellular or other wireless networks; other apparatus for the transmission or reception of voice, images or other data",WCO HS heading 85.17
+9619,"Sanitary towels (pads) and tampons, napkins (diapers), napkin liners and similar articles, of any material",WCO HS heading 96.19

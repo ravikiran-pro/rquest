@@ -1,0 +1,9 @@
+# Verified GST rates. Rows here WIN over every automated source:
+#   - loaded with verified = true; sources never overwrite or deactivate them
+#   - an override deactivates any overlapping unverified source rate for the same code
+# Fill this from the official CBIC schedule (Notification 9/2025-CT(Rate) for goods,
+# 15/2025-CT(Rate) for services), one row per code and period. Codes may be 2/4/6/8 digits;
+# a shorter code applies to every code beneath it unless a more specific row exists.
+# igst_rate must be a GST 2.0 slab for periods from 2025-09-22: 0, 0.1, 0.25, 1.5, 3, 5, 18, 40.
+# Leave effective_to empty for "until further notice".
+code,effective_from,effective_to,igst_rate,cess_rate,notification_ref,verified_by,note

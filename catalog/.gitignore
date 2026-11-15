@@ -1,0 +1,5 @@
+node_modules/
+.env.catalog
+# Raw downloads live outside the repo (CATALOG_CACHE_DIR, default ~/.cache/rquest-catalog).
+# This entry only guards against a cache dir configured inside the folder.
+.cache/
