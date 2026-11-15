@@ -1,0 +1,103 @@
+# HSN chapter titles (2-digit), from the WCO Harmonized System nomenclature as adopted in the
+# Indian Customs Tariff / GST. Some long titles are abridged. 77 is reserved in the HS.
+# 98 is India-specific; 99 is the GST services (SAC) chapter.
+# Only chapters that have codes in a loaded source become rows in catalog.hsn_codes.
+code,title
+01,Live animals
+02,Meat and edible meat offal
+03,"Fish and crustaceans, molluscs and other aquatic invertebrates"
+04,"Dairy produce; birds' eggs; natural honey; edible products of animal origin, not elsewhere specified"
+05,"Products of animal origin, not elsewhere specified or included"
+06,"Live trees and other plants; bulbs, roots and the like; cut flowers and ornamental foliage"
+07,Edible vegetables and certain roots and tubers
+08,Edible fruit and nuts; peel of citrus fruit or melons
+09,"Coffee, tea, maté and spices"
+10,Cereals
+11,Products of the milling industry; malt; starches; inulin; wheat gluten
+12,"Oil seeds and oleaginous fruits; miscellaneous grains, seeds and fruit; industrial or medicinal plants; straw and fodder"
+13,"Lac; gums, resins and other vegetable saps and extracts"
+14,"Vegetable plaiting materials; vegetable products not elsewhere specified or included"
+15,"Animal, vegetable or microbial fats and oils; prepared edible fats; animal or vegetable waxes"
+16,"Preparations of meat, fish, crustaceans, molluscs or other aquatic invertebrates, or of insects"
+17,Sugars and sugar confectionery
+18,Cocoa and cocoa preparations
+19,"Preparations of cereals, flour, starch or milk; pastrycooks' products"
+20,"Preparations of vegetables, fruit, nuts or other parts of plants"
+21,Miscellaneous edible preparations
+22,"Beverages, spirits and vinegar"
+23,Residues and waste from the food industries; prepared animal fodder
+24,Tobacco and manufactured tobacco substitutes; nicotine products
+25,"Salt; sulphur; earths and stone; plastering materials, lime and cement"
+26,"Ores, slag and ash"
+27,"Mineral fuels, mineral oils and products of their distillation; bituminous substances; mineral waxes"
+28,"Inorganic chemicals; compounds of precious metals, rare-earth metals, radioactive elements or isotopes"
+29,Organic chemicals
+30,Pharmaceutical products
+31,Fertilisers
+32,"Tanning or dyeing extracts; dyes, pigments and other colouring matter; paints and varnishes; putty; inks"
+33,"Essential oils and resinoids; perfumery, cosmetic or toilet preparations"
+34,"Soap, washing and lubricating preparations, waxes, polishing preparations, candles, modelling pastes and dental preparations"
+35,Albuminoidal substances; modified starches; glues; enzymes
+36,Explosives; pyrotechnic products; matches; pyrophoric alloys; certain combustible preparations
+37,Photographic or cinematographic goods
+38,Miscellaneous chemical products
+39,Plastics and articles thereof
+40,Rubber and articles thereof
+41,Raw hides and skins (other than furskins) and leather
+42,"Articles of leather; saddlery and harness; travel goods, handbags and similar containers"
+43,Furskins and artificial fur; manufactures thereof
+44,Wood and articles of wood; wood charcoal
+45,Cork and articles of cork
+46,"Manufactures of straw, esparto or other plaiting materials; basketware and wickerwork"
+47,Pulp of wood or other fibrous cellulosic material; recovered (waste and scrap) paper or paperboard
+48,"Paper and paperboard; articles of paper pulp, of paper or of paperboard"
+49,"Printed books, newspapers, pictures and other products of the printing industry"
+50,Silk
+51,"Wool, fine or coarse animal hair; horsehair yarn and woven fabric"
+52,Cotton
+53,Other vegetable textile fibres; paper yarn and woven fabrics of paper yarn
+54,Man-made filaments; strip and the like of man-made textile materials
+55,Man-made staple fibres
+56,"Wadding, felt and nonwovens; special yarns; twine, cordage, ropes and cables"
+57,Carpets and other textile floor coverings
+58,Special woven fabrics; tufted textile fabrics; lace; tapestries; trimmings; embroidery
+59,"Impregnated, coated, covered or laminated textile fabrics; textile articles for industrial use"
+60,Knitted or crocheted fabrics
+61,"Articles of apparel and clothing accessories, knitted or crocheted"
+62,"Articles of apparel and clothing accessories, not knitted or crocheted"
+63,Other made up textile articles; sets; worn clothing and worn textile articles; rags
+64,"Footwear, gaiters and the like; parts of such articles"
+65,Headgear and parts thereof
+66,"Umbrellas, sun umbrellas, walking-sticks, seat-sticks, whips, riding-crops and parts thereof"
+67,Prepared feathers and down; artificial flowers; articles of human hair
+68,"Articles of stone, plaster, cement, asbestos, mica or similar materials"
+69,Ceramic products
+70,Glass and glassware
+71,"Natural or cultured pearls, precious or semi-precious stones, precious metals and articles thereof; imitation jewellery; coin"
+72,Iron and steel
+73,Articles of iron or steel
+74,Copper and articles thereof
+75,Nickel and articles thereof
+76,Aluminium and articles thereof
+78,Lead and articles thereof
+79,Zinc and articles thereof
+80,Tin and articles thereof
+81,Other base metals; cermets; articles thereof
+82,"Tools, implements, cutlery, spoons and forks, of base metal"
+83,Miscellaneous articles of base metal
+84,"Nuclear reactors, boilers, machinery and mechanical appliances; parts thereof"
+85,"Electrical machinery and equipment; sound and television recorders and reproducers; parts and accessories"
+86,"Railway or tramway locomotives, rolling-stock, track fixtures and fittings; traffic signalling equipment"
+87,"Vehicles other than railway or tramway rolling-stock, and parts and accessories thereof"
+88,"Aircraft, spacecraft, and parts thereof"
+89,"Ships, boats and floating structures"
+90,"Optical, photographic, measuring, checking, precision, medical or surgical instruments and apparatus"
+91,Clocks and watches and parts thereof
+92,Musical instruments; parts and accessories of such articles
+93,Arms and ammunition; parts and accessories thereof
+94,"Furniture; bedding, mattresses, cushions; luminaires and lighting fittings; illuminated signs; prefabricated buildings"
+95,"Toys, games and sports requisites; parts and accessories thereof"
+96,Miscellaneous manufactured articles
+97,"Works of art, collectors' pieces and antiques"
+98,"Project imports; laboratory chemicals; passengers' baggage; personal importations; ship stores"
+99,Services

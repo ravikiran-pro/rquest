@@ -1,0 +1,23 @@
+{
+  "name": "rquest-catalog",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Isolated extraction pipeline for the Rquest master catalog. Writes only to the `catalog` Postgres schema; never imports from or writes to the app.",
+  "license": "UNLICENSED",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20.12"
+  },
+  "scripts": {
+    "migrate": "node cli.js migrate",
+    "sources": "node cli.js sources",
+    "status": "node cli.js status",
+    "run": "node cli.js run",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "pg": "8.23.1",
+    "pg-copy-streams": "7.0.0",
+    "zod": "4.6.7"
+  }
+}
