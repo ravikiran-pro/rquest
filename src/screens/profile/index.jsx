@@ -1,23 +1,26 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Card,
-  Tabs,
-  Button,
-  Avatar,
-  Typography,
-  Row,
-  Col,
-  Form,
-  Input,
-  Flex,
-  Spin,
-  Tag,
-  message,
-  Grid,
-  Empty,
-  Progress,
-  Modal,
   Alert,
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Form,
+  Grid,
+  Input,
+  List,
+  message,
+  Progress,
+  Row,
+  Segmented,
+  Skeleton,
+  Space,
+  Statistic,
+  Steps,
+  Tabs,
+  Tag,
+  Typography,
 } from 'antd';
 import {
   UserOutlined,
@@ -29,10 +32,10 @@ import {
   LogoutOutlined,
   SafetyCertificateOutlined,
   CheckCircleFilled,
+  MinusCircleOutlined,
   RocketOutlined,
   ArrowRightOutlined,
   ArrowLeftOutlined,
-  TrophyOutlined,
   CompassOutlined,
   AimOutlined,
   ShoppingOutlined,
@@ -47,22 +50,24 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
 import { netWorkCall, apiConfig, checkUserRole, getPreciseUserLocation, getLocationName } from '../../app/utils';
 import Routes from '../../app/routes/routes';
-import { AddressCard, AddressModal } from '../../app/components/profile';
-import { LeafletComponent } from '../../app/components';
-import { colors } from '../../app/styles/theme';
+import { AddressCard, AddressModal, ResponsiveSheet } from '../../app/components/profile';
 import './profile.css';
 
 const { Title, Text } = Typography;
 
-// Clean, realistic shopper interest categories (No emojis, sleek modern icons)
+const SUPER_ADMIN_ROLE_ID = 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9';
+const DEFAULT_COORDS = [12.9716, 77.5946];
+
 const SHOPPING_INTERESTS = [
-  { id: 'groceries', name: 'Groceries & Kirana', desc: 'Daily essentials & pantry staples', icon: <ShoppingOutlined /> },
-  { id: 'dining', name: 'Restaurants & Dining', desc: 'Fresh meals, snacks & cafes', icon: <CoffeeOutlined /> },
-  { id: 'pharmacy', name: 'Pharmacy & Wellness', desc: 'Medicines & health supplies', icon: <MedicineBoxOutlined /> },
-  { id: 'services', name: 'Technicians & Repairs', desc: 'AC, electricians & plumbers', icon: <ToolOutlined /> },
-  { id: 'salon', name: 'Salon & Personal Care', desc: 'Grooming & spa appointments', icon: <SmileOutlined /> },
-  { id: 'retail', name: 'Local Retail & Stores', desc: 'Fashion, stationery & electronics', icon: <ShopOutlined /> },
+  { id: 'groceries', name: 'Groceries & kirana', desc: 'Daily essentials and pantry staples', icon: <ShoppingOutlined /> },
+  { id: 'dining', name: 'Restaurants & dining', desc: 'Fresh meals, snacks and cafés', icon: <CoffeeOutlined /> },
+  { id: 'pharmacy', name: 'Pharmacy & wellness', desc: 'Medicines and health supplies', icon: <MedicineBoxOutlined /> },
+  { id: 'services', name: 'Technicians & repairs', desc: 'AC, electrical and plumbing', icon: <ToolOutlined /> },
+  { id: 'salon', name: 'Salon & personal care', desc: 'Grooming and spa appointments', icon: <SmileOutlined /> },
+  { id: 'retail', name: 'Local retail & stores', desc: 'Fashion, stationery and electronics', icon: <ShopOutlined /> },
 ];
+
+const ADDRESS_LABEL_OPTIONS = ['Home', 'Work', 'Other'];
 
 const ProfileScreen = () => {
   const history = useHistory();
@@ -74,9 +79,9 @@ const ProfileScreen = () => {
   const { isAdmin, isMerchant } = checkUserRole(user_data);
   const isSuperAdmin = Boolean(
     isAdmin ||
-    user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
-    user_data?.username === 'admin' ||
-    user_data?.username === 'root'
+      user_data?.role_id === SUPER_ADMIN_ROLE_ID ||
+      user_data?.username === 'admin' ||
+      user_data?.username === 'root'
   );
 
   const [loading, setLoading] = useState(true);
@@ -88,33 +93,25 @@ const ProfileScreen = () => {
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState(null);
 
-  // Interactive Setup Guide & Focus State
+  // Setup guide (onboarding wizard)
   const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
   const [onboardingStep, setOnboardingStep] = useState(0);
-  const [focusedActionKey, setFocusedActionKey] = useState(null);
-
-  // Guided Assistant Form State
-  const [assistantData, setAssistantData] = useState({
-    username: '',
-    email: '',
-    phone: '',
-    // Address fields (customer)
-    address_label: 'Home',
-    street_area: '',
-    house_flat_floor: '',
-    city: 'Bengaluru',
-    coords: [12.9716, 77.5946],
-    interests: ['groceries', 'dining'],
-  });
+  const [savingOnboarding, setSavingOnboarding] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
-  const [savingAssistant, setSavingAssistant] = useState(false);
-  const [showMapModal, setShowMapModal] = useState(false);
+  const [assistantCoords, setAssistantCoords] = useState(DEFAULT_COORDS);
+  const [interests, setInterests] = useState(['groceries', 'dining']);
 
   const [profileForm] = Form.useForm();
+  const [contactForm] = Form.useForm();
+  const [addressForm] = Form.useForm();
   const emailInputRef = useRef(null);
 
-  const fetchProfileAndAddresses = async () => {
-    setLoading(true);
+  const displayName = profile?.username || user_data?.username || 'User';
+  const avatarInitial = displayName.charAt(0).toUpperCase() || 'U';
+
+  // The skeleton shows only on first load; later refreshes update in place
+  const fetchProfileAndAddresses = async ({ silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const promises = [
         netWorkCall(apiConfig.user_profile, 'GET', null, true),
@@ -125,24 +122,10 @@ const ProfileScreen = () => {
         promises.push(netWorkCall(apiConfig.my_shops, 'POST', null, true));
       }
 
-      const results = await Promise.all(promises);
-      const profileRes = results[0];
-      const addrRes = results[1];
-      const shopsRes = results[2];
+      const [profileRes, addrRes, shopsRes] = await Promise.all(promises);
 
       if (profileRes?.data) {
         setProfile(profileRes.data);
-        setAssistantData((prev) => ({
-          ...prev,
-          username: profileRes.data.username || user_data?.username || '',
-          email: profileRes.data.email || '',
-          phone: profileRes.data.mobile || user_data?.mobile || '',
-        }));
-        profileForm.setFieldsValue({
-          username: profileRes.data.username || '',
-          email: profileRes.data.email || '',
-          mobile: profileRes.data.mobile || '',
-        });
       }
 
       if (addrRes?.data) {
@@ -154,7 +137,7 @@ const ProfileScreen = () => {
       }
     } catch (err) {
       console.error('Error fetching profile:', err);
-      message.error('Failed to load profile details');
+      message.error('Could not load your profile. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -164,30 +147,40 @@ const ProfileScreen = () => {
     fetchProfileAndAddresses();
   }, []);
 
-  // Handle URL query parameters for onboarding (e.g. ?onboarding=customer&new=true)
+  // Open the setup guide from links such as ?onboarding=customer or ?new=true
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    const obParam = params.get('onboarding');
-    const isNew = params.get('new') === 'true';
-
-    if (obParam || isNew) {
+    if (params.get('onboarding') || params.get('new') === 'true') {
       setOnboardingModalOpen(true);
       setOnboardingStep(0);
     }
   }, [location.search]);
 
-  // Profile Save
+  // Pre-fill the contact step each time the setup guide opens
+  useEffect(() => {
+    if (!onboardingModalOpen) return;
+    contactForm.setFieldsValue({
+      username: profile?.username || user_data?.username || '',
+      email: profile?.email || '',
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onboardingModalOpen]);
+
+  // Default the "Save as" label once the address step is on screen
+  useEffect(() => {
+    if (!onboardingModalOpen || onboardingStep !== 1 || isMerchant) return;
+    if (!addressForm.getFieldValue('label')) {
+      addressForm.setFieldsValue({ label: 'Home' });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onboardingModalOpen, onboardingStep]);
+
   const handleUpdateProfile = async (values) => {
     setSavingProfile(true);
     try {
-      const res = await netWorkCall(
-        apiConfig.user_profile,
-        'PUT',
-        JSON.stringify(values),
-        true
-      );
+      const res = await netWorkCall(apiConfig.user_profile, 'PUT', JSON.stringify(values), true);
       if (res?.success) {
-        message.success('Profile updated successfully!');
+        message.success('Profile updated');
         setProfile((prev) => ({ ...prev, ...res.data }));
         update_user_data({
           ...user_data,
@@ -196,55 +189,42 @@ const ProfileScreen = () => {
           email: res.data.email,
         });
       } else {
-        message.error(res?.message || 'Failed to update profile');
+        message.error(res?.message || 'Could not update your profile');
       }
     } catch (err) {
       console.error('Profile update error:', err);
-      message.error('Error saving profile changes');
+      message.error('Could not save your changes. Please try again.');
     } finally {
       setSavingProfile(false);
     }
   };
 
-  // Address Handlers
+  // ---------------------------------------------------------------------------
+  // Address handlers
+  // ---------------------------------------------------------------------------
   const handleSetDefaultAddress = async (addr) => {
     try {
-      const res = await netWorkCall(
-        `${apiConfig.user_addresses}/${addr.id}/default`,
-        'PUT',
-        null,
-        true
-      );
+      const res = await netWorkCall(`${apiConfig.user_addresses}/${addr.id}/default`, 'PUT', null, true);
       if (res?.success) {
-        message.success(`Set ${addr.label || 'address'} as default`);
-        setAddresses((prev) =>
-          prev.map((a) => ({
-            ...a,
-            is_default: a.id === addr.id,
-          }))
-        );
+        message.success(`${addr.label || 'Address'} set as default`);
+        setAddresses((prev) => prev.map((a) => ({ ...a, is_default: a.id === addr.id })));
       }
     } catch (err) {
       console.error('Set default error:', err);
-      message.error('Failed to set default address');
+      message.error('Could not set the default address');
     }
   };
 
   const handleDeleteAddress = async (addr) => {
     try {
-      const res = await netWorkCall(
-        `${apiConfig.user_addresses}/${addr.id}`,
-        'DELETE',
-        null,
-        true
-      );
+      const res = await netWorkCall(`${apiConfig.user_addresses}/${addr.id}`, 'DELETE', null, true);
       if (res?.success) {
         message.success('Address removed');
         setAddresses((prev) => prev.filter((a) => a.id !== addr.id));
       }
     } catch (err) {
       console.error('Delete address error:', err);
-      message.error('Failed to delete address');
+      message.error('Could not remove the address');
     }
   };
 
@@ -264,144 +244,68 @@ const ProfileScreen = () => {
     history.push(Routes.login);
   };
 
-  // -------------------------------------------------------------------------
-  // Profile Completion Score Engine & Interactive Checklist
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Profile completion checklist
+  // ---------------------------------------------------------------------------
   const calculateCompletion = () => {
     let score = 0;
     const checks = [];
 
-    // 1. Basic Account Created (Username + Mobile)
+    // 1. Account (username + mobile)
     const hasBasic = !!(profile?.username && profile?.mobile);
+    const basicPoints = isMerchant ? 25 : 30;
     if (hasBasic) {
-      score += isMerchant ? 25 : 30;
-      checks.push({
-        key: 'basic',
-        label: 'Account Verified',
-        fullLabel: 'Account Verified (Mobile & Username)',
-        done: true,
-        points: isMerchant ? 25 : 30,
-      });
+      score += basicPoints;
+      checks.push({ key: 'basic', label: 'Account verified', fullLabel: 'Account verified (name and mobile)', done: true, points: basicPoints });
     } else {
-      checks.push({
-        key: 'basic',
-        label: 'Basic Details',
-        fullLabel: 'Complete Account Details',
-        done: false,
-        points: isMerchant ? 25 : 30,
-        tab: 'profile_info',
-      });
+      checks.push({ key: 'basic', label: 'Complete account', fullLabel: 'Complete your account details', done: false, points: basicPoints, tab: 'profile_info' });
     }
 
-    // 2. Email Address
+    // 2. Email
     const hasEmail = !!(profile?.email && profile.email.trim());
+    const emailPoints = isMerchant ? 20 : 25;
     if (hasEmail) {
-      score += isMerchant ? 20 : 25;
-      checks.push({
-        key: 'email',
-        label: 'Email Added',
-        fullLabel: 'Email Added for Digital Invoices',
-        done: true,
-        points: isMerchant ? 20 : 25,
-      });
+      score += emailPoints;
+      checks.push({ key: 'email', label: 'Email added', fullLabel: 'Email added for invoices', done: true, points: emailPoints });
     } else {
-      checks.push({
-        key: 'email',
-        label: 'Add Email',
-        fullLabel: 'Add Email for Order Invoices',
-        done: false,
-        points: isMerchant ? 20 : 25,
-        tab: 'profile_info',
-      });
+      checks.push({ key: 'email', label: 'Add email', fullLabel: 'Add an email for order invoices', done: false, points: emailPoints, tab: 'profile_info' });
     }
 
     if (isMerchant) {
-      // 3. Storefront Registration
+      // 3. Storefront registered
       const hasShop = myShops && myShops.length > 0;
       if (hasShop) {
         score += 35;
-        checks.push({
-          key: 'shop',
-          label: 'Storefront Live',
-          fullLabel: `Store Registered (${myShops[0]?.shop_name || 'Active'})`,
-          done: true,
-          points: 35,
-        });
+        checks.push({ key: 'shop', label: 'Storefront live', fullLabel: `Store registered (${myShops[0]?.shop_name || 'active'})`, done: true, points: 35 });
       } else {
-        checks.push({
-          key: 'shop',
-          label: 'Register Storefront',
-          fullLabel: 'Register Physical Storefront',
-          done: false,
-          points: 35,
-          action: 'register_shop',
-        });
+        checks.push({ key: 'shop', label: 'Register storefront', fullLabel: 'Register your storefront', done: false, points: 35, action: 'register_shop' });
       }
 
-      // 4. Shop Catalog
+      // 4. Catalogue / location
       const hasCatalog = myShops && myShops.some((s) => s.address || s.products_list);
       if (hasCatalog) {
         score += 20;
-        checks.push({
-          key: 'catalog',
-          label: 'Catalog Configured',
-          fullLabel: 'Store Address & Catalog Configured',
-          done: true,
-          points: 20,
-        });
+        checks.push({ key: 'catalog', label: 'Catalogue set', fullLabel: 'Store address and catalogue configured', done: true, points: 20 });
       } else {
-        checks.push({
-          key: 'catalog',
-          label: 'Set Location & Menu',
-          fullLabel: 'Set Store Location & Menu Items',
-          done: false,
-          points: 20,
-          action: 'register_shop',
-        });
+        checks.push({ key: 'catalog', label: 'Set location and menu', fullLabel: 'Set your store location and menu', done: false, points: 20, action: 'register_shop' });
       }
     } else {
-      // 3. Saved Delivery Address
+      // 3. Delivery address
       const hasAddress = addresses && addresses.length > 0;
       if (hasAddress) {
         score += 35;
-        checks.push({
-          key: 'address',
-          label: `Address Saved (${addresses.length})`,
-          fullLabel: `Delivery Address Saved (${addresses.length})`,
-          done: true,
-          points: 35,
-        });
+        checks.push({ key: 'address', label: `Address saved (${addresses.length})`, fullLabel: `Delivery addresses saved (${addresses.length})`, done: true, points: 35 });
       } else {
-        checks.push({
-          key: 'address',
-          label: 'Add Delivery Address',
-          fullLabel: 'Add Primary Delivery Address / Pin',
-          done: false,
-          points: 35,
-          action: 'add_address',
-        });
+        checks.push({ key: 'address', label: 'Add address', fullLabel: 'Add your delivery address', done: false, points: 35, action: 'add_address' });
       }
 
-      // 4. Set Default Address
+      // 4. Default address
       const hasDefault = addresses && addresses.some((a) => a.is_default);
       if (hasDefault) {
         score += 10;
-        checks.push({
-          key: 'default_addr',
-          label: 'Default Address Set',
-          fullLabel: 'Default 1-Tap Delivery Address Selected',
-          done: true,
-          points: 10,
-        });
+        checks.push({ key: 'default_addr', label: 'Default address set', fullLabel: 'Default delivery address selected', done: true, points: 10 });
       } else {
-        checks.push({
-          key: 'default_addr',
-          label: 'Set Default Address',
-          fullLabel: 'Select Default Address for Quick Orders',
-          done: false,
-          points: 10,
-          action: 'add_address',
-        });
+        checks.push({ key: 'default_addr', label: 'Set default', fullLabel: 'Choose a default delivery address', done: false, points: 10, action: 'add_address' });
       }
     }
 
@@ -409,1146 +313,670 @@ const ProfileScreen = () => {
   };
 
   const { score: completionScore, checks: completionChecks } = calculateCompletion();
-  const firstIncompleteCheck = completionChecks.find((c) => !c.done);
 
-  // -------------------------------------------------------------------------
-  // Interactive Setup Guide Focus Handler
-  // -------------------------------------------------------------------------
   const handleExecuteChecklistAction = (check) => {
-    setFocusedActionKey(check.key);
-
     if (check.key === 'email' || check.tab === 'profile_info') {
       setActiveTabKey('profile_info');
-      // Smooth focus on personal form
+      message.info('Add your email below and save your changes');
       setTimeout(() => {
-        if (emailInputRef.current) {
-          emailInputRef.current.focus({ cursor: 'end' });
-        }
+        emailInputRef.current?.focus({ cursor: 'end' });
       }, 200);
-      message.info('Enter your email address below and click Save Changes');
     } else if (check.action === 'add_address' || check.key === 'address' || check.key === 'default_addr') {
       handleAddNewAddress();
     } else if (check.action === 'register_shop' || check.key === 'shop' || check.key === 'catalog') {
       history.push(`${Routes.client}?onboarding=shop`);
     } else {
+      setOnboardingStep(0);
       setOnboardingModalOpen(true);
     }
   };
 
-  // -------------------------------------------------------------------------
-  // Onboarding Assistant Step Actions
-  // -------------------------------------------------------------------------
+  // ---------------------------------------------------------------------------
+  // Setup guide
+  // ---------------------------------------------------------------------------
+  const closeOnboarding = () => {
+    setOnboardingModalOpen(false);
+    history.replace(Routes.profile);
+  };
+
+  const openOnboarding = () => {
+    setOnboardingStep(0);
+    setOnboardingModalOpen(true);
+  };
+
   const handleDetectAssistantGps = async () => {
     setDetectingGps(true);
     try {
       const loc = await getPreciseUserLocation(true);
       if (loc && loc.length === 2) {
-        setAssistantData((prev) => ({ ...prev, coords: loc }));
+        setAssistantCoords(loc);
         const areaName = await getLocationName(loc[0], loc[1]);
         if (areaName) {
-          setAssistantData((prev) => ({
-            ...prev,
-            street_area: prev.street_area || areaName,
-          }));
-          message.success('GPS location applied');
+          addressForm.setFieldsValue({ street_area: addressForm.getFieldValue('street_area') || areaName });
+          message.success('Location applied');
         }
       }
     } catch (e) {
       console.warn('GPS detection error:', e);
-      message.warning('Could not auto-detect location. You can enter it manually.');
+      message.warning('Could not detect your location. Enter it manually.');
     } finally {
       setDetectingGps(false);
     }
   };
 
-  const handleSaveAssistantStep = async () => {
-    // Step 0: Save contact details if modified
-    if (onboardingStep === 0) {
-      if (assistantData.email && assistantData.email !== profile?.email) {
-        setSavingAssistant(true);
-        try {
-          await netWorkCall(
-            apiConfig.user_profile,
-            'PUT',
-            JSON.stringify({
-              username: assistantData.username || profile?.username,
-              email: assistantData.email.trim(),
-            }),
-            true
-          );
-          setProfile((prev) => ({ ...prev, email: assistantData.email.trim() }));
-          update_user_data({ ...user_data, email: assistantData.email.trim() });
-        } catch (e) {
-          console.warn('Step 0 email save:', e);
-        } finally {
-          setSavingAssistant(false);
+  const handleContactStep = async (values) => {
+    const username = values.username?.trim() || profile?.username || '';
+    const email = values.email?.trim() || '';
+    const changed = username !== (profile?.username || '') || email !== (profile?.email || '');
+
+    if (changed) {
+      setSavingOnboarding(true);
+      try {
+        const res = await netWorkCall(apiConfig.user_profile, 'PUT', JSON.stringify({ username, email }), true);
+        if (!res?.success) {
+          message.error(res?.message || 'Could not save your contact details');
+          return;
         }
+        setProfile((prev) => ({ ...prev, username, email }));
+        update_user_data({ ...user_data, username, email });
+      } catch (e) {
+        console.warn('Setup guide contact save:', e);
+        message.error('Could not save your contact details');
+        return;
+      } finally {
+        setSavingOnboarding(false);
       }
-      setOnboardingStep(1);
-      return;
     }
 
-    // Step 1: Save Address (Customer) or navigate to Store setup (Merchant)
+    setOnboardingStep(1);
+  };
+
+  const handleAddressStep = async (values) => {
+    const hasInput = Boolean(values.street_area?.trim() || values.house_flat_floor?.trim());
+
+    // Only create an address when the user actually entered one
+    if (addresses.length === 0 && hasInput) {
+      setSavingOnboarding(true);
+      try {
+        const payload = {
+          label: values.label || 'Home',
+          recipient_name: profile?.username || user_data?.username || 'User',
+          recipient_phone: profile?.mobile || user_data?.mobile || '',
+          house_flat_floor: values.house_flat_floor?.trim() || '',
+          street_area: values.street_area?.trim() || 'Neighbourhood',
+          city: 'Bengaluru',
+          latitude: assistantCoords[0],
+          longitude: assistantCoords[1],
+          is_default: true,
+        };
+        const res = await netWorkCall(apiConfig.user_addresses, 'POST', JSON.stringify(payload), true);
+        if (!res?.success) {
+          message.error(res?.message || 'Could not save your address');
+          return;
+        }
+        setAddresses([res.data]);
+        message.success('Delivery address saved');
+      } catch (e) {
+        console.error('Setup guide address save error:', e);
+        message.error('Could not save your address');
+        return;
+      } finally {
+        setSavingOnboarding(false);
+      }
+    }
+
+    setOnboardingStep(2);
+  };
+
+  const finishOnboarding = () => {
+    setOnboardingModalOpen(false);
+    history.replace(Routes.profile);
+    message.success('Profile setup complete');
+  };
+
+  const toggleInterest = (id) => {
+    setInterests((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
+  };
+
+  // ---------------------------------------------------------------------------
+  // Render
+  // ---------------------------------------------------------------------------
+  if (loading) {
+    return (
+      <div className="rq-profile">
+        <Card className="rq-profile-hero">
+          <Skeleton avatar active paragraph={{ rows: 3 }} />
+        </Card>
+      </div>
+    );
+  }
+
+  const accountLabel = isSuperAdmin ? 'Super admin' : isMerchant ? 'Shop owner' : 'Shopper';
+
+  const addressesPanel = (
+    <>
+      <div className="rq-tab-head">
+        <div>
+          <Title level={5} className="rq-tab-title">
+            Saved addresses
+          </Title>
+          <Text type="secondary">Used at checkout and to find stores near you.</Text>
+        </div>
+        <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewAddress}>
+          Add address
+        </Button>
+      </div>
+
+      {addresses.length === 0 ? (
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={
+            <>
+              <div className="rq-empty-title">No delivery address yet</div>
+              <Text type="secondary">Save your home or work location for faster checkout.</Text>
+            </>
+          }
+        >
+          <Button type="primary" icon={<PlusOutlined />} onClick={handleAddNewAddress}>
+            Add your first address
+          </Button>
+        </Empty>
+      ) : (
+        <Row gutter={[16, 16]} align="stretch">
+          {addresses.map((addr) => (
+            <Col xs={24} md={12} key={addr.id}>
+              <AddressCard
+                address={addr}
+                onEdit={handleEditAddress}
+                onDelete={handleDeleteAddress}
+                onSetDefault={handleSetDefaultAddress}
+              />
+            </Col>
+          ))}
+        </Row>
+      )}
+    </>
+  );
+
+  const personalPanel = (
+    <div className="rq-tab-form">
+      <Title level={5} className="rq-tab-title">
+        Personal details
+      </Title>
+      <Text type="secondary">Used for order confirmations and messages from stores.</Text>
+
+      <Form
+        form={profileForm}
+        layout="vertical"
+        size="large"
+        requiredMark="optional"
+        onFinish={handleUpdateProfile}
+        className="rq-profile-form"
+        style={{ marginTop: 20 }}
+        initialValues={{
+          username: profile?.username || '',
+          email: profile?.email || '',
+          mobile: profile?.mobile || '',
+        }}
+      >
+        <Form.Item name="username" label="Display name" rules={[{ required: true, message: 'Enter a display name' }]}>
+          <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Your name" autoComplete="name" />
+        </Form.Item>
+
+        <Form.Item name="mobile" label="Mobile number" rules={[{ required: true, message: 'Enter your mobile number' }]}>
+          <Input prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="Mobile number" inputMode="tel" autoComplete="tel" />
+        </Form.Item>
+
+        <Form.Item
+          name="email"
+          label="Email address"
+          extra="Used for digital receipts and invoices."
+          rules={[{ type: 'email', message: 'Enter a valid email address' }]}
+        >
+          <Input
+            ref={emailInputRef}
+            prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
+            placeholder="name@example.com"
+            autoComplete="email"
+          />
+        </Form.Item>
+
+        <Form.Item className="rq-form-actions" style={{ marginBottom: 0 }}>
+          <Button type="primary" htmlType="submit" loading={savingProfile}>
+            Save changes
+          </Button>
+        </Form.Item>
+      </Form>
+    </div>
+  );
+
+  const tabItems = [
+    {
+      key: 'addresses',
+      label: (
+        <span>
+          <EnvironmentOutlined /> Addresses ({addresses.length})
+        </span>
+      ),
+      children: addressesPanel,
+    },
+    {
+      key: 'profile_info',
+      label: (
+        <span>
+          <UserOutlined /> Personal
+        </span>
+      ),
+      children: personalPanel,
+      forceRender: true,
+    },
+    ...(isMerchant
+      ? [
+          {
+            key: 'account_hub',
+            label: (
+              <span>
+                <ShopOutlined /> Storefront
+              </span>
+            ),
+            children: (
+              <Alert
+                type="info"
+                showIcon
+                className="rq-role-alert"
+                message="Storefront hub"
+                description={
+                  myShops.length > 0
+                    ? `You have ${myShops.length} registered storefront${myShops.length > 1 ? 's' : ''}. Manage your catalogue and orders.`
+                    : 'Set up your storefront pin and catalogue on the neighbourhood map.'
+                }
+                action={
+                  <Button type="primary" onClick={() => history.push(Routes.client)}>
+                    Open merchant studio
+                  </Button>
+                }
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(!isMerchant
+      ? [
+          {
+            key: 'delivery_hub',
+            label: (
+              <span>
+                <CarOutlined /> Delivery
+              </span>
+            ),
+            children: (
+              <Alert
+                type="success"
+                showIcon
+                className="rq-role-alert"
+                message="Delivery partner tasks"
+                description="View open deliveries, live routes and earnings from local drop-offs."
+                action={
+                  <Button type="primary" onClick={() => history.push(Routes.deliveryPortal)}>
+                    Open delivery portal
+                  </Button>
+                }
+              />
+            ),
+          },
+        ]
+      : []),
+    ...(isSuperAdmin
+      ? [
+          {
+            key: 'admin_hub',
+            label: (
+              <span>
+                <SafetyCertificateOutlined /> Admin
+              </span>
+            ),
+            children: (
+              <Alert
+                type="warning"
+                showIcon
+                className="rq-role-alert"
+                message="Super admin access"
+                description="Full control over storefront schemas, users, categories and marketplace health."
+                action={
+                  <Button danger onClick={() => history.push(Routes.admin)}>
+                    Open admin console
+                  </Button>
+                }
+              />
+            ),
+          },
+        ]
+      : []),
+  ];
+
+  const quickLinks = [
+    { key: 'explore', icon: <CompassOutlined />, label: 'Explore stores', onClick: () => history.push(Routes.app) },
+    { key: 'address', icon: <EnvironmentOutlined />, label: 'Add delivery address', onClick: handleAddNewAddress },
+    ...(!isMerchant
+      ? [
+          { key: 'delivery', icon: <CarOutlined />, label: 'Delivery portal', onClick: () => history.push(Routes.deliveryPortal) },
+          { key: 'register', icon: <ShopOutlined />, label: 'Register your store', onClick: () => history.push(`${Routes.client}?onboarding=shop`) },
+        ]
+      : []),
+    ...(isSuperAdmin
+      ? [{ key: 'admin', icon: <SafetyCertificateOutlined />, label: 'Admin console', onClick: () => history.push(Routes.admin) }]
+      : []),
+  ];
+
+  const onboardingTitle = (
+    <div className="rq-sheet-title">
+      <span className="rq-sheet-title-icon">{isMerchant ? <ShopOutlined /> : <RocketOutlined />}</span>
+      <div style={{ minWidth: 0 }}>
+        <div className="rq-sheet-title-main">{isMerchant ? 'Shop owner setup' : 'Welcome to Rquest'}</div>
+        <div className="rq-sheet-title-sub">
+          {isMerchant ? 'Get your store ready for nearby customers' : 'A few quick steps to start ordering'}
+        </div>
+      </div>
+    </div>
+  );
+
+  const stepItems = isMerchant
+    ? [{ title: 'Contact' }, { title: 'Storefront' }, { title: 'Launch' }]
+    : [{ title: 'Contact' }, { title: 'Address' }, { title: 'Interests' }];
+
+  const onboardingFooter = (() => {
+    if (onboardingStep === 0) {
+      return (
+        <div className="rq-sheet-footer rq-sheet-footer--split">
+          <Button type="text" onClick={closeOnboarding}>
+            Skip for now
+          </Button>
+          <Button type="primary" loading={savingOnboarding} onClick={() => contactForm.submit()}>
+            Continue <ArrowRightOutlined />
+          </Button>
+        </div>
+      );
+    }
+
     if (onboardingStep === 1) {
       if (isMerchant) {
-        setOnboardingModalOpen(false);
-        history.push(`${Routes.client}?onboarding=shop`);
-        return;
+        return (
+          <div className="rq-sheet-footer rq-sheet-footer--split">
+            <Button icon={<ArrowLeftOutlined />} onClick={() => setOnboardingStep(0)}>
+              Back
+            </Button>
+            <Button
+              type="primary"
+              onClick={() => {
+                setOnboardingModalOpen(false);
+                history.push(`${Routes.client}?onboarding=shop`);
+              }}
+            >
+              Open storefront creator <ArrowRightOutlined />
+            </Button>
+          </div>
+        );
       }
-
-      // If customer has no address and typed something
-      if (addresses.length === 0 && (assistantData.street_area || assistantData.house_flat_floor)) {
-        setSavingAssistant(true);
-        try {
-          const payload = {
-            label: assistantData.address_label || 'Home',
-            recipient_name: assistantData.username || profile?.username || 'User',
-            recipient_phone: assistantData.phone || profile?.mobile || '',
-            house_flat_floor: assistantData.house_flat_floor || '',
-            street_area: assistantData.street_area || 'Neighborhood',
-            city: assistantData.city || 'Bengaluru',
-            latitude: assistantData.coords[0],
-            longitude: assistantData.coords[1],
-            is_default: true,
-          };
-          const res = await netWorkCall(apiConfig.user_addresses, 'POST', JSON.stringify(payload), true);
-          if (res?.success) {
-            setAddresses([res.data]);
-            message.success('Delivery address saved!');
-          }
-        } catch (e) {
-          console.error('Assistant address save error:', e);
-        } finally {
-          setSavingAssistant(false);
-        }
-      }
-      setOnboardingStep(2);
-      return;
+      return (
+        <div className="rq-sheet-footer rq-sheet-footer--split">
+          <Button icon={<ArrowLeftOutlined />} onClick={() => setOnboardingStep(0)}>
+            Back
+          </Button>
+          <Button type="primary" loading={savingOnboarding} onClick={() => addressForm.submit()}>
+            Save and continue <ArrowRightOutlined />
+          </Button>
+        </div>
+      );
     }
 
-    // Step 2: Final completion
-    if (onboardingStep === 2) {
-      setOnboardingModalOpen(false);
-      history.replace(Routes.profile);
-      message.success('Profile setup finished!');
-    }
-  };
-
-  const handleToggleInterest = (id) => {
-    setAssistantData((prev) => {
-      const exists = prev.interests.includes(id);
-      return {
-        ...prev,
-        interests: exists ? prev.interests.filter((i) => i !== id) : [...prev.interests, id],
-      };
-    });
-  };
+    return (
+      <div className="rq-sheet-footer rq-sheet-footer--split">
+        <Button icon={<ArrowLeftOutlined />} onClick={() => setOnboardingStep(1)}>
+          Back
+        </Button>
+        <Button
+          type="primary"
+          onClick={() => {
+            finishOnboarding();
+            history.push(Routes.app);
+          }}
+        >
+          Explore marketplace <ArrowRightOutlined />
+        </Button>
+      </div>
+    );
+  })();
 
   return (
-    <div className="profile-page-shell">
-      {loading ? (
-        <Flex justify="center" align="center" style={{ minHeight: '50vh' }}>
-          <Spin size="large" tip="Loading account profile..." />
-        </Flex>
-      ) : (
-        <>
-          {/* ================================================================
-              TOP USER HERO CARD (Cool, Light, Minimalist Aesthetic)
-              ================================================================ */}
-          <Card
-            className="profile-hero-card"
-            styles={{ body: { padding: screens.xs ? '18px 14px' : '24px 26px' } }}
-          >
-            <Flex
-              justify="space-between"
-              align={isMobile ? 'flex-start' : 'center'}
-              vertical={isMobile}
-              gap={16}
-            >
-              {/* User Avatar & Name */}
-              <Flex align="center" gap={14}>
-                <Avatar
-                  size={screens.xs ? 56 : 68}
-                  className={isMerchant ? 'profile-avatar-cool profile-avatar-merchant' : 'profile-avatar-cool'}
-                >
-                  {(profile?.username || user_data?.username || 'U')[0].toUpperCase()}
-                </Avatar>
+    <div className="rq-profile">
+      {/* Identity + key stats */}
+      <Card className="rq-profile-hero">
+        <div className="rq-profile-hero-main">
+          <Avatar size={isMobile ? 56 : 72} className="rq-profile-avatar">
+            {avatarInitial}
+          </Avatar>
 
-                <div>
-                  <Flex align="center" gap={8} wrap="wrap">
-                    <Title
-                      level={screens.xs ? 4 : 3}
-                      style={{
-                        margin: 0,
-                        fontWeight: 800,
-                        color: '#1C1C19',
-                        fontFamily: 'var(--font-headline)',
-                      }}
-                    >
-                      {profile?.username || user_data?.username || 'User'}
-                    </Title>
-                    {isMerchant ? (
-                      <span className="profile-role-badge merchant">
-                        <ShopOutlined /> Shop Owner
-                      </span>
-                    ) : (
-                      <span className="profile-role-badge buyer">
-                        <SafetyCertificateOutlined /> Shopper
-                      </span>
-                    )}
-                  </Flex>
-
-                  <Flex gap={14} wrap="wrap" style={{ marginTop: 6, fontSize: 13, color: '#64748b' }}>
-                    <Flex align="center" gap={5}>
-                      <PhoneOutlined style={{ color: '#94a3b8' }} />
-                      <span>{profile?.mobile || user_data?.mobile || 'No phone'}</span>
-                    </Flex>
-                    {profile?.email ? (
-                      <Flex align="center" gap={5}>
-                        <MailOutlined style={{ color: '#94a3b8' }} />
-                        <span>{profile.email}</span>
-                      </Flex>
-                    ) : (
-                      <span style={{ color: '#94a3b8', fontStyle: 'italic', fontSize: 12 }}>
-                        No email added
-                      </span>
-                    )}
-                  </Flex>
-                </div>
-              </Flex>
-
-              {/* Action Buttons */}
-              <Flex gap={8} wrap="wrap" style={{ width: isMobile ? '100%' : 'auto' }}>
-                <Button
-                  icon={<RocketOutlined />}
-                  onClick={() => {
-                    setOnboardingStep(0);
-                    setOnboardingModalOpen(true);
-                  }}
-                  style={{
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    borderColor: '#cbd5e1',
-                    color: '#334155',
-                    flex: isMobile ? 1 : 'none',
-                    height: 38,
-                  }}
-                >
-                  Setup Guide
-                </Button>
-                <Button
-                  danger
-                  icon={<LogoutOutlined />}
-                  onClick={logout}
-                  style={{
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    flex: isMobile ? 1 : 'none',
-                    height: 38,
-                  }}
-                >
-                  Log Out
-                </Button>
-              </Flex>
-            </Flex>
-
-            {/* Quick Metrics Bar */}
-            <div className="profile-metrics-grid">
-              <div className="profile-metric-box">
-                <div className="profile-metric-label">Saved Addresses</div>
-                <div className="profile-metric-value">{addresses.length}</div>
-              </div>
-              <div className="profile-metric-box">
-                <div className="profile-metric-label">Account Type</div>
-                <div className="profile-metric-value" style={{ fontSize: 15, color: '#334155' }}>
-                  {isSuperAdmin ? 'Super Admin' : isMerchant ? 'Shop Owner' : 'Verified Shopper'}
-                </div>
-              </div>
-              <div className="profile-metric-box metric-col-full">
-                <div className="profile-metric-label">Quick Actions</div>
-                <Flex gap={8} style={{ marginTop: 4 }} wrap="wrap">
-                  <Button
-                    size="small"
-                    type="link"
-                    icon={<PlusOutlined />}
-                    onClick={handleAddNewAddress}
-                    style={{ padding: 0, fontWeight: 700, color: colors.primary }}
-                  >
-                    Add Address
-                  </Button>
-                  <span style={{ color: '#cbd5e1' }}>•</span>
-                  <Button
-                    size="small"
-                    type="link"
-                    icon={<CompassOutlined />}
-                    onClick={() => history.push(Routes.app)}
-                    style={{ padding: 0, fontWeight: 600, color: '#64748b' }}
-                  >
-                    Explore Stores
-                  </Button>
-                  {isSuperAdmin && (
-                    <>
-                      <span style={{ color: '#cbd5e1' }}>•</span>
-                      <Button
-                        size="small"
-                        type="link"
-                        icon={<SafetyCertificateOutlined style={{ color: colors.secondary }} />}
-                        onClick={() => history.push(Routes.admin)}
-                        style={{ padding: 0, fontWeight: 700, color: colors.secondary }}
-                      >
-                        Admin Console
-                      </Button>
-                    </>
-                  )}
-                  {!isMerchant && (
-                    <>
-                      <span style={{ color: '#cbd5e1' }}>•</span>
-                      <Button
-                        size="small"
-                        type="link"
-                        icon={<CarOutlined style={{ color: '#047857' }} />}
-                        onClick={() => history.push(Routes.deliveryPortal)}
-                        style={{ padding: 0, fontWeight: 700, color: '#047857' }}
-                      >
-                        Delivery Portal
-                      </Button>
-                    </>
-                  )}
-                </Flex>
-              </div>
-            </div>
-          </Card>
-
-          {/* ================================================================
-              INTERACTIVE SETUP GUIDE FOCUS CARD (Light, Cool, Clean)
-              ================================================================ */}
-          <Card
-            className={`setup-guide-card ${completionScore === 100 ? 'completed' : ''} ${
-              focusedActionKey ? 'interactive-focused' : ''
-            }`}
-            styles={{ body: { padding: screens.xs ? '16px 14px' : '20px 22px' } }}
-          >
-            <Flex justify="space-between" align={isMobile ? 'flex-start' : 'center'} vertical={isMobile} gap={10}>
-              <div style={{ flex: 1, width: '100%' }}>
-                <Flex align="center" justify="space-between" wrap="wrap" gap={6}>
-                  <Flex align="center" gap={8}>
-                    {completionScore === 100 ? (
-                      <TrophyOutlined style={{ color: '#0E7A43', fontSize: 18 }} />
-                    ) : (
-                      <RocketOutlined style={{ color: '#0B2D6B', fontSize: 18 }} />
-                    )}
-                    <span style={{ fontWeight: 800, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                      Profile Setup: {completionScore}% Complete
-                    </span>
-                  </Flex>
-                  <Tag
-                    color={completionScore === 100 ? 'success' : completionScore >= 60 ? 'default' : 'warning'}
-                    style={{ fontWeight: 700, borderRadius: 6, margin: 0, fontSize: 11 }}
-                  >
-                    {completionScore === 100 ? 'Verified' : `${100 - completionScore}% To Complete`}
-                  </Tag>
-                </Flex>
-
-                <div className="setup-progress-wrap">
-                  <Progress
-                    percent={completionScore}
-                    status={completionScore === 100 ? 'success' : 'normal'}
-                    showInfo={false}
-                    strokeColor={completionScore === 100 ? '#0E7A43' : '#0B2D6B'}
-                    strokeWidth={6}
-                  />
-                </div>
-
-                {/* Interactive Checklist Pills */}
-                <div className="setup-checklist-wrap">
-                  {completionChecks.map((check) => (
-                    <div
-                      key={check.key}
-                      onClick={() => !check.done && handleExecuteChecklistAction(check)}
-                      className={`setup-check-chip ${check.done ? 'done' : 'pending'} ${
-                        focusedActionKey === check.key ? 'active-focus' : ''
-                      }`}
-                      title={check.fullLabel}
-                    >
-                      {check.done ? (
-                        <>
-                          <CheckCircleFilled />
-                          <span>{check.label}</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>+ {check.label}</span>
-                          <span className="setup-point-tag">+{check.points}%</span>
-                        </>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Interactive Next Step Focus Banner */}
-                {completionScore < 100 && firstIncompleteCheck && (
-                  <div className="setup-focus-banner">
-                    <div className="setup-focus-banner-left">
-                      <div className="setup-focus-beacon" />
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: '#1C1C19' }}>
-                          Next Recommended Step: {firstIncompleteCheck.fullLabel}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#5C5E66' }}>
-                          Tap to complete this detail and boost your account status.
-                        </div>
-                      </div>
-                    </div>
-                    <Button
-                      type="primary"
-                      size="small"
-                      onClick={() => handleExecuteChecklistAction(firstIncompleteCheck)}
-                      style={{
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
-                        height: 34,
-                        padding: '0 14px',
-                      }}
-                    >
-                      Complete Now <ArrowRightOutlined style={{ fontSize: 10 }} />
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </Flex>
-          </Card>
-
-          {/* ================================================================
-              MAIN TABS (Clean White Cards, Warm Parchment Alignment)
-              ================================================================ */}
-          <Card
-            className="profile-clean-card profile-tabs-card"
-            styles={{ body: { padding: screens.xs ? '14px 12px' : '20px 22px' } }}
-          >
-            <Tabs
-              activeKey={activeTabKey}
-              onChange={setActiveTabKey}
-              items={[
-                {
-                  key: 'addresses',
-                  label: (
-                    <span>
-                      <EnvironmentOutlined /> Delivery Addresses ({addresses.length})
-                    </span>
-                  ),
-                  children: (
-                    <div style={{ paddingTop: 4 }}>
-                      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }} wrap="wrap" gap={10}>
-                        <div>
-                          <Title level={5} style={{ margin: 0, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
-                            Saved Delivery Locations
-                          </Title>
-                          <Text type="secondary" style={{ fontSize: 12 }}>
-                            Manage saved addresses for 1-tap checkout and proximity store search.
-                          </Text>
-                        </div>
-                        <Button
-                          type="primary"
-                          icon={<PlusOutlined />}
-                          onClick={handleAddNewAddress}
-                          style={{
-                            borderRadius: 10,
-                            fontWeight: 700,
-                            background: '#0B2D6B',
-                            borderColor: '#0B2D6B',
-                            height: 38,
-                          }}
-                        >
-                          Add New Address
-                        </Button>
-                      </Flex>
-
-                      {addresses.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '36px 16px' }}>
-                          <Empty
-                            description={
-                              <div>
-                                <div style={{ fontWeight: 700, color: '#1C1C19', fontSize: 14, marginBottom: 4 }}>
-                                  No delivery address saved yet
-                                </div>
-                                <Text type="secondary" style={{ fontSize: 12 }}>
-                                  Save your home or work location for quick order placement and accurate walking distance.
-                                </Text>
-                              </div>
-                            }
-                          >
-                            <Button
-                              type="primary"
-                              icon={<PlusOutlined />}
-                              onClick={handleAddNewAddress}
-                              style={{
-                                marginTop: 12,
-                                borderRadius: 10,
-                                fontWeight: 700,
-                                background: '#0B2D6B',
-                                borderColor: '#0B2D6B',
-                              }}
-                            >
-                              Add Your Address
-                            </Button>
-                          </Empty>
-                        </div>
-                      ) : (
-                        <Row gutter={[14, 14]}>
-                          {addresses.map((addr) => (
-                            <Col xs={24} md={12} key={addr.id}>
-                              <AddressCard
-                                address={addr}
-                                onEdit={handleEditAddress}
-                                onDelete={handleDeleteAddress}
-                                onSetDefault={handleSetDefaultAddress}
-                              />
-                            </Col>
-                          ))}
-                        </Row>
-                      )}
-                    </div>
-                  ),
-                },
-                {
-                  key: 'profile_info',
-                  label: (
-                    <span>
-                      <UserOutlined /> Personal Details
-                    </span>
-                  ),
-                  children: (
-                    <div style={{ maxWidth: 520, paddingTop: 6 }}>
-                      <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
-                        Contact Information
-                      </Title>
-                      <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
-                        Used for order confirmations and store direct communication.
-                      </Text>
-
-                      <Form form={profileForm} layout="vertical" onFinish={handleUpdateProfile}>
-                        <Form.Item
-                          name="username"
-                          label="Display Name / Username"
-                          rules={[{ required: true, message: 'Please enter your username' }]}
-                        >
-                          <Input
-                            prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                            placeholder="Your username"
-                            size="large"
-                            style={{ borderRadius: 10 }}
-                          />
-                        </Form.Item>
-
-                        <Form.Item
-                          name="mobile"
-                          label="Mobile Number (Verified)"
-                          rules={[{ required: true, message: 'Mobile number is required' }]}
-                        >
-                          <Input
-                            prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
-                            placeholder="Mobile number"
-                            size="large"
-                            style={{ borderRadius: 10 }}
-                          />
-                        </Form.Item>
-
-                        <Form.Item
-                          name="email"
-                          label="Email Address (For receipts & invoices)"
-                        >
-                          <Input
-                            ref={emailInputRef}
-                            prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-                            placeholder="name@example.com"
-                            size="large"
-                            style={{ borderRadius: 10 }}
-                          />
-                        </Form.Item>
-
-                        <Button
-                          type="primary"
-                          htmlType="submit"
-                          loading={savingProfile}
-                          size="large"
-                          style={{
-                            marginTop: 6,
-                            borderRadius: 10,
-                            fontWeight: 700,
-                            background: '#0B2D6B',
-                            borderColor: '#0B2D6B',
-                            padding: '0 26px',
-                          }}
-                        >
-                          Save Changes
-                        </Button>
-                      </Form>
-                    </div>
-                  ),
-                },
-                ...(isMerchant
-                  ? [
-                      {
-                        key: 'account_hub',
-                        label: (
-                          <span>
-                            <ShopOutlined /> Storefront &amp; Outlets
-                          </span>
-                        ),
-                        children: (
-                          <div style={{ paddingTop: 6 }}>
-                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
-                              Merchant &amp; Store Management
-                            </Title>
-                            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
-                              Manage your physical storefronts, catalog, and active outlets.
-                            </Text>
-
-                            <div
-                              style={{
-                                background: '#FAF7F2',
-                                border: '1px solid #EAE4DA',
-                                borderRadius: 14,
-                                padding: '18px 20px',
-                                marginBottom: 16,
-                              }}
-                            >
-                              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-                                <div>
-                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#1C1C19' }}>
-                                    Merchant Outlet Hub Active
-                                  </div>
-                                  <Text type="secondary" style={{ fontSize: 12 }}>
-                                    {myShops.length > 0
-                                      ? `You have ${myShops.length} registered storefront(s). Manage catalog and orders.`
-                                      : 'Setup your storefront pin and catalog on the neighborhood map.'}
-                                  </Text>
-                                </div>
-                                <Button
-                                  type="primary"
-                                  onClick={() => history.push(Routes.client)}
-                                  style={{
-                                    borderRadius: 10,
-                                    fontWeight: 700,
-                                    background: '#0B2D6B',
-                                    borderColor: '#0B2D6B',
-                                  }}
-                                >
-                                  Open Merchant Studio
-                                </Button>
-                              </Flex>
-                            </div>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(!isMerchant
-                  ? [
-                      {
-                        key: 'delivery_hub',
-                        label: (
-                          <span>
-                            <CarOutlined style={{ color: '#047857' }} /> Delivery Portal
-                          </span>
-                        ),
-                        children: (
-                          <div style={{ paddingTop: 6 }}>
-                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
-                              Delivery Partner Task Board
-                            </Title>
-                            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
-                              Accept local delivery runs and view active order fulfillment assignments.
-                            </Text>
-
-                            <div
-                              style={{
-                                background: '#F0FDF4',
-                                border: '1px solid #BBF7D0',
-                                borderRadius: 14,
-                                padding: '18px 20px',
-                                marginBottom: 16,
-                              }}
-                            >
-                              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-                                <div>
-                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#065F46' }}>
-                                    Local Delivery Tasks
-                                  </div>
-                                  <Text type="secondary" style={{ fontSize: 12, color: '#047857' }}>
-                                    View open deliveries, live route maps, and earnings from local neighborhood drop-offs.
-                                  </Text>
-                                </div>
-                                <Button
-                                  type="primary"
-                                  onClick={() => history.push(Routes.deliveryPortal)}
-                                  style={{
-                                    borderRadius: 10,
-                                    fontWeight: 700,
-                                    background: '#059669',
-                                    borderColor: '#059669',
-                                  }}
-                                >
-                                  Open Delivery Portal
-                                </Button>
-                              </Flex>
-                            </div>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-                ...(isSuperAdmin
-                  ? [
-                      {
-                        key: 'admin_hub',
-                        label: (
-                          <span>
-                            <SafetyCertificateOutlined style={{ color: colors.secondary }} /> Admin Console
-                          </span>
-                        ),
-                        children: (
-                          <div style={{ paddingTop: 6 }}>
-                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
-                              Platform Administrator Controls
-                            </Title>
-                            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
-                              Manage system roles, categories, dynamic field schema builder, and audit logs.
-                            </Text>
-
-                            <div
-                              style={{
-                                background: '#FEF2F2',
-                                border: '1px solid #FECACA',
-                                borderRadius: 14,
-                                padding: '18px 20px',
-                                marginBottom: 16,
-                              }}
-                            >
-                              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-                                <div>
-                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#991B1B' }}>
-                                    Super Admin Privileges Active
-                                  </div>
-                                  <Text type="secondary" style={{ fontSize: 12, color: '#B91C1C' }}>
-                                    Full administrative rights over storefront schemas, users, and marketplace health.
-                                  </Text>
-                                </div>
-                                <Button
-                                  type="primary"
-                                  danger
-                                  onClick={() => history.push(Routes.admin)}
-                                  style={{
-                                    borderRadius: 10,
-                                    fontWeight: 700,
-                                  }}
-                                >
-                                  Open Admin Console
-                                </Button>
-                              </Flex>
-                            </div>
-                          </div>
-                        ),
-                      },
-                    ]
-                  : []),
-              ]}
-            />
-
-            {/* Quiet Seller Option for Shoppers (Ensures phone numbers never deadlock) */}
-            {!isMerchant && (
-              <div
-                style={{
-                  marginTop: 18,
-                  paddingTop: 14,
-                  borderTop: '1px solid #f1f5f9',
-                  textAlign: 'center',
-                }}
-              >
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Are you a local shop owner or technician?{' '}
-                  <Button
-                    type="link"
-                    size="small"
-                    onClick={() => history.push(`${Routes.client}?onboarding=shop`)}
-                    style={{ padding: 0, fontSize: 12, fontWeight: 600, color: '#0B2D6B' }}
-                  >
-                    Register your store on Rquest &rarr;
-                  </Button>
-                </Text>
-              </div>
-            )}
-          </Card>
-        </>
-      )}
-
-      {/* ================================================================
-          INTERACTIVE ONBOARDING ASSISTANT MODAL (Mobile-Optimized)
-          ================================================================ */}
-      <Modal
-        open={onboardingModalOpen}
-        onCancel={() => {
-          setOnboardingModalOpen(false);
-          history.replace(Routes.profile);
-        }}
-        footer={null}
-        width={screens.xs ? '96vw' : 580}
-        centered
-        className="onboarding-sheet-modal"
-        destroyOnHidden
-      >
-        <div className="onboarding-sheet-header">
-          <div
-            style={{
-              width: 46,
-              height: 46,
-              borderRadius: 12,
-              background: '#E6EEF9',
-              color: '#0B2D6B',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: 20,
-              margin: '0 auto 10px',
-              border: '1px solid #D5E2F5',
-            }}
-          >
-            {isMerchant ? <ShopOutlined /> : <RocketOutlined />}
-          </div>
-          <Title
-            level={4}
-            style={{
-              margin: 0,
-              fontWeight: 800,
-              color: '#1C1C19',
-              fontFamily: 'var(--font-headline)',
-            }}
-          >
-            {isMerchant ? 'Shop Owner Quick Setup' : 'Welcome to Rquest'}
-          </Title>
-          <Text type="secondary" style={{ fontSize: 13 }}>
-            {isMerchant
-              ? 'Complete your profile and get your store ready for local customers.'
-              : 'Setup your account in 3 quick steps to find stores and place orders.'}
-          </Text>
-        </div>
-
-        <div className="onboarding-sheet-body">
-          {/* Step Pills */}
-          <div className="onboarding-step-pill-row">
-            <span
-              className={`onboarding-step-pill ${
-                onboardingStep === 0 ? 'active' : onboardingStep > 0 ? 'completed' : ''
-              }`}
-            >
-              1. Contact
-            </span>
-            <span
-              className={`onboarding-step-pill ${
-                onboardingStep === 1 ? 'active' : onboardingStep > 1 ? 'completed' : ''
-              }`}
-            >
-              {isMerchant ? '2. Storefront' : '2. Address'}
-            </span>
-            <span
-              className={`onboarding-step-pill ${
-                onboardingStep === 2 ? 'active' : ''
-              }`}
-            >
-              {isMerchant ? '3. Launch' : '3. Interests'}
-            </span>
-          </div>
-
-          {/* STEP 0: Contact & Email Details */}
-          {onboardingStep === 0 && (
-            <div>
-              <div className="live-profile-preview">
-                <Flex align="center" gap={12}>
-                  <Avatar size={48} className="profile-avatar-cool">
-                    {(assistantData.username || 'U')[0].toUpperCase()}
-                  </Avatar>
-                  <div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: '#1C1C19' }}>
-                      {assistantData.username || 'User'}
-                    </div>
-                    <div style={{ fontSize: 12, color: '#5C5E66' }}>
-                      Mobile: {assistantData.phone || 'Verified'}
-                    </div>
-                  </div>
-                </Flex>
-              </div>
-
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#1C1C19' }}>
-                  Account Name
-                </label>
-                <Input
-                  size="large"
-                  value={assistantData.username}
-                  onChange={(e) => setAssistantData({ ...assistantData, username: e.target.value })}
-                  prefix={<UserOutlined style={{ color: '#94a3b8' }} />}
-                  style={{ borderRadius: 10 }}
-                />
-              </div>
-
-              <div style={{ marginBottom: 14 }}>
-                <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 5, color: '#1C1C19' }}>
-                  Email Address (For digital receipts &amp; invoices)
-                </label>
-                <Input
-                  size="large"
-                  placeholder="name@example.com"
-                  value={assistantData.email}
-                  onChange={(e) => setAssistantData({ ...assistantData, email: e.target.value })}
-                  prefix={<MailOutlined style={{ color: '#94a3b8' }} />}
-                  style={{ borderRadius: 10 }}
-                />
-              </div>
-
-              <div className="onboarding-actions-footer">
-                <Button
-                  type="text"
-                  onClick={() => {
-                    setOnboardingModalOpen(false);
-                    history.replace(Routes.profile);
-                  }}
-                  style={{ color: '#5C5E66' }}
-                >
-                  Skip for now
-                </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  loading={savingAssistant}
-                  onClick={handleSaveAssistantStep}
-                  style={{
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    background: '#0B2D6B',
-                    borderColor: '#0B2D6B',
-                    padding: '0 24px',
-                  }}
-                >
-                  Continue <ArrowRightOutlined />
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* STEP 1: Address (Customer) OR Storefront (Merchant) */}
-          {onboardingStep === 1 && (
-            <div>
+          <div className="rq-profile-hero-info">
+            <div className="rq-profile-name-row">
+              <Title level={4} className="rq-profile-name">
+                {displayName}
+              </Title>
               {isMerchant ? (
-                <div>
-                  <div style={{ textAlign: 'center', padding: '12px 0 16px' }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: '#1C1C19', marginBottom: 4, fontFamily: 'var(--font-headline)' }}>
-                      Register Your Storefront Outlet
-                    </div>
-                    <Text type="secondary" style={{ fontSize: 13 }}>
-                      Put your store in front of nearby customers in your neighbourhood.
-                    </Text>
-                  </div>
-
-                  <Alert
-                    message="Instant Store Setup Ready"
-                    description="Set your store name, business category, and GPS location in under 2 minutes."
-                    type="info"
-                    showIcon
-                    style={{ marginBottom: 18, borderRadius: 10 }}
-                  />
-
-                  <div className="onboarding-actions-footer">
-                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 10 }}>
-                      <ArrowLeftOutlined /> Back
-                    </Button>
-                    <Button
-                      type="primary"
-                      size="large"
-                      onClick={() => {
-                        setOnboardingModalOpen(false);
-                        history.push(`${Routes.client}?onboarding=shop`);
-                      }}
-                      style={{
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
-                        padding: '0 24px',
-                      }}
-                    >
-                      Open Storefront Creator <ArrowRightOutlined />
-                    </Button>
-                  </div>
-                </div>
+                <Tag color="gold" icon={<ShopOutlined />} style={{ margin: 0 }}>
+                  Shop owner
+                </Tag>
               ) : (
-                <div>
-                  <div style={{ textAlign: 'center', marginBottom: 16 }}>
-                    <div style={{ fontWeight: 700, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                      Add Primary Delivery Location
-                    </div>
-                    <Text type="secondary" style={{ fontSize: 12 }}>
-                      Pin your address to see stores within walking distance.
-                    </Text>
-                  </div>
-
-                  {/* 1-Tap Detect Location Button */}
-                  <Button
-                    icon={<AimOutlined />}
-                    onClick={handleDetectAssistantGps}
-                    loading={detectingGps}
-                    style={{
-                      width: '100%',
-                      height: 42,
-                      borderRadius: 10,
-                      fontWeight: 600,
-                      marginBottom: 14,
-                      background: '#FAF7F2',
-                      borderColor: '#DDD6CC',
-                      color: '#0B2D6B',
-                    }}
-                  >
-                    1-Tap Auto-Detect GPS Location
-                  </Button>
-
-                  {/* Address Label Pills */}
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 6, color: '#5C5E66' }}>
-                      Address Label
-                    </label>
-                    <Flex gap={8}>
-                      {['Home', 'Work', 'Other'].map((lbl) => (
-                        <Button
-                          key={lbl}
-                          size="small"
-                          onClick={() => setAssistantData({ ...assistantData, address_label: lbl })}
-                          style={{
-                            borderRadius: 8,
-                            fontWeight: 600,
-                            background: assistantData.address_label === lbl ? '#0B2D6B' : '#FFFFFF',
-                            color: assistantData.address_label === lbl ? '#FFFFFF' : '#444650',
-                            borderColor: assistantData.address_label === lbl ? '#0B2D6B' : '#EAE4DA',
-                            flex: 1,
-                          }}
-                        >
-                          {lbl}
-                        </Button>
-                      ))}
-                    </Flex>
-                  </div>
-
-                  <div style={{ marginBottom: 12 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#5C5E66' }}>
-                      House / Flat / Floor No.
-                    </label>
-                    <Input
-                      placeholder="e.g. Flat 302, Green Valley Apartments"
-                      value={assistantData.house_flat_floor}
-                      onChange={(e) => setAssistantData({ ...assistantData, house_flat_floor: e.target.value })}
-                      style={{ borderRadius: 10 }}
-                    />
-                  </div>
-
-                  <div style={{ marginBottom: 16 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 12, marginBottom: 4, color: '#5C5E66' }}>
-                      Street &amp; Neighborhood / Area
-                    </label>
-                    <Input
-                      placeholder="e.g. 12th Main Road, Indiranagar"
-                      value={assistantData.street_area}
-                      onChange={(e) => setAssistantData({ ...assistantData, street_area: e.target.value })}
-                      style={{ borderRadius: 10 }}
-                    />
-                  </div>
-
-                  <div className="onboarding-actions-footer">
-                    <Button onClick={() => setOnboardingStep(0)} style={{ borderRadius: 10 }}>
-                      <ArrowLeftOutlined /> Back
-                    </Button>
-                    <Button
-                      type="primary"
-                      size="large"
-                      loading={savingAssistant}
-                      onClick={handleSaveAssistantStep}
-                      style={{
-                        borderRadius: 10,
-                        fontWeight: 700,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
-                        padding: '0 24px',
-                      }}
-                    >
-                      Save &amp; Next <ArrowRightOutlined />
-                    </Button>
-                  </div>
-                </div>
+                <Tag color="green" icon={<SafetyCertificateOutlined />} style={{ margin: 0 }}>
+                  Shopper
+                </Tag>
               )}
             </div>
-          )}
 
-          {/* STEP 2: Shopping Interests (Customer) or Done */}
-          {onboardingStep === 2 && (
-            <div>
-              <div style={{ textAlign: 'center', marginBottom: 14 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: '#1C1C19', fontFamily: 'var(--font-headline)' }}>
-                  What do you usually shop for?
-                </div>
-                <Text type="secondary" style={{ fontSize: 12 }}>
-                  Pick categories to customize your local marketplace feed.
-                </Text>
-              </div>
+            <div className="rq-profile-contact">
+              <span>
+                <PhoneOutlined /> {profile?.mobile || user_data?.mobile || 'No phone number'}
+              </span>
+              <span>
+                <MailOutlined /> {profile?.email || 'No email added'}
+              </span>
+            </div>
+          </div>
 
-              <div className="category-interest-grid">
-                {SHOPPING_INTERESTS.map((item) => {
-                  const isSelected = assistantData.interests.includes(item.id);
-                  return (
-                    <div
-                      key={item.id}
-                      onClick={() => handleToggleInterest(item.id)}
-                      className={`category-interest-card ${isSelected ? 'selected' : ''}`}
-                    >
-                      <div className="category-interest-icon" style={{ color: isSelected ? '#0B2D6B' : '#5C5E66' }}>
-                        {item.icon}
-                      </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div className="category-interest-name">{item.name}</div>
-                        <div className="category-interest-desc">{item.desc}</div>
-                      </div>
-                      {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
-                    </div>
-                  );
-                })}
-              </div>
+          <div className="rq-profile-hero-actions">
+            <Button icon={<RocketOutlined />} onClick={openOnboarding}>
+              Setup guide
+            </Button>
+            <Button danger icon={<LogoutOutlined />} onClick={logout}>
+              Log out
+            </Button>
+          </div>
+        </div>
 
-              <div className="onboarding-actions-footer">
-                <Button onClick={() => setOnboardingStep(1)} style={{ borderRadius: 10 }}>
-                  <ArrowLeftOutlined /> Back
-                </Button>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={async () => {
-                    await handleSaveAssistantStep();
-                    history.push(Routes.app);
-                  }}
-                  style={{
-                    borderRadius: 10,
-                    fontWeight: 700,
-                    background: '#0B2D6B',
-                    borderColor: '#0B2D6B',
-                    padding: '0 24px',
-                  }}
+        <Row gutter={[16, 16]} className="rq-profile-stats">
+          <Col xs={12} md={8}>
+            <Statistic title="Saved addresses" value={addresses.length} />
+          </Col>
+          <Col xs={12} md={8}>
+            <Statistic title="Account type" value={accountLabel} className="rq-stat-text" />
+          </Col>
+          <Col xs={24} md={8}>
+            <Statistic title="Profile completion" value={completionScore} suffix="%" />
+          </Col>
+        </Row>
+      </Card>
+
+      <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+        {/* Side column: checklist and quick links */}
+        <Col xs={24} lg={8} className="rq-profile-side">
+          <Card
+            size="small"
+            className="rq-side-card"
+            title="Profile completion"
+            extra={
+              completionScore === 100 ? (
+                <Tag color="success" style={{ margin: 0 }}>
+                  Complete
+                </Tag>
+              ) : null
+            }
+          >
+            <Progress percent={completionScore} status={completionScore === 100 ? 'success' : 'active'} />
+            <List
+              size="small"
+              split={false}
+              rowKey="key"
+              dataSource={completionChecks}
+              renderItem={(check) => (
+                <List.Item
+                  className={`rq-check-item${check.done ? ' is-done' : ''}`}
+                  actions={
+                    check.done
+                      ? []
+                      : [
+                          <Button key="go" type="link" size="small" onClick={() => handleExecuteChecklistAction(check)}>
+                            Complete
+                          </Button>,
+                        ]
+                  }
                 >
-                  Explore Marketplace <ArrowRightOutlined />
+                  <List.Item.Meta
+                    avatar={check.done ? <CheckCircleFilled className="rq-check-done" /> : <MinusCircleOutlined className="rq-check-todo" />}
+                    title={check.fullLabel}
+                    description={`${check.points}% of profile`}
+                  />
+                </List.Item>
+              )}
+            />
+          </Card>
+
+          <Card size="small" className="rq-side-card" title="Quick links">
+            <Space direction="vertical" size={2} style={{ width: '100%' }}>
+              {quickLinks.map((link) => (
+                <Button key={link.key} type="text" className="rq-quick-link" icon={link.icon} onClick={link.onClick}>
+                  {link.label}
                 </Button>
+              ))}
+            </Space>
+          </Card>
+        </Col>
+
+        {/* Main column: tabbed details */}
+        <Col xs={24} lg={16} className="rq-profile-main">
+          <Card className="rq-profile-tabs">
+            <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={tabItems} />
+          </Card>
+        </Col>
+      </Row>
+
+      {/* Setup guide */}
+      <ResponsiveSheet
+        open={onboardingModalOpen}
+        onClose={closeOnboarding}
+        title={onboardingTitle}
+        footer={onboardingFooter}
+        width={600}
+      >
+        <Steps size="small" current={onboardingStep} items={stepItems} className="rq-onboarding-steps" />
+
+        {onboardingStep === 0 && (
+          <>
+            <div className="rq-onboarding-preview">
+              <Avatar size={44} className="rq-profile-avatar">
+                {avatarInitial}
+              </Avatar>
+              <div style={{ minWidth: 0 }}>
+                <div className="rq-onboarding-name">{displayName}</div>
+                <div className="rq-onboarding-meta">
+                  Mobile: {profile?.mobile || user_data?.mobile || 'verified'}
+                </div>
               </div>
             </div>
-          )}
-        </div>
-      </Modal>
 
-      {/* Address Create / Edit Modal */}
+            <Form form={contactForm} layout="vertical" size="large" requiredMark={false} onFinish={handleContactStep}>
+              <Form.Item name="username" label="Display name" rules={[{ required: true, whitespace: true, message: 'Enter a display name' }]}>
+                <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Your name" />
+              </Form.Item>
+              <Form.Item
+                name="email"
+                label="Email address"
+                extra="Used for digital receipts and invoices."
+                rules={[{ type: 'email', message: 'Enter a valid email address' }]}
+              >
+                <Input prefix={<MailOutlined style={{ color: '#94a3b8' }} />} placeholder="name@example.com" />
+              </Form.Item>
+            </Form>
+          </>
+        )}
+
+        {onboardingStep === 1 && !isMerchant && (
+          <>
+            <Text type="secondary">Pin your location to see stores within walking distance.</Text>
+            <Button
+              block
+              size="large"
+              icon={<AimOutlined />}
+              loading={detectingGps}
+              onClick={handleDetectAssistantGps}
+              style={{ marginTop: 14 }}
+            >
+              Use current location
+            </Button>
+            <p className="rq-gps-note">
+              {assistantCoords[0].toFixed(5)}, {assistantCoords[1].toFixed(5)}
+            </p>
+
+            <Form form={addressForm} layout="vertical" size="large" requiredMark={false} onFinish={handleAddressStep} style={{ marginTop: 12 }}>
+              <Form.Item name="label" label="Save as">
+                <Segmented block options={ADDRESS_LABEL_OPTIONS} />
+              </Form.Item>
+              <Form.Item name="house_flat_floor" label="Flat, house no. or floor">
+                <Input placeholder="e.g. Flat 302, Green Valley Apartments" />
+              </Form.Item>
+              <Form.Item name="street_area" label="Street and area">
+                <Input placeholder="e.g. 12th Main Road, Indiranagar" />
+              </Form.Item>
+            </Form>
+          </>
+        )}
+
+        {onboardingStep === 1 && isMerchant && (
+          <Alert
+            type="info"
+            showIcon
+            message="Set up your storefront"
+            description="Add your store name, category and location on the map in under two minutes."
+          />
+        )}
+
+        {onboardingStep === 2 && (
+          <>
+            <Text type="secondary">Pick what you usually buy to tailor your local feed.</Text>
+            <div className="rq-interest-grid" role="group" aria-label="Shopping interests" style={{ marginTop: 14 }}>
+              {SHOPPING_INTERESTS.map((item) => {
+                const selected = interests.includes(item.id);
+                return (
+                  <button
+                    type="button"
+                    key={item.id}
+                    aria-pressed={selected}
+                    onClick={() => toggleInterest(item.id)}
+                    className={`rq-interest-card${selected ? ' is-selected' : ''}`}
+                  >
+                    <span className="rq-interest-icon">{item.icon}</span>
+                    <span className="rq-interest-text">
+                      <span className="rq-interest-name">{item.name}</span>
+                      <span className="rq-interest-desc">{item.desc}</span>
+                    </span>
+                    {selected && <CheckOutlined className="rq-interest-check" />}
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
+      </ResponsiveSheet>
+
+      {/* Address create / edit */}
       {addressModalOpen && (
         <AddressModal
           open={addressModalOpen}
@@ -1556,33 +984,10 @@ const ProfileScreen = () => {
             setAddressModalOpen(false);
             setEditingAddress(null);
           }}
-          onSuccess={() => fetchProfileAndAddresses()}
+          onSuccess={() => fetchProfileAndAddresses({ silent: true })}
           initialData={editingAddress}
           userProfile={profile || user_data}
         />
-      )}
-
-      {/* Embedded Leaflet Map Modal */}
-      {showMapModal && (
-        <Modal
-          open={showMapModal}
-          onCancel={() => setShowMapModal(false)}
-          footer={null}
-          width="100vw"
-          wrapClassName="full-view-map-modal"
-          closable={false}
-          style={{ top: 0, left: 0, margin: 0, padding: 0, maxWidth: '100vw', height: '100vh' }}
-          styles={{ body: { height: '100vh', padding: 0, margin: 0, overflow: 'hidden' } }}
-        >
-          <LeafletComponent
-            isModalVisible={showMapModal}
-            position={assistantData.coords}
-            setPosition={(loc) => setAssistantData((p) => ({ ...p, coords: loc }))}
-            markerLocation={assistantData.coords}
-            updateMarker={(loc) => setAssistantData((p) => ({ ...p, coords: loc }))}
-            onClose={() => setShowMapModal(false)}
-          />
-        </Modal>
       )}
     </div>
   );

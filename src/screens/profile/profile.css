@@ -1,453 +1,386 @@
 /* ==========================================================================
-   Rquest Profile & Onboarding - Aligned with "Neighborhood Commerce" Theme
-   Warm Parchment (#F8F4EF), Deep Maritime Navy (#0B2D6B),
-   Fine Hairline Borders (#EAE4DA), Charcoal Ink (#1C1C19)
+   Profile screen. Uses antd components for structure; this sheet only
+   handles layout, spacing and phone-width adjustments.
+   Palette mirrors styles/theme.js (primary #0B2D6B, parchment #FDF9F4).
    ========================================================================== */
 
-/* Page Container */
-.profile-page-shell {
-  max-width: 1040px;
+.rq-profile {
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 24px 20px 80px;
+  padding: 16px 16px calc(64px + env(safe-area-inset-bottom, 0px));
   box-sizing: border-box;
-  font-family: var(--font-body);
 }
 
-@media (max-width: 768px) {
-  .profile-page-shell {
-    padding: 14px 12px 84px;
+@media (min-width: 768px) {
+  .rq-profile {
+    padding: 28px 24px 56px;
   }
 }
 
-/* Elevated Warm Card Standards */
-.profile-clean-card {
-  background: var(--brand-surface) !important;
-  border: 1px solid #EAE4DA !important;
-  border-radius: 16px !important;
-  box-shadow: 0 4px 20px rgba(11, 45, 107, 0.04) !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  margin-bottom: 18px;
-  overflow: hidden;
+/* ---------- Hero ---------- */
+.rq-profile-hero .ant-card-body {
+  padding: 20px;
 }
 
-/* Hero Header Card */
-.profile-hero-card {
-  background: var(--brand-surface) !important;
-  border: 1px solid #EAE4DA !important;
-  border-radius: 18px !important;
-  box-shadow: 0 6px 24px rgba(11, 45, 107, 0.045) !important;
-  margin-bottom: 18px;
+@media (min-width: 768px) {
+  .rq-profile-hero .ant-card-body {
+    padding: 24px 28px;
+  }
 }
 
-.profile-avatar-cool {
-  background: #E6EEF9 !important;
-  color: #0B2D6B !important;
-  border: 2px solid #D5E2F5 !important;
-  font-family: var(--font-headline) !important;
-  font-weight: 800 !important;
-  box-shadow: 0 2px 8px rgba(11, 45, 107, 0.08) !important;
+.rq-profile-hero-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rq-profile-avatar.ant-avatar {
+  background: #e6f0ff;
+  color: #0b2d6b;
+  border: 1px solid #d2e3fc;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
-.profile-avatar-merchant {
-  background: #F5EBE1 !important;
-  color: #5B3A29 !important;
-  border: 2px solid #EADAC9 !important;
+.rq-profile-hero-info {
+  flex: 1;
+  min-width: 0;
 }
 
-/* Role Pills */
-.profile-role-badge {
+.rq-profile-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rq-profile-name.ant-typography {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.rq-profile-contact {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  font-size: 14px;
+  color: #575a65;
+}
+
+.rq-profile-contact > span {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rq-profile-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.rq-profile-stats {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #f1ede8;
+}
+
+.rq-profile-stats .ant-statistic-title {
   font-size: 12px;
-  font-weight: 700;
-  padding: 3px 11px;
-  border-radius: 9999px;
-  border: 1px solid transparent;
-}
-
-.profile-role-badge.buyer {
-  background: #EAF7EE;
-  color: #0E7A43;
-  border-color: #CDEBD7;
-}
-
-.profile-role-badge.merchant {
-  background: #F5EBE1;
-  color: #5B3A29;
-  border-color: #EADAC9;
-}
-
-/* Quick Metrics Row */
-.profile-metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  margin-top: 18px;
-}
-
-@media (max-width: 640px) {
-  .profile-metrics-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .profile-metrics-grid .metric-col-full {
-    grid-column: span 2;
-  }
-}
-
-.profile-metric-box {
-  background: #FAF7F2;
-  border: 1px solid #EAE4DA;
-  border-radius: 12px;
-  padding: 12px 14px;
-  transition: all 0.2s ease;
-}
-
-.profile-metric-box:hover {
-  background: #F3EDE3;
-  border-color: #DDD6CC;
-}
-
-.profile-metric-label {
-  font-size: 12px;
-  font-weight: 600;
-  color: #5C5E66;
+  color: #575a65;
   margin-bottom: 2px;
 }
 
-.profile-metric-value {
-  font-family: var(--font-headline);
-  font-size: 18px;
-  font-weight: 800;
-  color: #1C1C19;
+.rq-profile-stats .ant-statistic-content {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1c1c19;
 }
 
-/* ==========================================================================
-   Interactive Setup Guide & Focus Mode
-   ========================================================================== */
-.setup-guide-card {
-  background: var(--brand-surface) !important;
-  border: 1px solid #EAE4DA !important;
-  border-left: 4px solid #0B2D6B !important;
-  border-radius: 16px !important;
-  box-shadow: 0 4px 20px rgba(11, 45, 107, 0.04) !important;
-  margin-bottom: 20px;
-  transition: all 0.25s ease;
-  position: relative;
-  overflow: hidden;
+.rq-profile-stats .rq-stat-text .ant-statistic-content {
+  font-size: 15px;
 }
 
-.setup-guide-card.completed {
-  border-left-color: #0E7A43 !important;
-  background: var(--brand-surface) !important;
+@media (max-width: 767px) {
+  .rq-profile-hero-actions {
+    width: 100%;
+  }
+
+  .rq-profile-hero-actions .ant-btn {
+    flex: 1 1 0;
+  }
 }
 
-.setup-guide-card.interactive-focused {
-  border-color: #0159C5 !important;
-  border-left-color: #0B2D6B !important;
-  box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.12), var(--shadow-md) !important;
-}
-
-/* Focus Alert Capsule */
-.setup-focus-banner {
-  background: #FAF7F2;
-  border: 1px solid #EAE4DA;
-  border-radius: 12px;
-  padding: 12px 16px;
-  margin-top: 14px;
+/* ---------- Layout columns ---------- */
+.rq-profile-side {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rq-profile-main {
+  min-width: 0;
+}
+
+@media (min-width: 992px) {
+  .rq-profile-side {
+    order: 2;
+  }
+
+  .rq-profile-main {
+    order: 1;
+  }
+}
+
+.rq-side-card .ant-card-head-title {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+/* Checklist */
+.rq-check-item.ant-list-item {
+  padding: 10px 0;
+}
+
+.rq-check-item .ant-list-item-meta-title {
+  margin-bottom: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1c19;
+}
+
+.rq-check-item .ant-list-item-meta-description {
+  font-size: 12px;
+}
+
+.rq-check-done {
+  color: #059669;
+  font-size: 18px;
+}
+
+.rq-check-todo {
+  color: #c2c6d5;
+  font-size: 18px;
+}
+
+.rq-check-item.is-done .ant-list-item-meta-title {
+  color: #575a65;
+  font-weight: 500;
+}
+
+/* Quick links */
+.rq-quick-link.ant-btn {
+  width: 100%;
+  justify-content: flex-start;
+  height: 40px;
+  padding-inline: 8px;
+  font-weight: 600;
+  color: #1c1c19;
+}
+
+.rq-quick-link.ant-btn:hover {
+  color: #0b2d6b;
+  background: #f7f3ee;
+}
+
+/* ---------- Tabs card ---------- */
+.rq-profile-tabs .ant-card-body {
+  padding: 12px 20px 24px;
+}
+
+.rq-profile-tabs .ant-tabs-nav {
+  margin-bottom: 20px;
+}
+
+@media (max-width: 767px) {
+  .rq-profile-tabs .ant-card-body {
+    padding: 8px 14px 18px;
+  }
+
+  .rq-profile-tabs .ant-tabs-nav {
+    margin-bottom: 14px;
+  }
+}
+
+.rq-tab-head {
+  display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.setup-focus-banner-left {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.setup-focus-beacon {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #0B2D6B;
-  box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.22);
-  animation: pulseBeacon 2s infinite;
-  flex-shrink: 0;
-}
-
-@keyframes pulseBeacon {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(11, 45, 107, 0.4); }
-  70% { transform: scale(1.05); box-shadow: 0 0 0 6px rgba(11, 45, 107, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(11, 45, 107, 0); }
-}
-
-/* Checklist Pills */
-.setup-checklist-wrap {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
-}
-
-.setup-check-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  border-radius: 10px;
-  font-size: 13.5px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-  border: 1px solid transparent;
-}
-
-.setup-check-chip.done {
-  background: #EAF7EE;
-  color: #0E7A43;
-  border-color: #CDEBD7;
-  cursor: default;
-}
-
-.setup-check-chip.pending {
-  background: #FFFFFF;
-  color: #1C1C19;
-  border-color: #DDD6CC;
-  box-shadow: 0 1px 2px rgba(11, 45, 107, 0.04);
-}
-
-.setup-check-chip.pending:hover {
-  background: #FAF7F2;
-  border-color: #0B2D6B;
-  color: #0B2D6B;
-  transform: translateY(-1px);
-}
-
-.setup-check-chip.active-focus {
-  background: #E6EEF9;
-  border-color: #0159C5;
-  color: #0B2D6B;
-  box-shadow: 0 0 0 2px rgba(11, 45, 107, 0.18);
-}
-
-.setup-point-tag {
-  font-size: 11px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: 6px;
-  background: #F3EDE3;
-  color: #5B3A29;
-}
-
-.setup-check-chip.pending:hover .setup-point-tag {
-  background: #E6EEF9;
-  color: #0B2D6B;
-}
-
-/* Setup Progress Bar Customization */
-.setup-progress-wrap {
-  margin: 10px 0 14px;
-}
-
-.setup-progress-wrap .ant-progress-bg {
-  background: #0B2D6B !important;
-  border-radius: 9999px !important;
-}
-
-.setup-guide-card.completed .setup-progress-wrap .ant-progress-bg {
-  background: #0E7A43 !important;
-}
-
-/* ==========================================================================
-   Tabs & Content Areas
-   ========================================================================== */
-.profile-tabs-card .ant-tabs-nav {
-  margin-bottom: 20px !important;
-}
-
-.profile-tabs-card .ant-tabs-tab {
-  padding: 10px 16px !important;
-  font-weight: 700 !important;
-  font-size: 14px !important;
-  color: #5C5E66 !important;
-}
-
-.profile-tabs-card .ant-tabs-tab-active .ant-tabs-tab-btn {
-  color: #0B2D6B !important;
-}
-
-.profile-tabs-card .ant-tabs-ink-bar {
-  background: #0B2D6B !important;
-  height: 2.5px !important;
-  border-radius: 2px !important;
-}
-
-@media (max-width: 640px) {
-  .profile-tabs-card .ant-tabs-tab {
-    padding: 8px 10px !important;
-    font-size: 12.5px !important;
-  }
-}
-
-/* ==========================================================================
-   Interactive Onboarding Assistant Modal (Post-Login / Post-Register)
-   ========================================================================== */
-.onboarding-sheet-modal .ant-modal-content {
-  border-radius: 20px !important;
-  padding: 0 !important;
-  overflow: hidden !important;
-  box-shadow: 0 20px 44px -10px rgba(11, 45, 107, 0.16) !important;
-  border: 1px solid #EAE4DA !important;
-}
-
-.onboarding-sheet-header {
-  padding: 24px 24px 16px;
-  background: #F8F4EF;
-  border-bottom: 1px solid #EAE4DA;
-  text-align: center;
-}
-
-.onboarding-sheet-body {
-  padding: 20px 24px 26px;
-  max-height: 74vh;
-  overflow-y: auto;
-  background: #FFFFFF;
-}
-
-@media (max-width: 640px) {
-  .onboarding-sheet-modal .ant-modal-content {
-    border-radius: 16px !important;
-  }
-  .onboarding-sheet-header {
-    padding: 18px 16px 12px;
-  }
-  .onboarding-sheet-body {
-    padding: 16px 16px 20px;
-    max-height: 78vh;
-  }
-}
-
-/* Step Bar Customization */
-.onboarding-step-pill-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-bottom: 20px;
-}
-
-.onboarding-step-pill {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 9999px;
-  font-size: 12px;
-  font-weight: 700;
-  background: #F3EDE3;
-  color: #5C5E66;
-  border: 1px solid #E5DFD6;
-  transition: all 0.2s ease;
-}
-
-.onboarding-step-pill.active {
-  background: #0B2D6B;
-  border-color: #0B2D6B;
-  color: #FFFFFF;
-}
-
-.onboarding-step-pill.completed {
-  background: #EAF7EE;
-  color: #0E7A43;
-  border-color: #CDEBD7;
-}
-
-/* Interactive Category Interest Chips (User Onboarding) */
-.category-interest-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-  margin: 14px 0 20px;
-}
-
-@media (max-width: 480px) {
-  .category-interest-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.category-interest-card {
-  padding: 12px 14px;
-  border-radius: 12px;
-  border: 1.5px solid #EAE4DA;
-  background: #FFFFFF;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  user-select: none;
-}
-
-.category-interest-card:hover {
-  border-color: #C2C6D5;
-  background: #FAF7F2;
-}
-
-.category-interest-card.selected {
-  border-color: #0B2D6B;
-  background: #E6EEF9;
-  box-shadow: 0 0 0 1px #0B2D6B;
-}
-
-.category-interest-icon {
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.category-interest-name {
-  font-weight: 700;
-  font-size: 13.5px;
-  color: #1C1C19;
-}
-
-.category-interest-desc {
-  font-size: 11px;
-  color: #5C5E66;
-  margin-top: 1px;
-}
-
-/* Live Profile Summary Preview */
-.live-profile-preview {
-  background: #FAF7F2;
-  border: 1px solid #EAE4DA;
-  border-radius: 12px;
-  padding: 14px 16px;
+  gap: 12px;
   margin-bottom: 18px;
 }
 
-/* Sticky Action Footer on Mobile */
-.onboarding-actions-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px solid #F1EDE8;
+.rq-tab-title.ant-typography {
+  margin: 0 0 2px;
+  font-size: 16px;
+  font-weight: 700;
 }
 
-@media (max-width: 480px) {
-  .onboarding-actions-footer {
-    flex-direction: column-reverse;
+.rq-tab-form {
+  max-width: 560px;
+}
+
+.rq-empty-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1c1c19;
+  margin-bottom: 2px;
+}
+
+.rq-profile-form .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+.rq-role-alert {
+  border-radius: 12px;
+}
+
+.rq-role-alert .ant-alert-action {
+  margin-inline-start: 0;
+  margin-top: 12px;
+}
+
+@media (min-width: 768px) {
+  .rq-role-alert .ant-alert-action {
+    margin-top: 0;
+    margin-inline-start: 16px;
   }
-  .onboarding-actions-footer .ant-btn {
-    width: 100% !important;
-    height: 46px !important;
+}
+
+/* ---------- Onboarding sheet ---------- */
+.rq-onboarding-steps {
+  margin-bottom: 20px;
+}
+
+.rq-onboarding-preview {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  background: #faf7f2;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+}
+
+.rq-onboarding-name {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1c1c19;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rq-onboarding-meta {
+  font-size: 12px;
+  color: #575a65;
+}
+
+.rq-sheet-footer--split {
+  justify-content: space-between;
+}
+
+.rq-sheet-footer--split .ant-btn {
+  min-width: 0;
+}
+
+.rq-gps-note {
+  margin: 10px 0 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: #575a65;
+  text-align: center;
+}
+
+/* Interest picker */
+.rq-interest-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+@media (min-width: 480px) {
+  .rq-interest-grid {
+    grid-template-columns: 1fr 1fr;
   }
+}
+
+.rq-interest-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 14px;
+  background: #ffffff;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.rq-interest-card:hover {
+  border-color: #c2c6d5;
+  background: #faf7f2;
+}
+
+.rq-interest-card:focus-visible {
+  outline: 2px solid #0b2d6b;
+  outline-offset: 2px;
+}
+
+.rq-interest-card.is-selected {
+  border-color: #0b2d6b;
+  background: #e6f0ff;
+  box-shadow: 0 0 0 1px #0b2d6b;
+}
+
+.rq-interest-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #f7f3ee;
+  color: #0b2d6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.rq-interest-text {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rq-interest-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1c1c19;
+}
+
+.rq-interest-desc {
+  font-size: 12px;
+  color: #575a65;
+  line-height: 1.35;
+}
+
+.rq-interest-check {
+  color: #0b2d6b;
+  font-size: 14px;
+  flex-shrink: 0;
 }

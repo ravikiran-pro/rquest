@@ -1,32 +1,31 @@
 import React, { useState, useEffect } from 'react';
+import PropTypes from 'prop-types';
 import {
   Drawer,
   Button,
   Input,
   Radio,
+  Segmented,
+  Alert,
+  Result,
+  Descriptions,
   Typography,
-  Divider,
-  Space,
   Tag,
-  message,
-  Card,
   Empty,
   Flex,
-  Row,
-  Col,
+  Form,
+  Grid,
+  message,
 } from 'antd';
 import {
   DeleteOutlined,
   PlusOutlined,
   MinusOutlined,
   ShoppingCartOutlined,
-  CheckCircleFilled,
   ShopOutlined,
-  CloseOutlined,
   EnvironmentOutlined,
   AimOutlined,
   PhoneOutlined,
-  ThunderboltFilled,
   MessageOutlined,
   InboxOutlined,
   ClockCircleOutlined,
@@ -39,39 +38,51 @@ import { useCartStore, useGlobalStore, useChatStore } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
-import { AddressModal } from '../profile';
+import { AddressModal, AddressOption, getFormattedAddress } from '../profile';
 import { AuthModal } from '../auth';
-import { colors, radii, typography, shadows } from '../../styles/theme';
+import './cart.css';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 const PREBUILT_QUERIES = [
   {
-    icon: <InboxOutlined style={{ fontSize: 13, color: colors.primary }} />,
+    icon: <InboxOutlined />,
     label: 'In stock & fresh?',
     text: 'Hi! Is this item available in stock and ready for immediate dispatch / pickup?',
   },
   {
-    icon: <ClockCircleOutlined style={{ fontSize: 13, color: colors.secondary }} />,
+    icon: <ClockCircleOutlined />,
     label: 'Preparation time?',
     text: 'Hi! How long will it take to prepare and pack this order?',
   },
   {
-    icon: <EnvironmentOutlined style={{ fontSize: 13, color: colors.semantic.success }} />,
-    label: 'Delivery feasibility?',
+    icon: <EnvironmentOutlined />,
+    label: 'Delivery to my area?',
     text: 'Can you deliver to my location landmark? What is the delivery timeline?',
   },
   {
-    icon: <QrcodeOutlined style={{ fontSize: 13, color: colors.primary }} />,
-    label: 'Pay UPI on counter?',
+    icon: <QrcodeOutlined />,
+    label: 'Pay by UPI on arrival?',
     text: 'Can I pay directly via UPI QR code upon arrival / pickup?',
   },
   {
-    icon: <ToolOutlined style={{ fontSize: 13, color: colors.tertiary }} />,
-    label: 'Service inspection / Quote?',
+    icon: <ToolOutlined />,
+    label: 'Service quote?',
     text: 'Hi, I need an inspection or quote estimate before confirming this service booking.',
   },
 ];
+
+const SummaryRow = ({ label, value }) => (
+  <div className="rq-cart-summary-row">
+    <span>{label}</span>
+    <strong>{value}</strong>
+  </div>
+);
+
+SummaryRow.propTypes = {
+  label: PropTypes.string.isRequired,
+  value: PropTypes.string.isRequired,
+};
 
 const CartDrawer = () => {
   const history = useHistory();
@@ -79,6 +90,8 @@ const CartDrawer = () => {
     useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
 
   const [orderType, setOrderType] = useState('delivery');
   const [paymentMode, setPaymentMode] = useState('direct_upi');
@@ -88,7 +101,7 @@ const CartDrawer = () => {
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
-  // Pre-built query / Chat with owner states
+  // Pre-built query / chat with owner states
   const [querySending, setQuerySending] = useState(false);
   const [showCustomQuery, setShowCustomQuery] = useState(false);
   const [customQueryText, setCustomQueryText] = useState('');
@@ -97,7 +110,7 @@ const CartDrawer = () => {
   const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
 
-  // Address integration state
+  // Address state
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [addressMode, setAddressMode] = useState('saved'); // 'saved' | 'manual'
@@ -113,12 +126,7 @@ const CartDrawer = () => {
         const def = res.data.find((a) => a.is_default) || res.data[0];
         if (def && (!address || addressMode === 'saved')) {
           setSelectedAddressId(def.id);
-          const formatted =
-            def.formatted_address ||
-            [def.house_flat_floor, def.street_area, def.landmark, def.city, def.pincode]
-              .filter(Boolean)
-              .join(', ');
-          setAddress(formatted);
+          setAddress(getFormattedAddress(def));
           if (def.recipient_phone) {
             setPhone(def.recipient_phone);
           }
@@ -141,12 +149,7 @@ const CartDrawer = () => {
   const handleSelectSavedAddress = (addr) => {
     setSelectedAddressId(addr.id);
     setAddressMode('saved');
-    const formatted =
-      addr.formatted_address ||
-      [addr.house_flat_floor, addr.street_area, addr.landmark, addr.city, addr.pincode]
-        .filter(Boolean)
-        .join(', ');
-    setAddress(formatted);
+    setAddress(getFormattedAddress(addr));
     if (addr.recipient_phone) {
       setPhone(addr.recipient_phone);
     }
@@ -161,7 +164,9 @@ const CartDrawer = () => {
         setSelectedAddressId(null);
         setAddressMode('manual');
         setAddress(name);
-        message.success('Live GPS location detected and filled');
+        message.success('Current location filled in');
+      } else {
+        message.warning('Could not read that location. Please type your address.');
       }
     } catch (err) {
       console.warn('GPS in cart error:', err);
@@ -178,10 +183,16 @@ const CartDrawer = () => {
     }
   };
 
-  const itemsTotal = cart.items.reduce(
-    (sum, item) => sum + item.unit_price * item.quantity,
-    0
-  );
+  const openAddAddress = () => {
+    if (!user_data?.user_id) {
+      setIsOnboardingModalOpen(true);
+    } else {
+      setIsAddAddressModalOpen(true);
+    }
+  };
+
+  const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+  const itemsTotal = cart.items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
   const deliveryFee = orderType === 'delivery' ? 30.0 : 0.0;
   const platformFee = 0.0; // 0% commission direct commerce
   const finalTotal = itemsTotal + deliveryFee;
@@ -230,12 +241,7 @@ const CartDrawer = () => {
         })),
       };
 
-      const res = await netWorkCall(
-        apiConfig.orders_create,
-        'POST',
-        JSON.stringify(payload),
-        true
-      );
+      const res = await netWorkCall(apiConfig.orders_create, 'POST', JSON.stringify(payload), true);
 
       if (res?.data) {
         setOrderSuccess(res.data);
@@ -259,7 +265,7 @@ const CartDrawer = () => {
     }
 
     if (!user_data?.user_id) {
-      message.info('Please log in to chat directly with the store owner');
+      message.info('Please sign in to chat directly with the store owner');
       setIsOnboardingModalOpen(true);
       return;
     }
@@ -299,7 +305,7 @@ const CartDrawer = () => {
         true
       );
 
-      message.success('Inquiry sent to store owner!');
+      message.success('Question sent to the store owner');
       setShowCustomQuery(false);
       setCustomQueryText('');
       closeCart();
@@ -318,1123 +324,490 @@ const CartDrawer = () => {
     closeCart();
   };
 
-  const [isMobile, setIsMobile] = useState(
-    typeof window !== 'undefined' ? window.innerWidth <= 767 : false
+  // ---------------------------------------------------------------------------
+  // Render helpers
+  // ---------------------------------------------------------------------------
+  const hasSavedList = addressMode === 'saved' && savedAddresses.length > 0;
+  const showItems = !orderSuccess && cart.items.length > 0;
+
+  const title = (
+    <div className="rq-cart-title">
+      <span className="rq-cart-title-icon">
+        <ShoppingCartOutlined />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="rq-cart-title-main">Your cart</div>
+        {cart.shop_name && (
+          <div className="rq-cart-title-sub" title={cart.shop_name}>
+            From {cart.shop_name}
+          </div>
+        )}
+      </div>
+    </div>
   );
 
-  React.useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth <= 767);
-    };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+  const footer = showItems ? (
+    <div className="rq-cart-footer">
+      <div className="rq-cart-footer-total">
+        <Text type="secondary" style={{ fontSize: 13 }}>
+          Total · {itemCount} {itemCount === 1 ? 'item' : 'items'}
+        </Text>
+        <span className="rq-cart-footer-amount">₹{finalTotal.toFixed(2)}</span>
+      </div>
+      <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
+        Place order
+      </Button>
+      <Button
+        type="text"
+        block
+        icon={<MessageOutlined />}
+        disabled={loading || !!querySending}
+        onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
+      >
+        Ask the store owner first
+      </Button>
+    </div>
+  ) : null;
+
+  const renderSuccess = () => (
+    <Result
+      status="success"
+      title="Order placed"
+      subTitle={
+        <>
+          Order #{orderSuccess.order_number} was sent to{' '}
+          <strong>{orderSuccess.shop?.shop_name || 'the store'}</strong>. You will see updates in your orders.
+        </>
+      }
+      extra={[
+        <Button
+          type="primary"
+          key="orders"
+          onClick={() => {
+            handleClose();
+            history.push(Routes.orders);
+          }}
+        >
+          View order details
+        </Button>,
+        <Button key="continue" onClick={handleClose}>
+          Continue browsing
+        </Button>,
+      ]}
+    >
+      <Descriptions
+        size="small"
+        column={1}
+        bordered
+        items={[
+          {
+            key: 'total',
+            label: 'Total amount',
+            children: `₹${Number(orderSuccess.total_amount || 0).toFixed(2)}`,
+          },
+          {
+            key: 'payment',
+            label: 'Payment mode',
+            children: <Tag style={{ margin: 0 }}>{orderSuccess.payment_mode}</Tag>,
+          },
+          {
+            key: 'status',
+            label: 'Status',
+            children: (
+              <Tag color="gold" style={{ margin: 0 }}>
+                Pending acceptance
+              </Tag>
+            ),
+          },
+        ]}
+      />
+    </Result>
+  );
+
+  const renderEmpty = () => (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      style={{ marginTop: 48 }}
+      description={
+        <>
+          <div className="rq-cart-section-title">Your cart is empty</div>
+          <div className="rq-cart-hint" style={{ margin: '4px 0 0' }}>
+            Browse nearby shops, food or services to add items.
+          </div>
+        </>
+      }
+    >
+      <Button type="primary" onClick={closeCart}>
+        Explore market
+      </Button>
+    </Empty>
+  );
+
+  const renderItems = () => (
+    <section className="rq-cart-section">
+      <div className="rq-cart-section-head">
+        <span className="rq-cart-section-title">Items ({itemCount})</span>
+      </div>
+
+      {cart.items.map((item) => (
+        <div key={item.listing_id} className="rq-cart-item">
+          {item.img_url ? (
+            <img src={item.img_url} alt={item.item_name} className="rq-cart-item-thumb" />
+          ) : (
+            <div className="rq-cart-item-thumb-placeholder">
+              <ShopOutlined />
+            </div>
+          )}
+
+          <div className="rq-cart-item-info">
+            <div className="rq-cart-item-name" title={item.item_name}>
+              {item.item_name}
+            </div>
+            <div className="rq-cart-item-price">
+              ₹{item.unit_price}
+              {item.unit ? ` / ${item.unit}` : ''}
+            </div>
+            <div className="rq-cart-item-line">₹{(item.unit_price * item.quantity).toFixed(2)}</div>
+          </div>
+
+          <div className="rq-qty" role="group" aria-label={`Quantity of ${item.item_name}`}>
+            <Button
+              type="text"
+              icon={<MinusOutlined />}
+              onClick={() => updateQuantity(item.listing_id, -1)}
+              aria-label="Decrease quantity"
+            />
+            <span className="rq-qty-value">{item.quantity}</span>
+            <Button
+              type="text"
+              icon={<PlusOutlined />}
+              onClick={() => updateQuantity(item.listing_id, 1)}
+              aria-label="Increase quantity"
+            />
+          </div>
+
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            onClick={() => removeItem(item.listing_id)}
+            aria-label="Remove item"
+          />
+        </div>
+      ))}
+    </section>
+  );
+
+  const renderAddressSection = () => (
+    <section className="rq-cart-section">
+      <div className="rq-cart-section-head">
+        <span className="rq-cart-section-title">Delivery address</span>
+        <div className="rq-cart-section-links">
+          {savedAddresses.length > 0 && (
+            <Button
+              type="link"
+              size="small"
+              onClick={() => setAddressMode(addressMode === 'saved' ? 'manual' : 'saved')}
+              style={{ padding: 0 }}
+            >
+              {addressMode === 'saved' ? 'Enter manually' : 'Use saved address'}
+            </Button>
+          )}
+          <Button
+            type="link"
+            size="small"
+            icon={<AimOutlined />}
+            loading={detectingGps}
+            onClick={handleUseLiveGpsInCart}
+            style={{ padding: 0 }}
+          >
+            Use current location
+          </Button>
+        </div>
+      </div>
+
+      {hasSavedList ? (
+        <div className="rq-address-picker" role="radiogroup" aria-label="Saved addresses">
+          {savedAddresses.map((addr) => (
+            <AddressOption
+              key={addr.id}
+              address={addr}
+              selected={selectedAddressId === addr.id}
+              onSelect={handleSelectSavedAddress}
+            />
+          ))}
+          <Button type="dashed" icon={<PlusOutlined />} block onClick={openAddAddress}>
+            Add new delivery address
+          </Button>
+        </div>
+      ) : addressMode === 'manual' ? (
+        <>
+          <Input.TextArea
+            autoSize={{ minRows: 2, maxRows: 4 }}
+            placeholder="House no., street, landmark, locality"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+          />
+          <div className="rq-cart-section-links" style={{ marginTop: 8 }}>
+            <Button type="link" size="small" onClick={openAddAddress} style={{ padding: 0 }}>
+              Save this address to profile
+            </Button>
+            {savedAddresses.length > 0 && (
+              <Button type="link" size="small" onClick={() => setAddressMode('saved')} style={{ padding: 0 }}>
+                Choose a saved address
+              </Button>
+            )}
+          </div>
+        </>
+      ) : (
+        <div className="rq-query-box" style={{ textAlign: 'center' }}>
+          <EnvironmentOutlined style={{ fontSize: 24, color: '#0b2d6b' }} />
+          <div className="rq-cart-section-title" style={{ marginTop: 6 }}>
+            Add a delivery address
+          </div>
+          <div className="rq-cart-hint" style={{ margin: '4px 0 12px' }}>
+            A delivery address is needed to place this order.
+          </div>
+          <Button type="primary" onClick={openAddAddress}>
+            Add delivery address
+          </Button>
+        </div>
+      )}
+    </section>
+  );
+
+  const renderFulfilment = () => (
+    <section className="rq-cart-section">
+      <div className="rq-cart-section-head">
+        <span className="rq-cart-section-title">Fulfilment</span>
+      </div>
+      <Segmented
+        block
+        size="large"
+        value={orderType}
+        onChange={setOrderType}
+        options={[
+          {
+            label: (
+              <span className="rq-seg-opt">
+                <CarOutlined /> Delivery <em>₹30</em>
+              </span>
+            ),
+            value: 'delivery',
+          },
+          {
+            label: (
+              <span className="rq-seg-opt">
+                <ShopOutlined /> Self-pickup <em>Free</em>
+              </span>
+            ),
+            value: 'pickup',
+          },
+        ]}
+      />
+    </section>
+  );
+
+  const renderContactAndNotes = () => (
+    <section className="rq-cart-section">
+      <Form layout="vertical" size="large" requiredMark={false} className="rq-cart-form">
+        <Form.Item label="Contact phone" required>
+          <Input
+            prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+            placeholder="Mobile number for order updates"
+            value={phone}
+            inputMode="tel"
+            onChange={(e) => setPhone(e.target.value)}
+          />
+        </Form.Item>
+        <Form.Item label="Instructions for the store (optional)">
+          <Input
+            placeholder="e.g. Ring the bell, call before delivery"
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+          />
+        </Form.Item>
+      </Form>
+    </section>
+  );
+
+  const fulfilmentWord = orderType === 'delivery' ? 'delivery' : 'pickup';
+
+  const renderPayment = () => (
+    <section className="rq-cart-section">
+      <div className="rq-cart-section-head">
+        <span className="rq-cart-section-title">Payment method</span>
+      </div>
+      <Radio.Group
+        className="rq-payment-group"
+        value={paymentMode}
+        onChange={(e) => setPaymentMode(e.target.value)}
+      >
+        <Radio value="direct_upi" className="rq-payment-option">
+          <span>
+            <span className="rq-payment-title">Direct UPI</span>
+            <span className="rq-payment-desc">Pay the store via GPay or PhonePe on {fulfilmentWord}</span>
+          </span>
+        </Radio>
+        <Radio value="cod" className="rq-payment-option">
+          <span>
+            <span className="rq-payment-title">Cash on delivery</span>
+            <span className="rq-payment-desc">Pay the store in cash on {fulfilmentWord}</span>
+          </span>
+        </Radio>
+      </Radio.Group>
+      <div className="rq-cart-hint" style={{ margin: '8px 0 0' }}>
+        The store confirms and packs your order first, then you pay on {fulfilmentWord}.
+      </div>
+    </section>
+  );
+
+  const renderSummary = () => (
+    <section className="rq-cart-section">
+      <div className="rq-cart-section-head">
+        <span className="rq-cart-section-title">Bill summary</span>
+      </div>
+      <div className="rq-cart-summary">
+        <SummaryRow label="Subtotal" value={`₹${itemsTotal.toFixed(2)}`} />
+        {orderType === 'delivery' && <SummaryRow label="Delivery fee" value={`₹${deliveryFee.toFixed(2)}`} />}
+        <div className="rq-cart-summary-row">
+          <span>Platform fee</span>
+          <span className="rq-cart-pill-free">Free</span>
+        </div>
+        <div className="rq-cart-summary-row rq-cart-summary-total">
+          <span>Total</span>
+          <strong>₹{finalTotal.toFixed(2)}</strong>
+        </div>
+      </div>
+    </section>
+  );
+
+  const renderQueries = () => (
+    <section className="rq-cart-section">
+      <div className="rq-query-box">
+        <div className="rq-cart-section-title">Have a question first?</div>
+        <div className="rq-cart-hint" style={{ margin: '2px 0 0' }}>
+          Send a quick message to the store owner before you order.
+        </div>
+
+        <div className="rq-query-chips">
+          {PREBUILT_QUERIES.map((q) => (
+            <Button
+              key={q.label}
+              size="small"
+              icon={q.icon}
+              loading={querySending === q.text}
+              disabled={loading || !!querySending}
+              onClick={() => handleSendPrebuiltInquiry(q.text)}
+            >
+              {q.label}
+            </Button>
+          ))}
+        </div>
+
+        {showCustomQuery ? (
+          <div style={{ marginTop: 12 }}>
+            <Input.TextArea
+              rows={2}
+              maxLength={500}
+              showCount
+              placeholder="Type your question for the store owner"
+              value={customQueryText}
+              onChange={(e) => setCustomQueryText(e.target.value)}
+            />
+            <Flex justify="flex-end" gap={8} style={{ marginTop: 8 }}>
+              <Button size="small" onClick={() => setShowCustomQuery(false)}>
+                Cancel
+              </Button>
+              <Button
+                type="primary"
+                size="small"
+                loading={querySending === 'custom'}
+                onClick={() => handleSendPrebuiltInquiry(customQueryText)}
+              >
+                Send question
+              </Button>
+            </Flex>
+          </div>
+        ) : (
+          <Button
+            type="link"
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => setShowCustomQuery(true)}
+            style={{ padding: 0, marginTop: 8 }}
+          >
+            Write your own question
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+
+  const renderBody = () => {
+    if (orderSuccess) return renderSuccess();
+    if (cart.items.length === 0) return renderEmpty();
+
+    return (
+      <>
+        {!user_data?.user_id && (
+          <Alert
+            type="info"
+            showIcon
+            className="rq-cart-alert"
+            message="Sign in to place this order"
+            description="Use your mobile OTP to save addresses and track orders."
+            action={
+              <Button
+                size="small"
+                type="primary"
+                onClick={() => {
+                  setAuthMode('login');
+                  setIsOnboardingModalOpen(true);
+                }}
+              >
+                Sign in
+              </Button>
+            }
+          />
+        )}
+
+        {renderItems()}
+        {renderFulfilment()}
+        {orderType !== 'pickup' && renderAddressSection()}
+        {renderContactAndNotes()}
+        {renderPayment()}
+        {renderSummary()}
+        {renderQueries()}
+      </>
+    );
+  };
 
   return (
     <>
       <Drawer
-        title={
-          <Flex align="center" gap={10}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: radii.md,
-                background: colors.primaryLight,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                flexShrink: 0,
-              }}
-            >
-              <ShoppingCartOutlined style={{ color: colors.primary, fontSize: 18 }} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: colors.textMain,
-                  letterSpacing: '-0.02em',
-                  lineHeight: 1.2,
-                }}
-              >
-                Your Cart
-              </div>
-              {cart.shop_name && (
-                <div
-                  style={{
-                    fontSize: 12,
-                    color: colors.textMuted,
-                    fontFamily: typography.fontFamily.body,
-                    fontWeight: 500,
-                    marginTop: 2,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                  title={cart.shop_name}
-                >
-                  From: <span style={{ color: colors.textMain, fontWeight: 600 }}>{cart.shop_name}</span>
-                </div>
-              )}
-            </div>
-          </Flex>
-        }
-        extra={
-          <Button
-            type="text"
-            icon={<CloseOutlined style={{ fontSize: 14, color: colors.textMuted }} />}
-            onClick={handleClose}
-            style={{
-              width: 32,
-              height: 32,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              borderRadius: radii.md,
-              border: `1px solid ${colors.border}`,
-              background: colors.surfaceContainerLow,
-            }}
-            aria-label="Close cart"
-          />
-        }
+        title={title}
         placement={isMobile ? 'bottom' : 'right'}
         height={isMobile ? '92dvh' : undefined}
-        width={isMobile ? '100vw' : 440}
-        onClose={handleClose}
+        width={isMobile ? undefined : 440}
         open={isCartOpen}
+        onClose={handleClose}
         zIndex={1200}
+        footer={footer}
+        rootClassName={isMobile ? 'rq-cart-drawer rq-cart-drawer--mobile' : 'rq-cart-drawer'}
         styles={{
-          body: {
-            padding: isMobile ? '16px 14px' : '20px 24px',
-            background: colors.surface,
-            paddingBottom: isMobile
-              ? 'calc(24px + env(safe-area-inset-bottom, 0px))'
-              : '24px',
-          },
-          header: {
-            padding: isMobile ? '14px 16px' : '16px 24px',
-            borderBottom: `1px solid ${colors.border}`,
-            background: colors.surface,
+          body: { padding: isMobile ? '16px' : '20px 24px' },
+          footer: {
+            padding: isMobile
+              ? '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))'
+              : '16px 24px',
+            borderTop: '1px solid #ebe7e0',
           },
         }}
-        closable={false}
       >
-      {orderSuccess ? (
-        <div style={{ textAlign: 'center', padding: '40px 20px' }}>
-          <CheckCircleFilled style={{ fontSize: 64, color: colors.semantic.success, marginBottom: 16 }} />
-          <Title
-            level={3}
-            style={{
-              marginBottom: 8,
-              fontFamily: typography.fontFamily.headline,
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              color: colors.textMain,
-            }}
-          >
-            Order Confirmed!
-          </Title>
-          <Text
-            style={{
-              display: 'block',
-              marginBottom: 20,
-              fontFamily: typography.fontFamily.body,
-              color: colors.textMuted,
-              fontSize: 13,
-            }}
-          >
-            Order #{orderSuccess.order_number} has been sent directly to{' '}
-            <strong style={{ color: colors.textMain }}>{orderSuccess.shop?.shop_name || 'the merchant'}</strong>.
-          </Text>
+        {renderBody()}
+      </Drawer>
 
-          <Card
-            style={{
-              textAlign: 'left',
-              background: colors.surfaceContainerLow,
-              marginBottom: 24,
-              borderRadius: radii.lg,
-              border: `1px solid ${colors.border}`,
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
-              <Text style={{ color: colors.textMuted }}>Total Amount:</Text>
-              <Text strong style={{ color: colors.textMain, fontWeight: 700 }}>₹{orderSuccess.total_amount?.toFixed(2)}</Text>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
-              <Text style={{ color: colors.textMuted }}>Payment Mode:</Text>
-              <Tag
-                style={{
-                  background: colors.primaryLight,
-                  color: colors.primary,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radii.xs,
-                  fontWeight: 600,
-                  margin: 0,
-                }}
-              >
-                {orderSuccess.payment_mode}
-              </Tag>
-            </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: typography.fontFamily.body, fontSize: 13 }}>
-              <Text style={{ color: colors.textMuted }}>Status:</Text>
-              <Tag
-                style={{
-                  background: colors.liveBadgeBg,
-                  color: colors.liveBadgeText,
-                  border: 'none',
-                  borderRadius: radii.xs,
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
-                Pending Acceptance
-              </Tag>
-            </div>
-          </Card>
-
-          <Space direction="vertical" style={{ width: '100%' }}>
-            <Button
-              type="primary"
-              block
-              size="large"
-              onClick={() => {
-                handleClose();
-                history.push(Routes.orders);
-              }}
-              style={{
-                height: 44,
-                borderRadius: radii.md,
-                background: colors.primary,
-                borderColor: colors.primary,
-                fontFamily: typography.fontFamily.body,
-                fontWeight: 700,
-                boxShadow: shadows.primary,
-              }}
-            >
-              View Order Details
-            </Button>
-            <Button
-              block
-              onClick={handleClose}
-              style={{
-                height: 44,
-                borderRadius: radii.md,
-                border: `1px solid ${colors.border}`,
-                background: colors.surface,
-                color: colors.textMain,
-                fontFamily: typography.fontFamily.body,
-                fontWeight: 600,
-              }}
-            >
-              Continue Browsing
-            </Button>
-          </Space>
-        </div>
-      ) : cart.items.length === 0 ? (
-        <Empty
-          image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description={
-            <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, fontSize: 16, color: colors.textMain, letterSpacing: '-0.02em' }}>
-              Your cart is empty
-            </span>
-          }
-          style={{ marginTop: 80, fontFamily: typography.fontFamily.body }}
-        >
-          <Text style={{ display: 'block', marginBottom: 16, color: colors.textMuted, fontFamily: typography.fontFamily.body, fontSize: 13 }}>
-            Browse nearby shops, foods, or services to add items.
-          </Text>
-          <Button
-            type="primary"
-            onClick={closeCart}
-            style={{
-              background: colors.primary,
-              borderColor: colors.primary,
-              borderRadius: radii.md,
-              fontWeight: 600,
-              fontFamily: typography.fontFamily.body,
-              height: 40,
-              padding: '0 20px',
-              boxShadow: shadows.primary,
-            }}
-          >
-            Explore Market
-          </Button>
-        </Empty>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-          {/* Items List */}
-          <div style={{ flex: 1, overflowY: 'auto', paddingRight: 4 }}>
-            {cart.items.map((item) => (
-              <div
-                key={item.listing_id}
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  padding: '12px 14px',
-                  background: colors.surfaceContainerLow,
-                  borderRadius: radii.lg,
-                  marginBottom: 10,
-                  border: `1px solid ${colors.border}`,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: 1, minWidth: 0 }}>
-                  {item.img_url ? (
-                    <img
-                      src={item.img_url}
-                      alt={item.item_name}
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: radii.md,
-                        objectFit: 'cover',
-                        border: `1px solid ${colors.borderLight}`,
-                      }}
-                    />
-                  ) : (
-                    <div
-                      style={{
-                        width: 48,
-                        height: 48,
-                        borderRadius: radii.md,
-                        background: colors.surfaceContainer,
-                        border: `1px solid ${colors.borderLight}`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: colors.textMuted,
-                      }}
-                    >
-                      <ShopOutlined style={{ fontSize: 20 }} />
-                    </div>
-                  )}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontFamily: typography.fontFamily.headline,
-                        fontWeight: 700,
-                        fontSize: 14,
-                        color: colors.textMain,
-                        letterSpacing: '-0.01em',
-                        whiteSpace: 'nowrap',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {item.item_name}
-                    </div>
-                    <div style={{ fontSize: 13, color: colors.primary, fontWeight: 700, fontFamily: typography.fontFamily.body, marginTop: 2 }}>
-                      ₹{item.unit_price}{' '}
-                      <span style={{ fontSize: 11, color: colors.textLight, fontWeight: 400 }}>
-                        / {item.unit}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      background: colors.surface,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radii.md,
-                      overflow: 'hidden',
-                      boxShadow: shadows.sm,
-                    }}
-                  >
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<MinusOutlined style={{ fontSize: 11, color: colors.textMain }} />}
-                      onClick={() => updateQuantity(item.listing_id, -1)}
-                      style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                      aria-label="Decrease quantity"
-                    />
-                    <span
-                      style={{
-                        padding: '0 8px',
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: colors.textMain,
-                        fontFamily: typography.fontFamily.body,
-                        minWidth: 20,
-                        textAlign: 'center',
-                      }}
-                    >
-                      {item.quantity}
-                    </span>
-                    <Button
-                      type="text"
-                      size="small"
-                      icon={<PlusOutlined style={{ fontSize: 11, color: colors.textMain }} />}
-                      onClick={() => updateQuantity(item.listing_id, 1)}
-                      style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }}
-                      aria-label="Increase quantity"
-                    />
-                  </div>
-                  <Button
-                    type="text"
-                    danger
-                    size="small"
-                    icon={<DeleteOutlined style={{ fontSize: 14 }} />}
-                    onClick={() => removeItem(item.listing_id)}
-                    style={{
-                      width: 32,
-                      height: 32,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      borderRadius: radii.md,
-                    }}
-                    aria-label="Remove item"
-                  />
-                </div>
-              </div>
-            ))}
-
-            <Divider style={{ margin: '16px 0', borderColor: colors.borderLight }} />
-
-            {/* Guest Sign In Prompt Banner */}
-            {!user_data?.user_id && (
-              <div
-                style={{
-                  background: '#EFF6FF',
-                  border: '1px solid #BFDBFE',
-                  borderRadius: radii.lg,
-                  padding: '12px 14px',
-                  marginBottom: 16,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: 10,
-                }}
-              >
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 13, color: '#1E3A8A', fontFamily: typography.fontFamily.body }}>
-                    Sign in to your account
-                  </div>
-                  <div style={{ fontSize: 11.5, color: '#3B82F6', fontFamily: typography.fontFamily.body }}>
-                    Use mobile OTP to access saved addresses and track orders.
-                  </div>
-                </div>
-                <Button
-                  type="primary"
-                  size="small"
-                  onClick={() => {
-                    setAuthMode('login');
-                    setIsOnboardingModalOpen(true);
-                  }}
-                  style={{
-                    borderRadius: radii.full,
-                    background: '#0B2D6B',
-                    borderColor: '#0B2D6B',
-                    fontWeight: 700,
-                    fontSize: 12,
-                    boxShadow: shadows.primary,
-                  }}
-                >
-                  Sign In / Register
-                </Button>
-              </div>
-            )}
-
-            {/* Order Fulfillment Type */}
-            <div style={{ marginBottom: 16 }}>
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  fontSize: 13,
-                  marginBottom: 8,
-                  color: colors.textMain,
-                }}
-              >
-                Fulfillment Mode
-              </div>
-              <Row gutter={[10, 10]}>
-                <Col span={12}>
-                  <div
-                    onClick={() => setOrderType('pickup')}
-                    style={{
-                      padding: '12px 10px',
-                      borderRadius: radii.lg,
-                      border: orderType === 'pickup' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      background: orderType === 'pickup' ? colors.primaryLight : colors.surface,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      transition: 'all 0.2s ease',
-                      boxShadow: orderType === 'pickup' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
-                    }}
-                  >
-                    <div style={{ marginBottom: 4 }}>
-                      <ShopOutlined style={{ fontSize: 20, color: orderType === 'pickup' ? colors.primary : colors.textMuted }} />
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: typography.fontFamily.body,
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: orderType === 'pickup' ? colors.primary : colors.textMain,
-                      }}
-                    >
-                      Self-Pickup
-                    </div>
-                    <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 600, marginTop: 2, fontFamily: typography.fontFamily.body }}>
-                      Free
-                    </div>
-                  </div>
-                </Col>
-                <Col span={12}>
-                  <div
-                    onClick={() => setOrderType('delivery')}
-                    style={{
-                      padding: '12px 10px',
-                      borderRadius: radii.lg,
-                      border: orderType === 'delivery' ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                      background: orderType === 'delivery' ? colors.primaryLight : colors.surface,
-                      cursor: 'pointer',
-                      textAlign: 'center',
-                      transition: 'all 0.2s ease',
-                      boxShadow: orderType === 'delivery' ? '0 2px 8px rgba(11, 45, 107, 0.08)' : 'none',
-                    }}
-                  >
-                    <div style={{ marginBottom: 4 }}>
-                      <CarOutlined style={{ fontSize: 20, color: orderType === 'delivery' ? colors.primary : colors.textMuted }} />
-                    </div>
-                    <div
-                      style={{
-                        fontFamily: typography.fontFamily.body,
-                        fontWeight: 700,
-                        fontSize: 13,
-                        color: orderType === 'delivery' ? colors.primary : colors.textMain,
-                      }}
-                    >
-                      Delivery
-                    </div>
-                    <div style={{ fontSize: 11, color: colors.secondary, fontWeight: 600, marginTop: 2, fontFamily: typography.fontFamily.body }}>
-                      ₹30
-                    </div>
-                  </div>
-                </Col>
-              </Row>
-            </div>
-
-            {/* Contact & Delivery Details */}
-            {orderType !== 'pickup' && (
-              <div style={{ marginBottom: 14 }}>
-                <Flex justify="space-between" align="center" style={{ marginBottom: 6 }}>
-                  <div
-                    style={{
-                      fontFamily: typography.fontFamily.headline,
-                      fontWeight: 700,
-                      letterSpacing: '-0.02em',
-                      fontSize: 13,
-                      color: colors.textMain,
-                    }}
-                  >
-                    Delivery Destination
-                  </div>
-                  <Flex gap={8}>
-                    {savedAddresses.length > 0 && (
-                      <Button
-                        type="link"
-                        size="small"
-                        onClick={() => setAddressMode(addressMode === 'saved' ? 'manual' : 'saved')}
-                        style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
-                      >
-                        {addressMode === 'saved' ? 'Enter Manually' : 'Use Saved Address'}
-                      </Button>
-                    )}
-                    <Button
-                      type="link"
-                      size="small"
-                      icon={<AimOutlined />}
-                      loading={detectingGps}
-                      onClick={handleUseLiveGpsInCart}
-                      style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
-                    >
-                      Use GPS
-                    </Button>
-                  </Flex>
-                </Flex>
-
-                {/* If user is logged in and has saved addresses and in 'saved' mode */}
-                {addressMode === 'saved' && savedAddresses.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 8 }}>
-                    {savedAddresses.map((addr) => {
-                      const isSelected = selectedAddressId === addr.id;
-                      const formatted =
-                        addr.formatted_address ||
-                        [addr.house_flat_floor, addr.street_area, addr.landmark, addr.city, addr.pincode]
-                          .filter(Boolean)
-                          .join(', ');
-
-                      return (
-                        <div
-                          key={addr.id}
-                          onClick={() => handleSelectSavedAddress(addr)}
-                          style={{
-                            padding: '10px 12px',
-                            borderRadius: radii.md,
-                            border: isSelected ? `2px solid ${colors.primary}` : `1px solid ${colors.border}`,
-                            background: isSelected ? colors.primaryLight : colors.surface,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: 8,
-                            transition: 'all 0.15s ease',
-                          }}
-                        >
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <Flex align="center" gap={6} style={{ marginBottom: 2 }}>
-                              <Tag
-                                style={{
-                                  borderRadius: radii.xs,
-                                  fontWeight: 700,
-                                  fontSize: 10,
-                                  margin: 0,
-                                  padding: '0 6px',
-                                  background:
-                                    (addr.label || '').toLowerCase() === 'home'
-                                      ? colors.verifiedChipBg
-                                      : (addr.label || '').toLowerCase() === 'work'
-                                      ? colors.serviceChipBg
-                                      : colors.surfaceContainer,
-                                  color:
-                                    (addr.label || '').toLowerCase() === 'home'
-                                      ? colors.verifiedChipText
-                                      : (addr.label || '').toLowerCase() === 'work'
-                                      ? colors.serviceChipText
-                                      : colors.textMuted,
-                                  border:
-                                    (addr.label || '').toLowerCase() === 'home'
-                                      ? `1px solid ${colors.verifiedChipBorder}`
-                                      : (addr.label || '').toLowerCase() === 'work'
-                                      ? `1px solid ${colors.serviceChipBorder}`
-                                      : `1px solid ${colors.border}`,
-                                }}
-                              >
-                                {addr.label}
-                              </Tag>
-                              {addr.recipient_name && (
-                                <Text strong style={{ fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.body }}>
-                                  {addr.recipient_name}
-                                </Text>
-                              )}
-                            </Flex>
-                            <div
-                              style={{
-                                fontSize: 11,
-                                color: colors.textMuted,
-                                fontFamily: typography.fontFamily.body,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                              }}
-                              title={formatted}
-                            >
-                              {formatted}
-                            </div>
-                          </div>
-
-                          {isSelected && <CheckCircleFilled style={{ color: colors.primary, fontSize: 16 }} />}
-                        </div>
-                      );
-                    })}
-
-                    <Button
-                      type="dashed"
-                      size="small"
-                      onClick={() => setIsAddAddressModalOpen(true)}
-                      style={{
-                        borderRadius: radii.md,
-                        color: colors.primary,
-                        borderColor: colors.borderDark,
-                        fontWeight: 600,
-                        marginTop: 4,
-                        width: '100%',
-                        fontFamily: typography.fontFamily.body,
-                      }}
-                    >
-                      + Add New Delivery Address
-                    </Button>
-                  </div>
-                ) : (
-                  <div>
-                    {savedAddresses.length === 0 ? (
-                      <div
-                        style={{
-                          padding: '16px 14px',
-                          background: colors.surfaceContainerLow,
-                          borderRadius: radii.lg,
-                          border: `1.5px dashed ${colors.borderDark}`,
-                          textAlign: 'center',
-                          marginBottom: 8,
-                        }}
-                      >
-                        <EnvironmentOutlined style={{ fontSize: 24, color: colors.primary, marginBottom: 6 }} />
-                        <div
-                          style={{
-                            fontFamily: typography.fontFamily.headline,
-                            fontWeight: 700,
-                            letterSpacing: '-0.02em',
-                            fontSize: 13,
-                            color: colors.textMain,
-                            marginBottom: 4,
-                          }}
-                        >
-                          Default Delivery Address Required
-                        </div>
-                        <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body, marginBottom: 12 }}>
-                          Please add your delivery address to proceed with order checkout.
-                        </div>
-                        <Button
-                          type="primary"
-                          onClick={() => {
-                            if (!user_data?.user_id) {
-                              setIsOnboardingModalOpen(true);
-                            } else {
-                              setIsAddAddressModalOpen(true);
-                            }
-                          }}
-                          style={{
-                            background: colors.primary,
-                            borderColor: colors.primary,
-                            fontWeight: 700,
-                            borderRadius: radii.md,
-                            fontSize: 13,
-                            fontFamily: typography.fontFamily.body,
-                            boxShadow: shadows.primary,
-                          }}
-                        >
-                          + Create Default Address
-                        </Button>
-                      </div>
-                    ) : (
-                      <>
-                        <Input.TextArea
-                          rows={2}
-                          placeholder="Street address, house no, landmark, locality..."
-                          value={address}
-                          onChange={(e) => setAddress(e.target.value)}
-                          style={{
-                            borderRadius: radii.md,
-                            fontSize: 13,
-                            fontFamily: typography.fontFamily.body,
-                          }}
-                        />
-                        <Flex justify="space-between" align="center" style={{ marginTop: 4 }}>
-                          <Button
-                            type="link"
-                            size="small"
-                            onClick={() => setIsAddAddressModalOpen(true)}
-                            style={{ padding: 0, fontSize: 11, fontWeight: 600, color: colors.secondary, fontFamily: typography.fontFamily.body }}
-                          >
-                            + Save this address to profile
-                          </Button>
-                          <Button
-                            type="link"
-                            size="small"
-                            onClick={() => setAddressMode('saved')}
-                            style={{ padding: 0, fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}
-                          >
-                            Choose from saved
-                          </Button>
-                        </Flex>
-                      </>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  fontSize: 13,
-                  marginBottom: 4,
-                  color: colors.textMain,
-                }}
-              >
-                Contact Phone
-              </div>
-              <Input
-                prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
-                placeholder="Mobile number for delivery coordination"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                style={{
-                  borderRadius: radii.md,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              />
-            </div>
-
-            <div style={{ marginBottom: 12 }}>
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  fontSize: 13,
-                  marginBottom: 4,
-                  color: colors.textMain,
-                }}
-              >
-                Order Instructions / Notes (Optional)
-              </div>
-              <Input
-                placeholder="e.g. Ring the bell, deliver by 4 PM, etc."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                style={{
-                  borderRadius: radii.md,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              />
-            </div>
-
-            {/* Payment Method */}
-            <div style={{ marginBottom: 16 }}>
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  fontSize: 13,
-                  marginBottom: 8,
-                  color: colors.textMain,
-                }}
-              >
-                Payment Method
-              </div>
-              <Radio.Group
-                value={paymentMode}
-                onChange={(e) => setPaymentMode(e.target.value)}
-                style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: typography.fontFamily.body }}
-              >
-                <Radio value="direct_upi">
-                  <span style={{ fontWeight: 600, color: colors.textMain }}>Direct UPI</span>{' '}
-                  <span style={{ color: colors.textMuted }}>
-                    (Pay directly to merchant via GPay/PhonePe upon {orderType === 'delivery' ? 'delivery' : 'pickup'})
-                  </span>
-                </Radio>
-                <Radio value="cod">
-                  <span style={{ fontWeight: 600, color: colors.textMain }}>Cash on Delivery</span>{' '}
-                  <span style={{ color: colors.textMuted }}>/ Pay at store</span>
-                </Radio>
-              </Radio.Group>
-            </div>
-
-            {/* Payment Notification Banner */}
-            <div
-              style={{
-                background: colors.semantic.successLight,
-                padding: '12px 14px',
-                borderRadius: radii.lg,
-                border: `1px solid ${colors.semantic.successBorder}`,
-                marginBottom: 14,
-              }}
-            >
-              <Flex gap={8} align="flex-start">
-                <ThunderboltFilled style={{ color: colors.semantic.success, fontSize: 15, marginTop: 2 }} />
-                <div>
-                  <div style={{ fontWeight: 700, fontSize: 12, color: colors.semantic.successHover, fontFamily: typography.fontFamily.body }}>
-                    Payment on Order Confirmation
-                  </div>
-                  <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 2, fontFamily: typography.fontFamily.body }}>
-                    The shop will confirm and pack your order first. Pay via UPI QR or cash upon {orderType === 'delivery' ? 'delivery' : 'pickup'}.
-                  </div>
-                </div>
-              </Flex>
-            </div>
-
-            {/* Bill Summary */}
-            <div
-              style={{
-                background: colors.surfaceContainerLow,
-                padding: '14px',
-                borderRadius: radii.lg,
-                border: `1px solid ${colors.border}`,
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 700,
-                  letterSpacing: '-0.02em',
-                  fontSize: 13,
-                  marginBottom: 10,
-                  color: colors.textMain,
-                }}
-              >
-                Bill Summary
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                <Text style={{ color: colors.textMuted }}>Subtotal</Text>
-                <Text strong style={{ color: colors.textMain }}>₹{itemsTotal.toFixed(2)}</Text>
-              </div>
-
-              {orderType === 'delivery' && (
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: 6,
-                    fontSize: 13,
-                    fontFamily: typography.fontFamily.body,
-                  }}
-                >
-                  <Text style={{ color: colors.textMuted }}>Delivery Fee</Text>
-                  <Text strong style={{ color: colors.textMain }}>₹{deliveryFee.toFixed(2)}</Text>
-                </div>
-              )}
-
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  marginBottom: 6,
-                  fontSize: 13,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                <Text style={{ color: colors.textMuted }}>Platform Fee (Direct Commerce)</Text>
-                <span
-                  style={{
-                    fontSize: 11,
-                    fontWeight: 700,
-                    color: colors.verifiedChipText,
-                    background: colors.verifiedChipBg,
-                    padding: '1px 6px',
-                    borderRadius: radii.xs,
-                    border: `1px solid ${colors.verifiedChipBorder}`,
-                  }}
-                >
-                  Free (₹0)
-                </span>
-              </div>
-
-              <Divider style={{ margin: '8px 0', borderColor: colors.borderLight }} />
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  fontSize: 16,
-                  fontFamily: typography.fontFamily.headline,
-                  fontWeight: 800,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                <span style={{ color: colors.textMain }}>Total Amount</span>
-                <span style={{ color: colors.primary, fontSize: 18 }}>₹{finalTotal.toFixed(2)}</span>
-              </div>
-            </div>
-
-            {/* Quick Inquiry / Chat Instead of Immediate Order */}
-            <div
-              style={{
-                background: colors.surfaceContainerLow,
-                padding: '14px',
-                borderRadius: radii.lg,
-                border: `1px solid ${colors.border}`,
-                marginBottom: 16,
-              }}
-            >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  alignItems: 'center',
-                  marginBottom: 6,
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <MessageOutlined style={{ color: colors.secondary, fontSize: 15 }} />
-                  <span
-                    style={{
-                      fontFamily: typography.fontFamily.headline,
-                      fontWeight: 700,
-                      letterSpacing: '-0.02em',
-                      fontSize: 13,
-                      color: colors.textMain,
-                    }}
-                  >
-                    Have a Query Before Ordering?
-                  </span>
-                </div>
-                <Tag
-                  style={{
-                    borderRadius: radii.xs,
-                    fontWeight: 700,
-                    margin: 0,
-                    fontSize: 10,
-                    background: colors.verifiedChipBg,
-                    color: colors.verifiedChipText,
-                    border: `1px solid ${colors.verifiedChipBorder}`,
-                  }}
-                >
-                  Direct Inquiry
-                </Tag>
-              </div>
-
-              <div style={{ fontSize: 11, color: colors.textMuted, marginBottom: 8, fontFamily: typography.fontFamily.body }}>
-                Select a 1-tap question or send a quick inquiry directly to the store owner:
-              </div>
-
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 8 }}>
-                {PREBUILT_QUERIES.map((q, idx) => (
-                  <Button
-                    key={idx}
-                    size="small"
-                    icon={q.icon}
-                    loading={querySending === q.text}
-                    disabled={loading || !!querySending}
-                    onClick={() => handleSendPrebuiltInquiry(q.text)}
-                    style={{
-                      borderRadius: radii.full,
-                      fontSize: 11,
-                      fontWeight: 600,
-                      background: colors.surface,
-                      borderColor: colors.border,
-                      color: colors.textMain,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      boxShadow: shadows.sm,
-                      fontFamily: typography.fontFamily.body,
-                    }}
-                  >
-                    {q.label}
-                  </Button>
-                ))}
-              </div>
-
-              {showCustomQuery ? (
-                <div style={{ marginTop: 8 }}>
-                  <Input.TextArea
-                    rows={2}
-                    placeholder="Type your question for the store owner..."
-                    value={customQueryText}
-                    onChange={(e) => setCustomQueryText(e.target.value)}
-                    style={{
-                      borderRadius: radii.md,
-                      fontSize: 12,
-                      marginBottom: 6,
-                      fontFamily: typography.fontFamily.body,
-                    }}
-                  />
-                  <Flex gap={8} justify="flex-end">
-                    <Button
-                      size="small"
-                      onClick={() => setShowCustomQuery(false)}
-                      style={{
-                        borderRadius: radii.md,
-                        border: `1px solid ${colors.border}`,
-                        color: colors.textMuted,
-                        fontFamily: typography.fontFamily.body,
-                      }}
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="primary"
-                      size="small"
-                      loading={querySending === 'custom'}
-                      onClick={() => handleSendPrebuiltInquiry(customQueryText)}
-                      style={{
-                        background: colors.secondary,
-                        borderColor: colors.secondary,
-                        borderRadius: radii.md,
-                        fontWeight: 600,
-                        fontFamily: typography.fontFamily.body,
-                      }}
-                    >
-                      Send Query
-                    </Button>
-                  </Flex>
-                </div>
-              ) : (
-                <Button
-                  type="link"
-                  size="small"
-                  icon={<EditOutlined style={{ fontSize: 12, marginRight: 4 }} />}
-                  onClick={() => setShowCustomQuery(true)}
-                  style={{ padding: 0, fontSize: 11, color: colors.secondary, fontWeight: 600, fontFamily: typography.fontFamily.body, display: 'inline-flex', alignItems: 'center' }}
-                >
-                  Type a custom question for this store...
-                </Button>
-              )}
-            </div>
-          </div>
-
-          {/* Place Order CTA & Quick Chat */}
-          <div style={{ borderTop: `1px solid ${colors.border}`, paddingTop: 14 }}>
-            <Button
-              type="primary"
-              size="large"
-              block
-              loading={loading}
-              onClick={handlePlaceOrder}
-              style={{
-                height: 48,
-                fontSize: 15,
-                fontWeight: 700,
-                background: colors.primary,
-                borderColor: colors.primary,
-                borderRadius: radii.lg,
-                marginBottom: 8,
-                boxShadow: shadows.primary,
-                fontFamily: typography.fontFamily.body,
-                letterSpacing: '-0.01em',
-              }}
-            >
-              Place Order (₹{finalTotal.toFixed(0)})
-            </Button>
-            <Button
-              block
-              icon={<MessageOutlined style={{ color: colors.secondary }} />}
-              onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
-              style={{
-                height: 42,
-                borderRadius: radii.lg,
-                fontSize: 13,
-                fontWeight: 600,
-                color: colors.secondary,
-                borderColor: colors.border,
-                background: colors.surfaceContainerLow,
-                fontFamily: typography.fontFamily.body,
-              }}
-            >
-              Inquire with Store Owner Instead
-            </Button>
-          </div>
-        </div>
-      )}
-    </Drawer>
-
-      {/* Unified Login / Register Modal for Guest Checkout */}
       <AuthModal
         open={isOnboardingModalOpen}
         onClose={() => setIsOnboardingModalOpen(false)}
@@ -1459,4 +832,3 @@ const CartDrawer = () => {
 };
 
 export default CartDrawer;
-
