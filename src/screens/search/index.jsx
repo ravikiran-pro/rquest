@@ -1093,9 +1093,17 @@ const SearchScreen = () => {
               </div>
             ) : viewMode === 'list' ? (
               <ShopTableView
-                shops={visibleItems}
-                userLocation={markerLocation}
-                onRowClick={(shop) => history.push(`/shop/${shop.id}`)}
+                items={visibleItems}
+                searchMode={searchMode}
+                onOpenMap={(entry) => {
+                  const shop = searchMode === 'shops' ? entry : entry.shop || {};
+                  const query = shop.directions
+                    ? null
+                    : encodeURIComponent(`${shop.shop_name || ''} ${shop.address || ''}`.trim());
+                  if (shop.directions || query) {
+                    window.open(shop.directions || `https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener');
+                  }
+                }}
               />
             ) : (
               <Row gutter={[20, 20]}>
