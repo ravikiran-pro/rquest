@@ -181,6 +181,35 @@ const getLocationName = async (lat, lng) => {
   }
 };
 
+/**
+ * Reverse geocodes a point and returns the readable name plus the structured
+ * address parts (street, locality, city, state, pincode) when the backend has them.
+ */
+const getLocationDetails = async (lat, lng) => {
+  if (!lat || !lng) return null;
+
+  try {
+    const res = await fetch(
+      `${config.api_url}/api/v1/location/reverse?lat=${lat}&lon=${lng}`
+    );
+    if (res.ok) {
+      const data = await res.json();
+      if (data?.name || data?.address_parts) {
+        return {
+          name: data.name || data.formatted_address || '',
+          formatted_address: data.formatted_address || data.display_name || data.name || '',
+          address_parts: data.address_parts || null,
+        };
+      }
+    }
+  } catch (err) {
+    console.warn('getLocationDetails failed:', err);
+  }
+
+  const name = await getLocationName(lat, lng);
+  return name ? { name, formatted_address: name, address_parts: null } : null;
+};
+
 const createLocationSessionToken = () =>
   typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
     ? crypto.randomUUID()
@@ -329,4 +358,5 @@ export {
   geocodeAddress,
   createLocationSessionToken,
   getPreciseUserLocation,
+  getLocationDetails,
 };
