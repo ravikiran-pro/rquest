@@ -747,18 +747,62 @@ code {
 
 /* 1. Visible Focus Indicator for Keyboard Navigation */
 :focus-visible {
-  outline: 2px solid var(--primary, #0B2D6B) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--primary, #0B2D6B);
+  outline-offset: 2px;
 }
 
 button:focus-visible,
 a:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--primary, #0B2D6B) !important;
-  outline-offset: 2px !important;
+  outline: 2px solid var(--primary, #0B2D6B);
+  outline-offset: 2px;
+}
+
+/* 1b. Text fields do not get an inner outline. Their container shows focus with
+   one soft ring (AntD tokens in styles/theme.js), so there is no double box on
+   mobile or desktop. Checkboxes and radios keep their native focus ring. */
+input:not([type="checkbox"]):not([type="radio"]):focus,
+input:not([type="checkbox"]):not([type="radio"]):focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible {
+  outline: none;
+}
+
+/* Touch feedback: ripple spans are added by utils/ripple.js on press */
+.rq-ripple-host {
+  position: relative;
+  overflow: hidden;
+}
+
+.rq-ripple {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(11, 45, 107, 0.16);
+  transform: scale(0);
+  opacity: 1;
+  pointer-events: none;
+  animation: rq-ripple-expand 0.55s ease-out forwards;
+}
+
+.rq-ripple--light {
+  background: rgba(255, 255, 255, 0.35);
+}
+
+@keyframes rq-ripple-expand {
+  to {
+    transform: scale(1);
+    opacity: 0;
+  }
+}
+
+/* Mobile fields: 16px text stops iOS/Android browsers from zooming in on focus */
+@media (max-width: 576px) {
+  .ant-input,
+  .ant-input-affix-wrapper .ant-input {
+    font-size: 16px;
+  }
 }
 
 /* Search bar keyword input: the input sits inside a styled "pill" wrapper, so
