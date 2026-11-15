@@ -906,10 +906,14 @@
   }
 
   .rq-auth-mobile-top-nav {
+    /* Show inline at the very top of the viewport on small screens */
+    position: fixed;
+    top: calc(env(safe-area-inset-top, 0px) + 12px);
+    left: 16px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    margin-bottom: 14px;
+    z-index: 1000; /* keeps it above the card */
   }
 
   .rq-auth-hero {
