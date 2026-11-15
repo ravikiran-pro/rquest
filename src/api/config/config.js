@@ -18,11 +18,11 @@ module.exports = {
     dialect: 'postgres',
   },
   production: {
-    username: process.env.DB_USER || 'rquest_db_user',
-    password: process.env.DB_PASSWORD || 'hRfFXFiA3nyL0D3dzDQHwKqxjcraDykC',
-    database: process.env.DB_NAME || 'rquest_db',
-    host: process.env.DB_HOST || 'dpg-dbrab6lckfvc73dmkrmg-a.oregon-postgres.render.com',
-    port: process.env.DB_PORT || 5432,
+    username: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    host: process.env.DB_HOST,
+    port: process.env.DB_PORT,
     dialect: 'postgres',
     dialectOptions: {
       ssl: {
