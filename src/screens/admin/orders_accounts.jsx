@@ -27,8 +27,10 @@ import {
   CarOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
-  MessageOutlined,
+  PhoneOutlined,
+  EnvironmentOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../../app/components/common/ChatIcon';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { useChatStore } from '../../app/services';
 import { colors, radii, typography } from '../../app/styles/theme';
@@ -358,7 +360,7 @@ const AdminOrdersAccounts = () => {
                     : 'rgba(11, 45, 107, 0.2)',
               }}
             >
-              {record.order_type === 'delivery' ? '🚚 Delivery' : record.order_type === 'service' ? '🛠️ Service' : '🛍️ Pickup'}
+              {record.order_type === 'delivery' ? 'Delivery' : record.order_type === 'service' ? 'Service' : 'Pickup'}
             </Tag>
           </div>
         </div>
@@ -382,7 +384,7 @@ const AdminOrdersAccounts = () => {
           </div>
           {record.shop?.owner?.mobile && (
             <div style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-              📞 {record.shop.owner.mobile}
+              <PhoneOutlined /> {record.shop.owner.mobile}
             </div>
           )}
         </div>
@@ -402,7 +404,7 @@ const AdminOrdersAccounts = () => {
             {record.customer?.username || 'Customer'}
           </div>
           <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-            📞 {record.customer_phone || record.customer?.mobile || 'No Phone'}
+            <PhoneOutlined /> {record.customer_phone || record.customer?.mobile || 'No Phone'}
           </div>
           {record.delivery_address && (
             <Tooltip title={record.delivery_address}>
@@ -417,7 +419,7 @@ const AdminOrdersAccounts = () => {
                   fontFamily: typography.fontFamily.body,
                 }}
               >
-                📍 {record.delivery_address}
+                <EnvironmentOutlined /> {record.delivery_address}
               </div>
             </Tooltip>
           )}
@@ -542,7 +544,7 @@ const AdminOrdersAccounts = () => {
           {record.shop?.owner_id && (
             <Button
               size="small"
-              icon={<MessageOutlined />}
+              icon={<ChatIcon />}
               onClick={() => handleChatOpen(record.shop.owner_id, record.shop_id, { shop_name: record.shop?.shop_name })}
               style={{
                 borderRadius: radii.md,

@@ -4,11 +4,11 @@ import { Card, Button, Typography, Tag, Tooltip, Flex, Grid } from 'antd';
 import {
   EditOutlined,
   EnvironmentOutlined,
-  MessageOutlined,
   ArrowRightOutlined,
   CompassOutlined,
   StarFilled,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useGlobalStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
@@ -264,7 +264,7 @@ const ShopCard = ({
                 {!isChatDisabled && (
                   <Tooltip title={!isChat ? 'Login to chat' : 'Direct chat with owner'}>
                     <Button
-                      icon={<MessageOutlined />}
+                      icon={<ChatIcon />}
                       style={{ borderRadius: 8, height: 38, width: 38 }}
                       disabled={!isChat}
                       onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
@@ -521,7 +521,7 @@ const ShopCard = ({
             {!isChatDisabled && (
               <Tooltip title={!isChat ? 'Login to chat' : 'Direct chat with owner'}>
                 <Button
-                  icon={<MessageOutlined />}
+                  icon={<ChatIcon />}
                   style={{ borderRadius: 8, height: 38, width: 38 }}
                   disabled={!isChat}
                   onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}

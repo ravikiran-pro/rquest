@@ -30,12 +30,12 @@ import {
   LogoutOutlined,
   OrderedListOutlined,
   DownOutlined,
-  MessageOutlined,
   CompassOutlined,
   CarOutlined,
   SafetyCertificateOutlined,
   BellOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 
 const Navbar = () => {
   const history = useHistory();
@@ -225,7 +225,7 @@ const Navbar = () => {
       : []),
     {
       key: 'chat',
-      icon: <MessageOutlined />,
+      icon: <ChatIcon />,
       label: (
         <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
           <span>Direct Messages</span>

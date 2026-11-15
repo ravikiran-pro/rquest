@@ -20,7 +20,6 @@ import {
   PhoneOutlined,
   ArrowLeftOutlined,
   ArrowRightOutlined,
-  RocketOutlined,
   EditOutlined,
   AimOutlined,
   ShoppingOutlined,
@@ -1110,7 +1109,7 @@ const ClientRegister = () => {
                 ) : (
                   <Button
                     type="primary"
-                    icon={<RocketOutlined />}
+                    icon={<CheckOutlined />}
                     loading={submitting}
                     onClick={handleFinishOnboarding}
                     style={{

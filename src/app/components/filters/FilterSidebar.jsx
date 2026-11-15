@@ -468,7 +468,7 @@ const FilterSidebar = ({
               transition: 'all 0.15s ease',
             }}
           >
-            ☆ 4.0+
+            4.0+ rating
           </button>
         </Flex>
       </div>

@@ -640,11 +640,14 @@ code {
   position: fixed !important;
   top: auto !important;
   bottom: 32px !important;
-  left: 50% !important;
-  right: auto !important;
-  transform: translateX(-50%) !important;
-  width: auto !important;
-  max-width: 90vw !important;
+  /* Full-width track, toast centred inside: long text can use the full width */
+  left: 0 !important;
+  right: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: none !important;
+  padding: 0 16px !important;
+  box-sizing: border-box !important;
   margin: 0 !important;
   display: flex !important;
   flex-direction: column !important;
@@ -666,16 +669,20 @@ code {
   display: inline-flex !important;
   align-items: center !important;
   justify-content: center !important;
-  padding: 10px 22px !important;
+  padding: 10px 18px !important;
   background: var(--surface) !important;
-  border-radius: 9999px !important;
+  border-radius: 14px !important;
   box-shadow: 0 12px 32px -4px rgba(11, 45, 107, 0.16), 0 4px 12px rgba(11, 45, 107, 0.08) !important;
   border: 1px solid var(--border-color) !important;
   font-weight: 600 !important;
   font-size: 13px !important;
   pointer-events: all !important;
   color: var(--text-main) !important;
-  white-space: nowrap !important;
+  /* Long messages wrap instead of running off a phone screen */
+  white-space: normal !important;
+  max-width: min(520px, calc(100vw - 32px)) !important;
+  text-align: left !important;
+  line-height: 1.4 !important;
   animation: slideUpToast 0.22s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
@@ -768,6 +775,17 @@ textarea:focus-visible,
 select:focus,
 select:focus-visible {
   outline: none;
+}
+
+/* Touch screens: a tapped button keeps :hover until you tap elsewhere, so
+   primary buttons stayed in their lighter hover blue. Keep the brand colour;
+   the ripple gives the press feedback instead. */
+@media (hover: none) {
+  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-dangerous):hover {
+    background: var(--primary, #0B2D6B);
+    border-color: var(--primary, #0B2D6B);
+    color: #ffffff;
+  }
 }
 
 /* Touch feedback: ripple spans are added by utils/ripple.js on press */

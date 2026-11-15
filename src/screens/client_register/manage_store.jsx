@@ -33,11 +33,9 @@ import {
   FileTextOutlined,
   SettingOutlined,
   PhoneOutlined,
-  MessageOutlined,
   EnvironmentOutlined,
   CheckCircleFilled,
   CarOutlined,
-  ThunderboltFilled,
   UserOutlined,
   CopyOutlined,
   ToolOutlined,
@@ -46,6 +44,7 @@ import {
   QrcodeOutlined,
   WalletOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../../app/components/common/ChatIcon';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { useHistory } from 'react-router-dom';
 import { AddProductModal, ImportProductCsvModal } from '../../app/components';
@@ -775,7 +774,7 @@ const ManageStore = ({
                   onClick={() => handleUpdateOrderStatus(record.id, 'placed')}
                   style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMuted }}
                 >
-                  ↩️ Placed
+                  Placed
                 </Button>
               </>
             )}
@@ -788,7 +787,7 @@ const ManageStore = ({
                 style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Hand Over
+                Hand Over
               </Button>
             )}
 
@@ -800,7 +799,7 @@ const ManageStore = ({
                 style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Delivered
+                Delivered
               </Button>
             )}
 
@@ -812,7 +811,7 @@ const ManageStore = ({
                 style={{ background: colors.semantic.success, borderColor: colors.semantic.success, fontWeight: 600, borderRadius: radii.md }}
                 onClick={() => handleUpdateOrderStatus(record.id, 'completed')}
               >
-                ✅ Delivered
+                Delivered
               </Button>
             )}
 
@@ -1558,7 +1557,7 @@ const ManageStore = ({
                           }}
                           onClick={() => handleUpdateOrderStatus(selectedOrder.id, 'completed')}
                         >
-                          ✅ Confirm Delivered & Complete
+                          Confirm Delivered & Complete
                         </Button>
                       )}
 
@@ -1653,7 +1652,7 @@ const ManageStore = ({
                   )}
                   <Button
                     type="primary"
-                    icon={<MessageOutlined />}
+                    icon={<ChatIcon />}
                     style={{
                       borderRadius: radii.md,
                       fontWeight: 600,
@@ -1755,7 +1754,7 @@ const ManageStore = ({
             <Card
               title={
                 <span style={{ fontSize: 14, fontWeight: 700, fontFamily: typography.fontFamily.headline }}>
-                  <ThunderboltFilled style={{ marginRight: 6, color: colors.tertiary }} /> Payment & Transaction Breakdown
+                  <WalletOutlined style={{ marginRight: 6, color: colors.tertiary }} /> Payment & Transaction Breakdown
                 </span>
               }
               style={{ borderRadius: radii.lg, border: `1px solid ${colors.border}` }}

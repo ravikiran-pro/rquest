@@ -6,7 +6,6 @@ import {
   Input,
   Radio,
   Segmented,
-  Alert,
   Result,
   Descriptions,
   Typography,
@@ -26,20 +25,21 @@ import {
   EnvironmentOutlined,
   AimOutlined,
   PhoneOutlined,
-  MessageOutlined,
   InboxOutlined,
   ClockCircleOutlined,
   QrcodeOutlined,
   ToolOutlined,
   EditOutlined,
   CarOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { useCartStore, useGlobalStore, useChatStore } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal, AddressOption, getFormattedAddress } from '../profile';
-import { AuthModal } from '../auth';
+import { setCartReturn, takeReopenCartFlag } from '../../utils/returnTo';
 import './cart.css';
 
 const { Text } = Typography;
@@ -86,7 +86,7 @@ SummaryRow.propTypes = {
 
 const CartDrawer = () => {
   const history = useHistory();
-  const { cart, isCartOpen, closeCart, updateQuantity, removeItem, clearCart } =
+  const { cart, isCartOpen, openCart, closeCart, updateQuantity, removeItem, clearCart } =
     useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
@@ -106,9 +106,6 @@ const CartDrawer = () => {
   const [showCustomQuery, setShowCustomQuery] = useState(false);
   const [customQueryText, setCustomQueryText] = useState('');
 
-  // Authentication modal state for guest checkout
-  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
 
   // Address state
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -145,6 +142,14 @@ const CartDrawer = () => {
       }
     }
   }, [isCartOpen, user_data?.user_id]);
+
+  // Back from the login page: reopen the cart so the user can place the order
+  useEffect(() => {
+    if (user_data?.user_id && takeReopenCartFlag()) {
+      openCart();
+      message.success('Signed in. Review your order and place it.');
+    }
+  }, [user_data?.user_id]);
 
   const handleSelectSavedAddress = (addr) => {
     setSelectedAddressId(addr.id);
@@ -183,9 +188,17 @@ const CartDrawer = () => {
     }
   };
 
+  // Guests sign in on the full login page, then return here with the cart open
+  const goToLogin = () => {
+    const here = `${history.location.pathname}${history.location.search || ''}`;
+    setCartReturn(here);
+    closeCart();
+    history.push('/login');
+  };
+
   const openAddAddress = () => {
     if (!user_data?.user_id) {
-      setIsOnboardingModalOpen(true);
+      goToLogin();
     } else {
       setIsAddAddressModalOpen(true);
     }
@@ -199,7 +212,7 @@ const CartDrawer = () => {
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
-      setIsOnboardingModalOpen(true);
+      goToLogin();
       return;
     }
 
@@ -258,6 +271,23 @@ const CartDrawer = () => {
     }
   };
 
+  // Store owner's user id: from the cart, or looked up from the shop
+  const resolveOwnerId = async () => {
+    let ownerId = cart.owner_id;
+    if (!ownerId && cart.shop_id) {
+      try {
+        const shopDetails = await netWorkCall(`${apiConfig.shop_details}/${cart.shop_id}/details`, 'GET', null, false);
+        ownerId = shopDetails?.data?.owner_id;
+      } catch (err) {
+        console.error('Error fetching shop details for chat:', err);
+      }
+    }
+    if (!ownerId) {
+      message.warning('Store contact is unavailable right now. You can still place the order.');
+    }
+    return ownerId;
+  };
+
   const handleSendPrebuiltInquiry = async (queryText) => {
     if (!queryText || !queryText.trim()) {
       message.error('Please enter or select a question');
@@ -266,24 +296,12 @@ const CartDrawer = () => {
 
     if (!user_data?.user_id) {
       message.info('Please sign in to chat directly with the store owner');
-      setIsOnboardingModalOpen(true);
+      goToLogin();
       return;
     }
 
-    let targetOwnerId = cart.owner_id;
-    if (!targetOwnerId && cart.shop_id) {
-      try {
-        const shopDetails = await netWorkCall(`${apiConfig.shop_details}/${cart.shop_id}/details`, 'GET', null, false);
-        targetOwnerId = shopDetails?.data?.owner_id;
-      } catch (err) {
-        console.error('Error fetching shop details for chat:', err);
-      }
-    }
-
-    if (!targetOwnerId) {
-      message.warning('Store owner details unavailable. You can place the order directly!');
-      return;
-    }
+    const targetOwnerId = await resolveOwnerId();
+    if (!targetOwnerId) return;
 
     setQuerySending(queryText === customQueryText ? 'custom' : queryText);
     try {
@@ -317,6 +335,18 @@ const CartDrawer = () => {
     } finally {
       setQuerySending(false);
     }
+  };
+
+  // Open a chat with the store owner, without sending anything on the user's behalf
+  const handleChatWithStore = async () => {
+    if (!user_data?.user_id) {
+      goToLogin();
+      return;
+    }
+    const ownerId = await resolveOwnerId();
+    if (!ownerId) return;
+    closeCart();
+    handleChatOpen(ownerId, cart.shop_id, { shop_name: cart.shop_name });
   };
 
   const handleClose = () => {
@@ -354,17 +384,23 @@ const CartDrawer = () => {
         </Text>
         <span className="rq-cart-footer-amount">₹{finalTotal.toFixed(2)}</span>
       </div>
-      <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
-        Place order
-      </Button>
+      {user_data?.user_id ? (
+        <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
+          Place order
+        </Button>
+      ) : (
+        <Button type="primary" size="large" block onClick={goToLogin}>
+          Sign in to place order
+        </Button>
+      )}
       <Button
         type="text"
         block
-        icon={<MessageOutlined />}
+        icon={<ChatIcon />}
         disabled={loading || !!querySending}
-        onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
+        onClick={handleChatWithStore}
       >
-        Ask the store owner first
+        Chat with store
       </Button>
     </div>
   ) : null;
@@ -613,7 +649,7 @@ const CartDrawer = () => {
       <Form layout="vertical" size="large" requiredMark={false} className="rq-cart-form">
         <Form.Item label="Contact phone" required>
           <Input
-            prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+            prefix={<PhoneOutlined style={{ color: 'var(--outline)' }} />}
             placeholder="Mobile number for order updates"
             value={phone}
             inputMode="tel"
@@ -751,25 +787,18 @@ const CartDrawer = () => {
     return (
       <>
         {!user_data?.user_id && (
-          <Alert
-            type="info"
-            showIcon
-            className="rq-cart-alert"
-            message="Sign in to place this order"
-            description="Use your mobile OTP to save addresses and track orders."
-            action={
-              <Button
-                size="small"
-                type="primary"
-                onClick={() => {
-                  setAuthMode('login');
-                  setIsOnboardingModalOpen(true);
-                }}
-              >
-                Sign in
-              </Button>
-            }
-          />
+          <div className="rq-cart-signin">
+            <span className="rq-cart-signin-icon">
+              <UserOutlined />
+            </span>
+            <div className="rq-cart-signin-text">
+              <div className="rq-cart-signin-title">Sign in to place your order</div>
+              <div className="rq-cart-signin-sub">Your cart is saved. You'll come straight back here.</div>
+            </div>
+            <Button type="primary" className="rq-cart-signin-btn" onClick={goToLogin}>
+              Sign in
+            </Button>
+          </div>
         )}
 
         {renderItems()}
@@ -788,7 +817,7 @@ const CartDrawer = () => {
       <Drawer
         title={title}
         placement={isMobile ? 'bottom' : 'right'}
-        height={isMobile ? '92dvh' : undefined}
+        height={isMobile ? '100dvh' : undefined}
         width={isMobile ? undefined : 440}
         open={isCartOpen}
         onClose={handleClose}
@@ -807,16 +836,6 @@ const CartDrawer = () => {
       >
         {renderBody()}
       </Drawer>
-
-      <AuthModal
-        open={isOnboardingModalOpen}
-        onClose={() => setIsOnboardingModalOpen(false)}
-        initialMode={authMode}
-        onSuccess={(userData) => {
-          setPhone(userData.mobile || '');
-          fetchSavedAddresses();
-        }}
-      />
 
       {isAddAddressModalOpen && (
         <AddressModal

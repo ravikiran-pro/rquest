@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Modal, Button, Typography, Flex, Input, Tag } from 'antd';
-import { ThunderboltOutlined, SendOutlined } from '@ant-design/icons';
+import { SendOutlined, ControlOutlined } from '@ant-design/icons';
 import { colors, radii } from '../../styles/theme';
 
 const { Title, Text } = Typography;
@@ -115,7 +115,7 @@ const AiSearchModal = ({ open, visible, onClose, onAiApply, onApply }) => {
               flexShrink: 0,
             }}
           >
-            <ThunderboltOutlined />
+            <ControlOutlined />
           </div>
           <div>
             <Title level={4} style={{ margin: 0, color: '#0f172a' }}>

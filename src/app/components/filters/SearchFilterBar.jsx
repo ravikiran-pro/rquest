@@ -25,6 +25,7 @@ import {
   CheckOutlined,
   ShopOutlined,
   CheckCircleFilled,
+  CloseOutlined,
 } from '@ant-design/icons';
 import {
   DEFAULT_FILTERS,
@@ -364,7 +365,7 @@ const SearchFilterBar = ({
     if (filters.minRating) {
       tags.push({
         key: 'rating',
-        label: `${filters.minRating}★ & above`,
+        label: `${filters.minRating} and above`,
         icon: <StarFilled style={{ color: '#eab308' }} />,
         onRemove: () => updateFilter('minRating', null),
       });
@@ -435,7 +436,7 @@ const SearchFilterBar = ({
               onClick={t.onRemove}
               title="Remove filter"
             >
-              ✕
+              <CloseOutlined />
             </span>
           </div>
         ))}
@@ -548,7 +549,7 @@ const SearchFilterBar = ({
               onClick={() => isMobile && setIsDrawerOpen(true)}
             >
               <StarFilled style={{ color: filters.minRating ? '#eab308' : '#94a3b8' }} />
-              <span>{filters.minRating ? `${filters.minRating}★+` : 'Rating'}</span>
+              <span>{filters.minRating ? `${filters.minRating}+ rating` : 'Rating'}</span>
               <DownOutlined className="filter-pill-chevron" />
             </button>
           </Popover>
@@ -578,7 +579,7 @@ const SearchFilterBar = ({
             className={`filter-pill-btn ${filters.maxDistance === 2 ? 'active' : ''}`}
             onClick={() => updateFilter('maxDistance', filters.maxDistance === 2 ? null : 2)}
           >
-            <span>⚡ Within 2 km</span>
+            <span>Within 2 km</span>
           </button>
 
           {searchMode === 'items' && (

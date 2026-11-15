@@ -130,8 +130,8 @@ const AddressModal = ({
         state: 'Karnataka',
         is_default: false,
       });
-      // Pre-fill from GPS for new addresses
-      detectGpsLocation();
+      // Pre-fill from GPS for new addresses (quietly: no warning if it fails)
+      detectGpsLocation({ silent: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, visible, initialData, userProfile]);
@@ -163,7 +163,9 @@ const AddressModal = ({
     setSearchLocalityValue(formatted || name || '');
   };
 
-  const detectGpsLocation = async () => {
+  // opts.silent: automatic pre-fill on open, so a failure shows no warning
+  const detectGpsLocation = async (opts) => {
+    const silent = opts?.silent === true;
     setDetectingGps(true);
     try {
       const loc = await getPreciseUserLocation(true);
@@ -178,14 +180,14 @@ const AddressModal = ({
             formatted: details.formatted_address,
             parts: details.address_parts,
           });
-          message.success('Current location filled in');
+          if (!silent) message.success('Current location filled in');
         } else {
           setCoords(pair);
         }
       }
     } catch (err) {
       console.warn('GPS detection in address modal:', err);
-      message.warning('Could not detect your location. Pick it on the map instead.');
+      if (!silent) message.warning('Could not detect your location. Pick it on the map instead.');
     } finally {
       setDetectingGps(false);
     }
