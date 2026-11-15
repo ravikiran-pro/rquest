@@ -76,6 +76,38 @@ const formatLocationName = (address, displayName, lat, lng) => {
 };
 
 /**
+ * Normalises an OpenStreetMap / LocationIQ `address` object into the same
+ * shape the Google helpers return, so the client can fill the form the same way.
+ */
+const osmAddressParts = (address) => {
+  if (!address) return null;
+  const street = address.road || address.pedestrian || address.footway || '';
+  const sublocality = cleanAdminPrefix(
+    address.neighbourhood ||
+      address.suburb ||
+      address.quarter ||
+      address.residential ||
+      address.city_district ||
+      ''
+  );
+  const city =
+    address.city ||
+    address.town ||
+    address.municipality ||
+    address.village ||
+    address.state_district ||
+    address.county ||
+    '';
+  return {
+    street,
+    sublocality,
+    city,
+    state: address.state || '',
+    pincode: address.postcode || '',
+  };
+};
+
+/**
  * Extracts normalized locality/city/state/pincode parts from Google Geocoding (v3/v4)
  * and Google Places API (New) addressComponents arrays.
  */
@@ -209,7 +241,9 @@ const reverseWithLocationIq = async (lat, targetLon, locationIqKey) => {
       return {
         success: true,
         name: formattedName,
+        formatted_address: liqData?.display_name,
         address: liqData?.address,
+        address_parts: osmAddressParts(liqData?.address),
         display_name: liqData?.display_name,
         source: 'locationiq',
       };
@@ -495,6 +529,7 @@ const searchWithLocationIq = async (query, lat, targetLon, locationIqKey) => {
           lat: itemLat,
           lon: itemLon,
           dist,
+          address_parts: osmAddressParts(item.address),
           source: 'locationiq',
         };
       });
@@ -568,7 +603,9 @@ router.get('/reverse', async (req, res) => {
     const result = {
       success: true,
       name: formattedName,
+      formatted_address: osmData?.display_name,
       address: osmData?.address,
+      address_parts: osmAddressParts(osmData?.address),
       display_name: osmData?.display_name,
       source: 'osm',
     };
@@ -712,7 +749,7 @@ router.get('/search', async (req, res) => {
     // Fallback: OpenStreetMap Nominatim search
     const osmUrl = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
       query
-    )}&countrycodes=in&limit=6`;
+    )}&countrycodes=in&limit=6&addressdetails=1`;
     const osmRes = await fetch(osmUrl, {
       headers: OSM_HEADERS,
       signal: AbortSignal.timeout?.(5000),
@@ -721,10 +758,12 @@ router.get('/search', async (req, res) => {
     const osmData = await osmRes.json();
     const results = Array.isArray(osmData)
       ? osmData.map((item) => ({
-          name: item.name,
+          name: item.name || item.display_name?.split(',')[0]?.trim(),
           display_name: item.display_name,
+          secondary_text: item.display_name?.split(',').slice(1).join(',').trim() || '',
           lat: parseFloat(item.lat),
           lon: parseFloat(item.lon),
+          address_parts: osmAddressParts(item.address),
           source: 'osm',
         }))
       : [];

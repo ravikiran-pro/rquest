@@ -27,18 +27,29 @@ import {
   netWorkCall,
   apiConfig,
   getPreciseUserLocation,
-  getLocationName,
+  getLocationDetails,
   searchLocations,
   getPlaceDetails,
   createLocationSessionToken,
 } from '../../utils';
 import LeafletComponent from '../leaflet/leaflet';
 import ResponsiveSheet from './ResponsiveSheet';
+import { colors } from '../../styles/theme';
 import './profile-components.css';
 
 const DEFAULT_COORDS = [12.9716, 77.5946];
 // Stable fallback so the open-effect does not re-run on every render.
 const EMPTY_PROFILE = {};
+
+const INDIAN_STATES = [
+  'Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+  'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+];
+const STATE_OPTIONS = INDIAN_STATES.map((st) => ({ value: st }));
 
 const LABEL_OPTIONS = [
   { label: <span className="rq-seg-opt"><HomeOutlined /> Home</span>, value: 'Home' },
@@ -76,6 +87,9 @@ const AddressModal = ({
   const [searchLocalityValue, setSearchLocalityValue] = useState('');
   const [showMapPicker, setShowMapPicker] = useState(false);
   const localityTimeoutRef = useRef(null);
+  const [cityOptions, setCityOptions] = useState([]);
+  const [searchingCity, setSearchingCity] = useState(false);
+  const cityTimeoutRef = useRef(null);
   const sessionTokenRef = useRef(createLocationSessionToken());
   const [coords, setCoords] = useState(
     () => toCoordPair(initialData && [initialData.latitude, initialData.longitude]) ||
@@ -122,21 +136,51 @@ const AddressModal = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, visible, initialData, userProfile]);
 
+  /**
+   * Fills the address form from a resolved location (search pick, GPS or map pin).
+   * Location-derived fields are overwritten; flat/house, recipient and landmark are kept.
+   */
+  const applyLocation = ({ lat, lon, name, formatted, parts }) => {
+    const pair = toCoordPair([lat, lon]);
+    if (pair) setCoords(pair);
+
+    const p = parts || {};
+    const streetText = [p.street, p.sublocality]
+      .filter((v, i, arr) => v && arr.indexOf(v) === i)
+      .join(', ');
+
+    const updates = { formatted_address: formatted || name || '' };
+    if (streetText) {
+      updates.street_area = streetText;
+    } else if (name && !form.getFieldValue('street_area')) {
+      updates.street_area = name;
+    }
+    if (p.city) updates.city = p.city;
+    if (p.state) updates.state = p.state;
+    if (p.pincode) updates.pincode = String(p.pincode).replace(/\D/g, '').slice(0, 6);
+
+    form.setFieldsValue(updates);
+    setSearchLocalityValue(formatted || name || '');
+  };
+
   const detectGpsLocation = async () => {
     setDetectingGps(true);
     try {
       const loc = await getPreciseUserLocation(true);
       const pair = toCoordPair(loc);
       if (pair) {
-        setCoords(pair);
-        const name = await getLocationName(pair[0], pair[1]);
-        if (name) {
-          form.setFieldsValue({
-            street_area: form.getFieldValue('street_area') || name,
-            formatted_address: name,
+        const details = await getLocationDetails(pair[0], pair[1]);
+        if (details) {
+          applyLocation({
+            lat: pair[0],
+            lon: pair[1],
+            name: details.name,
+            formatted: details.formatted_address,
+            parts: details.address_parts,
           });
-          setSearchLocalityValue(name);
-          message.success('Current location applied');
+          message.success('Current location filled in');
+        } else {
+          setCoords(pair);
         }
       }
     } catch (err) {
@@ -217,37 +261,93 @@ const AddressModal = ({
       }
     }
 
-    const pair = toCoordPair([lat, lon]);
-    if (pair) setCoords(pair);
-
-    const fieldUpdates = {
-      street_area: name || form.getFieldValue('street_area'),
-      formatted_address: display_name,
-    };
-    if (address_parts?.city) fieldUpdates.city = address_parts.city;
-    if (address_parts?.state) fieldUpdates.state = address_parts.state;
-    if (address_parts?.pincode) fieldUpdates.pincode = address_parts.pincode;
-
-    form.setFieldsValue(fieldUpdates);
-    setSearchLocalityValue(display_name || name || val || '');
+    applyLocation({
+      lat,
+      lon,
+      name: name || val,
+      formatted: display_name,
+      parts: address_parts,
+    });
     setSearchOptions([]);
   };
 
-  const handleMapConfirm = (newCoords) => {
-    const pair = toCoordPair(newCoords);
-    if (pair) {
-      setCoords(pair);
-      getLocationName(pair[0], pair[1]).then((name) => {
-        if (name) {
-          form.setFieldsValue({
-            street_area: form.getFieldValue('street_area') || name,
-            formatted_address: name,
-          });
-          setSearchLocalityValue(name);
+  // City suggestions come from the same location search API. When a result has no
+  // structured city, derive it from the display text ("Locality, City, State, India").
+  const extractCityOptions = (results) => {
+    const byCity = new Map();
+    results.forEach((r) => {
+      const parts = r.address_parts || {};
+      let city = parts.city;
+      let state = parts.state;
+      if (!city) {
+        const segs = (r.display_name || '')
+          .split(',')
+          .map((x) => x.trim())
+          .filter((x) => x && x.toLowerCase() !== 'india');
+        if (segs.length >= 2) {
+          city = segs[segs.length - 2];
+          state = state || segs[segs.length - 1];
         }
+      }
+      if (city && !byCity.has(city.toLowerCase())) {
+        byCity.set(city.toLowerCase(), { city, state: state || '' });
+      }
+    });
+    return [...byCity.values()].map((c, i) => ({
+      value: c.city,
+      key: `city-${c.city}-${i}`,
+      label: (
+        <div style={{ padding: '4px 0' }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: colors.textMain }}>{c.city}</div>
+          {c.state && <div style={{ fontSize: 12, color: colors.textMuted }}>{c.state}</div>}
+        </div>
+      ),
+      raw: c,
+    }));
+  };
+
+  const handleSearchCity = (val) => {
+    if (cityTimeoutRef.current) clearTimeout(cityTimeoutRef.current);
+    if (!val || val.trim().length < 2) {
+      setCityOptions([]);
+      setSearchingCity(false);
+      return;
+    }
+    setSearchingCity(true);
+    cityTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(val, coords?.[0], coords?.[1], sessionTokenRef.current);
+        setCityOptions(extractCityOptions(results));
+      } catch (err) {
+        console.error('City search error:', err);
+      } finally {
+        setSearchingCity(false);
+      }
+    }, 280);
+  };
+
+  const handleSelectCity = (val, option) => {
+    const c = option?.raw;
+    if (!c) return;
+    form.setFieldsValue(c.state ? { city: c.city, state: c.state } : { city: c.city });
+    setCityOptions([]);
+  };
+
+  const handleMapConfirm = async (newCoords) => {
+    setShowMapPicker(false);
+    const pair = toCoordPair(newCoords);
+    if (!pair) return;
+    setCoords(pair);
+    const details = await getLocationDetails(pair[0], pair[1]);
+    if (details) {
+      applyLocation({
+        lat: pair[0],
+        lon: pair[1],
+        name: details.name,
+        formatted: details.formatted_address,
+        parts: details.address_parts,
       });
     }
-    setShowMapPicker(false);
   };
 
   const handleFinish = async (values) => {
@@ -374,7 +474,7 @@ const AddressModal = ({
 
           <section className="rq-form-section">
             <div className="rq-form-section-title">Address details</div>
-            <div className="rq-form-section-hint">Tell the delivery partner exactly where to find you.</div>
+            <div className="rq-form-section-hint">Pick a search result or use your location and the street, city, state and PIN fill in for you.</div>
 
             <Form.Item name="label" label="Save as" rules={[{ required: true, message: 'Choose a label' }]}>
               <Segmented block options={LABEL_OPTIONS} />
@@ -434,21 +534,39 @@ const AddressModal = ({
                 <Form.Item
                   name="pincode"
                   label="PIN code"
-                  rules={[{ required: true, message: 'Enter the PIN code' }]}
+                  rules={[
+                    { required: true, message: 'Enter the 6-digit PIN code' },
+                    { pattern: /^\d{6}$/, message: 'PIN code must be 6 digits' },
+                  ]}
                 >
-                  <Input placeholder="e.g. 560034" maxLength={8} inputMode="numeric" />
+                  <Input placeholder="e.g. 560034" maxLength={6} inputMode="numeric" />
                 </Form.Item>
               </Col>
 
               <Col xs={24} md={12}>
                 <Form.Item name="city" label="City" rules={[{ required: true, message: 'Enter the city' }]}>
-                  <Input placeholder="City" />
+                  <AutoComplete
+                    options={cityOptions}
+                    onSearch={handleSearchCity}
+                    onSelect={handleSelectCity}
+                    placeholder="Start typing your city"
+                  >
+                    <Input suffix={searchingCity ? <Spin size="small" /> : null} />
+                  </AutoComplete>
                 </Form.Item>
               </Col>
 
               <Col xs={24} md={12}>
-                <Form.Item name="state" label="State" rules={[{ required: true, message: 'Enter the state' }]}>
-                  <Input placeholder="State" />
+                <Form.Item name="state" label="State" rules={[{ required: true, message: 'Select the state' }]}>
+                  <AutoComplete
+                    options={STATE_OPTIONS}
+                    filterOption={(input, option) =>
+                      (option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                    }
+                    placeholder="Select or type your state"
+                  >
+                    <Input />
+                  </AutoComplete>
                 </Form.Item>
               </Col>
 

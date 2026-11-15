@@ -1,0 +1,83 @@
+/* ==========================================================================
+   Mobile search mode. While the search input is focused or holds text, the
+   search page covers the whole screen; the app header and bottom nav are hidden
+   (body.rq-search-immersive). Desktop is unaffected.
+   ========================================================================== */
+
+.rq-immersive-back,
+.rq-immersive-count {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  body.rq-search-immersive .navBar,
+  body.rq-search-immersive .mobile-bottom-nav {
+    display: none !important;
+  }
+
+  .rq-search-page.is-immersive {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    height: 100vh;
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding: 0 !important;
+    background: #fdf9f4;
+    box-sizing: border-box;
+  }
+
+  .rq-search-page.is-immersive > div {
+    max-width: none !important;
+  }
+
+  .rq-search-page.is-immersive .rq-immersive-hide {
+    display: none !important;
+  }
+
+  .rq-search-page.is-immersive .rq-search-card {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    margin: 0 !important;
+    padding: 10px 12px 12px !important;
+    border-radius: 0 0 20px 20px !important;
+    border-top: none !important;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  .rq-search-page.is-immersive .rq-immersive-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: #0b2d6b;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .rq-search-page.is-immersive .rq-immersive-count {
+    display: block;
+    margin: 0 0 8px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #64748b;
+  }
+
+  /* Chips collapse once the user scrolls, leaving the search bar and the results */
+  .rq-search-page.is-immersive.is-scrolled .rq-search-extras {
+    display: none;
+  }
+
+  .rq-search-page.is-immersive .rq-search-results {
+    padding: 12px 12px calc(40px + env(safe-area-inset-bottom, 0px));
+  }
+}
