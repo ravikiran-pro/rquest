@@ -25,7 +25,10 @@ import {
   DownOutlined,
   AudioOutlined,
   CameraOutlined,
-  RobotOutlined,
+  CloseOutlined,
+  ControlOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
@@ -429,7 +432,7 @@ const SearchScreen = () => {
     if (filters.minRating !== null && filters.minRating !== undefined) {
       tags.push({
         key: 'rating',
-        label: `★ ${filters.minRating}+`,
+        label: `${filters.minRating}+ rating`,
         onRemove: () => setFilters((prev) => ({ ...prev, minRating: null })),
       });
     }
@@ -704,7 +707,7 @@ const SearchScreen = () => {
                   onMouseEnter={(e) => (e.currentTarget.style.background = '#D1D5DB')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#E5E7EB')}
                 >
-                  ✕
+                  <CloseOutlined />
                 </button>
               )}
             </div>
@@ -775,7 +778,7 @@ const SearchScreen = () => {
                   justifyContent: 'center',
                 }}
               >
-                <RobotOutlined style={{ fontSize: 15 }} />
+                <ControlOutlined style={{ fontSize: 15 }} />
               </button>
             </div>
 
@@ -832,7 +835,7 @@ const SearchScreen = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  🏪 Stores &amp; Outlets ({filteredShops.length})
+                  <ShopOutlined style={{ marginRight: 6 }} />Stores &amp; Outlets ({filteredShops.length})
                 </button>
                 <button
                   type="button"
@@ -849,7 +852,7 @@ const SearchScreen = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  🛍 Items &amp; Services ({filteredItems.length})
+                  <ShoppingOutlined style={{ marginRight: 6 }} />Items &amp; Services ({filteredItems.length})
                 </button>
               </div>
 
@@ -989,7 +992,7 @@ const SearchScreen = () => {
                     padding: '4px 6px',
                   }}
                 >
-                  Reset all ✕
+                  Reset all
                 </button>
               )}
             </Flex>
@@ -1021,7 +1024,7 @@ const SearchScreen = () => {
                     onClick={tag.onRemove}
                     style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', padding: 0 }}
                   >
-                    ✕
+                    <CloseOutlined style={{ fontSize: 10 }} />
                   </button>
                 </span>
               ))}

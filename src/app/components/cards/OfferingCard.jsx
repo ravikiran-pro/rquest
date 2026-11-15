@@ -5,7 +5,6 @@ import {
   StarFilled,
   CheckCircleOutlined,
   ClockCircleOutlined,
-  FireOutlined,
   SafetyCertificateOutlined,
   AlertOutlined,
   EnvironmentOutlined,
@@ -88,7 +87,7 @@ const resolveStatusChip = (item) => {
 
   if (type === 'food') {
     return {
-      icon: <FireOutlined style={{ fontSize: 12 }} />,
+      icon: <ClockCircleOutlined style={{ fontSize: 12 }} />,
       text: 'Freshly Prepared',
       sub: 'Direct Kitchen',
       bg: colors.serviceChipBg,
@@ -168,7 +167,7 @@ const resolveMobileStatus = (item) => {
 
   if (type === 'food' || name.includes('idli')) {
     return {
-      icon: <FireOutlined style={{ fontSize: 12, marginRight: 4 }} />,
+      icon: <ClockCircleOutlined style={{ fontSize: 12, marginRight: 4 }} />,
       left: 'Fresh batch prepared today',
       right: 'Freshly Made',
       bg: '#fefce8',
@@ -351,7 +350,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
                 {shop.shop_name || 'Neighborhood Store'}
               </span>
               <span style={{ fontSize: 11, color: colors.textMuted, fontWeight: 500 }}>
-                {shop.rating ? `★ ${parseFloat(shop.rating).toFixed(1)} · ` : ''}
+                {shop.rating ? `${parseFloat(shop.rating).toFixed(1)} rating · ` : ''}
                 {distanceStr}
               </span>
             </Flex>

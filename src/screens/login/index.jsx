@@ -7,6 +7,8 @@ import {
   EnvironmentFilled,
   LockOutlined,
   ArrowRightOutlined,
+  MobileOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, storageKeys, checkUserRole } from '../../app/utils/helper';
 import { useHistory, Link } from 'react-router-dom';
@@ -353,7 +355,7 @@ const LoginScreen = () => {
                       <div className="rq-auth-country-picker">
                         <span className="rq-country-flag">🇮🇳</span>
                         <span className="rq-country-code">{countryCode}</span>
-                        <span className="rq-country-caret">▾</span>
+                        <DownOutlined className="rq-country-caret" />
                       </div>
                       <input
                         type="tel"
@@ -433,7 +435,7 @@ const LoginScreen = () => {
                         onClick={() => setPasswordMode(!passwordMode)}
                       >
                         {passwordMode
-                          ? '← Switch back to OTP verification'
+                          ? 'Switch back to OTP verification'
                           : 'Or sign in with password'}
                       </button>
                     </div>
@@ -508,7 +510,7 @@ const LoginScreen = () => {
 
                 {/* Auto-detecting SMS Banner */}
                 <div className="rq-auth-autodetect-banner">
-                  <span className="rq-autodetect-icon">📲</span>
+                  <span className="rq-autodetect-icon"><MobileOutlined /></span>
                   <span className="rq-autodetect-text">
                     Auto-detecting SMS OTP on this device...
                   </span>
@@ -559,7 +561,7 @@ const LoginScreen = () => {
                       disabled={loading}
                       style={{ fontSize: 13, color: '#0B2D6B', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
                     >
-                      📲 Send OTP via SMS instead
+                      Send OTP via SMS instead
                     </button>
                   ) : (
                     <button

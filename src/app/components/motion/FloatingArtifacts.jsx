@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { CoffeeOutlined, KeyOutlined, GiftOutlined, MedicineBoxOutlined } from '@ant-design/icons';
 import PropTypes from 'prop-types';
 
 const ARTIFACTS = [
   {
     id: 'croissant',
-    emoji: '🥐',
+    emoji: <CoffeeOutlined />,
     label: 'Sunrise Breads · 0.4km',
     category: 'bakery',
     top: '12%',
@@ -14,7 +15,7 @@ const ARTIFACTS = [
   },
   {
     id: 'key',
-    emoji: '🗝️',
+    emoji: <KeyOutlined />,
     label: 'FixIt Hardware · 1.2km',
     category: 'hardware',
     top: '78%',
@@ -24,7 +25,7 @@ const ARTIFACTS = [
   },
   {
     id: 'leaf',
-    emoji: '🪴',
+    emoji: <GiftOutlined />,
     label: 'Petal Botanics · 1.6km',
     category: 'florist',
     top: '84%',
@@ -34,7 +35,7 @@ const ARTIFACTS = [
   },
   {
     id: 'pharmacy',
-    emoji: '💊',
+    emoji: <MedicineBoxOutlined />,
     label: 'Care Pharmacy · 0.7km',
     category: 'pharmacy',
     top: '16%',

@@ -1,4 +1,18 @@
+import React from 'react';
+import {
+  AppstoreOutlined,
+  CoffeeOutlined,
+  InboxOutlined,
+  KeyOutlined,
+  MedicineBoxOutlined,
+  ShopOutlined,
+  ShoppingCartOutlined,
+  SkinOutlined,
+  ToolOutlined,
+} from '@ant-design/icons';
 import { matchesSchemaFilters } from '../../utils/form_schema';
+
+const icon = (Comp) => React.createElement(Comp);
 
 export const DEFAULT_FILTERS = {
   maxDistance: null, // null = unlimited / any distance, or number in km
@@ -25,13 +39,13 @@ export const DISTANCE_PRESETS = [
 ];
 
 export const FILTER_CATEGORIES = [
-  { id: 'Provision Store', label: 'Groceries & Marts', icon: '🛒', aliases: ['groceries', 'supermarket', 'mart', 'provision'] },
-  { id: 'Food & Dining', label: 'Food & Dining', icon: '🍽️', aliases: ['food', 'dining', 'restaurant', 'eatery', 'cafe'] },
-  { id: 'Health & Medicine', label: 'Pharmacy & Health', icon: '💊', aliases: ['pharmacy', 'health', 'medicine', 'wellness'] },
-  { id: 'Technicians', label: 'Repairs & Services', icon: '🔧', aliases: ['technician', 'repairs', 'services', 'tools', 'electrician', 'plumber'] },
-  { id: 'Dress Shop', label: 'Fashion & Boutique', icon: '👗', aliases: ['dress', 'fashion', 'boutique', 'clothing', 'retail'] },
-  { id: 'Rentals', label: 'Rentals & Equipment', icon: '📦', aliases: ['rental', 'rentals', 'equipment'] },
-  { id: 'Small business', label: 'Other Local Stores', icon: '🏪', aliases: ['small business', 'store', 'other', 'miscellaneous'] },
+  { id: 'Provision Store', label: 'Groceries & Marts', icon: icon(ShoppingCartOutlined), aliases: ['groceries', 'supermarket', 'mart', 'provision'] },
+  { id: 'Food & Dining', label: 'Food & Dining', icon: icon(CoffeeOutlined), aliases: ['food', 'dining', 'restaurant', 'eatery', 'cafe'] },
+  { id: 'Health & Medicine', label: 'Pharmacy & Health', icon: icon(MedicineBoxOutlined), aliases: ['pharmacy', 'health', 'medicine', 'wellness'] },
+  { id: 'Technicians', label: 'Repairs & Services', icon: icon(ToolOutlined), aliases: ['technician', 'repairs', 'services', 'tools', 'electrician', 'plumber'] },
+  { id: 'Dress Shop', label: 'Fashion & Boutique', icon: icon(SkinOutlined), aliases: ['dress', 'fashion', 'boutique', 'clothing', 'retail'] },
+  { id: 'Rentals', label: 'Rentals & Equipment', icon: icon(KeyOutlined), aliases: ['rental', 'rentals', 'equipment'] },
+  { id: 'Small business', label: 'Other Local Stores', icon: icon(ShopOutlined), aliases: ['small business', 'store', 'other', 'miscellaneous'] },
 ];
 
 export const PRICE_PRESETS = [
@@ -43,17 +57,17 @@ export const PRICE_PRESETS = [
 
 export const RATING_PRESETS = [
   { label: 'Any Rating', value: null },
-  { label: '4.5+ ★', value: 4.5 },
-  { label: '4.0+ ★', value: 4.0 },
-  { label: '3.5+ ★', value: 3.5 },
+  { label: '4.5 and above', value: 4.5 },
+  { label: '4.0 and above', value: 4.0 },
+  { label: '3.5 and above', value: 3.5 },
 ];
 
 export const LISTING_TYPE_OPTIONS = [
-  { label: 'All Items & Services', value: 'all', icon: '✨' },
-  { label: 'Products (Retail Goods)', value: 'product', icon: '📦' },
-  { label: 'Dishes & Food', value: 'food', icon: '🍽️' },
-  { label: 'Services & Tasks', value: 'service', icon: '🔧' },
-  { label: 'Rentals', value: 'rental', icon: '🏠' },
+  { label: 'All Items & Services', value: 'all', icon: icon(AppstoreOutlined) },
+  { label: 'Products (Retail Goods)', value: 'product', icon: icon(InboxOutlined) },
+  { label: 'Dishes & Food', value: 'food', icon: icon(CoffeeOutlined) },
+  { label: 'Services & Tasks', value: 'service', icon: icon(ToolOutlined) },
+  { label: 'Rentals', value: 'rental', icon: icon(KeyOutlined) },
 ];
 
 export const SORT_OPTIONS = [

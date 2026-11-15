@@ -33,7 +33,6 @@ import {
   SafetyCertificateOutlined,
   CheckCircleFilled,
   MinusCircleOutlined,
-  RocketOutlined,
   ArrowRightOutlined,
   ArrowLeftOutlined,
   CompassOutlined,
@@ -670,7 +669,7 @@ const ProfileScreen = () => {
 
   const onboardingTitle = (
     <div className="rq-sheet-title">
-      <span className="rq-sheet-title-icon">{isMerchant ? <ShopOutlined /> : <RocketOutlined />}</span>
+      <span className="rq-sheet-title-icon">{isMerchant ? <ShopOutlined /> : <ShopOutlined />}</span>
       <div style={{ minWidth: 0 }}>
         <div className="rq-sheet-title-main">{isMerchant ? 'Shop owner setup' : 'Welcome to Rquest'}</div>
         <div className="rq-sheet-title-sub">
@@ -783,7 +782,7 @@ const ProfileScreen = () => {
           </div>
 
           <div className="rq-profile-hero-actions">
-            <Button icon={<RocketOutlined />} onClick={openOnboarding}>
+            <Button icon={<ShopOutlined />} onClick={openOnboarding}>
               Setup guide
             </Button>
             <Button danger icon={<LogoutOutlined />} onClick={logout}>

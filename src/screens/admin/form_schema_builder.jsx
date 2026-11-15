@@ -20,8 +20,8 @@ import {
   ArrowUpOutlined,
   ArrowDownOutlined,
   SettingOutlined,
-  BulbOutlined,
   SaveOutlined,
+  AppstoreOutlined,
 } from '@ant-design/icons';
 import {
   netWorkCall,
@@ -470,7 +470,7 @@ const FormSchemaBuilderModal = ({
       {/* Quick Template Presets */}
       <div style={{ marginBottom: 16, background: colors.surfaceContainerLow, padding: '12px 16px', borderRadius: radii.lg, border: `1px solid ${colors.border}` }}>
         <Text strong style={{ fontSize: 13, display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
-          <BulbOutlined style={{ color: colors.tertiary }} /> Load Ready-Made Industry Template:
+          <AppstoreOutlined style={{ color: colors.tertiary }} /> Load Ready-Made Industry Template:
         </Text>
         <Space wrap>
           {templates.map((template) => {

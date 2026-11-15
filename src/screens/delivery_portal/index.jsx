@@ -392,7 +392,7 @@ const DeliveryPortalScreen = () => {
                                     padding: '0 24px',
                                   }}
                                 >
-                                  ✓ Mark Delivered & Fee Collected
+                                  Mark Delivered & Fee Collected
                                 </Button>
                               </div>
                             </div>

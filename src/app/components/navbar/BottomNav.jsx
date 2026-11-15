@@ -4,11 +4,11 @@ import { Badge } from 'antd';
 import {
   CompassOutlined,
   ShopOutlined,
-  MessageOutlined,
   OrderedListOutlined,
   ShoppingCartOutlined,
   UserOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { useGlobalStore, useChatStore, useCartStore } from '../../services';
 import Routes from '../../routes/routes';
 import { storageKeys, checkUserRole } from '../../utils';
@@ -105,7 +105,7 @@ const BottomNav = () => {
             }}
           >
             <Badge count={unreadTotal} size="small" offset={[4, -2]}>
-              <MessageOutlined className="mobile-nav-icon" />
+              <ChatIcon className="mobile-nav-icon" />
             </Badge>
             <span className="mobile-nav-label">Chat</span>
           </button>

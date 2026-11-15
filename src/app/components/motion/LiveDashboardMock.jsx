@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { Flex } from 'antd';
-import { ArrowUpOutlined, CheckCircleFilled, BellFilled } from '@ant-design/icons';
+import { ArrowUpOutlined, CheckCircleFilled, BellFilled, CoffeeOutlined } from '@ant-design/icons';
 
 /**
  * LiveDashboardMock
@@ -50,7 +50,7 @@ export const LiveDashboardMock = () => {
             <span className="chrome-dot" style={{ background: '#10B981' }} />
           </div>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#1C1917' }}>
-            🏪 Sunrise Bakehouse — Merchant Console
+            Sunrise Bakehouse — Merchant Console
           </span>
         </div>
 
@@ -113,7 +113,7 @@ export const LiveDashboardMock = () => {
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 14 }}>🥐</span>
+            <CoffeeOutlined style={{ fontSize: 14, color: '#78716C' }} />
             <div>
               <strong style={{ color: '#1C1917' }}>Multi-grain boule (2x)</strong>
               <div style={{ fontSize: 10.5, color: '#6B7280' }}>Koramangala 4th Blk · 0.4 km away</div>

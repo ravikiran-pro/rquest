@@ -9,6 +9,7 @@ import {
   ShoppingOutlined,
   CheckCircleFilled,
   EnvironmentFilled,
+  DownOutlined,
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../app/utils';
 import { useHistory, Link } from 'react-router-dom';
@@ -209,7 +210,7 @@ const RegisterScreen = () => {
                     <div className="rq-auth-country-picker">
                       <span className="rq-country-flag">🇮🇳</span>
                       <span className="rq-country-code">{countryCode}</span>
-                      <span className="rq-country-caret">▾</span>
+                      <DownOutlined className="rq-country-caret" />
                     </div>
                     <input
                       type="tel"
