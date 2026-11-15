@@ -116,13 +116,13 @@ export const colors = {
 
 export const typography = {
   fontFamily: {
-    serif: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
-    display: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
-    headline: "'Newsreader', 'Fraunces', 'Playfair Display', Georgia, serif",
+    serif: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    display: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    headline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     sansHeadline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     sans: "'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    mono: "'Fira Code', source-code-pro, Menlo, Monaco, Consolas, monospace",
+    mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
   fontSize: {
     labelSm: 11,

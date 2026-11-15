@@ -1065,7 +1065,7 @@ const HomeScreen = () => {
             CATEGORIES IN FOCUS
           </div>
           <h2
-            className="font-serif"
+            className="font-headline"
             style={{
               fontSize: isMobile ? 24 : 32,
               fontWeight: 700,
@@ -1149,9 +1149,9 @@ const HomeScreen = () => {
                 </span>
               </div>
 
-              {/* Serif Title */}
+              {/* Section Headline */}
               <h2
-                className="font-serif"
+                className="font-headline"
                 style={{
                   fontSize: isMobile ? 24 : 34,
                   fontWeight: 700,
@@ -1365,7 +1365,7 @@ const HomeScreen = () => {
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span>🏪</span>
-            <span style={{ fontFamily: 'Newsreader, Georgia, serif', fontSize: 20, fontWeight: 700 }}>
+            <span style={{ fontFamily: 'var(--font-headline)', fontSize: 20, fontWeight: 700 }}>
               How Selling on Rquest Works
             </span>
           </div>
