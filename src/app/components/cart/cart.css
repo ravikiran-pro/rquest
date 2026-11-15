@@ -87,8 +87,52 @@
   margin-bottom: 10px;
 }
 
-.rq-cart-alert {
+/* Guest sign-in card: app parchment + navy, not the stock blue alert */
+.rq-cart-signin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
   margin-bottom: 16px;
+  background: var(--surface-peach, #f7ede4);
+  border: 1px solid var(--surface-peach-border, #eadbcc);
+  border-radius: 12px;
+}
+
+.rq-cart-signin-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary, #0b2d6b);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.rq-cart-signin-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-cart-signin-title {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--text-main, #1c1c19);
+}
+
+.rq-cart-signin-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-light, #575a65);
+}
+
+.rq-cart-signin-btn {
+  flex-shrink: 0;
 }
 
 .rq-cart-form .ant-form-item {

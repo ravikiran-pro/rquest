@@ -6,7 +6,6 @@ import {
   Input,
   Radio,
   Segmented,
-  Alert,
   Result,
   Descriptions,
   Typography,
@@ -32,6 +31,7 @@ import {
   ToolOutlined,
   EditOutlined,
   CarOutlined,
+  UserOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import { useCartStore, useGlobalStore, useChatStore } from '../../services';
@@ -649,7 +649,7 @@ const CartDrawer = () => {
       <Form layout="vertical" size="large" requiredMark={false} className="rq-cart-form">
         <Form.Item label="Contact phone" required>
           <Input
-            prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />}
+            prefix={<PhoneOutlined style={{ color: 'var(--outline)' }} />}
             placeholder="Mobile number for order updates"
             value={phone}
             inputMode="tel"
@@ -787,22 +787,18 @@ const CartDrawer = () => {
     return (
       <>
         {!user_data?.user_id && (
-          <Alert
-            type="info"
-            showIcon
-            className="rq-cart-alert"
-            message="Sign in to place this order"
-            description="Sign in with your mobile number. Your cart is saved and will be ready when you're back."
-            action={
-              <Button
-                size="small"
-                type="primary"
-                onClick={goToLogin}
-              >
-                Sign in
-              </Button>
-            }
-          />
+          <div className="rq-cart-signin">
+            <span className="rq-cart-signin-icon">
+              <UserOutlined />
+            </span>
+            <div className="rq-cart-signin-text">
+              <div className="rq-cart-signin-title">Sign in to place your order</div>
+              <div className="rq-cart-signin-sub">Your cart is saved. You'll come straight back here.</div>
+            </div>
+            <Button type="primary" className="rq-cart-signin-btn" onClick={goToLogin}>
+              Sign in
+            </Button>
+          </div>
         )}
 
         {renderItems()}

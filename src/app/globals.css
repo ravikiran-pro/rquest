@@ -777,6 +777,17 @@ select:focus-visible {
   outline: none;
 }
 
+/* Touch screens: a tapped button keeps :hover until you tap elsewhere, so
+   primary buttons stayed in their lighter hover blue. Keep the brand colour;
+   the ripple gives the press feedback instead. */
+@media (hover: none) {
+  .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-dangerous):hover {
+    background: var(--primary, #0B2D6B);
+    border-color: var(--primary, #0B2D6B);
+    color: #ffffff;
+  }
+}
+
 /* Touch feedback: ripple spans are added by utils/ripple.js on press */
 .rq-ripple-host {
   position: relative;
