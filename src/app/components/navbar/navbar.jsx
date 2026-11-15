@@ -24,7 +24,6 @@ import { DesktopLogo, AppIcon } from '../assets';
 import { colors, radii } from '../../styles/theme';
 import './index.css';
 import {
-  MenuOutlined,
   UserOutlined,
   ShoppingCartOutlined,
   ShopOutlined,
@@ -38,7 +37,7 @@ import {
   BellOutlined,
 } from '@ant-design/icons';
 
-const Navbar = ({ open, handleOpen, handleClose }) => {
+const Navbar = () => {
   const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
@@ -397,11 +396,11 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
             </div>
           </Dropdown>
 
-          {/* Circular User Avatar Trigger */}
+          {/* Circular User Avatar Trigger (Navigates to Account) */}
           <div
             role="button"
             tabIndex={0}
-            onClick={() => (open ? handleClose() : handleOpen())}
+            onClick={() => history.push(Routes.profile)}
             style={{
               width: 38,
               height: 38,
@@ -734,29 +733,16 @@ const Navbar = ({ open, handleOpen, handleClose }) => {
           </>
         )}
 
-        {/* Mobile View Quick User Indicator */}
+        {/* Mobile View Quick User Indicator (1-tap to Account) */}
         {isMobile && isLoggedIn && (
           <Avatar
             size={32}
             icon={<UserOutlined />}
-            onClick={() => (open ? handleClose() : handleOpen())}
+            onClick={() => history.push(Routes.profile)}
             style={{
               cursor: 'pointer',
               backgroundColor: isMerchant ? colors.secondary : colors.primary,
             }}
-          />
-        )}
-
-        {/* Mobile View Hamburger Menu Trigger (< 768px) */}
-        {isMobile && (
-          <Button
-            type="text"
-            shape="circle"
-            size="large"
-            icon={<MenuOutlined style={{ fontSize: 20, color: '#0f172a' }} />}
-            onClick={() => (open ? handleClose() : handleOpen())}
-            style={{ borderRadius: 8 }}
-            aria-label="Toggle Menu"
           />
         )}
       </Flex>

@@ -333,6 +333,12 @@ const LoginScreen = () => {
                     Register here
                   </Link>
                 </p>
+                <p className="rq-auth-register-prompt" style={{ marginTop: 6, fontSize: 12.5 }}>
+                  Are you a local shop owner?{' '}
+                  <Link to={Routes.client} className="rq-auth-primary-link" style={{ fontWeight: 700 }}>
+                    Sell on Rquest
+                  </Link>
+                </p>
                 <p className="rq-auth-legal-note">
                   By continuing, you agree to Rquest&apos;s{' '}
                   <span className="rq-legal-link">Terms of Service</span> &amp;{' '}

@@ -41,6 +41,7 @@ import {
   ToolOutlined,
   SmileOutlined,
   CheckOutlined,
+  CarOutlined,
 } from '@ant-design/icons';
 import { useHistory, useLocation } from 'react-router-dom';
 import { useGlobalStore } from '../../app/services';
@@ -70,7 +71,13 @@ const ProfileScreen = () => {
   const isMobile = !screens.md;
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
-  const { isMerchant } = checkUserRole(user_data);
+  const { isAdmin, isMerchant } = checkUserRole(user_data);
+  const isSuperAdmin = Boolean(
+    isAdmin ||
+    user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
+    user_data?.username === 'admin' ||
+    user_data?.username === 'root'
+  );
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);
@@ -654,12 +661,12 @@ const ProfileScreen = () => {
               <div className="profile-metric-box">
                 <div className="profile-metric-label">Account Type</div>
                 <div className="profile-metric-value" style={{ fontSize: 15, color: '#334155' }}>
-                  {isMerchant ? 'Shop Owner' : 'Verified Shopper'}
+                  {isSuperAdmin ? 'Super Admin' : isMerchant ? 'Shop Owner' : 'Verified Shopper'}
                 </div>
               </div>
               <div className="profile-metric-box metric-col-full">
                 <div className="profile-metric-label">Quick Actions</div>
-                <Flex gap={8} style={{ marginTop: 4 }}>
+                <Flex gap={8} style={{ marginTop: 4 }} wrap="wrap">
                   <Button
                     size="small"
                     type="link"
@@ -679,6 +686,34 @@ const ProfileScreen = () => {
                   >
                     Explore Stores
                   </Button>
+                  {isSuperAdmin && (
+                    <>
+                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <Button
+                        size="small"
+                        type="link"
+                        icon={<SafetyCertificateOutlined style={{ color: colors.secondary }} />}
+                        onClick={() => history.push(Routes.admin)}
+                        style={{ padding: 0, fontWeight: 700, color: colors.secondary }}
+                      >
+                        Admin Console
+                      </Button>
+                    </>
+                  )}
+                  {!isMerchant && (
+                    <>
+                      <span style={{ color: '#cbd5e1' }}>•</span>
+                      <Button
+                        size="small"
+                        type="link"
+                        icon={<CarOutlined style={{ color: '#047857' }} />}
+                        onClick={() => history.push(Routes.deliveryPortal)}
+                        style={{ padding: 0, fontWeight: 700, color: '#047857' }}
+                      >
+                        Delivery Portal
+                      </Button>
+                    </>
+                  )}
                 </Flex>
               </div>
             </div>
@@ -1002,6 +1037,115 @@ const ProfileScreen = () => {
                                   }}
                                 >
                                   Open Merchant Studio
+                                </Button>
+                              </Flex>
+                            </div>
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(!isMerchant
+                  ? [
+                      {
+                        key: 'delivery_hub',
+                        label: (
+                          <span>
+                            <CarOutlined style={{ color: '#047857' }} /> Delivery Portal
+                          </span>
+                        ),
+                        children: (
+                          <div style={{ paddingTop: 6 }}>
+                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
+                              Delivery Partner Task Board
+                            </Title>
+                            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
+                              Accept local delivery runs and view active order fulfillment assignments.
+                            </Text>
+
+                            <div
+                              style={{
+                                background: '#F0FDF4',
+                                border: '1px solid #BBF7D0',
+                                borderRadius: 14,
+                                padding: '18px 20px',
+                                marginBottom: 16,
+                              }}
+                            >
+                              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+                                <div>
+                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#065F46' }}>
+                                    Local Delivery Tasks
+                                  </div>
+                                  <Text type="secondary" style={{ fontSize: 12, color: '#047857' }}>
+                                    View open deliveries, live route maps, and earnings from local neighborhood drop-offs.
+                                  </Text>
+                                </div>
+                                <Button
+                                  type="primary"
+                                  onClick={() => history.push(Routes.deliveryPortal)}
+                                  style={{
+                                    borderRadius: 10,
+                                    fontWeight: 700,
+                                    background: '#059669',
+                                    borderColor: '#059669',
+                                  }}
+                                >
+                                  Open Delivery Portal
+                                </Button>
+                              </Flex>
+                            </div>
+                          </div>
+                        ),
+                      },
+                    ]
+                  : []),
+                ...(isSuperAdmin
+                  ? [
+                      {
+                        key: 'admin_hub',
+                        label: (
+                          <span>
+                            <SafetyCertificateOutlined style={{ color: colors.secondary }} /> Admin Console
+                          </span>
+                        ),
+                        children: (
+                          <div style={{ paddingTop: 6 }}>
+                            <Title level={5} style={{ marginBottom: 4, color: '#1C1C19', fontWeight: 700, fontFamily: 'var(--font-headline)' }}>
+                              Platform Administrator Controls
+                            </Title>
+                            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 18 }}>
+                              Manage system roles, categories, dynamic field schema builder, and audit logs.
+                            </Text>
+
+                            <div
+                              style={{
+                                background: '#FEF2F2',
+                                border: '1px solid #FECACA',
+                                borderRadius: 14,
+                                padding: '18px 20px',
+                                marginBottom: 16,
+                              }}
+                            >
+                              <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
+                                <div>
+                                  <div style={{ fontWeight: 800, fontSize: 15, color: '#991B1B' }}>
+                                    Super Admin Privileges Active
+                                  </div>
+                                  <Text type="secondary" style={{ fontSize: 12, color: '#B91C1C' }}>
+                                    Full administrative rights over storefront schemas, users, and marketplace health.
+                                  </Text>
+                                </div>
+                                <Button
+                                  type="primary"
+                                  danger
+                                  onClick={() => history.push(Routes.admin)}
+                                  style={{
+                                    borderRadius: 10,
+                                    fontWeight: 700,
+                                  }}
+                                >
+                                  Open Admin Console
                                 </Button>
                               </Flex>
                             </div>
