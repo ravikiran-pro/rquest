@@ -7,6 +7,9 @@ const SOURCES = {
   'shopify-taxonomy': () => require('./shopify-taxonomy'),
   'ondc-taxonomy': () => require('./ondc-taxonomy'),
   'curated-taxonomy': () => require('./curated-taxonomy'),
+  'off-india': () => require('./off-india'),
+  'jan-aushadhi': () => require('./jan-aushadhi'),
+  'curated-items': () => require('./curated-items'),
 };
 
 function getSource(name) {

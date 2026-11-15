@@ -7,7 +7,12 @@
  *   node cli.js migrate                      create/upgrade the `catalog` schema
  *   node cli.js sources                      list sources with license + version
  *   node cli.js run <source> [flags]         extract → transform → bulk load
- *   node cli.js status                       last runs, row counts, open review items
+ *   node cli.js extract <source>             download into the cache only (no database)
+ *   node cli.js run-all [flags]              every source in dependency order, then dedupe
+ *   node cli.js dedupe                       queue probable duplicate items for review
+ *   node cli.js merge <keep_id> <drop_id>    mark drop as a duplicate of keep (rejected)
+ *   node cli.js verify <item_id>             mark an item verified (sources won't change it)
+ *   node cli.js status                       last runs, catalog health, open review items
  *
  * run flags:
  *   --dry-run        do everything inside a transaction, print the diff, then ROLLBACK
@@ -16,10 +21,22 @@
  *   --allow-rejects  permit a reject ratio above the source's threshold
  */
 
+const path = require('path');
+const { config } = require('./lib/env');
 const { connect } = require('./lib/db');
 const { migrate } = require('./db/schema');
 const { runSource } = require('./lib/run');
+const { findDuplicates, mergeItems, setItemStatus } = require('./lib/dedupe');
 const { SOURCES, getSource } = require('./sources');
+
+const withClient = async (fn) => {
+  const client = await connect();
+  try {
+    return await fn(client);
+  } finally {
+    await client.end();
+  }
+};
 
 function parseFlags(argv) {
   const flags = {};
@@ -90,9 +107,49 @@ async function cmdStatus() {
     if (!review.rowCount) console.log('  none');
     for (const r of review.rows)
       console.log(`  ${r.source.padEnd(14)} ${r.kind.padEnd(30)} ${r.n}`);
+
+    const health = await client.query(`
+      SELECT primary_source AS source, kind,
+             count(*)::int AS items,
+             count(*) FILTER (WHERE status = 'ready')::int AS ready,
+             count(*) FILTER (WHERE status = 'verified')::int AS verified,
+             round(100.0 * count(*) FILTER (WHERE taxonomy_node_id IS NOT NULL) / count(*))::int AS pct_category,
+             round(100.0 * count(*) FILTER (WHERE effective_hsn IS NOT NULL) / count(*))::int AS pct_hsn,
+             round(100.0 * count(*) FILTER (WHERE gst_rate IS NOT NULL) / count(*))::int AS pct_gst,
+             round(100.0 * count(*) FILTER (WHERE net_quantity IS NOT NULL OR kind = 'service') / count(*))::int AS pct_qty,
+             round(100.0 * count(*) FILTER (WHERE gtin IS NOT NULL) / count(*))::int AS pct_barcode,
+             round(100.0 * count(*) FILTER (WHERE image_url IS NOT NULL) / count(*))::int AS pct_image
+      FROM catalog.items_enriched WHERE is_active GROUP BY 1, 2 ORDER BY 1, 2`);
+    console.log('Catalog health (active items; % with each field):');
+    console.log(
+      '  source           kind      items  ready verified  categ  hsn  gst  qty  barcode image'
+    );
+    for (const h of health.rows) {
+      console.log(
+        `  ${h.source.padEnd(16)} ${h.kind.padEnd(8)} ${String(
+          h.items
+        ).padStart(6)} ${String(h.ready).padStart(6)} ` +
+          `${String(h.verified).padStart(8)} ${String(h.pct_category).padStart(
+            5
+          )}% ${String(h.pct_hsn).padStart(3)}% ` +
+          `${String(h.pct_gst).padStart(3)}% ${String(h.pct_qty).padStart(
+            3
+          )}% ${String(h.pct_barcode).padStart(6)}% ${String(
+            h.pct_image
+          ).padStart(4)}%`
+      );
+    }
   } finally {
     await client.end();
   }
+}
+
+/** Every source in registry order (the order encodes the dependencies), then dedupe. */
+async function cmdRunAll(flags) {
+  for (const name of Object.keys(SOURCES)) {
+    await runSource(getSource(name), flags);
+  }
+  if (!flags.dryRun) await withClient((c) => findDuplicates(c));
 }
 
 async function main() {
@@ -105,12 +162,58 @@ async function main() {
       return cmdSources();
     case 'status':
       return cmdStatus();
+    case 'run-all':
+      return cmdRunAll(flags);
+    case 'dedupe':
+      return withClient((c) => findDuplicates(c));
+    case 'merge': {
+      const [keep, drop] = positional;
+      if (!keep || !drop)
+        throw new Error('Usage: node cli.js merge <keep_id> <drop_id>');
+      const out = await withClient((c) =>
+        mergeItems(c, keep, drop, { by: process.env.USER || 'cli' })
+      );
+      console.log(
+        `${drop} → rejected, merged into ${keep} (${out.resolved} review item(s) resolved)`
+      );
+      return undefined;
+    }
+    case 'verify': {
+      if (!positional[0])
+        throw new Error('Usage: node cli.js verify <item_id>');
+      await withClient((c) =>
+        setItemStatus(c, positional[0], 'verified', {
+          by: process.env.USER || 'cli',
+        })
+      );
+      console.log(`${positional[0]} → verified`);
+      return undefined;
+    }
     case 'run': {
       if (!positional[0])
         throw new Error(
           'Usage: node cli.js run <source> [--dry-run] [--force]'
         );
       await runSource(getSource(positional[0]), flags);
+      return undefined;
+    }
+    case 'extract': {
+      if (!positional[0])
+        throw new Error('Usage: node cli.js extract <source>');
+      const source = getSource(positional[0]);
+      const cfg = config();
+      const ctx = {
+        config: cfg,
+        log: console.log,
+        cacheDir: path.join(cfg.cacheDir, source.meta.name),
+      };
+      const out = await source.extract(ctx);
+      console.log(
+        `extracted ${source.meta.name}: ${out.version} (${out.inputSha256.slice(
+          0,
+          12
+        )})`
+      );
       return undefined;
     }
     default:

@@ -231,6 +231,112 @@ CREATE TABLE catalog.taxonomy_hsn_defaults (
 );
 `,
   },
+  {
+    version: 3,
+    name: 'products: brands, items, item_sources, enrichment view',
+    sql: `
+-- GS1 check digit for a canonical 14-digit GTIN. Mirrors lib/gtin.js.
+CREATE FUNCTION catalog.gtin_is_valid(g text) RETURNS boolean
+LANGUAGE sql IMMUTABLE PARALLEL SAFE AS $fn$
+  SELECT g ~ '^[0-9]{14}$' AND g !~ '^0+$' AND
+    (10 - (SELECT sum(substr(g, i, 1)::int * CASE WHEN i % 2 = 1 THEN 3 ELSE 1 END)
+             FROM generate_series(1, 13) AS i) % 10) % 10 = substr(g, 14, 1)::int
+$fn$;
+
+CREATE TABLE catalog.brands (
+  brand_key text PRIMARY KEY CHECK (brand_key ~ '^[a-z0-9]+( [a-z0-9]+)*$'),
+  name      text NOT NULL CHECK (length(btrim(name)) > 0),
+  aliases   jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(aliases) = 'array'),
+  source    text NOT NULL,
+  ${TRACKING}
+);
+CREATE INDEX brands_name_trgm ON catalog.brands USING gin (name gin_trgm_ops);
+
+-- The master product. The id is deterministic, so duplicates cannot be created:
+--   gtin:<14 digits>                 any valid barcode → one item, whatever the source
+--   key:<sha256(dedupe_key)[0:20]>   no barcode: brand | name | base quantity | unit
+--   src:<source>:<source id>         too incomplete to identify across sources
+CREATE TABLE catalog.items (
+  id                   text PRIMARY KEY
+                       CHECK (id ~ '^(gtin:[0-9]{14}|key:[0-9a-f]{20}|src:[a-z0-9-]+:.+)$'),
+  gtin                 varchar(14) UNIQUE CHECK (gtin IS NULL OR catalog.gtin_is_valid(gtin)),
+  kind                 text NOT NULL DEFAULT 'product' CHECK (kind IN ('product', 'service')),
+  name                 text NOT NULL CHECK (length(btrim(name)) > 0),
+  name_key             text NOT NULL,
+  brand_key            text REFERENCES catalog.brands(brand_key) DEFERRABLE INITIALLY DEFERRED,
+  net_quantity         numeric(12,3) CHECK (net_quantity > 0),
+  unit                 text CHECK (unit IN ('g', 'ml', 'pc')),
+  quantity_text        text,
+  taxonomy_node_id     text REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  classification_basis text CHECK (classification_basis IN ('source_category', 'keyword', 'curated', 'manual')),
+  -- Item-specific HSN only. Otherwise the category default applies (see items_enriched).
+  hsn_code             varchar(8) REFERENCES catalog.hsn_codes(code) DEFERRABLE INITIALLY DEFERRED,
+  country_of_origin    char(2) CHECK (country_of_origin ~ '^[A-Z]{2}$'),
+  manufacturer         text,
+  image_url            text,
+  attributes           jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(attributes) = 'object'),
+  dedupe_key           text,
+  -- incomplete/ready are set by sources; verified/rejected only by people, and sources
+  -- never change an item in those states.
+  status               text NOT NULL CHECK (status IN ('incomplete', 'ready', 'verified', 'rejected')),
+  quality_score        smallint NOT NULL CHECK (quality_score BETWEEN 0 AND 100),
+  primary_source       text NOT NULL,
+  ${TRACKING},
+  CONSTRAINT items_gtin_id CHECK ((gtin IS NULL) = (id NOT LIKE 'gtin:%') AND (gtin IS NULL OR id = 'gtin:' || gtin)),
+  CONSTRAINT items_quantity_pair CHECK ((net_quantity IS NULL) = (unit IS NULL))
+);
+CREATE INDEX items_name_trgm ON catalog.items USING gin (name gin_trgm_ops);
+CREATE INDEX items_taxonomy_idx ON catalog.items (taxonomy_node_id);
+CREATE INDEX items_brand_idx ON catalog.items (brand_key);
+CREATE UNIQUE INDEX items_dedupe_key_uniq ON catalog.items (dedupe_key)
+  WHERE gtin IS NULL AND dedupe_key IS NOT NULL;
+
+-- Provenance: every source record that contributed to an item.
+CREATE TABLE catalog.item_sources (
+  source             text NOT NULL,
+  source_id          text NOT NULL,
+  item_id            text NOT NULL REFERENCES catalog.items(id) DEFERRABLE INITIALLY DEFERRED,
+  license            text NOT NULL,
+  source_url         text,
+  source_modified_at timestamptz,
+  raw                jsonb NOT NULL DEFAULT '{}'::jsonb,
+  ${TRACKING},
+  PRIMARY KEY (source, source_id)
+);
+CREATE INDEX item_sources_item_idx ON catalog.item_sources (item_id);
+
+-- Nearest active default HSN walking up the taxonomy from a node.
+CREATE FUNCTION catalog.default_hsn(p_node text)
+RETURNS TABLE (node_id text, hsn_code varchar, confidence text)
+LANGUAGE sql STABLE AS $fn$
+  WITH RECURSIVE up AS (
+    SELECT id, parent_id, 0 AS depth FROM catalog.taxonomy_nodes WHERE id = p_node
+    UNION ALL
+    SELECT n.id, n.parent_id, up.depth + 1 FROM catalog.taxonomy_nodes n JOIN up ON n.id = up.parent_id
+  )
+  SELECT d.node_id, d.hsn_code, d.confidence
+  FROM up JOIN catalog.taxonomy_hsn_defaults d ON d.node_id = up.id AND d.is_active
+  ORDER BY up.depth LIMIT 1
+$fn$;
+
+-- What consumers read: item + brand + category + effective HSN + suggested GST rate.
+-- HSN/rates are computed, not copied, so fixing a default or a rate fixes every item.
+CREATE VIEW catalog.items_enriched AS
+SELECT i.*,
+       b.name                                  AS brand_name,
+       n.full_path                             AS category_path,
+       coalesce(i.hsn_code, dh.hsn_code)       AS effective_hsn,
+       CASE WHEN i.hsn_code IS NOT NULL THEN 'item'
+            WHEN dh.hsn_code IS NOT NULL THEN 'category_' || dh.confidence END AS hsn_basis,
+       r.igst_rate                             AS gst_rate,
+       r.verified                              AS gst_rate_verified
+FROM catalog.items i
+LEFT JOIN catalog.brands b ON b.brand_key = i.brand_key
+LEFT JOIN catalog.taxonomy_nodes n ON n.id = i.taxonomy_node_id
+LEFT JOIN LATERAL catalog.default_hsn(i.taxonomy_node_id) dh ON i.hsn_code IS NULL
+LEFT JOIN LATERAL catalog.gst_rate(coalesce(i.hsn_code, dh.hsn_code)) r ON true;
+`,
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

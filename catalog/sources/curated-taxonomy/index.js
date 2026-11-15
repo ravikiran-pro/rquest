@@ -14,7 +14,7 @@ const { sha256, sha256File } = require('../../lib/hash');
 const { readCsv } = require('../../lib/csv');
 const { cleanText } = require('../../lib/text');
 const { normalizeHsn } = require('../../lib/hsn');
-const { LoadError } = require('../../lib/loader');
+const { assertActiveReferences } = require('../../lib/loader');
 const { siblingNameCollisions } = require('../../lib/taxonomy');
 
 const SOURCE = 'curated-taxonomy';
@@ -53,23 +53,7 @@ const meta = {
   maxRejectRatio: 0,
 };
 
-/** Fail the load if staged rows reference nodes/codes that are not active in the catalog. */
-const assertReferences = (checks) => async (client, staging) => {
-  for (const { column, table, key } of checks) {
-    const missing = await client.query(
-      `SELECT DISTINCT s.${column} AS ref FROM ${staging} s
-        WHERE NOT EXISTS (SELECT 1 FROM catalog.${table} x WHERE x.${key} = s.${column} AND x.is_active)
-        ORDER BY 1 LIMIT 20`
-    );
-    if (missing.rowCount) {
-      throw new LoadError(
-        `${SOURCE}: ${column} references unknown/inactive catalog.${table} rows`,
-        missing.rows
-      );
-    }
-  }
-  return 0;
-};
+const assertReferences = (checks) => assertActiveReferences(SOURCE, checks);
 
 const entities = [
   {

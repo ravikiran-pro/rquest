@@ -482,3 +482,187 @@ test(
     assert.ok(runSeq > 0);
   }
 );
+
+// ── product layer ─────────────────────────────────────────────────────────────────
+
+const { itemEntities } = require('../lib/itemEntities');
+const { findDuplicates, mergeItems, setItemStatus } = require('../lib/dedupe');
+const { normalizeGtin } = require('../lib/gtin');
+
+const [BRANDS, ITEMS, ITEM_SOURCES] = itemEntities('src-a');
+
+async function seedTaxonomy() {
+  await client.query(`
+    INSERT INTO catalog.taxonomy_nodes (id, scheme, external_id, parent_id, name, full_path, level, content_hash)
+    VALUES ('ondc:RET19', 'ondc', 'RET19', NULL, 'Pharma', 'Pharma', 0, 'x'),
+           ('ondc:RET10', 'ondc', 'RET10', NULL, 'Grocery', 'Grocery', 0, 'x')
+    ON CONFLICT DO NOTHING`);
+}
+
+const item = (over) => ({
+  id: null,
+  gtin: null,
+  kind: 'product',
+  name: 'Item',
+  name_key: 'item',
+  brand_key: 'acme',
+  net_quantity: 10,
+  unit: 'pc',
+  quantity_text: '10 pc',
+  taxonomy_node_id: 'ondc:RET19',
+  classification_basis: 'curated',
+  hsn_code: null,
+  country_of_origin: null,
+  manufacturer: null,
+  image_url: null,
+  attributes: {},
+  dedupe_key: null,
+  status: 'ready',
+  quality_score: 90,
+  primary_source: 'src-a',
+  ...over,
+});
+const src = (itemId, sourceId) => ({
+  source: 'src-a',
+  source_id: sourceId,
+  item_id: itemId,
+  license: 'test',
+  source_url: null,
+  source_modified_at: null,
+  raw: {},
+});
+async function loadItems(items, sources, options) {
+  return inTx(async () => {
+    const runId = await newRun();
+    await upsertEntity(
+      client,
+      runId,
+      BRANDS,
+      [{ brand_key: 'acme', name: 'Acme', aliases: [], source: 'src-a' }],
+      options
+    );
+    const s = await upsertEntity(client, runId, ITEMS, items, options);
+    await upsertEntity(client, runId, ITEM_SOURCES, sources, options);
+    return s;
+  });
+}
+
+test(
+  'database rejects a barcode with a bad check digit and a mismatched id',
+  opts,
+  async () => {
+    await seedTaxonomy();
+    const good = normalizeGtin('8901063010307').gtin;
+    await assert.rejects(
+      loadItems(
+        [item({ id: 'gtin:08901063010308', gtin: '08901063010308' })],
+        []
+      ),
+      /items_gtin_check/
+    );
+    await assert.rejects(
+      loadItems([item({ id: `gtin:${good}`, gtin: null })], []),
+      /items_gtin_id/
+    );
+  }
+);
+
+test(
+  'products: deterministic ids, people’s decisions are final, duplicates found',
+  opts,
+  async () => {
+    const pan = item({
+      id: 'src:src-a:1',
+      name: 'Pantoprazole 40mg and Levosulpiride 75mg Capsules',
+      name_key: 'pantoprazole 40mg and levosulpiride 75mg capsules',
+    });
+    const eso = item({
+      id: 'src:src-a:2',
+      name: 'Esomeprazole 40mg and Levosulpiride 75mg Capsules',
+      name_key: 'esomeprazole 40mg and levosulpiride 75mg capsules',
+    });
+    const n1 = item({
+      id: 'src:src-a:3',
+      name: 'Nachos, Cheese Jalapeno',
+      name_key: 'nachos cheese jalapeno',
+      taxonomy_node_id: 'ondc:RET10',
+    });
+    const n2 = item({
+      id: 'src:src-a:4',
+      name: 'Cheese Jalapeno Nachos',
+      name_key: 'cheese jalapeno nachos',
+      taxonomy_node_id: 'ondc:RET10',
+    });
+    const p650 = item({
+      id: 'src:src-a:5',
+      name: 'Paracetamol Tablets 650 mg',
+      name_key: 'paracetamol tablets 650 mg',
+    });
+    const p500 = item({
+      id: 'src:src-a:6',
+      name: 'Paracetamol Tablets 500 mg',
+      name_key: 'paracetamol tablets 500 mg',
+    });
+    const all = [pan, eso, n1, n2, p650, p500];
+    const s = await loadItems(
+      all,
+      all.map((i, k) => src(i.id, String(k + 1)))
+    );
+    assert.equal(s.inserted, 6);
+
+    const { candidates } = await findDuplicates(client, { log: () => {} });
+    const pairs = candidates.map((c) => `${c.a_id}|${c.b_id}`);
+    assert.deepEqual(
+      pairs,
+      ['src:src-a:3|src:src-a:4'],
+      'only the word-order pair; not different medicines or strengths'
+    );
+
+    await mergeItems(client, 'src:src-a:3', 'src:src-a:4');
+    await setItemStatus(client, 'src:src-a:1', 'verified');
+
+    // The source re-sends everything with changed names: verified/rejected rows must not change.
+    const changed = all.map((i) => ({ ...i, name: `${i.name} (new)` }));
+    const again = await loadItems(
+      changed,
+      all.map((i, k) => src(i.id, String(k + 1)))
+    );
+    assert.equal(again.updated, 4, 'only the 4 undecided items update');
+    const rows = await client.query(
+      "SELECT id, status, name FROM catalog.items WHERE id IN ('src:src-a:1','src:src-a:4') ORDER BY id"
+    );
+    assert.equal(rows.rows[0].status, 'verified');
+    assert.ok(!rows.rows[0].name.endsWith('(new)'));
+    assert.equal(rows.rows[1].status, 'rejected');
+
+    const after = await findDuplicates(client, { log: () => {} });
+    assert.equal(
+      after.candidates.length,
+      0,
+      'rejected items leave the duplicate queue'
+    );
+    const open = await client.query(
+      "SELECT count(*)::int n FROM catalog.review_queue WHERE kind = 'item_possible_duplicate' AND status = 'open'"
+    );
+    assert.equal(open.rows[0].n, 0);
+  }
+);
+
+test(
+  'items_enriched resolves HSN through the nearest category default',
+  opts,
+  async () => {
+    await client.query(`
+    INSERT INTO catalog.hsn_codes (code, type, parent_code, description, content_hash) VALUES ('30', 'HSN', NULL, 'Pharma', 'x'), ('3004', 'HSN', '30', 'Medicaments', 'x')
+    ON CONFLICT DO NOTHING;
+    INSERT INTO catalog.taxonomy_hsn_defaults (node_id, hsn_code, confidence, source, content_hash)
+    VALUES ('ondc:RET19', '3004', 'broad', 'test', 'x') ON CONFLICT DO NOTHING;`);
+    const r = await client.query(
+      "SELECT effective_hsn, hsn_basis FROM catalog.items_enriched WHERE id = 'src:src-a:6'"
+    );
+    assert.deepEqual(r.rows[0], {
+      effective_hsn: '3004',
+      hsn_basis: 'category_broad',
+    });
+  }
+);

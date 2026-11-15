@@ -137,6 +137,32 @@ async function upsertEntity(client, runId, spec, rows, opts = {}) {
   };
 }
 
+/**
+ * beforeUpsert hook: abort the load if staged rows reference rows that are not active.
+ * checks: [{ column, table, key }] — e.g. { column: 'hsn_code', table: 'hsn_codes', key: 'code' }.
+ * NULL references are ignored (optional columns).
+ */
+const assertActiveReferences = (label, checks) => async (client, staging) => {
+  for (const { column, table, key } of checks) {
+    const missing = await client.query(
+      `SELECT DISTINCT s.${quoteIdent(column)} AS ref FROM ${staging} s
+        WHERE s.${quoteIdent(column)} IS NOT NULL
+          AND NOT EXISTS (SELECT 1 FROM catalog.${quoteIdent(table)} x
+                           WHERE x.${quoteIdent(key)} = s.${quoteIdent(
+        column
+      )} AND x.is_active)
+        ORDER BY 1 LIMIT 20`
+    );
+    if (missing.rowCount) {
+      throw new LoadError(
+        `${label}: ${column} references unknown/inactive catalog.${table} rows`,
+        missing.rows
+      );
+    }
+  }
+  return 0;
+};
+
 /** Rejected input rows are logged per run (they never enter catalog tables). */
 async function insertRejects(client, runId, source, rejects) {
   const rows = rejects.map((r) => ({
@@ -204,4 +230,10 @@ async function syncReview(client, runId, source, items) {
   };
 }
 
-module.exports = { upsertEntity, insertRejects, syncReview, LoadError };
+module.exports = {
+  upsertEntity,
+  insertRejects,
+  syncReview,
+  assertActiveReferences,
+  LoadError,
+};

@@ -1,0 +1,52 @@
+# Local services (scheme "service"). Rows with an empty `group` are groups.
+#   sac_code       GST services code — must exist in catalog.hsn_codes (the load checks)
+#   billing_unit   visit | hour | job | piece | kg | month | session | day | trip
+#   shop_type      the Rquest shop type that typically offers it (seeds/shop_types.csv key)
+key,name,group,sac_code,billing_unit,shop_type
+home_services,Home Services,,,,
+plumbing,Plumbing Repair,home_services,995462,visit,home_repair
+electrical,Electrical Repair & Wiring,home_services,995461,visit,home_repair
+carpentry,Carpentry & Furniture Repair,home_services,995476,visit,home_repair
+painting,House Painting,home_services,995473,job,home_repair
+appliance_repair,Home Appliance Repair,home_services,998715,visit,electronics_repair
+ac_service,AC Service & Repair,home_services,998715,visit,electronics_repair
+water_purifier_service,Water Purifier Service,home_services,998715,visit,electronics_repair
+pest_control,Pest Control,home_services,998531,visit,home_repair
+home_cleaning,Home Deep Cleaning,home_services,998533,job,home_repair
+sofa_carpet_cleaning,Sofa & Carpet Cleaning,home_services,998539,job,home_repair
+personal_care,Personal Care,,,,
+haircut,Haircut,personal_care,999721,session,salon
+shave_beard,Shave & Beard Trim,personal_care,999721,session,salon
+hair_colour,Hair Colouring,personal_care,999721,session,salon
+facial,Facial & Clean-up,personal_care,999729,session,beauty_parlour
+manicure_pedicure,Manicure & Pedicure,personal_care,999722,session,beauty_parlour
+threading_waxing,Threading & Waxing,personal_care,999729,session,beauty_parlour
+bridal_makeup,Bridal Makeup,personal_care,999729,job,beauty_parlour
+massage_spa,Massage & Spa,personal_care,999723,session,beauty_parlour
+repairs,Repairs & Alterations,,,,
+mobile_repair,Mobile Phone Repair,repairs,998716,job,electronics_repair
+computer_repair,Laptop & Computer Repair,repairs,998713,job,electronics_repair
+clothing_alterations,Clothing Alterations,repairs,998723,piece,tailor
+shoe_bag_repair,Shoe & Bag Repair,repairs,998721,piece,footwear
+watch_jewellery_repair,Watch & Jewellery Repair,repairs,998722,job,jewellery
+bicycle_repair,Bicycle Repair,repairs,998725,job,vehicle_repair
+vehicle_service,Car & Bike Service,repairs,998714,job,vehicle_repair
+laundry,Laundry,,,,
+wash_fold,Wash & Fold,laundry,999719,kg,laundry
+dry_cleaning,Dry Cleaning,laundry,999712,piece,laundry
+ironing,Ironing,laundry,999714,piece,laundry
+education,Tuition & Classes,,,,
+school_tuition,School Tuition,education,999293,month,tuition
+music_classes,Music Classes,education,999242,month,tuition
+sports_yoga_coaching,Sports & Yoga Coaching,education,999243,month,tuition
+food_events,Food & Events,,,,
+event_catering,Event Catering,food_events,996334,job,restaurant
+tiffin_service,Tiffin / Meal Subscription,food_events,996336,month,home_kitchen
+event_decoration,Event Decoration & Planning,food_events,998596,job,
+photography,Photography,food_events,9983,job,photo_studio
+delivery_rentals,Delivery Printing & Rentals,,,,
+local_delivery,Local Delivery,delivery_rentals,996813,trip,
+courier,Courier,delivery_rentals,996812,piece,
+printing,Printing & Photocopy,delivery_rentals,998912,piece,printing
+furniture_appliance_rental,Furniture & Appliance Rental,delivery_rentals,997323,month,equipment_rental
+car_with_driver,Car with Driver,delivery_rentals,996601,day,equipment_rental

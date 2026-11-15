@@ -17,13 +17,28 @@ cd catalog
 npm install
 cp .env.catalog.example .env.catalog   # set CATALOG_DATABASE_URL
 npm run migrate                        # create/upgrade the catalog schema
-node cli.js run hsn --dry-run          # full load inside a transaction, then ROLLBACK
-node cli.js run hsn                    # real load
-node cli.js run hsn-overrides          # apply verified GST rates from seeds/
-npm run status                         # last runs, row counts, open review items
+node cli.js run-all --dry-run          # every source inside transactions, then ROLLBACK
+node cli.js run-all                    # real load of every source, then the duplicate finder
+npm run status                         # last runs, catalog health, open review items
 ```
 
-Behind an HTTPS proxy, Node's built-in `fetch` needs `NODE_USE_ENV_PROXY=1` (Node ≥ 22.21).
+Single sources: `node cli.js run <source> [--dry-run] [--force]`. Behind an HTTPS proxy,
+Node's built-in `fetch` needs `NODE_USE_ENV_PROXY=1` (Node ≥ 22.21).
+
+### What a full load produces today
+
+| | Rows |
+|---|---|
+| HSN/SAC codes (with built parents) | 20,077 |
+| Taxonomy nodes (Shopify, ONDC, shop types, services) | 14,414 |
+| Items — generic medicines (Jan Aushadhi) | 2,111 |
+| Items — packaged food (Open Food Facts India **sample**, see below) | 897 |
+| Items — loose produce & staples / local services | 73 / 40 |
+
+Consumers read **`catalog.items_enriched`**: item + brand + category path + effective HSN
+(item-specific, else the nearest category default) + suggested GST rate and whether it is
+verified. HSN and rates are joined at read time, never copied, so fixing one default or rate
+fixes every item that uses it.
 
 ## How a run works (clean, bulk, transactional)
 
@@ -89,10 +104,45 @@ is 0%, but butter/ghee/cheese are not). Put verified rates in `seeds/hsn_rate_ov
 | `hsn-overrides` | verified GST rates — `seeds/hsn_rate_overrides.csv` | internal | file hash |
 | `shopify-taxonomy` | 14,188 product categories + 8,272 attributes (418 excluded) | MIT | commit `2ea7266` (tag v2026-10) + sha256 |
 | `ondc-taxonomy` | 14 ONDC retail domains + 96 Indian grocery categories | ONDC spec (no LICENSE file; codes used as identifiers) | commit `aa74e5d` (release-2.0.2) + sha256 |
-| `curated-taxonomy` | 57 Rquest shop types in 12 groups, 62 cross-scheme mappings, 49 default HSN per category | internal | file hash |
+| `curated-taxonomy` | 57 Rquest shop types in 12 groups, 62 cross-scheme mappings, 50 default HSN per category | internal | file hash |
+| `off-india` | packaged food sold in India: 897 items from a 1,000-record sample (of 26,141) | ODbL 1.0 / DbCL; images CC BY-SA 3.0 | daily crawl id + content hash |
+| `jan-aushadhi` | 2,111 PMBJP generic medicines (list as of 31.12.2025), dosage form, pack size | Government of India public document (PIB) | URL + sha256 |
+| `curated-items` | 73 loose produce & staples with local-language aliases; 40 local services with SAC codes | internal | file hash |
 
-`curated-taxonomy` refuses to load if a mapping or default points to a node or HSN code that is
-not active — run it last.
+Sources that reference other sources' rows refuse to load if a reference is unknown or
+inactive (category, HSN/SAC code, shop type) — `run-all` uses the order above.
+
+### Open Food Facts: sample now, full country pending
+
+The public API serves anonymous clients only the first 1,000 results of a search ("not
+available to anonymous users" beyond that), so `off-india` currently holds a **sample** and the
+review queue carries `source_partial_coverage`. The crawler stops at that limit by design. For all
+~26,000 Indian products (and ~2,200 from Open Beauty Facts), load Open Food Facts' **official
+daily data export** — their recommended bulk channel — or sign in with an Open Food Facts
+account. Either needs a decision from the project owner; neither is wired in yet.
+
+### Products: identity, quality, ownership
+
+- **Identity is deterministic** (`catalog.items.id`): `gtin:<14 digits>` for valid barcodes
+  (UPC-A and EAN-13 of the same product collapse; check digit enforced in the DB), else
+  `key:<hash(brand|name|base qty|unit)>`, else `src:<source>:<record>`. Two sources sending the
+  same barcode produce one item with two `item_sources` rows.
+- **Normalisation**: English name preferred; promo text stripped ("Buy 1 Get 1", "MRP Rs 10");
+  trailing pack size split off; ALL-CAPS names title-cased (brand acronyms kept); quantities to
+  g / ml / pc (`1 kg` = `1000 g`, `2 x 200 ml` = `400 ml`); veg / non-veg / vegan; origin as ISO code.
+- **Classification**: deepest mapped source tag (`seeds/off_category_map.csv`), else keyword
+  rules (`seeds/category_keywords.csv`, first match wins — form words before ingredient words,
+  pinned by `test/classify.test.js`).
+- **Quality**: 0–100 score; `ready` needs name, brand, category and (quantity or barcode).
+  `incomplete` items stay in the catalog but should not be offered to merchants.
+- **Ownership**: a source only changes items it created; nothing automatic ever changes an item
+  a person marked `verified` or `rejected`.
+
+### Medicines
+
+The PMBJP list does not state drug schedules (H / H1 / X), so every medicine carries
+`attributes.prescription_status = 'unknown'`. Keep prescription-only medicines out of open
+listings until a pharmacist has classified them.
 
 ### Seeds you maintain (all CSV, reviewed via git)
 
@@ -105,6 +155,11 @@ not active — run it last.
 | `shop_types.csv` | Rquest shop types → OSM tags, ONDC domains, app form template, listing type |
 | `taxonomy_mappings.csv` | ONDC ↔ Shopify links |
 | `taxonomy_hsn_defaults.csv` | suggested HSN per category (`exact` / `broad`) |
+| `off_category_map.csv` | Open*Facts category tag → catalog category |
+| `category_keywords.csv` | name keyword rules for uncategorised products (order matters) |
+| `brand_aliases.csv` | brand spellings that are the same brand (e.g. `GCMMF` → Amul) |
+| `produce.csv` | loose produce & staples, with the local names people search by |
+| `services.csv` | local services → SAC code, billing unit, shop type |
 
 **Not yet loaded:** the FSSAI Food Category System (its official PDF host is not reachable from
 the pipeline's network and the codes could not be verified).
@@ -121,9 +176,25 @@ SELECT kind, count(*) FROM catalog.review_queue WHERE status = 'open' GROUP BY 1
 | `hsn_description_missing` / `hsn_description_fallback` | add the title to `hsn_headings.csv` (or supplement) |
 | `hsn_supplement_redundant` | delete the line from `hsn_supplement.csv` |
 | `taxonomy_duplicate_sibling_name` | rename or map the nodes |
+| `item_possible_duplicate` | `node cli.js merge <keep_id> <drop_id>`, or dismiss |
+| `source_partial_coverage` | load the full source (see Open Food Facts above) |
+| `source_row_outside_stated_count` | confirm the extra row belongs in the source list |
 
 Items close automatically on the next run once the cause is gone; `status = 'dismissed'` marks a
 deliberate "won't fix".
+
+### People's decisions
+
+```bash
+node cli.js dedupe                         # refresh duplicate candidates (also run by run-all)
+node cli.js merge gtin:089… gtin:089…      # second item → rejected, attributes.merged_into = first
+node cli.js verify src:jan-aushadhi:22     # item → verified
+```
+
+Duplicate candidates share brand, category, pack size and the numbers in the name, and then
+have the same words (any order) or ≥ 0.9 trigram similarity. Similarity alone is not used:
+"Pantoprazole … Levosulpiride" and "Esomeprazole … Levosulpiride" score 0.85 and are different
+medicines.
 
 ## Adding a source
 
@@ -139,7 +210,9 @@ npm test                                   # unit tests
 CATALOG_TEST_DATABASE_URL=postgres://user:pass@localhost:5432/rquest_catalog_it_test npm test
 ```
 
-The integration suite **drops and recreates schema `catalog`**, so it refuses to run unless
+`test/hygiene.test.js` fails on invisible characters (NBSP, zero-width, BOM…) in code or seeds —
+they silently break regexes and CSV keys. The integration suite **drops and recreates schema
+`catalog`**, so it refuses to run unless
 the database name ends in `_test`.
 
 ## Database isolation (shared databases)
