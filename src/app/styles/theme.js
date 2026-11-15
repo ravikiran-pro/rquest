@@ -199,6 +199,10 @@ export const antdTheme = {
     colorTextTertiary: colors.textLight,
     colorBorder: colors.border,
     colorBorderSecondary: colors.surfaceContainer,
+    // One soft focus ring for every field (inputs, selects, date pickers)
+    controlOutline: 'rgba(11, 45, 107, 0.14)',
+    controlOutlineWidth: 3,
+    colorErrorOutline: 'rgba(186, 26, 26, 0.14)',
     colorBgBase: colors.surface,
     colorBgLayout: colors.bg,
     colorSuccess: colors.semantic.success,
@@ -222,12 +226,14 @@ export const antdTheme = {
       colorText: colors.textMain,
     },
     Input: {
-      controlHeight: 42,
+      controlHeight: 44,
       borderRadius: radii.lg,
       colorBorder: colors.border,
       colorBgContainer: colors.surface,
       activeBorderColor: colors.primary,
       hoverBorderColor: colors.borderDark,
+      activeShadow: '0 0 0 3px rgba(11, 45, 107, 0.14)',
+      errorActiveShadow: '0 0 0 3px rgba(186, 26, 26, 0.14)',
     },
     Select: {
       controlHeight: 38,
