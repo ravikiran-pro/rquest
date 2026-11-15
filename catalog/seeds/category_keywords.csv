@@ -1,0 +1,55 @@
+# Name-based classification for products the source did not categorise.
+# Patterns are case-insensitive regular expressions matched against the cleaned product name,
+# tried IN FILE ORDER — the first match wins. Order: personal care & household, then product
+# FORM words (biscuit, chocolate, masala, noodles…), then INGREDIENT words (milk, butter, oil…),
+# so "Dairy Milk Chocolate" is a chocolate and "Butter Cookies" are biscuits.
+# Keep patterns word-bounded (\b) to avoid substring hits.
+pattern,node_id,note
+\bhair\s*oil\b,ondc:RET10-100B,before the generic oil rule
+\b(shampoo|conditioner|hair\s*(gel|serum|colou?r|cream))\b,ondc:RET10-100B,
+\b(tooth\s*paste|tooth\s*brush|mouth\s*wash|toothpowder)\b,ondc:RET10-1009,
+\b(soap|body\s*wash|hand\s*wash|handwash|shower\s*gel)\b,ondc:RET10-100D,
+\b(face\s*wash|face\s*cream|moisturi[sz]er|sunscreen|lotion)\b,ondc:RET10-1014,
+\b(deodorant|deo|perfume|body\s*spray)\b,ondc:RET10-100A,
+\b(sanitary\s*(pads?|napkins?)|tampons?)\b,ondc:RET10-1010,
+\b(diapers?|baby\s*wipes)\b,ondc:RET10-1000,
+\b(detergent|washing\s*powder|dish\s*wash|dishwash|fabric\s*conditioner)\b,ondc:RET10-1020,
+\b(floor\s*cleaner|toilet\s*cleaner|disinfectant|phenyl)\b,ondc:RET10-1021,
+\b(agarbatti|incense|dhoop|camphor|kapur|pooja)\b,ondc:RET10-1028,
+\b(whey|protein\s*(powder|bar|shake)?|mass\s*gainer|weight\s*gainer|multivitamin|supplement)\b,ondc:RET18,supplements before chocolate/food words
+\b(vada|dosa|idli|dhokla|gulab\s*jamun|halwa|cake|batter|pongal|upma|khaman|pakora|bajji|bonda|uttapam)\s*mix\b,ondc:RET10-104A,batter mixes before the sweets rule
+\b(biscuits?|cookies?|crackers?)\b,ondc:RET10-1045,
+\b(rusk|toast)\b,ondc:RET10-1004,
+\b(cake|pastry|muffin|brownie)\b,ondc:RET10-1005,
+\b(bread|buns?|pav)\b(?!\s*bhaji),ondc:RET10-1003,pav bhaji masala is a spice
+\b(chocolates?|candy|candies|toffees?|lollipop|gum)\b,ondc:RET10-1047,
+\b(ladoo|laddu|barfi|burfi|halwa|rasgulla|gulab\s*jamun|soan\s*papdi|patisa|peda|chikki|gajak|mithai|sweets)\b,ondc:RET10-1049,
+\b(ice\s*cream|kulfi|frozen\s*dessert)\b,ondc:RET10-1007,
+\b(french\s*fries|frozen)\b,ondc:RET10-1044,
+\b(noodles|pasta|vermicelli|seviyan|macaroni|spaghetti)\b,ondc:RET10-1039,
+\b(namkeen|bhujia|mixture|chips|wafers|sev|chakli|murukku|khakhra|puffs|nachos|popcorn|fries)\b,ondc:RET10-1046,
+\b(pickle|achar|aachar|chutney)\b,ondc:RET10-1048,
+\bpeanut\s*butter\b,ondc:RET10-103B,before the butter rule
+\b(ketchup|sauce|mayonnaise|mayo|jam|spread|honey)\b,ondc:RET10-103B,
+\b(masala|spices?|turmeric|haldi|chill?i\s*powder|jeera|cumin|coriander\s*powder|garam)\b,ondc:RET10-1040,
+\b(oats|corn\s*flakes|cornflakes|muesli|granola|chocos)\b,ondc:RET10-103A,
+\b(ready\s*to\s*(eat|cook)|instant\s*mix|upma|khichdi|biryani\s*kit)\b,ondc:RET10-104A,
+\b(green\s*tea|tea|chai)\b,ondc:RET10-101F,
+\bcoffee\b,ondc:RET10-101E,
+\b(methi|ajwain|saunf|fennel|hing|asafoetida|elaichi|cardamom|cloves?|black\s*pepper|mustard\s*seeds|adrak)\b,ondc:RET10-1040,whole spices after tea/coffee: Elaichi Chai is tea
+\b(juice|fruit\s*drink|flavou?red\s*drink|nectar|squash|sharbat)\b,ondc:RET10-1018,
+\b(energy\s*drink)\b,ondc:RET10-101B,
+\b(soda|cola|soft\s*drink)\b,ondc:RET10-1016,
+\b(mineral|drinking|packaged)\s*water\b,ondc:RET10-1017,
+\bghee\b,ondc:RET10-1043,
+\b(paneer|curd|dahi|yog(h)?urt|lassi|butter\s*milk|chaas|milk)\b,ondc:RET10-1006,
+\b(cheese|butter)\b,ondc:RET10-1037,
+\b(atta|maida|besan|sooji|suji|rava|flour)\b,ondc:RET10-1030,
+\b(basmati|rice|poha)\b,ondc:RET10-1031,
+\b(dal|daal|toor|tur|arhar|moong|masoor|urad|chana|rajma|pulses?|lentils?)\b,ondc:RET10-1032,
+\b(almonds?|badam|cashews?|kaju|raisins?|kishmish|walnuts?|akhrot|pista|pistachios?|dates|khajur|peanuts?|makhana)\b,ondc:RET10-1038,
+\b(sugar|jaggery|gur|salt)\b,ondc:RET10-1041,
+\b(sunflower|mustard|groundnut|coconut|sesame|olive|rice\s*bran|soyabean|soybean)?\s*oil\b,ondc:RET10-1042,
+\beggs?\b,ondc:RET10-102A,
+\b(chicken|mutton|meat)\b,ondc:RET10-102B,
+\b(fish|prawns?|shrimp)\b,ondc:RET10-102D,

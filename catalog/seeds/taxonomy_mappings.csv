@@ -1,0 +1,20 @@
+# Curated links between taxonomy schemes. Shop type → ONDC domain links are generated
+# from seeds/shop_types.csv and do not belong here.
+# relation: exact | broader (to is broader than from) | narrower | related
+from_id,to_id,relation,note
+ondc:RET10,shopify:fb,related,Grocery spans food plus household/personal care; Shopify splits these
+ondc:RET11,shopify:fb,related,Prepared food and beverages
+ondc:RET12,shopify:aa,related,
+ondc:RET13,shopify:hb-3,related,Personal care
+ondc:RET14,shopify:el,related,
+ondc:RET15,shopify:hg-9,related,Household appliances
+ondc:RET16,shopify:hg-3,related,Decor
+ondc:RET16,shopify:hg-11,related,Kitchen & dining
+ondc:RET17,shopify:tg,related,
+ondc:RET18,shopify:hb-1,related,Health care
+ondc:RET19,shopify:hb-1,related,Medicines sit under health care in Shopify
+ondc:RET1A,shopify:vp,related,
+ondc:RET1B,shopify:ha,related,
+ondc:RET1C,shopify:ha-2,related,Building materials
+ondc:RET1D,shopify:bi,related,Industrial chemicals sit under business & industrial
+ondc:RET10-1028,shopify:rc-2,related,Pooja supplies ↔ religious items

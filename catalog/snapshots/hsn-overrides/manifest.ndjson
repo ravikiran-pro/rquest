@@ -1,0 +1,4 @@
+{"attribution":null,"input_sha256":"27606b741588f8924acfc9332e7a7c899e5367d0713991b206bccfe7097e0a44","license":"Internal (curated from CBIC notifications)","source":"hsn-overrides","source_version":"seed+t1","title":"Verified GST rate overrides (seeds/hsn_rate_overrides.csv)"}
+{"file":"hsn_rates.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

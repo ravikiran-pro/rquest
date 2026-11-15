@@ -1,0 +1,5 @@
+{"attribution":"Product categories: Shopify Standard Product Taxonomy (github.com/Shopify/product-taxonomy), MIT License.","input_sha256":"f02f0ec6b5ddd7728f1522fd28d224195cff4e9a9212194ad5144ace4089feb4","license":"MIT (Copyright (c) Shopify)","source":"shopify-taxonomy","source_version":"v2026-10@2ea72664167d+t1","title":"Shopify Standard Product Taxonomy v2026-10"}
+{"file":"taxonomy_nodes.ndjson.gz","rows":14188,"sha256":"3f337eaf82f9ca39d916a80ad044087cc68cb310c7c140ea4600502d32b25664"}
+{"file":"taxonomy_attributes.ndjson.gz","rows":8272,"sha256":"26b2c2cdd2ea8cb50146f1b4ffeb45f78b43fb8e5139afbe305c11bca2d86327"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

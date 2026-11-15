@@ -1,0 +1,78 @@
+# Loose produce and staples sold by weight/count, with no barcode or brand. One row per
+# commonly sold item. `aliases` (";"-separated) are the names people actually search with.
+#   sold_by  kg | g250 | l | pc | dozen | bunch    (the default pack a shop lists)
+# HSN comes from the category default (taxonomy_hsn_defaults), not from this file.
+key,name,aliases,node_id,sold_by
+veg-potato,Potato,Aloo;Batata,ondc:RET10-1033,kg
+veg-onion,Onion,Pyaz;Kanda,ondc:RET10-1033,kg
+veg-tomato,Tomato,Tamatar,ondc:RET10-1033,kg
+veg-garlic,Garlic,Lahsun,ondc:RET10-1033,g250
+veg-ginger,Ginger,Adrak,ondc:RET10-1033,g250
+veg-green-chilli,Green Chilli,Hari Mirch,ondc:RET10-1033,g250
+veg-coriander,Coriander Leaves,Dhania;Kothimbir,ondc:RET10-1033,bunch
+veg-mint,Mint Leaves,Pudina,ondc:RET10-1033,bunch
+veg-curry-leaves,Curry Leaves,Kadi Patta;Kariveppilai,ondc:RET10-1033,bunch
+veg-spinach,Spinach,Palak,ondc:RET10-1033,bunch
+veg-fenugreek,Fenugreek Leaves,Methi,ondc:RET10-1033,bunch
+veg-cauliflower,Cauliflower,Phool Gobhi,ondc:RET10-1033,pc
+veg-cabbage,Cabbage,Patta Gobhi;Band Gobhi,ondc:RET10-1033,pc
+veg-brinjal,Brinjal,Baingan;Vangi,ondc:RET10-1033,kg
+veg-okra,Okra,Bhindi;Lady Finger,ondc:RET10-1033,kg
+veg-bottle-gourd,Bottle Gourd,Lauki;Dudhi,ondc:RET10-1033,pc
+veg-bitter-gourd,Bitter Gourd,Karela,ondc:RET10-1033,kg
+veg-ridge-gourd,Ridge Gourd,Turai;Tori,ondc:RET10-1033,kg
+veg-cucumber,Cucumber,Kheera;Kakdi,ondc:RET10-1033,kg
+veg-carrot,Carrot,Gajar,ondc:RET10-1033,kg
+veg-radish,Radish,Mooli,ondc:RET10-1033,kg
+veg-beetroot,Beetroot,Chukandar,ondc:RET10-1033,kg
+veg-capsicum,Capsicum,Shimla Mirch;Bell Pepper,ondc:RET10-1033,kg
+veg-french-beans,French Beans,Beans,ondc:RET10-1033,kg
+veg-green-peas,Green Peas,Matar,ondc:RET10-1033,kg
+veg-drumstick,Drumstick,Sahjan;Moringa,ondc:RET10-1033,kg
+veg-pumpkin,Pumpkin,Kaddu;Kashiphal,ondc:RET10-1033,kg
+veg-sweet-potato,Sweet Potato,Shakarkandi,ondc:RET10-1033,kg
+veg-lemon,Lemon,Nimbu,ondc:RET10-1033,g250
+veg-raw-banana,Raw Banana,Kachcha Kela,ondc:RET10-1033,kg
+veg-colocasia,Colocasia,Arbi;Arvi,ondc:RET10-1033,kg
+veg-yam,Elephant Foot Yam,Suran;Jimikand,ondc:RET10-1033,kg
+fruit-banana,Banana,Kela,ondc:RET10-1034,dozen
+fruit-apple,Apple,Seb,ondc:RET10-1034,kg
+fruit-mango,Mango,Aam,ondc:RET10-1034,kg
+fruit-orange,Orange,Santra;Narangi,ondc:RET10-1034,kg
+fruit-sweet-lime,Sweet Lime,Mosambi,ondc:RET10-1034,kg
+fruit-pomegranate,Pomegranate,Anar,ondc:RET10-1034,kg
+fruit-papaya,Papaya,Papita,ondc:RET10-1034,pc
+fruit-watermelon,Watermelon,Tarbooz;Kalingad,ondc:RET10-1034,pc
+fruit-muskmelon,Muskmelon,Kharbooja,ondc:RET10-1034,pc
+fruit-grapes,Grapes,Angoor,ondc:RET10-1034,kg
+fruit-guava,Guava,Amrood;Peru,ondc:RET10-1034,kg
+fruit-pineapple,Pineapple,Ananas,ondc:RET10-1034,pc
+fruit-chikoo,Sapota,Chikoo,ondc:RET10-1034,kg
+fruit-custard-apple,Custard Apple,Sitaphal;Sharifa,ondc:RET10-1034,kg
+fruit-coconut,Coconut,Nariyal;Thengai,ondc:RET10-1034,pc
+fruit-tender-coconut,Tender Coconut,Daab;Elaneer,ondc:RET10-1034,pc
+fruit-pear,Pear,Nashpati,ondc:RET10-1034,kg
+staple-sona-masoori,Sona Masoori Rice,Chawal,ondc:RET10-1031,kg
+staple-basmati,Basmati Rice,Chawal,ondc:RET10-1031,kg
+staple-idli-rice,Idli Rice,Parboiled Rice;Ukda Chawal,ondc:RET10-1031,kg
+staple-poha,Poha,Flattened Rice;Aval,ondc:RET10-1031,kg
+staple-wheat,Wheat,Gehun,ondc:RET10-1030,kg
+staple-atta,Wheat Flour,Atta;Chakki Atta,ondc:RET10-1030,kg
+staple-sooji,Semolina,Sooji;Rava,ondc:RET10-1030,kg
+staple-besan,Gram Flour,Besan,ondc:RET10-1030,kg
+staple-toor-dal,Toor Dal,Arhar Dal;Tuvar,ondc:RET10-1032,kg
+staple-moong-dal,Moong Dal,Green Gram Split,ondc:RET10-1032,kg
+staple-chana-dal,Chana Dal,Bengal Gram Split,ondc:RET10-1032,kg
+staple-urad-dal,Urad Dal,Black Gram Split;Ulundu,ondc:RET10-1032,kg
+staple-masoor-dal,Masoor Dal,Red Lentils,ondc:RET10-1032,kg
+staple-rajma,Rajma,Kidney Beans,ondc:RET10-1032,kg
+staple-kabuli-chana,Kabuli Chana,Chickpeas;Chole,ondc:RET10-1032,kg
+staple-kala-chana,Black Chana,Kala Chana,ondc:RET10-1032,kg
+staple-sugar,Sugar,Cheeni;Shakkar,ondc:RET10-1041,kg
+staple-jaggery,Jaggery,Gur;Bellam,ondc:RET10-1041,kg
+staple-groundnuts,Groundnuts,Moongphali;Peanuts,ondc:RET10-1038,kg
+staple-eggs,Eggs,Ande;Anda,ondc:RET10-102A,dozen
+dairy-cow-milk,Cow Milk (Loose),Doodh,ondc:RET10-1006,l
+dairy-buffalo-milk,Buffalo Milk (Loose),Bhains ka Doodh,ondc:RET10-1006,l
+dairy-curd,Curd (Loose),Dahi,ondc:RET10-1006,kg
+dairy-paneer,Paneer (Loose),Cottage Cheese,ondc:RET10-1006,kg

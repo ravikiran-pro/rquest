@@ -1,0 +1,4 @@
+{"attribution":"Domain and category codes: ONDC Retail Specifications (github.com/ONDC-Official/ONDC-RET-Specifications).","input_sha256":"c35a957df3a985ae8c28eff76e90ebd9ee79c25b716020818caef349f76e6087","license":"ONDC open protocol specification (no LICENSE file); codes used as protocol identifiers","source":"ondc-taxonomy","source_version":"release-2.0.2@aa74e5d8e054+t1","title":"ONDC retail domains + Grocery categories (release-2.0.2)"}
+{"file":"taxonomy_nodes.ndjson.gz","rows":110,"sha256":"f4280731bf06a50b918ec25ace77d6bc64594a6fe81796450db7a2fefdc6d532"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":1,"sha256":"72c198f9a70c5ebcb8100095825f9dd01c6e1c19d1e1db17ccf09a69b10be723"}

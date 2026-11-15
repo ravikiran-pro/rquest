@@ -1,0 +1,14 @@
+# Subtrees left out of the catalog. Excluding a node excludes all of its descendants.
+# Edit this file (not code) to change scope; the next run deactivates/reactivates nodes.
+# Not legal advice — review with counsel before listing restricted goods.
+scheme,external_id,reason
+shopify,ma,Mature vertical: adult products and weapons
+shopify,gc,Gift Cards: not a physical catalog item
+shopify,bu,Bundles: merchandising construct not a product type
+shopify,pa,Product Add-Ons: merchandising construct not a product type
+shopify,so,Software: digital goods out of scope for local shops
+shopify,na,Uncategorized: placeholder vertical
+shopify,fb-4,Cannabis products: prohibited under the NDPS Act 1985
+shopify,fb-1-1,Alcoholic beverages: state excise licensing; outside GST; delivery restricted
+shopify,fb-3-7,"Vaporizers and e-cigarettes: banned by the Prohibition of Electronic Cigarettes Act, 2019"
+shopify,sg-4-9,Hunting and shooting: Wildlife (Protection) Act and Arms Act restrictions

@@ -1,0 +1,7 @@
+# HSN codes that are part of the tariff but missing from the upstream source package.
+# Loaded with description_basis = 'curated'. They never inherit a collapsed source rate
+# (rates for them must come from seeds/hsn_rate_overrides.csv).
+# If the upstream package later includes a code, the run raises review item
+# `hsn_supplement_redundant` — then delete the line here.
+code,description,reference
+0407,"Birds' eggs, in shell, fresh, preserved or cooked",WCO HS heading 04.07; absent from hsn-code-package 3.0.0

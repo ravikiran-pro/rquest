@@ -1,0 +1,6 @@
+{"attribution":"Generic medicines: Pradhan Mantri Bhartiya Janaushadhi Pariyojana, via the Press Information Bureau (pib.gov.in).","input_sha256":"f54a140d9dc82880dcbb7672c18942417e8c9fe904376c742b6319665cdf9a08","license":"Government of India public document (Press Information Bureau)","source":"jan-aushadhi","source_version":"pib-annexure-31.12.2025+t1","title":"PMBJP (Jan Aushadhi) generic medicines list — PIB annexure, as of 31.12.2025"}
+{"file":"brands.ndjson.gz","rows":1,"sha256":"e6a5577629881f86e8112e47d2ca583143b20a5e0c597d70ebbb7949dfa43425"}
+{"file":"items.ndjson.gz","rows":2111,"sha256":"1f773c7814b896ac686e9d404f77f643680339ef0c4a95ceddfb38ab39b9be81"}
+{"file":"item_sources.ndjson.gz","rows":2111,"sha256":"eb1d69ccdac860a521b0cf73cc9f50db73b2fcf2ab0816b6dcaf195e1523fc52"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":1,"sha256":"8a4a36a7888b778ee3f51cfaa359ae70b356b29697798d72f3b4b7f5ad490c1a"}
