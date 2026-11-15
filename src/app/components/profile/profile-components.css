@@ -48,6 +48,15 @@
   min-width: 120px;
 }
 
+/* Phones: sheets take the whole screen, so they never look stacked on the cart */
+.rq-sheet--mobile .ant-drawer-content {
+  border-radius: 0;
+}
+
+.rq-sheet--mobile .ant-drawer-header {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+
 /* Mobile bottom sheet: two equal, touch-sized buttons */
 .rq-sheet--mobile .rq-sheet-footer {
   display: grid;

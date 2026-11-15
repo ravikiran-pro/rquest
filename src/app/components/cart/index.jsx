@@ -26,7 +26,6 @@ import {
   EnvironmentOutlined,
   AimOutlined,
   PhoneOutlined,
-  MessageOutlined,
   InboxOutlined,
   ClockCircleOutlined,
   QrcodeOutlined,
@@ -34,6 +33,7 @@ import {
   EditOutlined,
   CarOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { useCartStore, useGlobalStore, useChatStore } from '../../services';
 import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from '../../utils';
 import { useHistory } from 'react-router-dom';
@@ -271,6 +271,23 @@ const CartDrawer = () => {
     }
   };
 
+  // Store owner's user id: from the cart, or looked up from the shop
+  const resolveOwnerId = async () => {
+    let ownerId = cart.owner_id;
+    if (!ownerId && cart.shop_id) {
+      try {
+        const shopDetails = await netWorkCall(`${apiConfig.shop_details}/${cart.shop_id}/details`, 'GET', null, false);
+        ownerId = shopDetails?.data?.owner_id;
+      } catch (err) {
+        console.error('Error fetching shop details for chat:', err);
+      }
+    }
+    if (!ownerId) {
+      message.warning('Store contact is unavailable right now. You can still place the order.');
+    }
+    return ownerId;
+  };
+
   const handleSendPrebuiltInquiry = async (queryText) => {
     if (!queryText || !queryText.trim()) {
       message.error('Please enter or select a question');
@@ -283,20 +300,8 @@ const CartDrawer = () => {
       return;
     }
 
-    let targetOwnerId = cart.owner_id;
-    if (!targetOwnerId && cart.shop_id) {
-      try {
-        const shopDetails = await netWorkCall(`${apiConfig.shop_details}/${cart.shop_id}/details`, 'GET', null, false);
-        targetOwnerId = shopDetails?.data?.owner_id;
-      } catch (err) {
-        console.error('Error fetching shop details for chat:', err);
-      }
-    }
-
-    if (!targetOwnerId) {
-      message.warning('Store owner details unavailable. You can place the order directly!');
-      return;
-    }
+    const targetOwnerId = await resolveOwnerId();
+    if (!targetOwnerId) return;
 
     setQuerySending(queryText === customQueryText ? 'custom' : queryText);
     try {
@@ -330,6 +335,18 @@ const CartDrawer = () => {
     } finally {
       setQuerySending(false);
     }
+  };
+
+  // Open a chat with the store owner, without sending anything on the user's behalf
+  const handleChatWithStore = async () => {
+    if (!user_data?.user_id) {
+      goToLogin();
+      return;
+    }
+    const ownerId = await resolveOwnerId();
+    if (!ownerId) return;
+    closeCart();
+    handleChatOpen(ownerId, cart.shop_id, { shop_name: cart.shop_name });
   };
 
   const handleClose = () => {
@@ -379,11 +396,11 @@ const CartDrawer = () => {
       <Button
         type="text"
         block
-        icon={<MessageOutlined />}
+        icon={<ChatIcon />}
         disabled={loading || !!querySending}
-        onClick={() => handleSendPrebuiltInquiry(PREBUILT_QUERIES[0].text)}
+        onClick={handleChatWithStore}
       >
-        Ask the store owner first
+        Chat with store
       </Button>
     </div>
   ) : null;
@@ -804,7 +821,7 @@ const CartDrawer = () => {
       <Drawer
         title={title}
         placement={isMobile ? 'bottom' : 'right'}
-        height={isMobile ? '92dvh' : undefined}
+        height={isMobile ? '100dvh' : undefined}
         width={isMobile ? undefined : 440}
         open={isCartOpen}
         onClose={handleClose}
