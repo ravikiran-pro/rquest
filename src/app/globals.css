@@ -761,6 +761,23 @@ textarea:focus-visible,
   outline-offset: 2px !important;
 }
 
+/* Search bar keyword input: the input sits inside a styled "pill" wrapper, so
+   suppress its own floating focus ring and surface focus on the pill instead.
+   Keeps a clearly visible focus affordance without the stray inner outline. */
+.rquest-search-input:focus,
+.rquest-search-input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.rquest-search-pill:focus-within {
+  border-color: var(--primary, #0B2D6B) !important;
+  /* Focus ring layered on top of any existing drop shadow; !important so it
+     overrides inline box-shadow set on some pills (e.g. the homepage hero). */
+  box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.12),
+    0 8px 24px -4px rgba(11, 45, 107, 0.08) !important;
+}
+
 /* 2. Vestibular Motion Sensitivity Support */
 @media (prefers-reduced-motion: reduce) {
   *,

@@ -22,11 +22,13 @@ const requestOtpHandler = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: result.delivered
-        ? `OTP sent via ${result.channel}`
-        : `OTP generated (dev mode) via ${result.channel}`,
+        ? `OTP sent via ${result.channel.toUpperCase()}`
+        : `OTP generated (dev mode) via ${result.channel.toUpperCase()}${result.deliveryError ? ` (${result.deliveryError})` : ''}`,
       channel: result.channel,
       ttlSeconds: result.ttlSeconds,
-      // Only present in dev mode — never returned in production.
+      delivered: !!result.delivered,
+      ...(result.deliveryError ? { deliveryError: result.deliveryError } : {}),
+      // Only present in dev mode — never returned in production without DEV_MODE.
       ...(result.devCode ? { devCode: result.devCode } : {}),
     });
   } catch (error) {

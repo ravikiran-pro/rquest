@@ -576,6 +576,7 @@ const HomeScreen = () => {
 
               {/* Search Container (Radius + Omnisearch + Submit) */}
               <div
+                className="rquest-search-pill"
                 style={{
                   background: '#FFFFFF',
                   border: '1px solid #E5E7EB',
@@ -668,6 +669,7 @@ const HomeScreen = () => {
                   <SearchOutlined style={{ color: '#9CA3AF', fontSize: 16, flexShrink: 0 }} />
                   <input
                     type="text"
+                    className="rquest-search-input"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
@@ -973,6 +975,66 @@ const HomeScreen = () => {
                   >
                     {shop.name}
                   </h3>
+
+                  {/* Status & Distance Tag Buttons (moved out of image overlay) */}
+                  <Flex align="center" gap={6} style={{ marginBottom: 10, flexWrap: 'wrap' }}>
+                    <button
+                      type="button"
+                      aria-label={shop.isOpen ? 'Open now' : 'Currently closed'}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 5,
+                        padding: '4px 10px',
+                        borderRadius: 9999,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        cursor: 'pointer',
+                        background: shop.isOpen ? '#ECFDF5' : '#FEF2F2',
+                        color: shop.isOpen ? '#047857' : '#B91C1C',
+                        border: `1px solid ${shop.isOpen ? '#A7F3D0' : '#FECACA'}`,
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = shop.isOpen ? '#D1FAE5' : '#FEE2E2'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = shop.isOpen ? '#ECFDF5' : '#FEF2F2'; }}
+                    >
+                      <span
+                        style={{
+                          width: 6,
+                          height: 6,
+                          borderRadius: '50%',
+                          display: 'inline-block',
+                          background: shop.isOpen ? '#10B981' : '#EF4444',
+                        }}
+                      />
+                      {shop.isOpen ? 'Open' : 'Closed'}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`${shop.distance} km away`}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        padding: '4px 10px',
+                        borderRadius: 9999,
+                        fontSize: 11,
+                        fontWeight: 600,
+                        lineHeight: 1,
+                        cursor: 'pointer',
+                        background: '#F1F5F9',
+                        color: '#475569',
+                        border: '1px solid #E2E8F0',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = '#E2E8F0'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = '#F1F5F9'; }}
+                    >
+                      <EnvironmentOutlined style={{ fontSize: 10 }} />
+                      {shop.distance} km away
+                    </button>
+                  </Flex>
 
                   {/* Description */}
                   <p

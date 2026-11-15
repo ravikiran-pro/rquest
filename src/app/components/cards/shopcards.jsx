@@ -307,7 +307,7 @@ const ShopCard = ({
       }}
       styles={{
         body: {
-          padding: screens.xs ? 14 : 16,
+          padding: screens.xs ? 14 : 18,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
@@ -315,11 +315,11 @@ const ShopCard = ({
       }}
     >
       {/* Top Banner / Avatar & Rating */}
-      <Flex gap={12} align="start" style={{ marginBottom: 10 }}>
+      <Flex gap={12} align="start" style={{ marginBottom: 12 }}>
         <div
           style={{
-            width: screens.xs ? 64 : 72,
-            height: screens.xs ? 64 : 72,
+            width: screens.xs ? 64 : 78,
+            height: screens.xs ? 64 : 78,
             borderRadius: 12,
             background: '#f1f5f9',
             overflow: 'hidden',
@@ -345,7 +345,8 @@ const ShopCard = ({
               margin: 0,
               fontWeight: 700,
               color: '#0f172a',
-              fontSize: screens.xs ? 15 : 16,
+              fontSize: screens.xs ? 15 : 16.5,
+              lineHeight: 1.3,
             }}
           >
             {shop_name}
@@ -375,7 +376,7 @@ const ShopCard = ({
                   padding: '0 6px',
                   fontWeight: 600,
                   margin: 0,
-                  maxWidth: 140,
+                  maxWidth: 240,
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
@@ -402,7 +403,7 @@ const ShopCard = ({
             gap={6}
             style={{
               marginTop: 4,
-              fontSize: 12,
+              fontSize: 12.5,
               color: colors.textMuted,
               whiteSpace: 'nowrap',
               overflow: 'hidden',
@@ -427,11 +428,11 @@ const ShopCard = ({
         type="secondary"
         ellipsis={{ rows: 2 }}
         style={{
-          fontSize: 12,
+          fontSize: 12.5,
           color: colors.textMuted,
           marginBottom: 12,
-          minHeight: screens.xs ? 32 : 36,
-          lineHeight: '18px',
+          minHeight: screens.xs ? 32 : 38,
+          lineHeight: '19px',
         }}
       >
         {address}

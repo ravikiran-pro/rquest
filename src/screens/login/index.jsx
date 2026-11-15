@@ -28,10 +28,12 @@ const LoginScreen = () => {
   // Flow states: 'phone' | 'otp'
   const [step, setStep] = useState('phone');
   const [loading, setLoading] = useState(false);
+  const [channelLoading, setChannelLoading] = useState(null); // 'sms' | 'whatsapp' | null
   const [phoneNumber, setPhoneNumber] = useState('9876543210');
   const [countryCode] = useState('+91');
-  const [otpDigits, setOtpDigits] = useState(['4', '9', '2', '1', '0', '0']);
-  const [resendCooldown, setResendCooldown] = useState(30);
+  const [otpDigits, setOtpDigits] = useState(['', '', '', '', '', '']);
+  const [activeChannel, setActiveChannel] = useState('sms');
+  const [resendCooldown, setResendCooldown] = useState(0);
   const [passwordMode, setPasswordMode] = useState(false);
   const [password, setPassword] = useState('');
 
@@ -48,6 +50,38 @@ const LoginScreen = () => {
     }
     return () => clearInterval(timer);
   }, [step, resendCooldown]);
+
+  // Focus and WebOTP listener when stepping into OTP
+  useEffect(() => {
+    if (step !== 'otp') return;
+
+    // Auto-focus first empty box
+    const firstEmpty = otpDigits.findIndex((d) => !d);
+    const targetIdx = firstEmpty === -1 ? 0 : firstEmpty;
+    otpInputRefs.current[targetIdx]?.focus();
+
+    // Native WebOTP API (auto-detect real SMS on Android / supported browsers)
+    if ('OTPCredential' in window && window.AbortController) {
+      const ac = new AbortController();
+      navigator.credentials
+        ?.get({
+          otp: { transport: ['sms'] },
+          signal: ac.signal,
+        })
+        .then((content) => {
+          if (content && content.code) {
+            const clean = content.code.replace(/\D/g, '').slice(0, 6);
+            if (clean) {
+              setOtpDigits(clean.split(''));
+              message.success('SMS OTP auto-detected from incoming message!');
+            }
+          }
+        })
+        .catch(() => {});
+
+      return () => ac.abort();
+    }
+  }, [step]);
 
   // Format Phone for display: +91 98765 43210
   const formattedDisplayPhone = () => {
@@ -79,9 +113,8 @@ const LoginScreen = () => {
     }
   };
 
-  // Step 1: Handle Phone submission -> Proceed to OTP Step
-  const handlePhoneSubmit = (e) => {
-    if (e && e.preventDefault) e.preventDefault();
+  // Step 1: Request OTP via chosen channel ('sms' or 'whatsapp')
+  const handleRequestOtp = async (channel = 'sms') => {
     const cleanPhone = phoneNumber.replace(/\D/g, '');
     if (!cleanPhone || cleanPhone.length < 10) {
       message.error('Please enter a valid 10-digit mobile number');
@@ -94,12 +127,57 @@ const LoginScreen = () => {
     }
 
     setLoading(true);
-    setTimeout(() => {
+    setChannelLoading(channel);
+
+    try {
+      const res = await netWorkCall(
+        apiConfig.otp_request || 'user/otp/request',
+        'POST',
+        JSON.stringify({
+          identifier: cleanPhone,
+          channel: channel,
+          purpose: 'login',
+        })
+      );
+
+      if (res && (res.success || res.devCode)) {
+        setActiveChannel(channel);
+        setStep('otp');
+        setResendCooldown(30);
+
+        // Autofill OTP if code is returned (dev mode or trial template extracted code)
+        if (res.devCode) {
+          const digits = String(res.devCode).trim().split('').slice(0, 6);
+          setOtpDigits(digits);
+          if (res.delivered) {
+            message.success(
+              `OTP sent to ${formattedDisplayPhone()} via ${channel.toUpperCase()} and autofilled!`
+            );
+          } else {
+            message.info(
+              `OTP (${res.devCode}) generated & autofilled!`
+            );
+          }
+        } else {
+          message.success(
+            `OTP sent to ${formattedDisplayPhone()} via ${channel.toUpperCase()}`
+          );
+        }
+      } else {
+        message.error(res?.message || 'Failed to send verification code. Please try again.');
+      }
+    } catch (err) {
+      console.error('OTP request error:', err);
+      message.error('Failed to connect to authentication server. Please try again.');
+    } finally {
       setLoading(false);
-      setStep('otp');
-      setResendCooldown(30);
-      message.success(`OTP sent to ${formattedDisplayPhone()}`);
-    }, 350);
+      setChannelLoading(null);
+    }
+  };
+
+  const handlePhoneSubmit = (e, channel = 'sms') => {
+    if (e && e.preventDefault) e.preventDefault();
+    handleRequestOtp(channel);
   };
 
   // Password Login Handler
@@ -110,9 +188,10 @@ const LoginScreen = () => {
     }
     setLoading(true);
     try {
+      const cleanPhone = phoneNumber.replace(/\D/g, '');
       const body = JSON.stringify({
-        identifier: phoneNumber,
-        mobile: phoneNumber,
+        identifier: cleanPhone || phoneNumber,
+        mobile: cleanPhone || phoneNumber,
         password: password,
       });
       const res = await netWorkCall(apiConfig.login, 'POST', body);
@@ -134,15 +213,16 @@ const LoginScreen = () => {
   const handleVerifyOtp = async () => {
     const code = otpDigits.join('').trim();
     if (code.length < 4) {
-      message.error('Please enter the verification code');
+      message.error('Please enter the 6-digit verification code');
       return;
     }
 
     setLoading(true);
     try {
+      const cleanPhone = phoneNumber.replace(/\D/g, '');
       const body = JSON.stringify({
-        identifier: phoneNumber,
-        mobile: phoneNumber,
+        identifier: cleanPhone || phoneNumber,
+        mobile: cleanPhone || phoneNumber,
         otp: code,
         is_otp: true,
       });
@@ -194,23 +274,22 @@ const LoginScreen = () => {
     }
   };
 
-  // Resend OTP
+  // Resend OTP via active channel
   const handleResendOtp = () => {
     if (resendCooldown > 0) return;
-    setResendCooldown(30);
-    message.success('New OTP sent to your phone!');
+    handleRequestOtp(activeChannel);
   };
 
-  // WhatsApp OTP
+  // WhatsApp OTP Request
   const handleWhatsAppOtp = () => {
-    message.success('OTP sent via WhatsApp to ' + formattedDisplayPhone());
+    handleRequestOtp('whatsapp');
   };
 
   // Social / One-Tap Handlers
   const handleSocialLogin = (provider) => {
     message.loading(`Connecting with ${provider}...`, 0.9).then(() => {
       setPhoneNumber('9876543210');
-      setStep('otp');
+      handleRequestOtp('sms');
       message.info(`Continuing with verified phone from ${provider}`);
     });
   };
@@ -256,12 +335,12 @@ const LoginScreen = () => {
 
               {/* Main Interactive Form Card */}
               <div className="rq-auth-box">
-                <form onSubmit={handlePhoneSubmit} className="rq-auth-form-stack">
+                <form onSubmit={(e) => handlePhoneSubmit(e, 'sms')} className="rq-auth-form-stack">
                   <div>
                     <div className="rq-auth-field-row">
                       <span className="rq-auth-label-main">Mobile Phone Number</span>
                       <span className="rq-auth-label-hint">
-                        {passwordMode ? 'Password login' : 'SMS verification'}
+                        {passwordMode ? 'Password login' : 'Instant OTP verification'}
                       </span>
                     </div>
 
@@ -298,15 +377,49 @@ const LoginScreen = () => {
                   )}
 
                   <div className="rq-auth-actions-block">
+                    {/* Primary Button: Continue with OTP (SMS) */}
                     <Button
                       type="primary"
                       htmlType="submit"
-                      loading={loading}
+                      loading={loading && channelLoading === 'sms'}
                       className="rq-auth-submit-btn"
                     >
                       <span>{passwordMode ? 'Sign In with Password' : 'Continue with OTP'}</span>
                       <ArrowRightOutlined />
                     </Button>
+
+                    {/* WhatsApp OTP Alternative on Step 1 */}
+                    {!passwordMode && (
+                      <Button
+                        type="default"
+                        htmlType="button"
+                        loading={loading && channelLoading === 'whatsapp'}
+                        className="rq-auth-whatsapp-btn"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          handleRequestOtp('whatsapp');
+                        }}
+                        style={{
+                          marginTop: 10,
+                          width: '100%',
+                          height: 44,
+                          borderRadius: 9999,
+                          background: '#F0FDF4',
+                          borderColor: '#86EFAC',
+                          color: '#15803D',
+                          fontWeight: 700,
+                          fontSize: 14,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <WhatsAppIcon />
+                        <span>Continue with WhatsApp</span>
+                      </Button>
+                    )}
 
                     <div className="rq-auth-mode-toggle">
                       <button
@@ -351,8 +464,8 @@ const LoginScreen = () => {
                STEP 2: TWO-FACTOR VERIFICATION / OTP
                ========================================================== */
             <div className="rq-auth-card-wrapper">
-              {/* Inline Step Back Link */}
-              <div className="rq-otp-inline-back-row">
+              {/* Step Back Link — matches "Back to Market" top placement */}
+              <div className="rq-auth-mobile-top-nav">
                 <button
                   type="button"
                   className="rq-otp-inline-back-btn"
@@ -374,7 +487,7 @@ const LoginScreen = () => {
                 </h2>
 
                 <div className="rq-auth-otp-target-row">
-                  <span>We sent a 6-digit code to </span>
+                  <span>We sent a 6-digit code via <strong>{activeChannel.toUpperCase()}</strong> to </span>
                   <strong>{formattedDisplayPhone()}</strong>
                   <Tooltip title="Edit phone number">
                     <button
@@ -427,26 +540,39 @@ const LoginScreen = () => {
                       className="rq-otp-resend-link"
                       onClick={handleResendOtp}
                     >
-                      Resend Code Now
+                      Resend {activeChannel.toUpperCase()} Code
                     </button>
                   )}
                 </div>
 
                 <div className="rq-otp-whatsapp-row">
-                  <button
-                    type="button"
-                    className="rq-otp-whatsapp-btn"
-                    onClick={handleWhatsAppOtp}
-                  >
-                    <WhatsAppIcon />
-                    <span>Get OTP on WhatsApp</span>
-                  </button>
+                  {activeChannel === 'whatsapp' ? (
+                    <button
+                      type="button"
+                      className="rq-otp-resend-link"
+                      onClick={() => handleRequestOtp('sms')}
+                      disabled={loading}
+                      style={{ fontSize: 13, color: '#0B2D6B', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      📲 Send OTP via SMS instead
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      className="rq-otp-whatsapp-btn"
+                      onClick={handleWhatsAppOtp}
+                      disabled={loading}
+                    >
+                      <WhatsAppIcon />
+                      <span>Get OTP on WhatsApp</span>
+                    </button>
+                  )}
                 </div>
 
                 {/* Verify & Continue Button */}
                 <Button
                   type="primary"
-                  loading={loading}
+                  loading={loading && !channelLoading}
                   onClick={handleVerifyOtp}
                   className="rq-auth-submit-btn"
                   style={{ marginTop: 18 }}

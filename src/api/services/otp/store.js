@@ -12,6 +12,21 @@ const OTP_RESEND_COOLDOWN_SECONDS =
   Number(process.env.OTP_RESEND_COOLDOWN_SECONDS) || 30;
 
 /**
+ * Normalise an identifier so phone numbers match regardless of prefix (+91, 0, spaces).
+ */
+const normalizeIdentifier = (raw) => {
+  const str = String(raw || '').trim();
+  if (/@/.test(str)) {
+    return str.toLowerCase();
+  }
+  const digits = str.replace(/\D/g, '');
+  if (digits.length >= 10) {
+    return digits.slice(-10);
+  }
+  return digits || str;
+};
+
+/**
  * Generate a zero-padded numeric code of OTP_LENGTH digits.
  * Uses crypto for unbiased randomness.
  */
@@ -27,11 +42,15 @@ const generateCode = () => {
  * Invalidates any still-valid prior codes for the same identifier+purpose.
  * Returns the plain code (to be handed to a channel adapter for delivery).
  */
-const createOtp = async ({ identifier, channel, purpose = 'login' }) => {
-  // Cooldown: block rapid re-requests.
+const createOtp = async ({ identifier: rawId, channel, purpose = 'login' }) => {
+  const identifier = normalizeIdentifier(rawId);
+
+  // Cooldown: block rapid re-requests on the SAME channel.
+  // Switching channels (e.g. SMS -> WhatsApp) is allowed immediately.
   const recent = await otp_codes.findOne({
     where: {
       identifier,
+      channel,
       purpose,
       consumed_at: null,
       createdAt: {
@@ -41,7 +60,7 @@ const createOtp = async ({ identifier, channel, purpose = 'login' }) => {
     order: [['createdAt', 'DESC']],
   });
   if (recent) {
-    const err = new Error('Please wait before requesting another code');
+    const err = new Error(`Please wait before requesting another code via ${channel.toUpperCase()}`);
     err.code = 'OTP_COOLDOWN';
     throw err;
   }
@@ -64,7 +83,23 @@ const createOtp = async ({ identifier, channel, purpose = 'login' }) => {
     expires_at,
   });
 
-  return { code, expires_at, ttlSeconds: OTP_TTL_SECONDS };
+  return { code, expires_at, ttlSeconds: OTP_TTL_SECONDS, normalizedIdentifier: identifier };
+};
+
+/**
+ * Update the stored hash for the active OTP if an upstream provider
+ * (like Twilio trial template) issued a specific code in the delivered message.
+ */
+const updateOtpCode = async ({ identifier: rawId, purpose = 'login', code }) => {
+  const identifier = normalizeIdentifier(rawId);
+  const code_hash = await generateHash(String(code).trim());
+  const record = await otp_codes.findOne({
+    where: { identifier, purpose, consumed_at: null },
+    order: [['createdAt', 'DESC']],
+  });
+  if (record) {
+    await record.update({ code_hash });
+  }
 };
 
 /**
@@ -72,7 +107,9 @@ const createOtp = async ({ identifier, channel, purpose = 'login' }) => {
  * Returns { valid: true } or { valid: false, reason }.
  * On success the code is consumed so it can't be reused.
  */
-const verifyOtp = async ({ identifier, code, purpose = 'login' }) => {
+const verifyOtp = async ({ identifier: rawId, code, purpose = 'login' }) => {
+  const identifier = normalizeIdentifier(rawId);
+
   const record = await otp_codes.findOne({
     where: { identifier, purpose, consumed_at: null },
     order: [['createdAt', 'DESC']],
@@ -114,8 +151,10 @@ const verifyOtp = async ({ identifier, code, purpose = 'login' }) => {
 
 module.exports = {
   createOtp,
+  updateOtpCode,
   verifyOtp,
   generateCode,
+  normalizeIdentifier,
   OTP_TTL_SECONDS,
   OTP_LENGTH,
 };

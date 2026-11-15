@@ -11,7 +11,7 @@
  *   { name, send({ to, code, ttlSeconds }), isConfigured() }
  *
  * Channel selection via env:
- *   OTP_DEFAULT_CHANNEL=email|sms|whatsapp|telegram   (default: email)
+ *   OTP_DEFAULT_CHANNEL=email|sms|whatsapp|telegram   (default: sms)
  *   OTP_DEV_MODE=true   -> also return the code in the API response + log it,
  *                          so you can test with no provider keys at all.
  */
@@ -20,10 +20,15 @@ const email = require('./channels/email');
 const sms = require('./channels/sms');
 const whatsapp = require('./channels/whatsapp');
 const telegram = require('./channels/telegram');
-const { createOtp, verifyOtp } = require('./store');
+const {
+  createOtp,
+  updateOtpCode,
+  verifyOtp,
+  normalizeIdentifier,
+} = require('./store');
 
 const CHANNELS = { email, sms, whatsapp, telegram };
-const DEFAULT_CHANNEL = (process.env.OTP_DEFAULT_CHANNEL || 'email').toLowerCase();
+const DEFAULT_CHANNEL = (process.env.OTP_DEFAULT_CHANNEL || 'sms').toLowerCase();
 const DEV_MODE =
   String(process.env.OTP_DEV_MODE || '').toLowerCase() === 'true' ||
   (process.env.NODE_ENV || 'development') !== 'production';
@@ -33,8 +38,6 @@ const looksLikeEmail = (v) => /@/.test(String(v || ''));
 /**
  * Decide which channel to use.
  * Priority: explicit `channel` arg -> email if identifier is an email -> env default.
- * Falls back to any configured channel if the chosen one has no credentials
- * (unless in DEV_MODE, where we never need credentials).
  */
 const resolveChannel = (identifier, requested) => {
   let name = (requested || '').toLowerCase();
@@ -51,7 +54,7 @@ const resolveChannel = (identifier, requested) => {
 
 /**
  * Request an OTP: generate, persist, and deliver.
- * @returns { channel, ttlSeconds, devCode? }
+ * @returns { channel, ttlSeconds, devCode?, delivered, deliveryError? }
  */
 const requestOtp = async ({ identifier, channel: requested, purpose = 'login' }) => {
   if (!identifier) {
@@ -62,13 +65,15 @@ const requestOtp = async ({ identifier, channel: requested, purpose = 'login' })
 
   const { name, channel } = resolveChannel(identifier, requested);
 
-  const { code, ttlSeconds } = await createOtp({
+  const { code: initialCode, ttlSeconds, normalizedIdentifier } = await createOtp({
     identifier: String(identifier).trim(),
     channel: name,
     purpose,
   });
 
-  // In dev mode we don't require any provider to be set up — we just surface
+  let code = initialCode;
+
+  // In dev mode we don't require any provider to be set up — we surface
   // the code so you can test the full flow with 0 cost / 0 config.
   if (DEV_MODE && !channel.isConfigured()) {
     console.log(
@@ -78,14 +83,29 @@ const requestOtp = async ({ identifier, channel: requested, purpose = 'login' })
   }
 
   try {
-    await channel.send({ to: String(identifier).trim(), code, ttlSeconds });
+    const sendResult = await channel.send({
+      to: String(identifier).trim(),
+      code,
+      ttlSeconds,
+    });
+
+    // If channel (e.g. Twilio trial template) issued a real rendered code, sync it to database
+    if (sendResult?.actualCode && sendResult.actualCode !== code) {
+      code = sendResult.actualCode;
+      await updateOtpCode({ identifier: normalizedIdentifier, purpose, code });
+    }
   } catch (sendErr) {
     if (DEV_MODE) {
-      // Delivery failed but we can still test: log the code and continue.
       console.warn(
         `[OTP][dev] delivery via ${name} failed (${sendErr.message}); code: ${code}`
       );
-      return { channel: name, ttlSeconds, devCode: code, delivered: false };
+      return {
+        channel: name,
+        ttlSeconds,
+        devCode: code,
+        delivered: false,
+        deliveryError: sendErr.message,
+      };
     }
     throw sendErr;
   }
@@ -115,4 +135,10 @@ const channelStatus = () =>
     Object.entries(CHANNELS).map(([n, c]) => [n, c.isConfigured()])
   );
 
-module.exports = { requestOtp, checkOtp, channelStatus, DEV_MODE };
+module.exports = {
+  requestOtp,
+  checkOtp,
+  channelStatus,
+  normalizeIdentifier,
+  DEV_MODE,
+};

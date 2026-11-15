@@ -13,16 +13,14 @@
  *                                    send a plain text message, which only works inside an
  *                                    open 24h session — fine for dev once the user messages you)
  *   WHATSAPP_TEMPLATE_LANG=en       (optional, default en_US)
- *
- * NOTE: For production (cold OTP to any number) you MUST use an approved
- * "authentication" category template. Set WHATSAPP_TEMPLATE to that template name.
  */
+
+const { normalizePhone } = require('./sms');
 
 const GRAPH_VERSION = process.env.WHATSAPP_GRAPH_VERSION || 'v21.0';
 
-const toE164 = (mobile) => {
-  const digits = String(mobile).replace(/\D/g, '');
-  return digits; // Graph API expects digits without '+'
+const toWhatsAppRecipient = (mobile) => {
+  return normalizePhone(mobile).digitsOnly;
 };
 
 const sendTemplate = async (to, code) => {
@@ -31,9 +29,11 @@ const sendTemplate = async (to, code) => {
   const template = process.env.WHATSAPP_TEMPLATE;
   const lang = process.env.WHATSAPP_TEMPLATE_LANG || 'en_US';
 
+  const recipient = toWhatsAppRecipient(to);
+
   const payload = {
     messaging_product: 'whatsapp',
-    to: toE164(to),
+    to: recipient,
     type: 'template',
     template: {
       name: template,
@@ -41,14 +41,14 @@ const sendTemplate = async (to, code) => {
       components: [
         {
           type: 'body',
-          parameters: [{ type: 'text', text: code }],
+          parameters: [{ type: 'text', text: String(code) }],
         },
         {
           // Authentication templates require the code copy button component.
           type: 'button',
           sub_type: 'url',
           index: '0',
-          parameters: [{ type: 'text', text: code }],
+          parameters: [{ type: 'text', text: String(code) }],
         },
       ],
     },
@@ -57,16 +57,18 @@ const sendTemplate = async (to, code) => {
   return postGraph(phoneId, token, payload);
 };
 
-const sendText = async (to, code, ttlSeconds) => {
+const sendText = async (to, code, ttlSeconds = 300) => {
   const token = process.env.WHATSAPP_TOKEN;
   const phoneId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-  const minutes = Math.round(ttlSeconds / 60);
+  const minutes = Math.max(1, Math.round(ttlSeconds / 60));
+  const recipient = toWhatsAppRecipient(to);
+
   const payload = {
     messaging_product: 'whatsapp',
-    to: toE164(to),
+    to: recipient,
     type: 'text',
     text: {
-      body: `Your Rquest verification code is ${code} (valid ${minutes} min). Do not share it with anyone.`,
+      body: `Your Rquest verification code is ${code} (valid for ${minutes} min). Do not share it with anyone.`,
     },
   };
   return postGraph(phoneId, token, payload);
@@ -84,18 +86,22 @@ const postGraph = async (phoneId, token, payload) => {
       body: JSON.stringify(payload),
     }
   );
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
-    const detail = await res.text();
-    throw new Error(`WhatsApp send failed (${res.status}): ${detail}`);
+    const errorMsg = data?.error?.message || `HTTP ${res.status}`;
+    throw new Error(`WhatsApp send failed (${res.status}): ${errorMsg}`);
   }
+  return { delivered: true, data };
 };
 
 const isConfigured = () =>
   !!(process.env.WHATSAPP_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID);
 
 const send = async ({ to, code, ttlSeconds }) => {
-  if (process.env.WHATSAPP_TEMPLATE) return sendTemplate(to, code);
+  if (process.env.WHATSAPP_TEMPLATE) {
+    return sendTemplate(to, code);
+  }
   return sendText(to, code, ttlSeconds);
 };
 
-module.exports = { name: 'whatsapp', send, isConfigured };
+module.exports = { name: 'whatsapp', send, isConfigured, toWhatsAppRecipient };

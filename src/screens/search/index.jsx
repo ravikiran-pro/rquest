@@ -455,8 +455,8 @@ const SearchScreen = () => {
   };
 
   return (
-    <div style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 24px 60px' }}>
-      <div style={{ maxWidth: 1240, margin: '0 auto' }}>
+    <div style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}>
+      <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
         {/* Navigation Breadcrumb & Page Header */}
         <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
           <Link
@@ -492,6 +492,7 @@ const SearchScreen = () => {
         >
           {/* Top Row: Search Input + Radius + Modals */}
           <div
+            className="rquest-search-pill"
             style={{
               display: 'flex',
               alignItems: 'center',
@@ -579,6 +580,7 @@ const SearchScreen = () => {
               <SearchOutlined style={{ color: '#9CA3AF', fontSize: 16, flexShrink: 0 }} />
               <input
                 type="text"
+                className="rquest-search-input"
                 value={searchText}
                 onChange={(e) => setSearchText(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleSearchSubmit()}
@@ -923,7 +925,7 @@ const SearchScreen = () => {
         {/* Results Grid with Sidebar */}
         <Row gutter={isMobile ? [0, 16] : [24, 24]}>
           {!isMobile && (
-            <Col md={7} lg={6}>
+            <Col md={8} lg={7} xl={6} xxl={5}>
               <FilterSidebar
                 filters={filters}
                 onFilterChange={setFilters}
@@ -935,7 +937,7 @@ const SearchScreen = () => {
             </Col>
           )}
 
-          <Col xs={24} md={17} lg={18}>
+          <Col xs={24} md={16} lg={17} xl={18} xxl={19}>
             {loading ? (
               <div style={{ padding: '60px 0', textAlign: 'center' }}>
                 <Spin size="large" />
@@ -981,15 +983,15 @@ const SearchScreen = () => {
                 onRowClick={(shop) => history.push(`/shop/${shop.id}`)}
               />
             ) : (
-              <Row gutter={[16, 16]}>
+              <Row gutter={[20, 20]}>
                 {searchMode === 'shops'
                   ? visibleItems.map((shop) => (
-                      <Col xs={24} sm={12} lg={8} key={shop.id}>
+                      <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={shop.id}>
                         <ShopCard shopDetails={shop} shop={shop} />
                       </Col>
                     ))
                   : visibleItems.map((item) => (
-                      <Col xs={24} sm={12} lg={8} key={item.id}>
+                      <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={item.id}>
                         <OfferingCard
                           item={item}
                           onAddToCart={(it) => {
