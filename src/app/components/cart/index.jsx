@@ -39,7 +39,7 @@ import { netWorkCall, apiConfig, getPreciseUserLocation, getLocationName } from 
 import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal, AddressOption, getFormattedAddress } from '../profile';
-import { AuthModal } from '../auth';
+import { setCartReturn, takeReopenCartFlag } from '../../utils/returnTo';
 import './cart.css';
 
 const { Text } = Typography;
@@ -86,7 +86,7 @@ SummaryRow.propTypes = {
 
 const CartDrawer = () => {
   const history = useHistory();
-  const { cart, isCartOpen, closeCart, updateQuantity, removeItem, clearCart } =
+  const { cart, isCartOpen, openCart, closeCart, updateQuantity, removeItem, clearCart } =
     useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
@@ -106,9 +106,6 @@ const CartDrawer = () => {
   const [showCustomQuery, setShowCustomQuery] = useState(false);
   const [customQueryText, setCustomQueryText] = useState('');
 
-  // Authentication modal state for guest checkout
-  const [isOnboardingModalOpen, setIsOnboardingModalOpen] = useState(false);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
 
   // Address state
   const [savedAddresses, setSavedAddresses] = useState([]);
@@ -145,6 +142,14 @@ const CartDrawer = () => {
       }
     }
   }, [isCartOpen, user_data?.user_id]);
+
+  // Back from the login page: reopen the cart so the user can place the order
+  useEffect(() => {
+    if (user_data?.user_id && takeReopenCartFlag()) {
+      openCart();
+      message.success('Signed in. Review your order and place it.');
+    }
+  }, [user_data?.user_id]);
 
   const handleSelectSavedAddress = (addr) => {
     setSelectedAddressId(addr.id);
@@ -183,9 +188,17 @@ const CartDrawer = () => {
     }
   };
 
+  // Guests sign in on the full login page, then return here with the cart open
+  const goToLogin = () => {
+    const here = `${history.location.pathname}${history.location.search || ''}`;
+    setCartReturn(here);
+    closeCart();
+    history.push('/login');
+  };
+
   const openAddAddress = () => {
     if (!user_data?.user_id) {
-      setIsOnboardingModalOpen(true);
+      goToLogin();
     } else {
       setIsAddAddressModalOpen(true);
     }
@@ -199,7 +212,7 @@ const CartDrawer = () => {
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
-      setIsOnboardingModalOpen(true);
+      goToLogin();
       return;
     }
 
@@ -266,7 +279,7 @@ const CartDrawer = () => {
 
     if (!user_data?.user_id) {
       message.info('Please sign in to chat directly with the store owner');
-      setIsOnboardingModalOpen(true);
+      goToLogin();
       return;
     }
 
@@ -354,9 +367,15 @@ const CartDrawer = () => {
         </Text>
         <span className="rq-cart-footer-amount">₹{finalTotal.toFixed(2)}</span>
       </div>
-      <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
-        Place order
-      </Button>
+      {user_data?.user_id ? (
+        <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
+          Place order
+        </Button>
+      ) : (
+        <Button type="primary" size="large" block onClick={goToLogin}>
+          Sign in to place order
+        </Button>
+      )}
       <Button
         type="text"
         block
@@ -756,15 +775,12 @@ const CartDrawer = () => {
             showIcon
             className="rq-cart-alert"
             message="Sign in to place this order"
-            description="Use your mobile OTP to save addresses and track orders."
+            description="Sign in with your mobile number. Your cart is saved and will be ready when you're back."
             action={
               <Button
                 size="small"
                 type="primary"
-                onClick={() => {
-                  setAuthMode('login');
-                  setIsOnboardingModalOpen(true);
-                }}
+                onClick={goToLogin}
               >
                 Sign in
               </Button>
@@ -807,16 +823,6 @@ const CartDrawer = () => {
       >
         {renderBody()}
       </Drawer>
-
-      <AuthModal
-        open={isOnboardingModalOpen}
-        onClose={() => setIsOnboardingModalOpen(false)}
-        initialMode={authMode}
-        onSuccess={(userData) => {
-          setPhone(userData.mobile || '');
-          fetchSavedAddresses();
-        }}
-      />
 
       {isAddAddressModalOpen && (
         <AddressModal

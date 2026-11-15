@@ -14,6 +14,7 @@ import { useGlobalStore, subscribeToPushNotifications } from '../../app/services
 import Routes from '../../app/routes/routes';
 import { apiConfig, SOCKET } from '../../app/utils';
 import { AppIcon } from '../../app/components/assets';
+import { takeReturnPath } from '../../app/utils/returnTo';
 import {
   WhatsAppIcon,
   AuthLeftShowcase,
@@ -103,8 +104,12 @@ const LoginScreen = () => {
       subscribeToPushNotifications(res.user_data).catch(() => {});
     }
 
+    // Came from a guarded action (e.g. cart checkout): go back to that page
+    const returnPath = takeReturnPath();
     const { isAdmin, isMerchant } = checkUserRole(res.user_data);
-    if (isAdmin) {
+    if (returnPath) {
+      history.push(returnPath);
+    } else if (isAdmin) {
       history.push(Routes.admin);
     } else if (isMerchant) {
       history.push(Routes.client);
