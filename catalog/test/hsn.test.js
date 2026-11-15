@@ -75,6 +75,24 @@ test('deriveDescription uses a majority word-prefix, tolerating one typo leaf', 
   assert.equal(deriveDescription(['A x', 'B y', 'C z']), null);
 });
 
+test('deriveDescription ignores case and hyphen-joined words (real 0401 data)', () => {
+  const leaves = [
+    'MILK AND CREAM-FAT CONTENT, BY WEIGHT, <= 1%',
+    'MILK AND CREAM-FAT CONTENT, BY WEIGHT >1% <= 6%',
+    'Milk and cream, not concentrated nor containing added sugar - Of a fat content',
+    'Milk and cream, not concentrated nor containing added sugar - Of a fat content, by',
+  ];
+  assert.equal(deriveDescription(leaves), 'MILK AND CREAM');
+  // Hyphenated words inside the kept prefix are preserved verbatim.
+  assert.equal(
+    deriveDescription([
+      'PURE-BRED BREEDING ANIMALS HORSES',
+      'PURE-BRED BREEDING ANIMALS ASSES',
+    ]),
+    'PURE-BRED BREEDING ANIMALS'
+  );
+});
+
 test('collapseByPrefix emits the shortest uniform prefix', () => {
   const leaves = new Map([
     ['04011010', '5'],

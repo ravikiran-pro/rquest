@@ -1,6 +1,6 @@
-{"attribution":"HSN/SAC data via hsn-code-package (github.com/karthi-21/HSN-Code-Package), ISC.","input_sha256":"f5989a623e33760b3965df36ed231dcbf89e283ab7a1d4423f074151ec8d1ebb","license":"ISC (package). HSN/SAC codes are statutory nomenclature (CBIC).","source":"hsn","source_version":"hsn-code-package@3.0.0+t1","title":"GST HSN/SAC codes + chapter-level GST rates (hsn-code-package, CBIC/WCO-derived)"}
-{"file":"hsn_codes.ndjson.gz","rows":20076,"sha256":"d6e9ebe34f81085f563cf5fac9cc0ce875c1fe3874d18d2ad8c0e3ab79a6fc93"}
+{"attribution":"HSN/SAC data via hsn-code-package (github.com/karthi-21/HSN-Code-Package), ISC.","input_sha256":"85e082cdc7a0efdf6b2061f96335affb5cb639e1e5cc132e03b7182b82b54411","license":"ISC (package). HSN/SAC codes are statutory nomenclature (CBIC).","source":"hsn","source_version":"hsn-code-package@3.0.0+t2","title":"GST HSN/SAC codes + chapter-level GST rates (hsn-code-package, CBIC/WCO-derived)"}
+{"file":"hsn_codes.ndjson.gz","rows":20077,"sha256":"931dc250382fe084fcb20110b177d2e1d23f67278485df205c4af7ca06545693"}
 {"file":"hsn_source_descriptions.ndjson.gz","rows":13032,"sha256":"4f14b54ba79432bd7d6b88debcf33542af1521c9f4ab2f96b985b2a9bac76b9f"}
-{"file":"hsn_rates.ndjson.gz","rows":90,"sha256":"5595140dffba5239aa094f79b9ce44ba81d7cd35605ec97bc87f69023d4d5969"}
+{"file":"hsn_rates.ndjson.gz","rows":98,"sha256":"1e45484df641e20637584fe4c231229b5f7c48ef7c73885700c198a7c23b7b66"}
 {"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
-{"file":"review.ndjson.gz","rows":102,"sha256":"406b4a36e1dccfb4e77a413b53a107b9cb0e416b71240d8d5722e807c14e777c"}
+{"file":"review.ndjson.gz","rows":231,"sha256":"619f8926aec8f45bdc9331581798137922c881357e7df7719783f3f3a986df36"}

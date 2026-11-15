@@ -1,0 +1,6 @@
+{"attribution":null,"input_sha256":"8d68f31c25a7785169de2ee411b6e0a9ecf00064af35df1a8b4f4fb429d39f90","license":"Internal","source":"curated-taxonomy","source_version":"seed+t1","title":"Curated taxonomy seeds (shop types, cross-scheme mappings, default HSN)"}
+{"file":"taxonomy_nodes.ndjson.gz","rows":69,"sha256":"00e68dbe903e98eaa9f2b891f211f65cc40b2a4c5de90c53790d4e5565e4ce9c"}
+{"file":"taxonomy_mappings.ndjson.gz","rows":62,"sha256":"ac7f0c908c25028c456b57a325196c168f238f21ab119293c708467558276b38"}
+{"file":"taxonomy_hsn_defaults.ndjson.gz","rows":49,"sha256":"2e2a362b4128e31bf16386c1b3665b38ac122132875f2cc85669738fcbb57bb2"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

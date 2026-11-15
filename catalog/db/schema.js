@@ -172,6 +172,65 @@ LANGUAGE sql STABLE AS $fn$
 $fn$;
 `,
   },
+  {
+    version: 2,
+    name: 'taxonomies: nodes, attributes, cross-mappings, default HSN per node',
+    sql: `
+-- One table for every classification scheme. id = '<scheme>:<external_id>' so ids never
+-- collide across schemes, and a node can only have a parent from its own scheme.
+CREATE TABLE catalog.taxonomy_nodes (
+  id          text       PRIMARY KEY,
+  scheme      text       NOT NULL CHECK (scheme IN ('shopify', 'ondc', 'shop_type', 'service')),
+  external_id text       NOT NULL,
+  parent_id   text       REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  name        text       NOT NULL CHECK (length(btrim(name)) > 0),
+  full_path   text       NOT NULL,
+  level       smallint   NOT NULL CHECK (level >= 0),
+  attributes  jsonb      NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(attributes) = 'array'),
+  extra       jsonb      NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(extra) = 'object'),
+  ${TRACKING},
+  UNIQUE (scheme, external_id),
+  CONSTRAINT taxonomy_id_format CHECK (id = scheme || ':' || external_id),
+  CONSTRAINT taxonomy_parent_same_scheme CHECK (parent_id IS NULL OR parent_id LIKE scheme || ':%'),
+  CONSTRAINT taxonomy_root_level CHECK ((parent_id IS NULL) = (level = 0))
+);
+CREATE INDEX taxonomy_nodes_parent_idx ON catalog.taxonomy_nodes (parent_id);
+CREATE INDEX taxonomy_nodes_name_trgm ON catalog.taxonomy_nodes USING gin (name gin_trgm_ops);
+
+CREATE TABLE catalog.taxonomy_attributes (
+  id          text PRIMARY KEY,
+  scheme      text NOT NULL,
+  handle      text NOT NULL,
+  name        text NOT NULL,
+  description text,
+  ${TRACKING},
+  UNIQUE (scheme, handle),
+  CONSTRAINT taxonomy_attribute_id_format CHECK (id = scheme || ':' || handle)
+);
+
+-- Curated links between schemes (e.g. ONDC domain ↔ Shopify vertical, shop type → domain).
+CREATE TABLE catalog.taxonomy_mappings (
+  from_id  text NOT NULL REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  to_id    text NOT NULL REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  relation text NOT NULL CHECK (relation IN ('exact', 'broader', 'narrower', 'related')),
+  source   text NOT NULL,
+  ${TRACKING},
+  PRIMARY KEY (from_id, to_id),
+  CHECK (from_id <> to_id)
+);
+
+-- Suggested HSN/SAC for products in a category. One default per node; 'broad' means the
+-- code is a chapter/heading that must be refined per product.
+CREATE TABLE catalog.taxonomy_hsn_defaults (
+  node_id    text       PRIMARY KEY REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  hsn_code   varchar(8) NOT NULL REFERENCES catalog.hsn_codes(code) DEFERRABLE INITIALLY DEFERRED,
+  confidence text       NOT NULL CHECK (confidence IN ('exact', 'broad')),
+  source     text       NOT NULL,
+  note       text,
+  ${TRACKING}
+);
+`,
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

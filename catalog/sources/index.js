@@ -4,6 +4,9 @@
 const SOURCES = {
   hsn: () => require('./hsn'),
   'hsn-overrides': () => require('./hsn-overrides'),
+  'shopify-taxonomy': () => require('./shopify-taxonomy'),
+  'ondc-taxonomy': () => require('./ondc-taxonomy'),
+  'curated-taxonomy': () => require('./curated-taxonomy'),
 };
 
 function getSource(name) {

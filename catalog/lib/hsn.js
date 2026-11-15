@@ -58,35 +58,55 @@ function cleanDescription(raw) {
   return out.length ? out : null;
 }
 
+/** Words for prefix comparison: case/punctuation-insensitive, hyphens split words. */
+function comparableTokens(text) {
+  const out = [];
+  const re = /[^\s\-–—]+/g;
+  let m;
+  while ((m = re.exec(text))) {
+    const norm = m[0].toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (norm) out.push({ norm, end: m.index + m[0].length });
+  }
+  return out;
+}
+
 /**
  * Derive a parent description from its leaf descriptions. Tariff-item text in these
  * sources starts with the heading text ("LIVE HORSES, ... HINNIES PURE-BRED ... HORSES"),
  * so the longest word-prefix shared by ≥60% of leaves is a good heading label. A strict
  * common prefix would break on typos in a single leaf, hence the majority vote.
+ * Words are compared ignoring case/punctuation ("MILK AND CREAM-FAT" ~ "Milk and cream,"),
+ * but the label is cut verbatim from the first matching leaf.
  * Returns null when nothing meaningful (< 2 words) is shared.
  */
 function deriveDescription(
   leafDescriptions,
   { quorum = 0.6, maxWords = 30 } = {}
 ) {
-  const lists = leafDescriptions.filter(Boolean).map((d) => d.split(' '));
-  if (!lists.length) return null;
-  const needed = Math.max(1, Math.ceil(lists.length * quorum));
-  let best = null;
-  const counts = new Map();
-  for (const words of lists) {
-    for (let k = 1; k <= Math.min(words.length, maxWords); k += 1) {
-      const prefix = words.slice(0, k).join(' ');
-      counts.set(prefix, (counts.get(prefix) || 0) + 1);
+  const leaves = leafDescriptions
+    .filter(Boolean)
+    .map((text) => ({ text, tokens: comparableTokens(text) }));
+  if (!leaves.length) return null;
+  const needed = Math.max(1, Math.ceil(leaves.length * quorum));
+  const counts = new Map(); // normalised prefix -> { n, words, leaf }
+  for (const leaf of leaves) {
+    let key = '';
+    for (let k = 0; k < Math.min(leaf.tokens.length, maxWords); k += 1) {
+      key += `${leaf.tokens[k].norm} `;
+      const entry = counts.get(key);
+      if (entry) entry.n += 1;
+      else
+        counts.set(key, { n: 1, words: k + 1, leaf, end: leaf.tokens[k].end });
     }
   }
-  for (const [prefix, n] of counts) {
-    if (n >= needed && (!best || prefix.length > best.length)) best = prefix;
+  let best = null;
+  for (const entry of counts.values()) {
+    if (entry.n >= needed && (!best || entry.words > best.words)) best = entry;
   }
   if (!best) return null;
   // With a single leaf (common for 6-digit subheadings) this is that leaf's full text —
   // an acceptable label, and the row is marked description_basis = 'derived'.
-  let words = best.split(' ');
+  let words = best.leaf.text.slice(0, best.end).split(' ');
   while (
     words.length &&
     TRAILING_FILLER.has(

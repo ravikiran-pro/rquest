@@ -73,19 +73,57 @@ Every run is recorded in `catalog.import_runs` with its stats.
 | Defect in the package | Handling |
 |---|---|
 | 877 codes lost their leading zero | zero-padded |
-| Only 8-digit rows | chapter titles from `seeds/hsn_chapters.csv`; headings/subheadings derived from their items' shared wording (`description_basis = 'derived'`) |
+| Only 8-digit rows | chapter titles from `seeds/hsn_chapters.csv`; headings/subheadings derived bottom-up from their direct children's shared wording, one vote per child (`description_basis = 'derived'`) |
 | 68 codes with description `-` (mostly alcoholic beverages, outside GST) | kept as `placeholder`, their rate ignored, review item `hsn_description_missing` |
-| One guessed rate per chapter, including abolished 12%/28% | collapsed to 90 unverified chapter-level rows; 34 groups (1,473 codes) at 12%/28% go to review as `rate_invalid_slab` — **not loaded** |
+| One guessed rate per chapter, including abolished 12%/28% | collapsed to 98 unverified chapter/heading rows; 34 groups (1,473 codes) at 12%/28% go to review as `rate_invalid_slab` — **not loaded** |
+| Heading 0407 (eggs in shell) missing | added from `seeds/hsn_supplement.csv`; gets no inherited rate |
 
 **The package rates are suggestions, not tax advice.** They are per chapter (e.g. chapter 04
 is 0%, but butter/ghee/cheese are not). Put verified rates in `seeds/hsn_rate_overrides.csv`.
 
-## Sources
+## Sources (run in this order)
 
-| Source | Data | License | Status |
+| Source | Data | License | Pinned to |
 |---|---|---|---|
-| `hsn` | 13,100 HSN/SAC codes + chapter rates | ISC (hsn-code-package) | ✅ |
-| `hsn-overrides` | verified GST rates (`seeds/`) | internal | ✅ (empty until filled) |
+| `hsn` | 13,101 HSN/SAC codes → 20,077 with built parents; chapter/heading rate suggestions | ISC (hsn-code-package) | npm `3.0.0` + SRI integrity |
+| `hsn-overrides` | verified GST rates — `seeds/hsn_rate_overrides.csv` | internal | file hash |
+| `shopify-taxonomy` | 14,188 product categories + 8,272 attributes (418 excluded) | MIT | commit `2ea7266` (tag v2026-10) + sha256 |
+| `ondc-taxonomy` | 14 ONDC retail domains + 96 Indian grocery categories | ONDC spec (no LICENSE file; codes used as identifiers) | commit `aa74e5d` (release-2.0.2) + sha256 |
+| `curated-taxonomy` | 57 Rquest shop types in 12 groups, 62 cross-scheme mappings, 49 default HSN per category | internal | file hash |
+
+`curated-taxonomy` refuses to load if a mapping or default points to a node or HSN code that is
+not active — run it last.
+
+### Seeds you maintain (all CSV, reviewed via git)
+
+| File | Purpose |
+|---|---|
+| `hsn_chapters.csv`, `hsn_headings.csv` | official titles for chapters/headings the source cannot label (`hsn_description_fallback` review items list what is missing) |
+| `hsn_supplement.csv` | tariff codes missing from the package (e.g. `0407` eggs in shell) |
+| `hsn_rate_overrides.csv` | verified GST rates — they always win |
+| `taxonomy_exclusions.csv` | subtrees kept out of the catalog, with the legal reason (cannabis, e-cigarettes, alcohol, hunting, mature) |
+| `shop_types.csv` | Rquest shop types → OSM tags, ONDC domains, app form template, listing type |
+| `taxonomy_mappings.csv` | ONDC ↔ Shopify links |
+| `taxonomy_hsn_defaults.csv` | suggested HSN per category (`exact` / `broad`) |
+
+**Not yet loaded:** the FSSAI Food Category System (its official PDF host is not reachable from
+the pipeline's network and the codes could not be verified).
+
+## Working the review queue
+
+```sql
+SELECT kind, count(*) FROM catalog.review_queue WHERE status = 'open' GROUP BY 1;
+```
+
+| Kind | Fix |
+|---|---|
+| `rate_invalid_slab` | add the correct rate(s) to `hsn_rate_overrides.csv` |
+| `hsn_description_missing` / `hsn_description_fallback` | add the title to `hsn_headings.csv` (or supplement) |
+| `hsn_supplement_redundant` | delete the line from `hsn_supplement.csv` |
+| `taxonomy_duplicate_sibling_name` | rename or map the nodes |
+
+Items close automatically on the next run once the cause is gone; `status = 'dismissed'` marks a
+deliberate "won't fix".
 
 ## Adding a source
 

@@ -40,7 +40,7 @@ const meta = {
     'HSN/SAC data via hsn-code-package (github.com/karthi-21/HSN-Code-Package), ISC.',
   package: 'hsn-code-package',
   version: '3.0.0',
-  transformVersion: 1,
+  transformVersion: 2,
   maxRejectRatio: 0.01,
 };
 
@@ -128,16 +128,21 @@ async function extract(ctx) {
     JSON.parse(fs.readFileSync(path.join(extracted, f), 'utf8'));
 
   const chaptersFile = path.join(ctx.config.seedDir, 'hsn_chapters.csv');
-  const tarballSha = await sha256File(tgz);
-  const chaptersSha = await sha256File(chaptersFile);
+  const headingsFile = path.join(ctx.config.seedDir, 'hsn_headings.csv');
+  const supplementFile = path.join(ctx.config.seedDir, 'hsn_supplement.csv');
+  const shas = await Promise.all(
+    [tgz, chaptersFile, headingsFile, supplementFile].map(sha256File)
+  );
   return {
     version: `${meta.package}@${meta.version}`,
-    inputSha256: sha256(`${tarballSha}:${chaptersSha}`),
+    inputSha256: sha256(shas.join(':')),
     hsn: read('hsn_codes.json'),
     sac: read('sac_codes.json'),
     rates: read('gst_rates.json'),
     packageMeta: read('metadata.json'),
     chapters: readCsv(chaptersFile),
+    headings: readCsv(headingsFile),
+    supplement: readCsv(supplementFile),
   };
 }
 
@@ -190,16 +195,61 @@ function transform(input) {
   input.hsn.forEach((r) => take(r, 'HSN'));
   input.sac.forEach((r) => take(r, 'SAC'));
 
+  // 1b. Curated supplement: real tariff codes the package lacks.
+  let supplemented = 0;
+  for (const rec of input.supplement) {
+    const { code, error } = normalizeHsnDetailed(rec.code);
+    const description = cleanDescription(rec.description);
+    if (!code || !description) {
+      reject(
+        'hsn_codes',
+        rec.code,
+        `invalid_supplement:${error || 'empty_description'}`,
+        rec
+      );
+      continue;
+    }
+    if (sourceCodes.has(code)) {
+      review.push({
+        kind: 'hsn_supplement_redundant',
+        entity: 'hsn_code',
+        entity_key: code,
+        payload: {
+          source: SOURCE,
+          action:
+            'The package now has this code: delete it from seeds/hsn_supplement.csv.',
+        },
+      });
+      continue;
+    }
+    sourceCodes.set(code, {
+      type: hsnType(code),
+      description,
+      raw: null,
+      placeholder: false,
+      curated: true,
+    });
+    supplemented += 1;
+  }
+
   // 2. Complete the hierarchy: every code needs its 2/4/6-digit ancestors.
-  const chapterTitles = new Map(
-    input.chapters.map((c) => [c.code.padStart(2, '0'), c.title])
-  );
-  const descendants = new Map(); // missing ancestor prefix -> descendant source descriptions
-  for (const [code, rec] of sourceCodes) {
-    for (let p = parentOf(code); p; p = parentOf(p)) {
-      if (sourceCodes.has(p)) continue;
-      if (!descendants.has(p)) descendants.set(p, []);
-      if (!rec.placeholder) descendants.get(p).push(rec.description);
+  // Curated titles (chapters + selected headings) beat derived labels at any level.
+  const curatedTitles = new Map();
+  for (const c of [...input.chapters, ...input.headings]) {
+    const code = normalizeHsnDetailed(c.code).code;
+    const title = cleanDescription(c.title);
+    if (!code || !title)
+      reject('hsn_codes', c.code, 'invalid_curated_title', c);
+    else curatedTitles.set(code, title);
+  }
+  // Missing ancestors and the direct children of every code.
+  const missing = new Set();
+  const children = new Map();
+  for (const code of sourceCodes.keys()) {
+    for (let c = code, p = parentOf(c); p; c = p, p = parentOf(p)) {
+      if (!children.has(p)) children.set(p, new Set());
+      children.get(p).add(c);
+      if (!sourceCodes.has(p)) missing.add(p);
     }
   }
   const codeRows = [];
@@ -211,29 +261,60 @@ function transform(input) {
     fallback: 0,
   };
   for (const [code, rec] of sourceCodes) {
+    const basis = rec.curated
+      ? 'curated'
+      : rec.placeholder
+      ? 'placeholder'
+      : 'source';
     codeRows.push({
       code,
       type: rec.type,
       parent_code: parentOf(code),
       description: rec.description,
       description_raw: rec.raw,
-      description_basis: rec.placeholder ? 'placeholder' : 'source',
+      description_basis: basis,
     });
-    basisCount[rec.placeholder ? 'placeholder' : 'source'] += 1;
+    basisCount[basis] += 1;
   }
-  for (const [code, leafDescriptions] of descendants) {
-    let description = code.length === 2 ? chapterTitles.get(code) : null;
+  // Bottom-up (6 → 4 → 2 digits), one vote per DIRECT child: a heading's label comes from
+  // its subheadings, so one large subheading cannot impose its own wording on the heading.
+  const labelFor = new Map(); // code -> usable description (null for placeholders/fallbacks)
+  for (const [code, rec] of sourceCodes)
+    labelFor.set(code, rec.placeholder ? null : rec.description);
+  for (const code of [...missing].sort(
+    (a, b) => b.length - a.length || (a < b ? -1 : 1)
+  )) {
+    let description = curatedTitles.get(code) || null;
     let basis = 'curated';
     if (!description) {
       basis = 'derived';
-      description = deriveDescription(leafDescriptions);
+      const childLabels = [...children.get(code)]
+        .sort()
+        .map((c) => labelFor.get(c));
+      description = deriveDescription(childLabels);
       if (!description) {
         basisCount.fallback += 1;
         description = `${
           { 2: 'Chapter', 4: 'Heading', 6: 'Subheading' }[code.length]
         } ${code}`;
+        review.push({
+          kind: 'hsn_description_fallback',
+          entity: 'hsn_code',
+          entity_key: code,
+          payload: {
+            source: SOURCE,
+            action: 'Add the official title to seeds/hsn_headings.csv.',
+          },
+        });
       }
     }
+    labelFor.set(
+      code,
+      basis === 'derived' &&
+        /^(Chapter|Heading|Subheading) \d+$/.test(description)
+        ? null
+        : description
+    );
     basisCount[basis] += 1;
     codeRows.push({
       code,
@@ -246,7 +327,7 @@ function transform(input) {
   }
 
   const descriptionRows = [...sourceCodes]
-    .filter(([, rec]) => !rec.placeholder)
+    .filter(([, rec]) => !rec.placeholder && !rec.curated)
     .map(([code, rec]) => ({
       code,
       source: SOURCE,
@@ -301,7 +382,7 @@ function transform(input) {
   const leafKeys = new Map();
   for (const [code, rec] of sourceCodes) {
     if (rec.type !== 'HSN') continue;
-    const r = rec.placeholder ? null : rateByCode.get(code);
+    const r = rec.placeholder || rec.curated ? null : rateByCode.get(code);
     if (!r) leafKeys.set(code, 'NONE');
     else {
       const valid = GST2_SLABS.has(r.igst);
@@ -361,6 +442,7 @@ function transform(input) {
       package_reported_version: input.packageMeta.version,
       source_codes: sourceCodes.size,
       zero_padded_codes: zeroPadded,
+      supplemented_codes: supplemented,
       description_basis: basisCount,
       rate_rows_after_collapse: rateRows.length,
       rate_groups_sent_to_review: review.filter(

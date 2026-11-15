@@ -1,0 +1,56 @@
+# Suggested HSN code for products in a category. A starting point for classifying a
+# product, never a substitute for classifying it: products override this.
+# confidence: exact = the heading fits essentially every product in the category
+#             broad = a chapter/heading that must be narrowed per product
+# Categories that mix unrelated headings (e.g. Salt & Sugar, Chocolates & Candies) are
+# deliberately absent.
+node_id,hsn_code,confidence,note
+ondc:RET10-1000,9619,exact,"Diapers, napkins and similar"
+ondc:RET10-1001,1901,broad,Food preparations for infants (some formula is 0402)
+ondc:RET10-1003,1905,exact,Bread and bakers' wares
+ondc:RET10-1004,1905,exact,
+ondc:RET10-1005,1905,exact,
+ondc:RET10-1006,04,broad,Dairy produce
+ondc:RET10-1007,2105,exact,Ice cream and other edible ice
+ondc:RET10-1009,3306,exact,Preparations for oral or dental hygiene
+ondc:RET10-100A,3307,broad,Deodorants; perfumes are 3303
+ondc:RET10-100B,3305,exact,Preparations for use on the hair
+ondc:RET10-100D,3401,broad,Soap; liquid hand wash may be 3402
+ondc:RET10-1010,9619,exact,Sanitary towels and tampons
+ondc:RET10-1014,3304,exact,Beauty and skin-care preparations
+ondc:RET10-1015,3304,exact,Make-up preparations
+ondc:RET10-1016,2202,exact,Waters with added sugar or flavour (aerated drinks)
+ondc:RET10-1017,2201,exact,Waters not sweetened or flavoured
+ondc:RET10-1018,2009,exact,Fruit and vegetable juices
+ondc:RET10-101E,0901,broad,Coffee; instant coffee is 2101
+ondc:RET10-101F,0902,exact,Tea
+ondc:RET10-1020,3402,exact,Washing and cleaning preparations
+ondc:RET10-1022,3923,exact,Plastic sacks and bags
+ondc:RET10-1025,3808,exact,"Insecticides, repellents and disinfectants"
+ondc:RET10-1026,4818,exact,"Toilet paper, tissues and napkins"
+ondc:RET10-1029,3307,exact,Room deodorisers
+ondc:RET10-102A,0407,exact,Birds' eggs in shell
+ondc:RET10-102B,02,broad,Meat and edible meat offal
+ondc:RET10-102D,03,broad,"Fish, fresh/chilled/frozen"
+ondc:RET10-1031,1006,exact,Rice
+ondc:RET10-1032,0713,exact,Dried leguminous vegetables (dals and pulses)
+ondc:RET10-1033,07,broad,Edible vegetables
+ondc:RET10-1034,08,broad,Edible fruit
+ondc:RET10-1036,15,broad,Fats and oils
+ondc:RET10-1037,04,broad,Dairy produce; cheese is 0406
+ondc:RET10-1038,08,broad,Nuts and dried fruit
+ondc:RET10-1039,1902,broad,Pasta and noodles; soups are 2104
+ondc:RET10-103A,1904,exact,Prepared cereals (flakes etc.)
+ondc:RET10-103B,2103,broad,Sauces and condiments; jams are 2007
+ondc:RET10-1040,09,broad,Spices; mixed masalas may be 0910 or 2103
+ondc:RET10-1042,15,broad,Fats and oils
+ondc:RET10-1043,0405,exact,Butter and other fats derived from milk (ghee)
+ondc:RET10-1045,1905,exact,Biscuits
+ondc:RET10-1046,2106,broad,Namkeen and other food preparations n.e.s.
+ondc:RET10-1048,2001,broad,Pickles; chutneys may be 2103
+ondc:RET10-1049,2106,broad,Sweetmeats (mithai)
+ondc:RET10-1053,9608,exact,"Pens, markers and similar"
+ondc:RET10-1050,3213,broad,Artists' and students' colours
+ondc:RET10-104F,8470,exact,Calculators
+ondc:RET10-1054,4909,broad,Greeting cards; posters are 4911
+ondc:RET10-1055,4202,broad,School bags; other supplies vary
