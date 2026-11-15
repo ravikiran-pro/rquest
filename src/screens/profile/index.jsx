@@ -1053,7 +1053,7 @@ const ProfileScreen = () => {
         width={screens.xs ? '96vw' : 580}
         centered
         className="onboarding-sheet-modal"
-        destroyOnClose
+        destroyOnHidden
       >
         <div className="onboarding-sheet-header">
           <div

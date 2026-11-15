@@ -985,7 +985,7 @@ const SearchScreen = () => {
                 {searchMode === 'shops'
                   ? visibleItems.map((shop) => (
                       <Col xs={24} sm={12} lg={8} key={shop.id}>
-                        <ShopCard shop={shop} />
+                        <ShopCard shopDetails={shop} shop={shop} />
                       </Col>
                     ))
                   : visibleItems.map((item) => (
@@ -1036,7 +1036,7 @@ const SearchScreen = () => {
         onCancel={() => setIsModalVisible(false)}
         footer={null}
         width={720}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ height: 420, width: '100%', marginTop: 12 }}>
           <LeafletComponent
@@ -1063,6 +1063,7 @@ const SearchScreen = () => {
 
       {/* 2. Voice Search Modal */}
       <VoiceSearchModal
+        open={isVoiceModalOpen}
         visible={isVoiceModalOpen}
         onClose={() => setIsVoiceModalOpen(false)}
         onSearch={(transcript) => {
@@ -1073,8 +1074,13 @@ const SearchScreen = () => {
 
       {/* 3. Image Search Modal */}
       <ImageSearchModal
+        open={isImageModalOpen}
         visible={isImageModalOpen}
         onClose={() => setIsImageModalOpen(false)}
+        onSearch={(term) => {
+          setSearchText(term);
+          setIsImageModalOpen(false);
+        }}
         onSelect={(term) => {
           setSearchText(term);
           setIsImageModalOpen(false);
@@ -1083,13 +1089,16 @@ const SearchScreen = () => {
 
       {/* 4. AI Smart Search Modal */}
       <AiSearchModal
+        open={isAiModalOpen}
         visible={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onAiApply={handleAiApply}
         onApply={handleAiApply}
       />
 
       {/* 5. Address Manager Modal */}
       <AddressModal
+        open={isAddAddressModalOpen}
         visible={isAddAddressModalOpen}
         onClose={() => setIsAddAddressModalOpen(false)}
         onSuccess={handleNewAddressCreated}

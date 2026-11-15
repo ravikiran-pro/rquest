@@ -333,14 +333,16 @@ export const AuthModal = ({
       open={open}
       onCancel={onClose}
       footer={null}
-      destroyOnClose
+      destroyOnHidden
       centered
       width={460}
       closeIcon={<CloseOutlined style={{ fontSize: 16, color: '#64748B' }} />}
-      bodyStyle={{
-        padding: '24px 24px 28px',
-        background: '#F8F4EF',
-        borderRadius: 20,
+      styles={{
+        body: {
+          padding: '24px 24px 28px',
+          background: '#F8F4EF',
+          borderRadius: 20,
+        },
       }}
       style={{ borderRadius: 20, overflow: 'hidden' }}
     >

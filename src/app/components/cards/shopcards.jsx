@@ -18,6 +18,7 @@ const { Text, Title, Paragraph } = Typography;
 
 const ShopCard = ({
   shopDetails,
+  shop,
   isChat = false,
   isChatDisabled = false,
   isEdit = false,
@@ -28,11 +29,12 @@ const ShopCard = ({
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
+  const currentShop = shopDetails || shop || {};
   const {
-    shop_name,
-    address,
-    area,
-    rating,
+    shop_name = '',
+    address = '',
+    area = '',
+    rating = 0,
     shopSubCategory,
     shopCategory,
     shop_type,
@@ -41,7 +43,7 @@ const ShopCard = ({
     distance,
     id,
     owner_id,
-  } = shopDetails;
+  } = currentShop;
 
   const { handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
@@ -543,25 +545,28 @@ const ShopCard = ({
   );
 };
 
+const shopPropShape = PropTypes.shape({
+  id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  shop_name: PropTypes.string,
+  address: PropTypes.string,
+  area: PropTypes.string,
+  rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  shop_type: PropTypes.string,
+  directions: PropTypes.string,
+  img_url: PropTypes.string,
+  distance: PropTypes.number,
+  owner_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  shopCategory: PropTypes.shape({
+    name: PropTypes.string,
+  }),
+  shopSubCategory: PropTypes.shape({
+    name: PropTypes.string,
+  }),
+});
+
 ShopCard.propTypes = {
-  shopDetails: PropTypes.shape({
-    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    shop_name: PropTypes.string,
-    address: PropTypes.string,
-    area: PropTypes.string,
-    rating: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    shop_type: PropTypes.string,
-    directions: PropTypes.string,
-    img_url: PropTypes.string,
-    distance: PropTypes.number,
-    owner_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-    shopCategory: PropTypes.shape({
-      name: PropTypes.string,
-    }),
-    shopSubCategory: PropTypes.shape({
-      name: PropTypes.string,
-    }),
-  }).isRequired,
+  shopDetails: shopPropShape,
+  shop: shopPropShape,
   isChat: PropTypes.bool,
   isChatDisabled: PropTypes.bool,
   isEdit: PropTypes.bool,

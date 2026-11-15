@@ -510,7 +510,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
       ]}
       width={840}
       style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
-      destroyOnClose
+      destroyOnHidden
     >
       {/* Category Type Context Banner */}
       <div

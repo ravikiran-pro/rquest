@@ -14,7 +14,8 @@ const AI_PROMPT_PRESETS = [
   'Authentic biryani food delivery under ₹250',
 ];
 
-const AiSearchModal = ({ open, onClose, onAiApply }) => {
+const AiSearchModal = ({ open, visible, onClose, onAiApply, onApply }) => {
+  const isOpen = open !== undefined ? Boolean(open) : Boolean(visible);
   const [prompt, setPrompt] = useState('');
 
   const parseAiQuery = (text) => {
@@ -76,13 +77,18 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
   const handleApply = () => {
     if (!prompt.trim()) return;
     const result = parseAiQuery(prompt);
-    onAiApply(result);
-    onClose();
+    const applyFn = onAiApply || onApply;
+    if (typeof applyFn === 'function') {
+      applyFn(result);
+    }
+    if (typeof onClose === 'function') {
+      onClose();
+    }
   };
 
   return (
     <Modal
-      open={open}
+      open={isOpen}
       onCancel={onClose}
       footer={null}
       centered
@@ -192,9 +198,11 @@ const AiSearchModal = ({ open, onClose, onAiApply }) => {
 };
 
 AiSearchModal.propTypes = {
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
+  visible: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
-  onAiApply: PropTypes.func.isRequired,
+  onAiApply: PropTypes.func,
+  onApply: PropTypes.func,
 };
 
 export default AiSearchModal;

@@ -343,7 +343,7 @@ const AddProductModal = ({
       footer={null}
       width={width}
       style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
-      destroyOnClose
+      destroyOnHidden
     >
       <Form
         form={form}

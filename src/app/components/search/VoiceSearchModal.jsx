@@ -6,7 +6,8 @@ import { colors, radii } from '../../styles/theme';
 
 const { Title, Text } = Typography;
 
-const VoiceSearchModal = ({ open, onClose, onSearch }) => {
+const VoiceSearchModal = ({ open, visible, onClose, onSearch }) => {
+  const isOpen = open !== undefined ? Boolean(open) : Boolean(visible);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [isSupported, setIsSupported] = useState(true);
@@ -61,18 +62,18 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
 
   // Auto-start when modal opens
   useEffect(() => {
-    if (open && isSupported && recognitionRef.current) {
+    if (isOpen && isSupported && recognitionRef.current) {
       setTranscript('');
       try {
         recognitionRef.current.start();
       } catch (err) {
         // already started
       }
-    } else if (!open && recognitionRef.current) {
+    } else if (!isOpen && recognitionRef.current) {
       recognitionRef.current.abort();
       setIsListening(false);
     }
-  }, [open, isSupported]);
+  }, [isOpen, isSupported]);
 
   const toggleListening = () => {
     if (!recognitionRef.current) return;
@@ -90,14 +91,18 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
 
   const handleApply = () => {
     if (transcript.trim()) {
-      onSearch(transcript.trim());
-      onClose();
+      if (typeof onSearch === 'function') {
+        onSearch(transcript.trim());
+      }
+      if (typeof onClose === 'function') {
+        onClose();
+      }
     }
   };
 
   return (
     <Modal
-      open={open}
+      open={isOpen}
       onCancel={onClose}
       footer={null}
       centered
@@ -192,9 +197,10 @@ const VoiceSearchModal = ({ open, onClose, onSearch }) => {
 };
 
 VoiceSearchModal.propTypes = {
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
+  visible: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
-  onSearch: PropTypes.func.isRequired,
+  onSearch: PropTypes.func,
 };
 
 export default VoiceSearchModal;

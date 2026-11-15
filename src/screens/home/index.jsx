@@ -1300,7 +1300,7 @@ const HomeScreen = () => {
         onCancel={handleCloseModal}
         footer={null}
         width={720}
-        destroyOnClose
+        destroyOnHidden
       >
         <div style={{ height: 420, width: '100%', marginTop: 12 }}>
           <LeafletComponent
@@ -1327,6 +1327,7 @@ const HomeScreen = () => {
 
       {/* 2. Voice Search Modal */}
       <VoiceSearchModal
+        open={isVoiceModalOpen}
         visible={isVoiceModalOpen}
         onClose={() => setIsVoiceModalOpen(false)}
         onSearch={(transcript) => {
@@ -1337,8 +1338,13 @@ const HomeScreen = () => {
 
       {/* 3. Image Search Modal */}
       <ImageSearchModal
+        open={isImageModalOpen}
         visible={isImageModalOpen}
         onClose={() => setIsImageModalOpen(false)}
+        onSearch={(term) => {
+          setIsImageModalOpen(false);
+          history.push(`/search?q=${encodeURIComponent(term)}`);
+        }}
         onSelect={(term) => {
           setIsImageModalOpen(false);
           history.push(`/search?q=${encodeURIComponent(term)}`);
@@ -1347,13 +1353,16 @@ const HomeScreen = () => {
 
       {/* 4. AI Smart Search Modal */}
       <AiSearchModal
+        open={isAiModalOpen}
         visible={isAiModalOpen}
         onClose={() => setIsAiModalOpen(false)}
+        onAiApply={handleAiApply}
         onApply={handleAiApply}
       />
 
       {/* 5. Address Manager Modal */}
       <AddressModal
+        open={isAddAddressModalOpen}
         visible={isAddAddressModalOpen}
         onClose={() => setIsAddAddressModalOpen(false)}
         onSuccess={handleNewAddressCreated}

@@ -40,12 +40,15 @@ const { Text } = Typography;
 
 const AddressModal = ({
   open,
+  visible,
   onClose,
   onSuccess,
   initialData = null,
+  initialCoords = null,
   userProfile = {},
   zIndex,
 }) => {
+  const isOpen = open !== undefined ? Boolean(open) : Boolean(visible);
   const [form] = Form.useForm();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
@@ -57,15 +60,19 @@ const AddressModal = ({
   const [searchLocalityValue, setSearchLocalityValue] = useState('');
   const localityTimeoutRef = useRef(null);
   const sessionTokenRef = useRef(createLocationSessionToken());
-  const [coords, setCoords] = useState(
-    initialData?.latitude && initialData?.longitude
-      ? [Number(initialData.latitude), Number(initialData.longitude)]
-      : [12.9716, 77.5946]
-  );
+  const [coords, setCoords] = useState(() => {
+    if (initialData?.latitude && initialData?.longitude) {
+      return [Number(initialData.latitude), Number(initialData.longitude)];
+    }
+    if (initialCoords && Array.isArray(initialCoords) && initialCoords.length === 2) {
+      return [Number(initialCoords[0]), Number(initialCoords[1])];
+    }
+    return [12.9716, 77.5946];
+  });
   const [showMapPicker, setShowMapPicker] = useState(false);
 
   useEffect(() => {
-    if (open) {
+    if (isOpen) {
       if (initialData) {
         setCoords([Number(initialData.latitude), Number(initialData.longitude)]);
         setSearchLocalityValue(initialData.formatted_address || initialData.street_area || '');
@@ -83,6 +90,9 @@ const AddressModal = ({
           is_default: initialData.is_default || false,
         });
       } else {
+        if (initialCoords && Array.isArray(initialCoords) && initialCoords.length === 2) {
+          setCoords([Number(initialCoords[0]), Number(initialCoords[1])]);
+        }
         form.resetFields();
         setSearchLocalityValue('');
         form.setFieldsValue({
@@ -283,7 +293,7 @@ const AddressModal = ({
   return (
     <>
       <Modal
-        open={open}
+        open={isOpen}
         onCancel={onClose}
         footer={null}
         zIndex={zIndex}
@@ -604,10 +614,12 @@ const AddressModal = ({
 };
 
 AddressModal.propTypes = {
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
+  visible: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
   onSuccess: PropTypes.func,
   initialData: PropTypes.object,
+  initialCoords: PropTypes.arrayOf(PropTypes.number),
   userProfile: PropTypes.object,
   zIndex: PropTypes.number,
 };

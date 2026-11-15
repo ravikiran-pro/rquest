@@ -14,7 +14,8 @@ const VISUAL_PRESETS = [
   'Pharmacy medicine strip',
 ];
 
-const ImageSearchModal = ({ open, onClose, onSearch }) => {
+const ImageSearchModal = ({ open, visible, onClose, onSearch, onSelect }) => {
+  const isOpen = open !== undefined ? Boolean(open) : Boolean(visible);
   const [previewUrl, setPreviewUrl] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -31,8 +32,13 @@ const ImageSearchModal = ({ open, onClose, onSearch }) => {
 
   const handleApply = () => {
     if (searchQuery.trim()) {
-      onSearch(searchQuery.trim());
-      onClose();
+      const searchFn = onSearch || onSelect;
+      if (typeof searchFn === 'function') {
+        searchFn(searchQuery.trim());
+      }
+      if (typeof onClose === 'function') {
+        onClose();
+      }
     } else {
       message.warning('Please select an item or upload an image.');
     }
@@ -40,7 +46,7 @@ const ImageSearchModal = ({ open, onClose, onSearch }) => {
 
   return (
     <Modal
-      open={open}
+      open={isOpen}
       onCancel={onClose}
       footer={null}
       centered
@@ -170,9 +176,11 @@ const ImageSearchModal = ({ open, onClose, onSearch }) => {
 };
 
 ImageSearchModal.propTypes = {
-  open: PropTypes.bool.isRequired,
+  open: PropTypes.bool,
+  visible: PropTypes.bool,
   onClose: PropTypes.func.isRequired,
-  onSearch: PropTypes.func.isRequired,
+  onSearch: PropTypes.func,
+  onSelect: PropTypes.func,
 };
 
 export default ImageSearchModal;

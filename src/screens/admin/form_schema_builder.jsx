@@ -445,7 +445,7 @@ const FormSchemaBuilderModal = ({
             : `Save Form Schema (${fields.length} Fields)`}
         </Button>,
       ]}
-      destroyOnClose
+      destroyOnHidden
     >
       <Alert
         message={isShopTarget ? 'Store-Specific Form Override' : 'Standard Category Schema'}
