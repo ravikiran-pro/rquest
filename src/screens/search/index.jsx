@@ -1094,7 +1094,7 @@ const SearchScreen = () => {
                 {searchMode === 'shops'
                   ? visibleItems.map((shop) => (
                       <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={shop.id}>
-                        <ShopCard shopDetails={shop} shop={shop} />
+                        <ShopCard shopDetails={shop} shop={shop} isChat={Boolean(user_data?.user_id)} />
                       </Col>
                     ))
                   : visibleItems.map((item) => (
