@@ -808,54 +808,35 @@ const SearchScreen = () => {
           </div>
 
           <div className="rq-search-extras">
-          {/* Controls Row: Mode switch, Location pin, View mode, Mobile filter */}
+          {/* Result tabs: what the list below shows */}
+          <div className="rq-mode-tabs" role="tablist" aria-label="Search results">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={searchMode === 'shops'}
+              className={`rq-mode-tab${searchMode === 'shops' ? ' is-active' : ''}`}
+              onClick={() => setSearchMode('shops')}
+            >
+              <ShopOutlined />
+              <span>Stores &amp; Outlets</span>
+              <span className="rq-mode-tab-count">{filteredShops.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={searchMode === 'items'}
+              className={`rq-mode-tab${searchMode === 'items' ? ' is-active' : ''}`}
+              onClick={() => setSearchMode('items')}
+            >
+              <ShoppingOutlined />
+              <span>Items &amp; Services</span>
+              <span className="rq-mode-tab-count">{filteredItems.length}</span>
+            </button>
+          </div>
+
+          {/* Controls Row: Location pin, View mode, Mobile filter */}
           <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
             <Flex align="center" gap={8} wrap="wrap">
-              {/* Stores vs Items Mode Switcher */}
-              <div
-                style={{
-                  display: 'inline-flex',
-                  background: '#F1EDE8',
-                  borderRadius: 9999,
-                  padding: 3,
-                }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setSearchMode('shops')}
-                  style={{
-                    background: searchMode === 'shops' ? '#0B2D6B' : 'transparent',
-                    color: searchMode === 'shops' ? '#FFFFFF' : '#111827',
-                    border: 'none',
-                    borderRadius: 9999,
-                    padding: '6px 14px',
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <ShopOutlined style={{ marginRight: 6 }} />Stores &amp; Outlets ({filteredShops.length})
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSearchMode('items')}
-                  style={{
-                    background: searchMode === 'items' ? '#0B2D6B' : 'transparent',
-                    color: searchMode === 'items' ? '#FFFFFF' : '#111827',
-                    border: 'none',
-                    borderRadius: 9999,
-                    padding: '6px 14px',
-                    fontSize: 12.5,
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <ShoppingOutlined style={{ marginRight: 6 }} />Items &amp; Services ({filteredItems.length})
-                </button>
-              </div>
-
               {/* Geolocation Pin Pill */}
               <button
                 type="button"
@@ -1113,7 +1094,7 @@ const SearchScreen = () => {
                 {searchMode === 'shops'
                   ? visibleItems.map((shop) => (
                       <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={shop.id}>
-                        <ShopCard shopDetails={shop} shop={shop} />
+                        <ShopCard shopDetails={shop} shop={shop} isChat={Boolean(user_data?.user_id)} />
                       </Col>
                     ))
                   : visibleItems.map((item) => (

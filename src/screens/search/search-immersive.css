@@ -81,3 +81,78 @@
     padding: 12px 12px calc(40px + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* ==========================================================================
+   Result tabs (Stores & Outlets / Items & Services): underline tabs, not
+   buttons. The active tab gets a navy underline and a lime count badge.
+   ========================================================================== */
+.rq-mode-tabs {
+  display: flex;
+  width: 100%;
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--border-color, #ebe7e0);
+}
+
+.rq-mode-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 6px 11px;
+  margin-bottom: -1px;
+  background: none;
+  border: 0;
+  border-bottom: 2.5px solid transparent;
+  color: var(--text-light, #575a65);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rq-mode-tab:hover {
+  color: var(--text-main, #1c1c19);
+}
+
+.rq-mode-tab.is-active {
+  color: var(--primary, #0b2d6b);
+  border-bottom-color: var(--primary, #0b2d6b);
+  font-weight: 700;
+}
+
+.rq-mode-tab-count {
+  min-width: 22px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--surface-container, #f1ede8);
+  color: var(--text-muted, #444650);
+  font-size: 11.5px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rq-mode-tab.is-active .rq-mode-tab-count {
+  background: var(--brand-lime, #d2f82e);
+  color: var(--primary, #0b2d6b);
+}
+
+@media (max-width: 400px) {
+  .rq-mode-tab {
+    font-size: 12.5px;
+    gap: 5px;
+  }
+}
+
+/* Wider screens: tabs size to their label instead of stretching */
+@media (min-width: 768px) {
+  .rq-mode-tab {
+    flex: 0 0 auto;
+    padding: 10px 18px 11px;
+  }
+}

@@ -1,6 +1,16 @@
 import React from 'react';
-import { notification, Button } from 'antd';
+import { notification } from 'antd';
+import {
+  BellOutlined,
+  InboxOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
+} from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../utils';
+
+// Older notifications carry emoji in the title; the icon tile replaces them
+const stripLeadingEmoji = (text = '') =>
+  String(text).replace(/^[\p{Extended_Pictographic}\u200d\ufe0f\s]+/u, '');
 
 /**
  * Convert base64 VAPID key string to Uint8Array for PushManager subscribe
@@ -164,6 +174,98 @@ export function triggerNativeNotification(title, options = {}) {
   }
 }
 
+const SWIPE_DISMISS_PX = 70;
+
+/**
+ * Compact notification row: icon tile, title, two-line body and a text action.
+ * Swipe left, right or down (touch or mouse) to dismiss it.
+ */
+function NotifyCard({ notifyKey, tone, Icon, title, body, actionLabel, onAction }) {
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const notice = ref.current?.closest('.ant-notification-notice');
+    if (!notice) return undefined;
+
+    let startX = 0;
+    let startY = 0;
+    let dx = 0;
+    let dy = 0;
+    let dragging = false;
+
+    const reset = () => {
+      notice.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      notice.style.transform = '';
+      notice.style.opacity = '';
+    };
+
+    const onDown = (e) => {
+      if (e.target.closest('.rq-notify-action')) return;
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      dx = 0;
+      dy = 0;
+      notice.style.transition = 'none';
+      notice.setPointerCapture?.(e.pointerId);
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      dx = e.clientX - startX;
+      dy = Math.max(0, e.clientY - startY); // only downward
+      const horizontal = Math.abs(dx) >= dy;
+      const dist = horizontal ? Math.abs(dx) : dy;
+      notice.style.transform = horizontal ? `translateX(${dx}px)` : `translateY(${dy}px)`;
+      notice.style.opacity = String(Math.max(0.2, 1 - dist / 220));
+    };
+
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      const horizontal = Math.abs(dx) >= dy;
+      const dist = horizontal ? Math.abs(dx) : dy;
+      if (dist > SWIPE_DISMISS_PX) {
+        notice.style.transition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+        notice.style.transform = horizontal
+          ? `translateX(${dx > 0 ? 120 : -120}%)`
+          : 'translateY(120%)';
+        notice.style.opacity = '0';
+        setTimeout(() => notification.destroy(notifyKey), 170);
+      } else {
+        reset();
+      }
+    };
+
+    notice.addEventListener('pointerdown', onDown);
+    notice.addEventListener('pointermove', onMove);
+    notice.addEventListener('pointerup', onUp);
+    notice.addEventListener('pointercancel', reset);
+    return () => {
+      notice.removeEventListener('pointerdown', onDown);
+      notice.removeEventListener('pointermove', onMove);
+      notice.removeEventListener('pointerup', onUp);
+      notice.removeEventListener('pointercancel', reset);
+    };
+  }, [notifyKey]);
+
+  const h = React.createElement;
+  return h(
+    'div',
+    { ref, className: 'rq-notify-row' },
+    h('span', { className: `rq-notify-icon rq-notify-icon--${tone}` }, h(Icon)),
+    h(
+      'div',
+      { className: 'rq-notify-text' },
+      h('div', { className: 'rq-notify-title' }, title),
+      body ? h('div', { className: 'rq-notify-body' }, body) : null
+    ),
+    actionLabel
+      ? h('button', { type: 'button', className: 'rq-notify-action', onClick: onAction }, actionLabel)
+      : null
+  );
+}
+
 /**
  * Displays an in-app rich toast notification + native popup + audio chime
  */
@@ -177,81 +279,66 @@ export function displayPushNotification(notifData, history = null) {
 
   // 2. If browser tab is in background or permission granted, trigger native OS notification
   if (document.hidden || Notification.permission === 'granted') {
-    triggerNativeNotification(title, {
+    triggerNativeNotification(stripLeadingEmoji(title), {
       body,
       data,
     });
   }
 
-  // 3. Determine icon and action button based on notification type
-  let iconEmoji = '🔔';
+  // 3. Pick the icon tile (tone + icon) and action for this notification type
+  let tone = 'default';
+  let IconComp = BellOutlined;
   let actionLabel = 'View';
   let targetUrl = '/';
 
   if (type === 'account_register') {
-    iconEmoji = '🎉';
-    actionLabel = data?.url?.includes('client') ? 'Go to Store' : 'Explore Stores';
+    tone = 'lavender';
+    IconComp = ShopOutlined;
+    actionLabel = data?.url?.includes('client') ? 'Go to store' : 'Explore stores';
     targetUrl = data?.url || '/app';
   } else if (type === 'order_placed') {
-    iconEmoji = '🛍️';
-    actionLabel = data?.url?.includes('client') ? 'View New Order' : 'Track Order';
+    tone = 'lime';
+    IconComp = ShoppingOutlined;
+    actionLabel = data?.url?.includes('client') ? 'View order' : 'Track order';
     targetUrl = data?.url || '/orders';
   } else if (type === 'order_status_change') {
-    iconEmoji = '📦';
-    actionLabel = 'Track Order';
+    tone = 'navy';
+    IconComp = InboxOutlined;
+    actionLabel = 'Track order';
     targetUrl = data?.url || '/orders';
   } else if (data?.url) {
     targetUrl = data.url;
   }
 
-  // 4. Show Ant Design notification banner
+  // 4. Compact notification card at the bottom; dismissed by timeout, swipe or action
+  const key = `rq-notify-${Date.now()}`;
+  const isPhone = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+
   notification.open({
-    message: React.createElement(
-      'div',
-      { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-      React.createElement('span', { style: { fontSize: 18 } }, iconEmoji),
-      React.createElement('span', { style: { fontWeight: 700, color: '#0f172a', fontSize: 14 } }, title)
-    ),
-    description: React.createElement(
-      'div',
-      { style: { marginTop: 4 } },
-      React.createElement('div', { style: { color: '#334155', fontSize: 13, lineHeight: '18px' } }, body),
-      targetUrl
-        ? React.createElement(
-            'div',
-            { style: { marginTop: 10, textAlign: 'right' } },
-            React.createElement(
-              Button,
-              {
-                type: 'primary',
-                size: 'small',
-                onClick: () => {
-                  notification.destroy();
-                  if (history) {
-                    history.push(targetUrl);
-                  } else {
-                    window.location.href = targetUrl;
-                  }
-                },
-                style: {
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  fontSize: 12,
-                  background: '#0f172a',
-                  borderColor: '#0f172a',
-                },
-              },
-              `${actionLabel} →`
-            )
-          )
-        : null
-    ),
-    placement: 'bottomRight',
-    duration: 6,
-    style: {
-      borderRadius: 12,
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e2e8f0',
-    },
+    key,
+    className: 'rq-notify',
+    message: React.createElement(NotifyCard, {
+      notifyKey: key,
+      tone,
+      Icon: IconComp,
+      title: stripLeadingEmoji(title),
+      body,
+      actionLabel: targetUrl ? actionLabel : null,
+      onAction: () => {
+        notification.destroy(key);
+        if (history) {
+          history.push(targetUrl);
+        } else {
+          window.location.href = targetUrl;
+        }
+      },
+    }),
+    closeIcon: false,
+    placement: isPhone ? 'bottom' : 'bottomRight',
+    // Phones: sit just above the bottom navigation
+    bottom: isPhone ? 76 : 24,
+    duration: 5,
+    showProgress: true,
+    pauseOnHover: true,
   });
 }

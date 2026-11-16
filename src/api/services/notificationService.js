@@ -59,9 +59,13 @@ const getOrderStatusNotification = (status, orderNumber, shopName = 'Store') => 
  * 2. Sends native Web Push through browser Push Service
  * 3. Persists record in PostgreSQL notifications table
  */
+// Titles are shown next to an app icon, so leading emoji only add noise
+const stripLeadingEmoji = (text = '') =>
+  String(text).replace(/^[\p{Extended_Pictographic}\u200d\ufe0f\s]+/u, '');
+
 const sendPushNotification = async ({
   userId,
-  title,
+  title: rawTitle,
   body,
   type = 'general',
   data = {},
@@ -71,6 +75,8 @@ const sendPushNotification = async ({
     console.warn('[NotificationService] Missing userId for push notification');
     return null;
   }
+
+  const title = stripLeadingEmoji(rawTitle);
 
   const payload = {
     title,

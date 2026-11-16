@@ -1499,3 +1499,270 @@ select:focus-visible {
 
 
 
+
+/* ==========================================================================
+   Overlay theme: notifications, modals, the cart and sheets share the home
+   page look - parchment canvas, soft lime glow, lime icon tile, navy actions
+   and Plus Jakarta Sans headings.
+   ========================================================================== */
+
+:root {
+  --overlay-glow: radial-gradient(120% 90% at 100% 0%, rgba(228, 251, 62, 0.18) 0%, rgba(228, 251, 62, 0) 55%);
+}
+
+/* ---------- In-app notification card (services/notificationService.js) ----------
+   Compact single row at the bottom. Auto-dismisses (progress line), swipe to close. */
+.ant-notification .ant-notification-notice-wrapper .ant-notification-notice.rq-notify {
+  width: min(360px, calc(100vw - 24px));
+  padding: 10px 10px 10px 12px;
+  margin-inline: auto;
+  border-radius: 14px;
+  border: 1px solid var(--border-color);
+  background: var(--overlay-glow), var(--surface);
+  box-shadow: var(--shadow-popover);
+  touch-action: none; /* swipe gestures are handled in JS */
+  user-select: none;
+  cursor: grab;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-message {
+  margin: 0;
+  padding: 0;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-description {
+  display: none;
+}
+
+/* The wrapper around each card carries AntD's own radius and shadow */
+.ant-notification .ant-notification-notice-wrapper:has(.rq-notify) {
+  border-radius: 14px;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Phones: sit just above the bottom navigation (AntD pins bottom inline) */
+@media (max-width: 767px) {
+  .ant-notification.ant-notification-bottom {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Thin navy line counting down to auto-dismiss */
+.ant-notification .rq-notify .ant-notification-notice-progress {
+  height: 2px;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-progress::-webkit-progress-value {
+  background: var(--primary);
+}
+
+.ant-notification .rq-notify .ant-notification-notice-progress::-moz-progress-bar {
+  background: var(--primary);
+}
+
+.rq-notify-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.rq-notify-icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.rq-notify-icon--lime { background: var(--brand-lime); color: var(--primary); }
+.rq-notify-icon--navy { background: var(--primary-light); color: var(--primary); }
+.rq-notify-icon--lavender { background: var(--brand-purple-badge); color: var(--brand-purple-text); }
+.rq-notify-icon--default { background: var(--surface-container); color: var(--text-main); }
+
+.rq-notify-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-notify-title {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 13.5px;
+  line-height: 1.3;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rq-notify-body {
+  margin-top: 1px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.rq-notify-action {
+  flex-shrink: 0;
+  align-self: center;
+  border: 0;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.rq-notify-action:hover,
+.rq-notify-action:focus-visible {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* ---------- Modals: warm glow, headline font ---------- */
+.ant-modal-wrap:not(.full-view-map-modal) .ant-modal-content {
+  border-radius: 20px;
+  background: var(--overlay-glow), var(--surface);
+}
+
+.ant-modal-wrap:not(.full-view-map-modal) .ant-modal-header {
+  background: transparent;
+}
+
+.ant-modal .ant-modal-title {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* ---------- Cart drawer and address / form sheets ---------- */
+.rq-cart-drawer .ant-drawer-header,
+.rq-sheet .ant-drawer-header {
+  background: var(--overlay-glow), var(--brand-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rq-cart-drawer .ant-drawer-body,
+.rq-sheet .ant-drawer-body {
+  background: var(--brand-bg);
+}
+
+.rq-cart-drawer .ant-drawer-footer,
+.rq-sheet .ant-drawer-footer {
+  background: var(--surface);
+}
+
+.rq-cart-title-icon,
+.rq-sheet-title-icon {
+  background: var(--brand-lime) !important;
+  color: var(--primary) !important;
+}
+
+.rq-cart-title-main,
+.rq-sheet-title-main {
+  font-family: var(--font-headline);
+}
+
+/* Cards inside the cart sit white on the parchment canvas */
+.rq-cart-drawer .rq-cart-summary,
+.rq-cart-drawer .rq-query-box {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+}
+
+/* ==========================================================================
+   Shop cards (grid view): same structure as the list view. Thumbnail and name
+   on top, a three-value metrics strip, one primary action with icon buttons.
+   ========================================================================== */
+.rq-shop-card .ant-card-body {
+  transition: background-color 0.15s ease;
+}
+
+.rq-shop-card-thumb {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--surface-container);
+  border: 1px solid var(--border-color);
+}
+
+.rq-shop-card-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.rq-shop-card-area {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.rq-shop-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  padding: 10px 8px;
+  border-radius: var(--radius-md);
+  background: var(--surface-container-low);
+  text-align: center;
+}
+
+.rq-shop-card-metrics > div {
+  min-width: 0;
+}
+
+.rq-shop-card-metrics span {
+  display: block;
+  font-size: 11px;
+  color: var(--text-light);
+}
+
+.rq-shop-card-metrics strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rq-shop-card .ant-btn.rq-shop-card-icon {
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0;
+  flex-shrink: 0;
+  border-radius: var(--radius-md);
+}
+
+.rq-shop-card .ant-btn-primary:not(:disabled) {
+  height: 40px;
+  font-weight: 700;
+}
+
+@media (hover: hover) {
+  .rq-shop-card:hover {
+    border-color: var(--border-color-dark);
+    box-shadow: var(--shadow-md);
+  }
+}
