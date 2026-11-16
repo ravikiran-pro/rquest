@@ -1,18 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Modal,
   Form,
   Input,
-  Radio,
+  Segmented,
   Button,
   Checkbox,
   AutoComplete,
-  Flex,
+  Row,
+  Col,
   Spin,
-  Typography,
+  Modal,
   message,
-  Grid,
 } from 'antd';
 import {
   HomeOutlined,
@@ -21,22 +20,51 @@ import {
   AimOutlined,
   SearchOutlined,
   CheckOutlined,
+  CompassOutlined,
   UserOutlined,
-  PhoneOutlined,
 } from '@ant-design/icons';
 import {
   netWorkCall,
   apiConfig,
   getPreciseUserLocation,
-  getLocationName,
+  getLocationDetails,
   searchLocations,
   getPlaceDetails,
   createLocationSessionToken,
 } from '../../utils';
 import LeafletComponent from '../leaflet/leaflet';
-import { colors, radii, typography, shadows } from '../../styles/theme';
+import ResponsiveSheet from './ResponsiveSheet';
+import { colors } from '../../styles/theme';
+import './profile-components.css';
 
-const { Text } = Typography;
+const DEFAULT_COORDS = [12.9716, 77.5946];
+// Stable fallback so the open-effect does not re-run on every render.
+const EMPTY_PROFILE = {};
+
+const INDIAN_STATES = [
+  'Andaman and Nicobar Islands', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar',
+  'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 'Goa',
+  'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu and Kashmir', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya',
+  'Mizoram', 'Nagaland', 'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+  'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+];
+const STATE_OPTIONS = INDIAN_STATES.map((st) => ({ value: st }));
+
+const LABEL_OPTIONS = [
+  { label: <span className="rq-seg-opt"><HomeOutlined /> Home</span>, value: 'Home' },
+  { label: <span className="rq-seg-opt"><ShopOutlined /> Work</span>, value: 'Work' },
+  { label: <span className="rq-seg-opt"><EnvironmentOutlined /> Other</span>, value: 'Other' },
+];
+
+const toCoordPair = (value) => {
+  if (Array.isArray(value) && value.length === 2) {
+    const lat = Number(value[0]);
+    const lon = Number(value[1]);
+    if (Number.isFinite(lat) && Number.isFinite(lon)) return [lat, lon];
+  }
+  return null;
+};
 
 const AddressModal = ({
   open,
@@ -45,88 +73,121 @@ const AddressModal = ({
   onSuccess,
   initialData = null,
   initialCoords = null,
-  userProfile = {},
+  userProfile = EMPTY_PROFILE,
   zIndex,
 }) => {
   const isOpen = open !== undefined ? Boolean(open) : Boolean(visible);
+  const isEdit = Boolean(initialData?.id);
   const [form] = Form.useForm();
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
 
   const [saving, setSaving] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
   const [searchingArea, setSearchingArea] = useState(false);
   const [searchOptions, setSearchOptions] = useState([]);
   const [searchLocalityValue, setSearchLocalityValue] = useState('');
-  const localityTimeoutRef = useRef(null);
-  const sessionTokenRef = useRef(createLocationSessionToken());
-  const [coords, setCoords] = useState(() => {
-    if (initialData?.latitude && initialData?.longitude) {
-      return [Number(initialData.latitude), Number(initialData.longitude)];
-    }
-    if (initialCoords && Array.isArray(initialCoords) && initialCoords.length === 2) {
-      return [Number(initialCoords[0]), Number(initialCoords[1])];
-    }
-    return [12.9716, 77.5946];
-  });
   const [showMapPicker, setShowMapPicker] = useState(false);
+  const localityTimeoutRef = useRef(null);
+  const [cityOptions, setCityOptions] = useState([]);
+  const [searchingCity, setSearchingCity] = useState(false);
+  const cityTimeoutRef = useRef(null);
+  const sessionTokenRef = useRef(createLocationSessionToken());
+  const [coords, setCoords] = useState(
+    () => toCoordPair(initialData && [initialData.latitude, initialData.longitude]) ||
+      toCoordPair(initialCoords) ||
+      DEFAULT_COORDS
+  );
 
   useEffect(() => {
-    if (isOpen) {
-      if (initialData) {
-        setCoords([Number(initialData.latitude), Number(initialData.longitude)]);
-        setSearchLocalityValue(initialData.formatted_address || initialData.street_area || '');
-        form.setFieldsValue({
-          label: initialData.label || 'Home',
-          recipient_name: initialData.recipient_name || '',
-          recipient_phone: initialData.recipient_phone || '',
-          house_flat_floor: initialData.house_flat_floor || '',
-          street_area: initialData.street_area || '',
-          landmark: initialData.landmark || '',
-          city: initialData.city || 'Bengaluru',
-          state: initialData.state || 'Karnataka',
-          pincode: initialData.pincode || '',
-          formatted_address: initialData.formatted_address || '',
-          is_default: initialData.is_default || false,
-        });
-      } else {
-        if (initialCoords && Array.isArray(initialCoords) && initialCoords.length === 2) {
-          setCoords([Number(initialCoords[0]), Number(initialCoords[1])]);
-        }
-        form.resetFields();
-        setSearchLocalityValue('');
-        form.setFieldsValue({
-          label: 'Home',
-          recipient_name: userProfile?.username || '',
-          recipient_phone: userProfile?.mobile || '',
-          city: 'Bengaluru',
-          state: 'Karnataka',
-          is_default: false,
-        });
-        // Auto-detect location for new address if not set
-        detectGpsLocation();
-      }
-    }
-  }, [open, initialData, userProfile]);
+    if (!isOpen) return;
 
-  const detectGpsLocation = async () => {
+    if (initialData) {
+      const pair = toCoordPair([initialData.latitude, initialData.longitude]);
+      if (pair) setCoords(pair);
+      setSearchLocalityValue(initialData.formatted_address || initialData.street_area || '');
+      form.setFieldsValue({
+        label: initialData.label || 'Home',
+        recipient_name: initialData.recipient_name || '',
+        recipient_phone: initialData.recipient_phone || '',
+        house_flat_floor: initialData.house_flat_floor || '',
+        street_area: initialData.street_area || '',
+        landmark: initialData.landmark || '',
+        city: initialData.city || 'Bengaluru',
+        state: initialData.state || 'Karnataka',
+        pincode: initialData.pincode || '',
+        formatted_address: initialData.formatted_address || '',
+        is_default: Boolean(initialData.is_default),
+      });
+    } else {
+      const pair = toCoordPair(initialCoords);
+      if (pair) setCoords(pair);
+      form.resetFields();
+      setSearchLocalityValue('');
+      form.setFieldsValue({
+        label: 'Home',
+        recipient_name: userProfile?.username || '',
+        recipient_phone: userProfile?.mobile || '',
+        city: 'Bengaluru',
+        state: 'Karnataka',
+        is_default: false,
+      });
+      // Pre-fill from GPS for new addresses (quietly: no warning if it fails)
+      detectGpsLocation({ silent: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, visible, initialData, userProfile]);
+
+  /**
+   * Fills the address form from a resolved location (search pick, GPS or map pin).
+   * Location-derived fields are overwritten; flat/house, recipient and landmark are kept.
+   */
+  const applyLocation = ({ lat, lon, name, formatted, parts }) => {
+    const pair = toCoordPair([lat, lon]);
+    if (pair) setCoords(pair);
+
+    const p = parts || {};
+    const streetText = [p.street, p.sublocality]
+      .filter((v, i, arr) => v && arr.indexOf(v) === i)
+      .join(', ');
+
+    const updates = { formatted_address: formatted || name || '' };
+    if (streetText) {
+      updates.street_area = streetText;
+    } else if (name && !form.getFieldValue('street_area')) {
+      updates.street_area = name;
+    }
+    if (p.city) updates.city = p.city;
+    if (p.state) updates.state = p.state;
+    if (p.pincode) updates.pincode = String(p.pincode).replace(/\D/g, '').slice(0, 6);
+
+    form.setFieldsValue(updates);
+    setSearchLocalityValue(formatted || name || '');
+  };
+
+  // opts.silent: automatic pre-fill on open, so a failure shows no warning
+  const detectGpsLocation = async (opts) => {
+    const silent = opts?.silent === true;
     setDetectingGps(true);
     try {
       const loc = await getPreciseUserLocation(true);
-      if (loc && loc.length === 2) {
-        setCoords(loc);
-        const name = await getLocationName(loc[0], loc[1]);
-        if (name) {
-          form.setFieldsValue({
-            street_area: form.getFieldValue('street_area') || name,
-            formatted_address: name,
+      const pair = toCoordPair(loc);
+      if (pair) {
+        const details = await getLocationDetails(pair[0], pair[1]);
+        if (details) {
+          applyLocation({
+            lat: pair[0],
+            lon: pair[1],
+            name: details.name,
+            formatted: details.formatted_address,
+            parts: details.address_parts,
           });
-          setSearchLocalityValue(name);
-          message.success('Detected location applied');
+          if (!silent) message.success('Current location filled in');
+        } else {
+          setCoords(pair);
         }
       }
     } catch (err) {
       console.warn('GPS detection in address modal:', err);
+      if (!silent) message.warning('Could not detect your location. Pick it on the map instead.');
     } finally {
       setDetectingGps(false);
     }
@@ -145,20 +206,23 @@ const AddressModal = ({
     setSearchingArea(true);
     localityTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await searchLocations(
-          val,
-          coords?.[0],
-          coords?.[1],
-          sessionTokenRef.current
-        );
+        const results = await searchLocations(val, coords?.[0], coords?.[1], sessionTokenRef.current);
         setSearchOptions(
           results.map((r, i) => ({
             value: r.display_name || r.name,
             key: `loc-${r.place_id || `${r.lat}-${r.lon}`}-${i}`,
             label: (
-              <div key={`loc-${i}`} style={{ padding: '4px 0', fontFamily: typography.fontFamily.body }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: colors.textMain }}>{r.name}</div>
-                <div style={{ fontSize: 11, color: colors.textMuted }}>
+              <div style={{ padding: '4px 0' }}>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#1c1c19' }}>{r.name}</div>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: '#575a65',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {r.secondary_text || r.display_name}
                 </div>
               </div>
@@ -182,10 +246,7 @@ const AddressModal = ({
 
     let { lat, lon, name, display_name, place_id, address_parts } = option.raw;
 
-    if (
-      (lat === undefined || lon === undefined || isNaN(Number(lat)) || isNaN(Number(lon))) &&
-      place_id
-    ) {
+    if (toCoordPair([lat, lon]) === null && place_id) {
       setSearchingArea(true);
       try {
         const details = await getPlaceDetails(place_id, sessionTokenRef.current);
@@ -202,38 +263,93 @@ const AddressModal = ({
       }
     }
 
-    if (lat !== undefined && lon !== undefined && !isNaN(Number(lat)) && !isNaN(Number(lon))) {
-      setCoords([parseFloat(lat), parseFloat(lon)]);
-    }
-
-    const fieldUpdates = {
-      street_area: name || form.getFieldValue('street_area'),
-      formatted_address: display_name,
-    };
-    if (address_parts?.city) fieldUpdates.city = address_parts.city;
-    if (address_parts?.state) fieldUpdates.state = address_parts.state;
-    if (address_parts?.pincode) fieldUpdates.pincode = address_parts.pincode;
-
-    form.setFieldsValue(fieldUpdates);
-    const chosenText = display_name || name || val || '';
-    setSearchLocalityValue(chosenText);
+    applyLocation({
+      lat,
+      lon,
+      name: name || val,
+      formatted: display_name,
+      parts: address_parts,
+    });
     setSearchOptions([]);
   };
 
-  const handleMapConfirm = (newCoords) => {
-    if (newCoords && newCoords.length === 2) {
-      setCoords(newCoords);
-      getLocationName(newCoords[0], newCoords[1]).then((name) => {
-        if (name) {
-          form.setFieldsValue({
-            street_area: form.getFieldValue('street_area') || name,
-            formatted_address: name,
-          });
-          setSearchLocalityValue(name);
+  // City suggestions come from the same location search API. When a result has no
+  // structured city, derive it from the display text ("Locality, City, State, India").
+  const extractCityOptions = (results) => {
+    const byCity = new Map();
+    results.forEach((r) => {
+      const parts = r.address_parts || {};
+      let city = parts.city;
+      let state = parts.state;
+      if (!city) {
+        const segs = (r.display_name || '')
+          .split(',')
+          .map((x) => x.trim())
+          .filter((x) => x && x.toLowerCase() !== 'india');
+        if (segs.length >= 2) {
+          city = segs[segs.length - 2];
+          state = state || segs[segs.length - 1];
         }
+      }
+      if (city && !byCity.has(city.toLowerCase())) {
+        byCity.set(city.toLowerCase(), { city, state: state || '' });
+      }
+    });
+    return [...byCity.values()].map((c, i) => ({
+      value: c.city,
+      key: `city-${c.city}-${i}`,
+      label: (
+        <div style={{ padding: '4px 0' }}>
+          <div style={{ fontWeight: 600, fontSize: 13, color: colors.textMain }}>{c.city}</div>
+          {c.state && <div style={{ fontSize: 12, color: colors.textMuted }}>{c.state}</div>}
+        </div>
+      ),
+      raw: c,
+    }));
+  };
+
+  const handleSearchCity = (val) => {
+    if (cityTimeoutRef.current) clearTimeout(cityTimeoutRef.current);
+    if (!val || val.trim().length < 2) {
+      setCityOptions([]);
+      setSearchingCity(false);
+      return;
+    }
+    setSearchingCity(true);
+    cityTimeoutRef.current = setTimeout(async () => {
+      try {
+        const results = await searchLocations(val, coords?.[0], coords?.[1], sessionTokenRef.current);
+        setCityOptions(extractCityOptions(results));
+      } catch (err) {
+        console.error('City search error:', err);
+      } finally {
+        setSearchingCity(false);
+      }
+    }, 280);
+  };
+
+  const handleSelectCity = (val, option) => {
+    const c = option?.raw;
+    if (!c) return;
+    form.setFieldsValue(c.state ? { city: c.city, state: c.state } : { city: c.city });
+    setCityOptions([]);
+  };
+
+  const handleMapConfirm = async (newCoords) => {
+    setShowMapPicker(false);
+    const pair = toCoordPair(newCoords);
+    if (!pair) return;
+    setCoords(pair);
+    const details = await getLocationDetails(pair[0], pair[1]);
+    if (details) {
+      applyLocation({
+        lat: pair[0],
+        lon: pair[1],
+        name: details.name,
+        formatted: details.formatted_address,
+        parts: details.address_parts,
       });
     }
-    setShowMapPicker(false);
   };
 
   const handleFinish = async (values) => {
@@ -258,25 +374,12 @@ const AddressModal = ({
         longitude: coords[1],
       };
 
-      let res;
-      if (initialData?.id) {
-        res = await netWorkCall(
-          `${apiConfig.user_addresses}/${initialData.id}`,
-          'PUT',
-          JSON.stringify(payload),
-          true
-        );
-      } else {
-        res = await netWorkCall(
-          apiConfig.user_addresses,
-          'POST',
-          JSON.stringify(payload),
-          true
-        );
-      }
+      const res = isEdit
+        ? await netWorkCall(`${apiConfig.user_addresses}/${initialData.id}`, 'PUT', JSON.stringify(payload), true)
+        : await netWorkCall(apiConfig.user_addresses, 'POST', JSON.stringify(payload), true);
 
       if (res?.success) {
-        message.success(initialData ? 'Address updated!' : 'Address saved successfully!');
+        message.success(isEdit ? 'Address updated' : 'Address saved');
         if (onSuccess) onSuccess(res.data);
         onClose();
       } else {
@@ -290,149 +393,53 @@ const AddressModal = ({
     }
   };
 
+  const title = (
+    <div className="rq-sheet-title">
+      <span className="rq-sheet-title-icon">
+        <EnvironmentOutlined />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="rq-sheet-title-main">{isEdit ? 'Edit address' : 'Add delivery address'}</div>
+        <div className="rq-sheet-title-sub">Used for delivery and finding nearby stores</div>
+      </div>
+    </div>
+  );
+
+  const footer = (
+    <div className="rq-sheet-footer">
+      <Button onClick={onClose} disabled={saving}>
+        Cancel
+      </Button>
+      <Button type="primary" loading={saving} icon={<CheckOutlined />} onClick={() => form.submit()}>
+        {isEdit ? 'Update address' : 'Save address'}
+      </Button>
+    </div>
+  );
+
   return (
     <>
-      <Modal
+      <ResponsiveSheet
         open={isOpen}
-        onCancel={onClose}
-        footer={null}
+        onClose={onClose}
+        title={title}
+        footer={footer}
+        width={640}
         zIndex={zIndex}
-        title={
-          <Flex align="center" gap={10}>
-            <div
-              style={{
-                width: 36,
-                height: 36,
-                borderRadius: radii.md,
-                background: colors.primaryLight,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: colors.primary,
-                fontSize: 18,
-              }}
-            >
-              <EnvironmentOutlined />
-            </div>
-            <div>
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: colors.textMain,
-                  fontFamily: typography.fontFamily.headline,
-                }}
-              >
-                {initialData ? 'Edit Address' : 'Add New Address'}
-              </div>
-              <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-                Provide accurate address details for local doorstep delivery
-              </Text>
-            </div>
-          </Flex>
-        }
-        width={screens.xs ? '95vw' : 620}
-        styles={{
-          body: {
-            maxHeight: '78vh',
-            overflowY: 'auto',
-            padding: isMobile ? '14px 4px' : '20px 8px',
-            fontFamily: typography.fontFamily.body,
-          },
-        }}
-        destroyOnHidden
       >
         <Form
           form={form}
           layout="vertical"
+          size="large"
+          requiredMark="optional"
           onFinish={handleFinish}
           initialValues={{ label: 'Home', is_default: false }}
-          style={{ marginTop: 12, fontFamily: typography.fontFamily.body }}
         >
-          {/* Address Label Capsule */}
-          <Form.Item name="label" label="Address Tag / Label" rules={[{ required: true }]}>
-            <Radio.Group buttonStyle="solid" style={{ width: '100%', display: 'flex' }}>
-              <Radio.Button value="Home" style={{ flex: 1, textAlign: 'center' }}>
-                <HomeOutlined /> Home
-              </Radio.Button>
-              <Radio.Button value="Work" style={{ flex: 1, textAlign: 'center' }}>
-                <ShopOutlined /> Work / Office
-              </Radio.Button>
-              <Radio.Button value="Other" style={{ flex: 1, textAlign: 'center' }}>
-                <EnvironmentOutlined /> Other
-              </Radio.Button>
-            </Radio.Group>
-          </Form.Item>
+          <section className="rq-form-section">
+            <div className="rq-form-section-title">Pin your location</div>
+            <div className="rq-form-section-hint">Search an area or landmark, or use your current position.</div>
 
-          {/* Location Pinpoint & Map Assist */}
-          <div
-            style={{
-              background: colors.surfaceContainerLow,
-              border: `1px solid ${colors.border}`,
-              borderRadius: radii.lg,
-              padding: '12px 14px',
-              marginBottom: 16,
-            }}
-          >
-            <Flex justify="space-between" align="center" style={{ marginBottom: 8 }} wrap="wrap" gap={8}>
-              <div>
-                <Text
-                  strong
-                  style={{
-                    fontSize: 13,
-                    color: colors.textMain,
-                    display: 'block',
-                    fontFamily: typography.fontFamily.headline,
-                  }}
-                >
-                  Location Pinpoint (GPS)
-                </Text>
-                <Text style={{ fontSize: 11, color: colors.textMuted, fontFamily: typography.fontFamily.mono }}>
-                  Coordinates: {coords[0].toFixed(4)}, {coords[1].toFixed(4)}
-                </Text>
-              </div>
-
-              <Flex gap={8}>
-                <Button
-                  size="small"
-                  icon={detectingGps ? <Spin size="small" /> : <AimOutlined />}
-                  onClick={detectGpsLocation}
-                  loading={detectingGps}
-                  style={{
-                    borderRadius: radii.sm,
-                    borderColor: colors.border,
-                    color: colors.textMain,
-                    fontWeight: 600,
-                    fontSize: 12,
-                    fontFamily: typography.fontFamily.body,
-                  }}
-                >
-                  Locate Me
-                </Button>
-                <Button
-                  size="small"
-                  type="primary"
-                  ghost
-                  icon={<EnvironmentOutlined />}
-                  onClick={() => setShowMapPicker(true)}
-                  style={{
-                    borderRadius: radii.sm,
-                    borderColor: colors.primary,
-                    color: colors.primary,
-                    fontWeight: 600,
-                    fontSize: 12,
-                    fontFamily: typography.fontFamily.body,
-                  }}
-                >
-                  Pick on Map
-                </Button>
-              </Flex>
-            </Flex>
-
-            {/* Quick Locality Autocomplete Search */}
             <AutoComplete
               style={{ width: '100%' }}
-              className="address-search"
               options={searchOptions}
               value={searchLocalityValue}
               onChange={(val) => {
@@ -441,152 +448,144 @@ const AddressModal = ({
               }}
               onSearch={handleSearchLocality}
               onSelect={handleSelectLocality}
-              placeholder="Search locality (e.g. Koramangala 4th Block, Indiranagar)..."
             >
               <Input
                 allowClear
-                prefix={<SearchOutlined style={{ color: colors.textLight }} />}
+                placeholder="Search area, locality or landmark"
+                prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
                 suffix={searchingArea ? <Spin size="small" /> : null}
-                style={{ borderRadius: radii.md, height: 38, fontSize: 13 }}
               />
             </AutoComplete>
-          </div>
 
-          {/* Contact Person Details */}
-          <Flex gap={12} wrap={isMobile ? 'wrap' : 'nowrap'}>
-            <Form.Item
-              name="recipient_name"
-              label="Recipient Name"
-              rules={[{ required: true, message: 'Please enter contact person name' }]}
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
-            >
-              <Input prefix={<UserOutlined style={{ color: colors.textLight }} />} placeholder="e.g. Rahul Sharma" />
+            <div className="rq-locate-row">
+              <Button
+                icon={detectingGps ? null : <AimOutlined />}
+                loading={detectingGps}
+                onClick={detectGpsLocation}
+              >
+                Use current location
+              </Button>
+              <Button icon={<CompassOutlined />} onClick={() => setShowMapPicker(true)}>
+                Pick on map
+              </Button>
+              <span className="rq-coords">
+                {coords[0].toFixed(5)}, {coords[1].toFixed(5)}
+              </span>
+            </div>
+          </section>
+
+          <section className="rq-form-section">
+            <div className="rq-form-section-title">Address details</div>
+            <div className="rq-form-section-hint">Pick a search result or use your location and the street, city, state and PIN fill in for you.</div>
+
+            <Form.Item name="label" label="Save as" rules={[{ required: true, message: 'Choose a label' }]}>
+              <Segmented block options={LABEL_OPTIONS} />
             </Form.Item>
 
-            <Form.Item
-              name="recipient_phone"
-              label="Contact Phone Number"
-              rules={[
-                { required: true, message: 'Please enter contact phone number' },
-                { pattern: /^[0-9+\s-]{8,15}$/, message: 'Please enter a valid phone number' },
-              ]}
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
-            >
-              <Input prefix={<PhoneOutlined style={{ color: colors.textLight }} />} placeholder="10-digit mobile number" />
+            <Row gutter={16}>
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="recipient_name"
+                  label="Recipient name"
+                  rules={[{ required: true, message: 'Enter the name of the person receiving the order' }]}
+                >
+                  <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="e.g. Rahul Sharma" autoComplete="name" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="recipient_phone"
+                  label="Contact phone"
+                  rules={[
+                    { required: true, message: 'Enter a contact phone number' },
+                    { pattern: /^[0-9+\s-]{8,15}$/, message: 'Enter a valid phone number' },
+                  ]}
+                >
+                  <Input placeholder="10-digit mobile number" inputMode="tel" autoComplete="tel" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item
+                  name="house_flat_floor"
+                  label="Flat, house no., building or floor"
+                  rules={[{ required: true, message: 'Enter your flat or house number' }]}
+                >
+                  <Input placeholder="e.g. Flat 402, 4th Floor, Skyline Residency" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item
+                  name="street_area"
+                  label="Street, road or area"
+                  rules={[{ required: true, message: 'Enter the street or area' }]}
+                >
+                  <Input placeholder="e.g. 80 Feet Road, 6th Block, Koramangala" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="landmark" label="Landmark">
+                  <Input placeholder="e.g. Opposite Sony Center" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item
+                  name="pincode"
+                  label="PIN code"
+                  rules={[
+                    { required: true, message: 'Enter the 6-digit PIN code' },
+                    { pattern: /^\d{6}$/, message: 'PIN code must be 6 digits' },
+                  ]}
+                >
+                  <Input placeholder="e.g. 560034" maxLength={6} inputMode="numeric" />
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="city" label="City" rules={[{ required: true, message: 'Enter the city' }]}>
+                  <AutoComplete
+                    options={cityOptions}
+                    onSearch={handleSearchCity}
+                    onSelect={handleSelectCity}
+                    placeholder="Start typing your city"
+                  >
+                    <Input suffix={searchingCity ? <Spin size="small" /> : null} />
+                  </AutoComplete>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24} md={12}>
+                <Form.Item name="state" label="State" rules={[{ required: true, message: 'Select the state' }]}>
+                  <AutoComplete
+                    options={STATE_OPTIONS}
+                    filterOption={(input, option) =>
+                      (option?.value ?? '').toLowerCase().includes(input.trim().toLowerCase())
+                    }
+                    placeholder="Select or type your state"
+                  >
+                    <Input />
+                  </AutoComplete>
+                </Form.Item>
+              </Col>
+
+              <Col xs={24}>
+                <Form.Item name="formatted_address" label="Full address for receipts">
+                  <Input.TextArea autoSize={{ minRows: 2, maxRows: 4 }} placeholder="Complete delivery address" />
+                </Form.Item>
+              </Col>
+            </Row>
+
+            <Form.Item name="is_default" valuePropName="checked" className="rq-default-check">
+              <Checkbox>Make this my default delivery address</Checkbox>
             </Form.Item>
-          </Flex>
-
-          {/* Address House/Building & Street */}
-          <Form.Item
-            name="house_flat_floor"
-            label="Flat / House No. / Building / Floor"
-            rules={[{ required: true, message: 'House or flat number is required' }]}
-          >
-            <Input placeholder="e.g. Flat 402, 4th Floor, Skyline Residency" />
-          </Form.Item>
-
-          <Form.Item
-            name="street_area"
-            label="Street Name, Road, or Area Colony"
-            rules={[{ required: true, message: 'Street or area is required' }]}
-          >
-            <Input placeholder="e.g. 80 Feet Road, 6th Block, Koramangala" />
-          </Form.Item>
-
-          <Flex gap={12} wrap={isMobile ? 'wrap' : 'nowrap'}>
-            <Form.Item
-              name="landmark"
-              label="Nearby Landmark (Optional)"
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
-            >
-              <Input placeholder="e.g. Opposite Sony Center / Near Metro" />
-            </Form.Item>
-
-            <Form.Item
-              name="pincode"
-              label="PIN Code"
-              rules={[{ required: true, message: 'Postal PIN code is required' }]}
-              style={{ width: isMobile ? '100%' : 150 }}
-            >
-              <Input placeholder="e.g. 560034" maxLength={8} />
-            </Form.Item>
-          </Flex>
-
-          <Flex gap={12} wrap={isMobile ? 'wrap' : 'nowrap'}>
-            <Form.Item
-              name="city"
-              label="City"
-              rules={[{ required: true, message: 'City is required' }]}
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
-            >
-              <Input placeholder="City" />
-            </Form.Item>
-
-            <Form.Item
-              name="state"
-              label="State"
-              rules={[{ required: true, message: 'State is required' }]}
-              style={{ flex: 1, minWidth: isMobile ? '100%' : 'auto' }}
-            >
-              <Input placeholder="State" />
-            </Form.Item>
-          </Flex>
-
-          {/* Complete readable address */}
-          <Form.Item name="formatted_address" label="Full Address Summary (Used for delivery receipts)">
-            <Input.TextArea rows={2} placeholder="Complete formatted delivery address" />
-          </Form.Item>
-
-          {/* Default Switch */}
-          <Form.Item name="is_default" valuePropName="checked">
-            <Checkbox>Set as default address for future orders & quick search</Checkbox>
-          </Form.Item>
-
-          <Flex
-            justify="flex-end"
-            gap={10}
-            style={{ marginTop: 16 }}
-            wrap={isMobile ? 'wrap' : 'nowrap'}
-          >
-            <Button
-              onClick={onClose}
-              disabled={saving}
-              style={{
-                borderRadius: radii.md,
-                borderColor: colors.border,
-                color: colors.textMain,
-                fontWeight: 600,
-                flex: isMobile ? 1 : 'none',
-                height: isMobile ? 42 : 'auto',
-                fontFamily: typography.fontFamily.body,
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={saving}
-              icon={<CheckOutlined />}
-              style={{
-                background: colors.primary,
-                borderColor: colors.primary,
-                borderRadius: radii.md,
-                fontWeight: 700,
-                padding: '0 24px',
-                flex: isMobile ? 1 : 'none',
-                height: isMobile ? 42 : 'auto',
-                boxShadow: shadows.primary,
-                fontFamily: typography.fontFamily.body,
-              }}
-            >
-              {initialData ? 'Update Address' : 'Save Address'}
-            </Button>
-          </Flex>
+          </section>
         </Form>
-      </Modal>
+      </ResponsiveSheet>
 
-      {/* Embedded Full View Map Picker Modal */}
       {showMapPicker && (
         <Modal
           open={showMapPicker}
@@ -594,10 +593,11 @@ const AddressModal = ({
           footer={null}
           zIndex={zIndex ? zIndex + 100 : 1200}
           width="100vw"
-          wrapClassName="full-view-map-modal"
+          wrapClassName="full-view-map-modal rq-map-modal"
           closable={false}
-          style={{ top: 0, left: 0, margin: 0, padding: 0, maxWidth: '100vw', height: '100vh' }}
-          styles={{ body: { height: '100vh', padding: 0, margin: 0, overflow: 'hidden' } }}
+          destroyOnHidden
+          style={{ top: 0, left: 0, margin: 0, padding: 0, maxWidth: '100vw' }}
+          styles={{ body: { height: '100%', padding: 0, margin: 0, overflow: 'hidden' } }}
         >
           <LeafletComponent
             isModalVisible={showMapPicker}
@@ -625,4 +625,3 @@ AddressModal.propTypes = {
 };
 
 export default AddressModal;
-

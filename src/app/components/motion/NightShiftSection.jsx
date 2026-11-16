@@ -3,10 +3,11 @@ import PropTypes from 'prop-types';
 import { Row, Col, Flex } from 'antd';
 import {
   AimOutlined,
-  MessageOutlined,
-  ThunderboltFilled,
   CheckCircleFilled,
+  ClockCircleFilled,
+  WalletOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 
 const NIGHT_STEPS = [
   {
@@ -24,7 +25,7 @@ const NIGHT_STEPS = [
     title: 'Confirm shelf stock & craft',
     description:
       'Skip the guesswork. Chat directly with the actual brick-and-mortar shopkeeper in real-time to verify sizes, fresh batches, or custom requests.',
-    icon: <MessageOutlined style={{ fontSize: 22, color: '#5690FE' }} />,
+    icon: <ChatIcon style={{ fontSize: 22, color: '#5690FE' }} />,
     accent: '#5690FE',
   },
   {
@@ -33,7 +34,7 @@ const NIGHT_STEPS = [
     title: 'Collect or dispatch in 15m',
     description:
       'Pay 100% directly to the merchant with ₹0 platform markup. Choose rapid counter pickup or local runner delivery straight to your door.',
-    icon: <ThunderboltFilled style={{ fontSize: 22, color: '#F59E0B' }} />,
+    icon: <ClockCircleFilled style={{ fontSize: 22, color: '#F59E0B' }} />,
     accent: '#F59E0B',
   },
 ];
@@ -223,7 +224,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Sunrise Bakehouse:</span>
-                      <span style={{ fontSize: 11, color: '#5690FE', fontWeight: 700 }}>“Hot batch at 7 AM ✓”</span>
+                      <span style={{ fontSize: 11, color: '#5690FE', fontWeight: 700 }}>“Hot batch at 7 AM”</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Typing</span>
@@ -237,7 +238,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
                 {idx === 2 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 13 }}>⚡</span>
+                      <WalletOutlined style={{ fontSize: 13, color: '#F59E0B' }} />
                       <div>
                         <div style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>Direct UPI</div>
                         <div style={{ fontSize: 10, color: '#10B981', fontWeight: 700 }}>₹0 Platform Fee</div>

@@ -1,0 +1,398 @@
+/* ==========================================================================
+   Cart drawer. Right side panel on desktop, bottom sheet on phones.
+   Palette mirrors styles/theme.js.
+   ========================================================================== */
+
+/* ---------- Header ---------- */
+.rq-cart-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rq-cart-title-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  background: #e6f0ff;
+  color: #0b2d6b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.rq-cart-title-main {
+  font-weight: 700;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #1c1c19;
+}
+
+.rq-cart-title-sub {
+  font-size: 12px;
+  color: #575a65;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Phones: the cart takes the whole screen */
+.rq-cart-drawer--mobile .ant-drawer-content {
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.rq-cart-drawer--mobile .ant-drawer-header {
+  padding-top: calc(12px + env(safe-area-inset-top, 0px));
+}
+
+/* ---------- Sections ---------- */
+.rq-cart-section {
+  padding: 16px 0;
+  border-top: 1px solid #f1ede8;
+}
+
+.rq-cart-section:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.rq-cart-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px 12px;
+  margin-bottom: 10px;
+}
+
+.rq-cart-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #1c1c19;
+}
+
+.rq-cart-section-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.rq-cart-hint {
+  font-size: 12px;
+  color: #575a65;
+  margin-bottom: 10px;
+}
+
+/* Guest sign-in card: app parchment + navy, not the stock blue alert */
+.rq-cart-signin {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  margin-bottom: 16px;
+  background: var(--surface-peach, #f7ede4);
+  border: 1px solid var(--surface-peach-border, #eadbcc);
+  border-radius: 12px;
+}
+
+.rq-cart-signin-icon {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--primary, #0b2d6b);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.rq-cart-signin-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-cart-signin-title {
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1.3;
+  color: var(--text-main, #1c1c19);
+}
+
+.rq-cart-signin-sub {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-light, #575a65);
+}
+
+.rq-cart-signin-btn {
+  flex-shrink: 0;
+}
+
+.rq-cart-form .ant-form-item {
+  margin-bottom: 14px;
+}
+
+.rq-cart-form .ant-form-item:last-child {
+  margin-bottom: 0;
+}
+
+/* Fulfilment toggle */
+.rq-seg-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.rq-seg-opt em {
+  font-style: normal;
+  font-size: 12px;
+  color: #575a65;
+  font-weight: 500;
+}
+
+/* ---------- Cart items ---------- */
+.rq-cart-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #ffffff;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+}
+
+.rq-cart-item + .rq-cart-item {
+  margin-top: 8px;
+}
+
+.rq-cart-item-thumb,
+.rq-cart-item-thumb-placeholder {
+  width: 56px;
+  height: 56px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1px solid #f1ede8;
+}
+
+.rq-cart-item-thumb-placeholder {
+  background: #f1ede8;
+  color: #444650;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.rq-cart-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.rq-cart-item-name {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.3;
+  color: #1c1c19;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.rq-cart-item-price {
+  font-size: 12px;
+  color: #575a65;
+  margin-top: 2px;
+}
+
+.rq-cart-item-line {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0b2d6b;
+  margin-top: 2px;
+}
+
+.rq-qty {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  height: 36px;
+  border: 1px solid #ebe7e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #ffffff;
+}
+
+.rq-qty .ant-btn {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rq-qty-value {
+  min-width: 28px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 14px;
+  color: #1c1c19;
+}
+
+/* ---------- Payment options ---------- */
+.rq-payment-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.rq-payment-option.ant-radio-wrapper {
+  display: flex;
+  align-items: flex-start;
+  width: 100%;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+  background: #ffffff;
+  line-height: 1.4;
+}
+
+.rq-payment-option.ant-radio-wrapper-checked {
+  border-color: #0b2d6b;
+  background: #e6f0ff;
+}
+
+.rq-payment-title {
+  display: block;
+  font-weight: 600;
+  font-size: 14px;
+  color: #1c1c19;
+}
+
+.rq-payment-desc {
+  display: block;
+  font-size: 12px;
+  color: #575a65;
+  margin-top: 2px;
+}
+
+/* ---------- Bill summary ---------- */
+.rq-cart-summary {
+  background: #f7f3ee;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.rq-cart-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 14px;
+  color: #444650;
+  padding: 3px 0;
+}
+
+.rq-cart-summary-row strong {
+  color: #1c1c19;
+  font-weight: 600;
+}
+
+.rq-cart-summary-total {
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px dashed #ddd6cc;
+  font-size: 16px;
+  font-weight: 800;
+  color: #1c1c19;
+}
+
+.rq-cart-summary-total strong {
+  color: #0b2d6b;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.rq-cart-pill-free {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  color: #0056bd;
+  background: #e6f0ff;
+  border: 1px solid #d2e3fc;
+}
+
+/* ---------- Queries ---------- */
+.rq-query-box {
+  background: #f7f3ee;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.rq-query-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.rq-query-chips .ant-btn {
+  border-radius: 999px;
+  font-size: 12px;
+  background: #ffffff;
+}
+
+/* ---------- Sticky footer ---------- */
+.rq-cart-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rq-cart-footer-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rq-cart-footer-amount {
+  font-size: 20px;
+  font-weight: 800;
+  color: #0b2d6b;
+  line-height: 1.2;
+}
+
+/* ---------- Mobile tuning ---------- */
+@media (max-width: 767px) {
+  .rq-cart-item {
+    padding: 10px;
+    gap: 10px;
+  }
+
+  .rq-cart-item-thumb,
+  .rq-cart-item-thumb-placeholder {
+    width: 48px;
+    height: 48px;
+  }
+
+  .rq-cart-footer .ant-btn-lg {
+    height: 48px;
+  }
+}

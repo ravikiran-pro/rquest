@@ -26,6 +26,13 @@ import {
   GiftOutlined,
   AudioOutlined,
   CloseOutlined,
+  ClockCircleOutlined,
+  CarOutlined,
+  CoffeeOutlined,
+  ShoppingCartOutlined,
+  ShopOutlined,
+  SafetyCertificateOutlined,
+  ArrowUpOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
@@ -74,7 +81,7 @@ const FEATURED_SHOPS = [
     reviewsCount: 184,
     description: 'Freshly pulled batch of multi-grain boules, almond croissants, and brioche burger buns...',
     perk: 'Pickup in 10m',
-    perkIcon: '🕒',
+    perkIcon: <ClockCircleOutlined />,
     isOpen: true,
     verified: true,
     area: '4th Block',
@@ -89,7 +96,7 @@ const FEATURED_SHOPS = [
     reviewsCount: 312,
     description: 'Farm harvest arrived 6 AM today: hydroponic spinach, Ooty carrots, cold-pressed mustard oil,',
     perk: 'Delivery in 20m',
-    perkIcon: '🚚',
+    perkIcon: <CarOutlined />,
     isOpen: true,
     verified: true,
     area: '1st Block',
@@ -104,7 +111,7 @@ const FEATURED_SHOPS = [
     reviewsCount: 96,
     description: 'Plumbing spares, LED fixtures, wall anchors, and instant tool rentals with in-store technician...',
     perk: 'Tools & Help',
-    perkIcon: '🔧',
+    perkIcon: <ToolOutlined />,
     isOpen: true,
     verified: true,
     area: '80 Feet Rd',
@@ -119,7 +126,7 @@ const FEATURED_SHOPS = [
     reviewsCount: 78,
     description: 'Fresh morning cut lilies, bespoke celebration bouquets, terrarium moss, and hand-tied...',
     perk: 'Hand Tied',
-    perkIcon: '🪴',
+    perkIcon: <GiftOutlined />,
     isOpen: true,
     verified: true,
     area: 'Coral Parkway',
@@ -143,7 +150,7 @@ const CATEGORIES_IN_FOCUS = [
     count: '18 shops',
     iconBg: '#FFEDD5',
     iconColor: '#EA580C',
-    icon: <span style={{ fontSize: 24 }}>🥐</span>,
+    icon: <CoffeeOutlined style={{ fontSize: 24 }} />,
     categoryFilter: 'Food & Dining',
   },
   {
@@ -350,7 +357,7 @@ const HomeScreen = () => {
       console.warn('Geolocation detection error:', error);
       if (error?.isPermissionDenied) {
         message.error(
-          'Location access is blocked in your browser. Please allow location access in your browser address bar (🔒 icon), or search your area on the map.',
+          'Location access is blocked in your browser. Please allow location access in your browser address bar, or search your area on the map.',
           6
         );
       } else if (isUserTriggered) {
@@ -749,7 +756,7 @@ const HomeScreen = () => {
                       onMouseEnter={(e) => (e.currentTarget.style.background = '#D1D5DB')}
                       onMouseLeave={(e) => (e.currentTarget.style.background = '#E5E7EB')}
                     >
-                      ✕
+                      <CloseOutlined />
                     </button>
                   )}
                 </div>
@@ -854,7 +861,7 @@ const HomeScreen = () => {
                   className="quick-chip-gpt"
                   onClick={() => handleQuickCategory('bakery')}
                 >
-                  <span className="chip-emoji" style={{ fontSize: 15 }}>🥐</span>
+                  <CoffeeOutlined className="chip-emoji" style={{ fontSize: 15 }} />
                   <span>Bakery</span>
                 </button>
                 <button
@@ -862,7 +869,7 @@ const HomeScreen = () => {
                   className="quick-chip-gpt"
                   onClick={() => handleQuickCategory('grocery')}
                 >
-                  <span className="chip-emoji" style={{ fontSize: 15 }}>🛒</span>
+                  <ShoppingCartOutlined className="chip-emoji" style={{ fontSize: 15 }} />
                   <span>Grocery</span>
                 </button>
                 <button
@@ -870,7 +877,7 @@ const HomeScreen = () => {
                   className="quick-chip-gpt"
                   onClick={() => handleQuickCategory('hardware')}
                 >
-                  <span className="chip-emoji" style={{ fontSize: 15 }}>🔧</span>
+                  <ToolOutlined className="chip-emoji" style={{ fontSize: 15 }} />
                   <span>Hardware</span>
                 </button>
                 <button
@@ -878,7 +885,7 @@ const HomeScreen = () => {
                   className="quick-chip-gpt"
                   onClick={() => handleQuickCategory('pharmacy')}
                 >
-                  <span className="chip-emoji" style={{ fontSize: 14, color: '#E11D48', fontWeight: 800 }}>➕</span>
+                  <MedicineBoxOutlined className="chip-emoji" style={{ fontSize: 15, color: '#E11D48' }} />
                   <span>Pharmacy</span>
                 </button>
                 <button
@@ -886,7 +893,7 @@ const HomeScreen = () => {
                   className="quick-chip-gpt"
                   onClick={() => handleQuickCategory('florist')}
                 >
-                  <span className="chip-emoji" style={{ fontSize: 15 }}>🌸</span>
+                  <GiftOutlined className="chip-emoji" style={{ fontSize: 15 }} />
                   <span>Florist</span>
                 </button>
               </div>
@@ -983,7 +990,7 @@ const HomeScreen = () => {
             <span>
               View all {activeMerchantCount} shops in {cleanAreaName}
             </span>
-            <span style={{ fontSize: 13 }}>→</span>
+            <ArrowRightOutlined style={{ fontSize: 12 }} />
           </button>
         </Flex>
 
@@ -1285,7 +1292,7 @@ const HomeScreen = () => {
                     gap: 6,
                   }}
                 >
-                  <span>🏪</span> MERCHANT PARTNER COMMUNITY
+                  <ShopOutlined /> MERCHANT PARTNER COMMUNITY
                 </span>
               </div>
 
@@ -1389,7 +1396,7 @@ const HomeScreen = () => {
                     onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
                   >
                     <span>Sell on Rquest</span>
-                    <span style={{ fontSize: 14 }}>→</span>
+                    <ArrowRightOutlined style={{ fontSize: 13 }} />
                   </button>
 
                   {/* See How It Works White Pill Button */}
@@ -1513,7 +1520,7 @@ const HomeScreen = () => {
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span>🏪</span>
+            <ShopOutlined />
             <span style={{ fontFamily: 'var(--font-headline)', fontSize: 20, fontWeight: 700 }}>
               How Selling on Rquest Works
             </span>
@@ -1534,7 +1541,7 @@ const HomeScreen = () => {
             }}
             style={{ borderRadius: radii.md }}
           >
-            Start Free Store Setup →
+            Start Free Store Setup <ArrowRightOutlined />
           </Button>,
         ]}
         width={560}
@@ -1628,7 +1635,7 @@ const HomeScreen = () => {
         <div className="sticky-neighborhood-bar">
           <div className="sticky-radar-pulse" />
           <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: '#110E28', whiteSpace: 'nowrap' }}>
-            ⚡ {activeMerchantCount > 0 ? `${activeMerchantCount} verified shops` : 'Verified shops'}
+            <SafetyCertificateOutlined /> {activeMerchantCount > 0 ? `${activeMerchantCount} verified shops` : 'Verified shops'}
             {!isMobile && (
               <>
                 {' open in '}
@@ -1656,7 +1663,7 @@ const HomeScreen = () => {
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)',
             }}
           >
-            <span>Search ↑</span>
+            <ArrowUpOutlined /><span>Search</span>
           </button>
           <button
             type="button"

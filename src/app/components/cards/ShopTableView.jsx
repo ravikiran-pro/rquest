@@ -4,9 +4,9 @@ import { Button, Typography, Tag, Tooltip, Flex, Grid } from 'antd';
 import {
   CheckCircleFilled,
   StarFilled,
-  MessageOutlined,
   ShopOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useGlobalStore, useCartStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
@@ -205,7 +205,7 @@ const ShopTableView = ({
 
           <Tooltip title={!user_data?.user_id ? 'Login to chat' : 'Direct Chat'}>
             <Button
-              icon={<MessageOutlined style={{ fontSize: 16 }} />}
+              icon={<ChatIcon style={{ fontSize: 16 }} />}
               style={{
                 borderRadius: radii.md,
                 height: 38,
@@ -457,7 +457,7 @@ const ShopTableView = ({
                           <Tooltip title={!user_data?.user_id ? 'Login to chat' : 'Chat'}>
                             <Button
                               size="small"
-                              icon={<MessageOutlined />}
+                              icon={<ChatIcon />}
                               style={{
                                 borderRadius: radii.sm || 6,
                                 height: 32,

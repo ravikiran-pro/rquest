@@ -22,7 +22,6 @@ import {
 import {
   PhoneOutlined,
   CompassOutlined,
-  MessageOutlined,
   ShoppingCartOutlined,
   PlusOutlined,
   MinusOutlined,
@@ -33,12 +32,12 @@ import {
   ClockCircleOutlined,
   SearchOutlined,
   StarFilled,
-  ThunderboltFilled,
   EditOutlined,
   ShopOutlined,
   EyeOutlined,
   CarOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../../app/components/common/ChatIcon';
 import {
   netWorkCall,
   apiConfig,
@@ -568,7 +567,7 @@ const StorefrontScreen = () => {
                 letterSpacing: '0.2px',
               }}
             >
-              <ThunderboltFilled style={{ color: '#fbbf24' }} />
+              <ShopOutlined style={{ color: '#fbbf24' }} />
               Direct Local Store • 0% Commission
             </div>
 
@@ -812,7 +811,7 @@ const StorefrontScreen = () => {
                 ) : (
                   <Button
                     type="primary"
-                    icon={<MessageOutlined />}
+                    icon={<ChatIcon />}
                     onClick={() => {
                       if (!user_data?.user_id) {
                         message.info('Please log in to chat with the store owner');
@@ -1043,7 +1042,7 @@ const StorefrontScreen = () => {
                 ) : (
                   <Button
                     type="primary"
-                    icon={<MessageOutlined />}
+                    icon={<ChatIcon />}
                     onClick={() => {
                       if (!user_data?.user_id) {
                         message.info('Please log in to chat with the store owner');

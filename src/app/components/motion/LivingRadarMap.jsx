@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { StarFilled, ArrowRightOutlined, ThunderboltFilled } from '@ant-design/icons';
+import { StarFilled, ArrowRightOutlined, ClockCircleFilled, CheckCircleFilled } from '@ant-design/icons';
 
 const PINS = [
   {
@@ -243,7 +243,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
               fontSize: 16,
             }}
           >
-            <ThunderboltFilled />
+            <ClockCircleFilled />
           </div>
           <div>
             <div style={{ fontSize: 13, fontWeight: 800, color: '#110E28', lineHeight: 1.2 }}>
@@ -313,7 +313,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
                   <span style={{ fontSize: 13.5, fontWeight: 700, color: '#110E28' }}>
                     {activePin.fullName}
                   </span>
-                  <span style={{ color: '#0159C5', fontSize: 12 }}>✓</span>
+                  <CheckCircleFilled style={{ color: '#0159C5', fontSize: 12 }} />
                 </div>
                 <div style={{ fontSize: 11.5, color: '#64748B', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                   <span>{activePin.distance} · {activePin.category}</span>

@@ -19,7 +19,6 @@ import {
 } from 'antd';
 import {
   FileDoneOutlined,
-  MessageOutlined,
   ShopOutlined,
   ClockCircleOutlined,
   CheckCircleOutlined,
@@ -39,7 +38,9 @@ import {
   QrcodeOutlined,
   WalletOutlined,
   ToolOutlined,
+  CheckOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../../app/components/common/ChatIcon';
 import { netWorkCall, apiConfig, checkUserRole } from '../../app/utils';
 import { useGlobalStore, useChatStore } from '../../app/services';
 import { colors, typography, radii, shadows } from '../../app/styles/theme';
@@ -425,7 +426,7 @@ const OrdersScreen = () => {
                       boxShadow: step.done ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                     }}
                   >
-                    {step.done ? '✓' : <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#98A2B3' }} />}
+                    {step.done ? <CheckOutlined style={{ fontSize: 10 }} /> : <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#98A2B3' }} />}
                   </div>
                 )}
                 <div style={{ fontSize: 11, fontWeight: isBeacon || step.done ? 700 : 600, color: isBeacon ? colors.secondary : step.done ? '#1D2939' : '#667085' }}>
@@ -619,7 +620,7 @@ const OrdersScreen = () => {
               onClick={() => setActiveTab(activeTab === 'quotes' ? 'customer_orders' : 'quotes')}
               style={{ color: '#0056bd', fontWeight: 700, padding: 0 }}
             >
-              {activeTab === 'quotes' ? '← Back to Orders' : `View Service Quotes (${customerQuotes.length})`}
+              {activeTab === 'quotes' ? 'Back to orders' : `View Service Quotes (${customerQuotes.length})`}
             </Button>
           </div>
         )}
@@ -1047,7 +1048,7 @@ const OrdersScreen = () => {
                       {/* Customer Communication Buttons */}
                       <Space wrap>
                         <Button
-                          icon={<MessageOutlined />}
+                          icon={<ChatIcon />}
                           onClick={() => handleChatOpen(ord.customer_id, ord.shop_id, { username: ord.customer?.username || 'Customer' })}
                           style={{ borderRadius: 8, fontWeight: 600 }}
                         >
@@ -1576,7 +1577,7 @@ const OrdersScreen = () => {
                               gap: 4,
                             }}
                           >
-                            {ord.status === 'completed' ? '✓ Completed' : 'Cancelled'}
+                            {ord.status === 'completed' ? 'Completed' : 'Cancelled'}
                           </span>
                         </div>
 
@@ -1755,7 +1756,7 @@ const OrdersScreen = () => {
 
                         <Button
                           type="primary"
-                          icon={<MessageOutlined />}
+                          icon={<ChatIcon />}
                           onClick={() => handleChatOpen(q.customer_id, q.shop_id, { username: q.customer?.username })}
                           style={{ background: colors.primary, borderColor: colors.primary, borderRadius: 8, fontWeight: 700 }}
                         >
@@ -1827,7 +1828,7 @@ const OrdersScreen = () => {
                             <Button
                               type="primary"
                               block
-                              icon={<MessageOutlined />}
+                              icon={<ChatIcon />}
                               onClick={() => handleChatOpen(q.shop?.owner_id, q.shop_id, { shop_name: q.shop?.shop_name })}
                               style={{ height: 40, borderRadius: 10, fontWeight: 700, background: colors.primary, borderColor: colors.primary }}
                             >

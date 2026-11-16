@@ -5,7 +5,6 @@ import {
   ShopOutlined,
   CheckOutlined,
   LoadingOutlined,
-  MessageOutlined,
   DeleteOutlined,
   InboxOutlined,
   MoreOutlined,
@@ -14,6 +13,7 @@ import {
   SendOutlined,
   FilterOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 import { Dropdown, Popconfirm, Select, Input } from 'antd';
 import {
   MainContainer,
@@ -412,7 +412,7 @@ function ChatApp() {
         ...prev,
         [selectedChat]: (prev[selectedChat] || []).map((m) =>
           m.id === msg.id
-            ? { ...m, is_deleted: true, message: '🚫 This message was deleted' }
+            ? { ...m, is_deleted: true, message: 'This message was deleted' }
             : m
         ),
       }));
@@ -644,7 +644,7 @@ function ChatApp() {
           ...prev,
           [partnerId]: thread.map((m) =>
             m.id === deletedData.id
-              ? { ...m, is_deleted: true, message: '🚫 This message was deleted' }
+              ? { ...m, is_deleted: true, message: 'This message was deleted' }
               : m
           ),
         };
@@ -896,7 +896,7 @@ function ChatApp() {
               <div className="rquest-sidebar-top-header">
                 <div className="rquest-sidebar-title-badge">
                   <div className="rquest-sidebar-icon-wrap">
-                    <MessageOutlined />
+                    <ChatIcon />
                   </div>
                   <span className="rquest-sidebar-title">Messages</span>
                 </div>
@@ -989,7 +989,7 @@ function ChatApp() {
               <ConversationList loading={isChatLoading}>
                 {conversationList.length === 0 && !isChatLoading ? (
                   <div className="rquest-chat-empty-state">
-                    <MessageOutlined className="rquest-chat-empty-state-icon" />
+                    <ChatIcon className="rquest-chat-empty-state-icon" />
                     <div className="rquest-chat-empty-state-title">
                       {activeFilter === 'archived'
                         ? 'No archived conversations'
@@ -1009,7 +1009,7 @@ function ChatApp() {
                         onClick={() => handleStartChatWithShop(browsingShop)}
                         style={{ fontSize: 12, height: 36, padding: '0 12px' }}
                       >
-                        <MessageOutlined /> Chat with {browsingShop.shop_name}
+                        <ChatIcon /> Chat with {browsingShop.shop_name}
                       </button>
                     )}
                   </div>
@@ -1089,7 +1089,7 @@ function ChatApp() {
                                 ) : item.lastMsg ? (
                                   item.lastMsg.is_deleted ? (
                                     <span style={{ fontStyle: 'italic', color: 'var(--text-light, #747781)' }}>
-                                      🚫 This message was deleted
+                                      This message was deleted
                                     </span>
                                   ) : (
                                     <span>
@@ -1271,7 +1271,7 @@ function ChatApp() {
                 >
                   {activeMessages.length === 0 ? (
                     <div className="rquest-chat-empty-state">
-                      <MessageOutlined className="rquest-chat-empty-state-icon" />
+                      <ChatIcon className="rquest-chat-empty-state-icon" />
                       <div className="rquest-chat-empty-state-title">
                         Start chatting with {activePartnerInfo.name}
                       </div>
@@ -1306,7 +1306,7 @@ function ChatApp() {
                           )}
                           <Message
                             model={{
-                              message: isDeleted ? '🚫 This message was deleted' : msg.message,
+                              message: isDeleted ? 'This message was deleted' : msg.message,
                               sentTime: timeStr,
                               sender: isOutgoing ? 'You' : activePartnerInfo.name,
                               direction: isOutgoing ? 'outgoing' : 'incoming',
@@ -1450,7 +1450,7 @@ function ChatApp() {
                   <CloseOutlined />
                 </button>
 
-                <MessageOutlined
+                <ChatIcon
                   style={{ fontSize: 44, color: colors.primary, marginBottom: 14 }}
                 />
                 <div
@@ -1489,7 +1489,7 @@ function ChatApp() {
                       className="rquest-chat-start-btn"
                       onClick={() => handleStartChatWithShop(browsingShop)}
                     >
-                      <MessageOutlined /> Start Chat with {browsingShop.shop_name}
+                      <ChatIcon /> Start Chat with {browsingShop.shop_name}
                     </button>
                   </div>
                 )}

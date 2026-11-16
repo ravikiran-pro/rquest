@@ -3,6 +3,9 @@ import ReactDOM from 'react-dom';
 import './globals.css';
 import App from './App';
 import { registerSW } from 'virtual:pwa-register';
+import { initTouchRipple } from './utils/ripple';
+
+initTouchRipple();
 
 // Automatically register service worker and refresh when a new build is deployed
 registerSW({

@@ -5,9 +5,9 @@ import {
   CompassFilled,
   DownOutlined,
   CheckCircleFilled,
-  ThunderboltFilled,
   StarFilled,
   EnvironmentFilled,
+  ClockCircleOutlined,
 } from '@ant-design/icons';
 import { distanceConvertor } from '../../utils';
 import { colors } from '../../styles/theme';
@@ -39,10 +39,10 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
         </Flex>
         <Flex align="center" gap={6}>
           <StarFilled style={{ color: '#f59e0b' }} />
-          <span>High customer rating: <strong>{rating}★</strong></span>
+          <span>High customer rating: <strong>{rating} / 5</strong></span>
         </Flex>
         <Flex align="center" gap={6}>
-          <ThunderboltFilled style={{ color: colors.primary }} />
+          <ClockCircleOutlined style={{ color: colors.primary }} />
           <span>Quick response time and direct service</span>
         </Flex>
         <Flex align="center" gap={6}>
@@ -109,7 +109,7 @@ const AiRecommendationCard = ({ topResult, searchMode = 'shops', onClick }) => {
                 lineHeight: 1.4,
               }}
             >
-              <strong>{name}</strong> is recommended based on proximity ({distKm} km), verified status, and customer rating ({rating}★).
+              <strong>{name}</strong> is recommended based on proximity ({distKm} km), verified status, and customer rating ({rating} / 5).
             </Text>
           </Flex>
         </Flex>

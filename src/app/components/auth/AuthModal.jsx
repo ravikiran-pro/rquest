@@ -10,6 +10,8 @@ import {
   ArrowRightOutlined,
   UserOutlined,
   CloseOutlined,
+  MobileOutlined,
+  DownOutlined,
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../utils';
 import { useGlobalStore, subscribeToPushNotifications, requestPushPermission } from '../../services';
@@ -413,7 +415,7 @@ export const AuthModal = ({
                       <div className="rq-auth-country-picker">
                         <span className="rq-country-flag">🇮🇳</span>
                         <span className="rq-country-code">{countryCode}</span>
-                        <span className="rq-country-caret">▾</span>
+                        <DownOutlined className="rq-country-caret" />
                       </div>
                       <input
                         type="tel"
@@ -512,7 +514,7 @@ export const AuthModal = ({
                         }}
                       >
                         {passwordMode
-                          ? '← Switch back to OTP verification'
+                          ? 'Switch back to OTP verification'
                           : 'Or sign in with password'}
                       </button>
                     </div>
@@ -600,7 +602,7 @@ export const AuthModal = ({
                 </div>
 
                 <div className="rq-auth-autodetect-banner" style={{ margin: '8px 0 0', fontSize: 11.5 }}>
-                  <span className="rq-autodetect-icon">📲</span>
+                  <span className="rq-autodetect-icon"><MobileOutlined /></span>
                   <span className="rq-autodetect-text">Auto-detecting SMS OTP on this device...</span>
                 </div>
               </div>
@@ -664,7 +666,7 @@ export const AuthModal = ({
                         cursor: 'pointer',
                       }}
                     >
-                      📲 Send OTP via SMS instead
+                      Send OTP via SMS instead
                     </button>
                   ) : (
                     <button
@@ -757,7 +759,7 @@ export const AuthModal = ({
                     <div className="rq-auth-country-picker">
                       <span className="rq-country-flag">🇮🇳</span>
                       <span className="rq-country-code">+91</span>
-                      <span className="rq-country-caret">▾</span>
+                      <DownOutlined className="rq-country-caret" />
                     </div>
                     <input
                       type="tel"

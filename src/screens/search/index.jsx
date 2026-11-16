@@ -25,7 +25,10 @@ import {
   DownOutlined,
   AudioOutlined,
   CameraOutlined,
-  RobotOutlined,
+  CloseOutlined,
+  ControlOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
 } from '@ant-design/icons';
 import {
   LeafletComponent,
@@ -52,6 +55,7 @@ import { apiConfig, getAvailableFilters } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
 import { useHistory, useLocation, Link } from 'react-router-dom';
 import { radii } from '../../app/styles';
+import './search-immersive.css';
 import Routes from '../../app/routes/routes';
 
 const RADIUS_PRESETS = [
@@ -80,6 +84,7 @@ const SearchScreen = () => {
 
   const [searchText, setSearchText] = useState(initialQ);
   const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
   const [searchMode, setSearchMode] = useState(initialMode);
   const [filters, setFilters] = useState(() => ({
     ...DEFAULT_FILTERS,
@@ -427,7 +432,7 @@ const SearchScreen = () => {
     if (filters.minRating !== null && filters.minRating !== undefined) {
       tags.push({
         key: 'rating',
-        label: `★ ${filters.minRating}+`,
+        label: `${filters.minRating}+ rating`,
         onRemove: () => setFilters((prev) => ({ ...prev, minRating: null })),
       });
     }
@@ -451,15 +456,41 @@ const SearchScreen = () => {
     return locationName.split(',')[0].trim();
   }, [locationName]);
 
+  // Mobile search mode: full screen while the input is focused or has text
+  const isImmersive = isMobile && (isSearchFocused || searchText.trim().length > 0);
+
+  useEffect(() => {
+    document.body.classList.toggle('rq-search-immersive', isImmersive);
+    if (!isImmersive) setIsScrolled(false);
+  }, [isImmersive]);
+
+  useEffect(() => () => document.body.classList.remove('rq-search-immersive'), []);
+
+  const exitImmersive = () => {
+    setIsSearchFocused(false);
+    if (searchText) setSearchText('');
+    if (document.activeElement && document.activeElement.blur) document.activeElement.blur();
+  };
+
+  // Hysteresis: collapse the chips past 60px, expand again only near the top
+  const handleImmersiveScroll = (e) => {
+    const top = e.currentTarget.scrollTop;
+    setIsScrolled((prev) => (prev ? top > 8 : top > 60));
+  };
+
   const handleSearchSubmit = () => {
     setVisibleCount(18);
   };
 
   return (
-    <div style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}>
+    <div
+      className={`rq-search-page${isImmersive ? ' is-immersive' : ''}${isImmersive && isScrolled ? ' is-scrolled' : ''}`}
+      onScroll={isImmersive ? handleImmersiveScroll : undefined}
+      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}
+    >
       <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
         {/* Navigation Breadcrumb & Page Header */}
-        <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
+        <Flex justify="space-between" align="center" className="rq-immersive-hide" style={{ marginBottom: 16 }}>
           <Link
             to={Routes.home}
             style={{
@@ -482,6 +513,7 @@ const SearchScreen = () => {
 
         {/* Live Search & Filter Bar */}
         <div
+          className="rq-search-card"
           style={{
             background: '#FFFFFF',
             border: '1px solid #ECE7DF',
@@ -491,6 +523,10 @@ const SearchScreen = () => {
             marginBottom: 20,
           }}
         >
+          <div className="rq-immersive-count">
+            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} near {cleanAreaName}
+          </div>
+
           {/* Top Row: Search Input + Radius + Modals */}
           <div
             className="rquest-search-pill"
@@ -505,6 +541,15 @@ const SearchScreen = () => {
               marginBottom: 14,
             }}
           >
+            <button
+              type="button"
+              className="rq-immersive-back"
+              onClick={exitImmersive}
+              aria-label="Exit search"
+            >
+              <ArrowLeftOutlined />
+            </button>
+
             {/* Collapsible Radius Selector */}
             <div
               style={{
@@ -662,7 +707,7 @@ const SearchScreen = () => {
                   onMouseEnter={(e) => (e.currentTarget.style.background = '#D1D5DB')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = '#E5E7EB')}
                 >
-                  ✕
+                  <CloseOutlined />
                 </button>
               )}
             </div>
@@ -733,7 +778,7 @@ const SearchScreen = () => {
                   justifyContent: 'center',
                 }}
               >
-                <RobotOutlined style={{ fontSize: 15 }} />
+                <ControlOutlined style={{ fontSize: 15 }} />
               </button>
             </div>
 
@@ -762,6 +807,7 @@ const SearchScreen = () => {
             </button>
           </div>
 
+          <div className="rq-search-extras">
           {/* Controls Row: Mode switch, Location pin, View mode, Mobile filter */}
           <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
             <Flex align="center" gap={8} wrap="wrap">
@@ -789,7 +835,7 @@ const SearchScreen = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  🏪 Stores &amp; Outlets ({filteredShops.length})
+                  <ShopOutlined style={{ marginRight: 6 }} />Stores &amp; Outlets ({filteredShops.length})
                 </button>
                 <button
                   type="button"
@@ -806,7 +852,7 @@ const SearchScreen = () => {
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  🛍 Items &amp; Services ({filteredItems.length})
+                  <ShoppingOutlined style={{ marginRight: 6 }} />Items &amp; Services ({filteredItems.length})
                 </button>
               </div>
 
@@ -946,7 +992,7 @@ const SearchScreen = () => {
                     padding: '4px 6px',
                   }}
                 >
-                  Reset all ✕
+                  Reset all
                 </button>
               )}
             </Flex>
@@ -978,7 +1024,7 @@ const SearchScreen = () => {
                     onClick={tag.onRemove}
                     style={{ background: 'none', border: 'none', color: '#1E40AF', cursor: 'pointer', padding: 0 }}
                   >
-                    ✕
+                    <CloseOutlined style={{ fontSize: 10 }} />
                   </button>
                 </span>
               ))}
@@ -991,10 +1037,11 @@ const SearchScreen = () => {
               </button>
             </div>
           )}
+          </div>
         </div>
 
         {/* Results Grid with Sidebar */}
-        <Row gutter={isMobile ? [0, 16] : [24, 24]}>
+        <Row gutter={isMobile ? [0, 16] : [24, 24]} className="rq-search-results">
           {!isMobile && (
             <Col md={8} lg={7} xl={6} xxl={5}>
               <FilterSidebar
@@ -1049,9 +1096,17 @@ const SearchScreen = () => {
               </div>
             ) : viewMode === 'list' ? (
               <ShopTableView
-                shops={visibleItems}
-                userLocation={markerLocation}
-                onRowClick={(shop) => history.push(`/shop/${shop.id}`)}
+                items={visibleItems}
+                searchMode={searchMode}
+                onOpenMap={(entry) => {
+                  const shop = searchMode === 'shops' ? entry : entry.shop || {};
+                  const query = shop.directions
+                    ? null
+                    : encodeURIComponent(`${shop.shop_name || ''} ${shop.address || ''}`.trim());
+                  if (shop.directions || query) {
+                    window.open(shop.directions || `https://www.google.com/maps/search/?api=1&query=${query}`, '_blank', 'noopener');
+                  }
+                }}
               />
             ) : (
               <Row gutter={[20, 20]}>

@@ -26,12 +26,12 @@ import {
   LoginOutlined,
   UserAddOutlined,
   ShoppingCartOutlined,
-  MessageOutlined,
   RightOutlined,
   CompassOutlined,
   CarOutlined,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
+import ChatIcon from '../common/ChatIcon';
 
 const { Text } = Typography;
 
@@ -347,7 +347,7 @@ const SideBar = ({ open, handleClose }) => {
         {isLoggedIn && (
           <Button
             type="text"
-            icon={<MessageOutlined style={{ fontSize: 17 }} />}
+            icon={<ChatIcon style={{ fontSize: 17 }} />}
             className="drawer-nav-item"
             onClick={handleChatClick}
           >
