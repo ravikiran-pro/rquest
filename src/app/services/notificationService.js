@@ -1,6 +1,17 @@
 import React from 'react';
 import { notification, Button } from 'antd';
+import {
+  ArrowRightOutlined,
+  BellOutlined,
+  InboxOutlined,
+  ShopOutlined,
+  ShoppingOutlined,
+} from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../utils';
+
+// Older notifications carry emoji in the title; the icon tile replaces them
+const stripLeadingEmoji = (text = '') =>
+  String(text).replace(/^[\p{Extended_Pictographic}\u200d\ufe0f\s]+/u, '');
 
 /**
  * Convert base64 VAPID key string to Uint8Array for PushManager subscribe
@@ -177,81 +188,73 @@ export function displayPushNotification(notifData, history = null) {
 
   // 2. If browser tab is in background or permission granted, trigger native OS notification
   if (document.hidden || Notification.permission === 'granted') {
-    triggerNativeNotification(title, {
+    triggerNativeNotification(stripLeadingEmoji(title), {
       body,
       data,
     });
   }
 
-  // 3. Determine icon and action button based on notification type
-  let iconEmoji = '🔔';
+  // 3. Pick the icon tile (tone + icon) and action for this notification type
+  let tone = 'default';
+  let IconComp = BellOutlined;
   let actionLabel = 'View';
   let targetUrl = '/';
 
   if (type === 'account_register') {
-    iconEmoji = '🎉';
-    actionLabel = data?.url?.includes('client') ? 'Go to Store' : 'Explore Stores';
+    tone = 'lavender';
+    IconComp = ShopOutlined;
+    actionLabel = data?.url?.includes('client') ? 'Go to store' : 'Explore stores';
     targetUrl = data?.url || '/app';
   } else if (type === 'order_placed') {
-    iconEmoji = '🛍️';
-    actionLabel = data?.url?.includes('client') ? 'View New Order' : 'Track Order';
+    tone = 'lime';
+    IconComp = ShoppingOutlined;
+    actionLabel = data?.url?.includes('client') ? 'View order' : 'Track order';
     targetUrl = data?.url || '/orders';
   } else if (type === 'order_status_change') {
-    iconEmoji = '📦';
-    actionLabel = 'Track Order';
+    tone = 'navy';
+    IconComp = InboxOutlined;
+    actionLabel = 'Track order';
     targetUrl = data?.url || '/orders';
   } else if (data?.url) {
     targetUrl = data.url;
   }
 
-  // 4. Show Ant Design notification banner
+  const go = () => {
+    notification.destroy();
+    if (history) {
+      history.push(targetUrl);
+    } else {
+      window.location.href = targetUrl;
+    }
+  };
+
+  // Phones: show at the top so the bottom nav and cart stay usable
+  const isPhone = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
+  const h = React.createElement;
+
+  // 4. Show the in-app notification card (styles: .rq-notify in globals.css)
   notification.open({
-    message: React.createElement(
+    className: 'rq-notify',
+    icon: h('span', { className: `rq-notify-icon rq-notify-icon--${tone}` }, h(IconComp)),
+    message: h('span', { className: 'rq-notify-title' }, stripLeadingEmoji(title)),
+    description: h(
       'div',
-      { style: { display: 'flex', alignItems: 'center', gap: 8 } },
-      React.createElement('span', { style: { fontSize: 18 } }, iconEmoji),
-      React.createElement('span', { style: { fontWeight: 700, color: '#0f172a', fontSize: 14 } }, title)
-    ),
-    description: React.createElement(
-      'div',
-      { style: { marginTop: 4 } },
-      React.createElement('div', { style: { color: '#334155', fontSize: 13, lineHeight: '18px' } }, body),
+      null,
+      h('div', { className: 'rq-notify-body' }, body),
       targetUrl
-        ? React.createElement(
+        ? h(
             'div',
-            { style: { marginTop: 10, textAlign: 'right' } },
-            React.createElement(
+            { className: 'rq-notify-actions' },
+            h(
               Button,
-              {
-                type: 'primary',
-                size: 'small',
-                onClick: () => {
-                  notification.destroy();
-                  if (history) {
-                    history.push(targetUrl);
-                  } else {
-                    window.location.href = targetUrl;
-                  }
-                },
-                style: {
-                  borderRadius: 6,
-                  fontWeight: 600,
-                  fontSize: 12,
-                  background: '#0f172a',
-                  borderColor: '#0f172a',
-                },
-              },
-              `${actionLabel} →`
+              { type: 'primary', size: 'small', onClick: go, className: 'rq-notify-btn' },
+              actionLabel,
+              h(ArrowRightOutlined)
             )
           )
         : null
     ),
-    placement: 'bottomRight',
+    placement: isPhone ? 'top' : 'bottomRight',
     duration: 6,
-    style: {
-      borderRadius: 12,
-      boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
-      border: '1px solid #e2e8f0',
-    },
   });
 }

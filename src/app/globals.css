@@ -1499,3 +1499,149 @@ select:focus-visible {
 
 
 
+
+/* ==========================================================================
+   Overlay theme: notifications, modals, the cart and sheets share the home
+   page look - parchment canvas, soft lime glow, lime icon tile, navy actions
+   and Plus Jakarta Sans headings.
+   ========================================================================== */
+
+:root {
+  --overlay-glow: radial-gradient(120% 90% at 100% 0%, rgba(228, 251, 62, 0.18) 0%, rgba(228, 251, 62, 0) 55%);
+}
+
+/* ---------- In-app notification card (services/notificationService.js) ---------- */
+.ant-notification .rq-notify {
+  width: min(380px, calc(100vw - 24px));
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  background: var(--overlay-glow), var(--surface);
+  box-shadow: var(--shadow-popover);
+}
+
+.ant-notification .rq-notify .ant-notification-notice-icon {
+  line-height: 1;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-with-icon .ant-notification-notice-message,
+.ant-notification .rq-notify .ant-notification-notice-with-icon .ant-notification-notice-description {
+  margin-inline-start: 54px;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-message {
+  padding-inline-end: 24px;
+  margin-bottom: 2px;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-close {
+  top: 14px;
+  inset-inline-end: 14px;
+}
+
+.rq-notify-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.rq-notify-icon--lime { background: var(--brand-lime); color: var(--primary); }
+.rq-notify-icon--navy { background: var(--primary-light); color: var(--primary); }
+.rq-notify-icon--lavender { background: var(--brand-purple-badge); color: var(--brand-purple-text); }
+.rq-notify-icon--default { background: var(--surface-container); color: var(--text-main); }
+
+.rq-notify-title {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 1.3;
+  color: var(--text-main);
+}
+
+.rq-notify-body {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.rq-notify-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.rq-notify .rq-notify-btn {
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  /* Static notifications render outside the theme provider: set brand colours */
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #ffffff;
+  box-shadow: var(--shadow-primary);
+}
+
+.rq-notify .rq-notify-btn:not(:disabled):hover {
+  background: var(--primary-hover);
+  border-color: var(--primary-hover);
+  color: #ffffff;
+}
+
+/* ---------- Modals: warm glow, headline font ---------- */
+.ant-modal-wrap:not(.full-view-map-modal) .ant-modal-content {
+  border-radius: 20px;
+  background: var(--overlay-glow), var(--surface);
+}
+
+.ant-modal-wrap:not(.full-view-map-modal) .ant-modal-header {
+  background: transparent;
+}
+
+.ant-modal .ant-modal-title {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* ---------- Cart drawer and address / form sheets ---------- */
+.rq-cart-drawer .ant-drawer-header,
+.rq-sheet .ant-drawer-header {
+  background: var(--overlay-glow), var(--brand-bg);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rq-cart-drawer .ant-drawer-body,
+.rq-sheet .ant-drawer-body {
+  background: var(--brand-bg);
+}
+
+.rq-cart-drawer .ant-drawer-footer,
+.rq-sheet .ant-drawer-footer {
+  background: var(--surface);
+}
+
+.rq-cart-title-icon,
+.rq-sheet-title-icon {
+  background: var(--brand-lime) !important;
+  color: var(--primary) !important;
+}
+
+.rq-cart-title-main,
+.rq-sheet-title-main {
+  font-family: var(--font-headline);
+}
+
+/* Cards inside the cart sit white on the parchment canvas */
+.rq-cart-drawer .rq-cart-summary,
+.rq-cart-drawer .rq-query-box {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+}
