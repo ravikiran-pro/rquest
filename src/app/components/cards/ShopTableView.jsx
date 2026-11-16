@@ -244,6 +244,7 @@ const ShopTableView = ({
             <table
               style={{
                 width: '100%',
+                minWidth: 900,
                 borderCollapse: 'collapse',
                 textAlign: 'left',
                 fontSize: 13,
@@ -260,15 +261,15 @@ const ShopTableView = ({
                     fontSize: 12,
                   }}
                 >
-                  <th style={{ padding: '14px 16px', width: 60, textAlign: 'center' }}>S.No</th>
-                  <th style={{ padding: '14px 16px', minWidth: 220 }}>Name & Details</th>
-                  <th style={{ padding: '14px 16px', minWidth: 160 }}>Address</th>
-                  <th style={{ padding: '14px 16px', width: 110 }}>Availability</th>
-                  <th style={{ padding: '14px 16px', width: 90 }}>Distance</th>
-                  <th style={{ padding: '14px 16px', width: 80 }}>ETA</th>
-                  <th style={{ padding: '14px 16px', width: 120 }}>Response Time</th>
-                  <th style={{ padding: '14px 16px', width: 120 }}>Quoted Price</th>
-                  <th style={{ padding: '14px 16px', width: 140, textAlign: 'center' }}>Action</th>
+                  <th style={{ padding: '14px 12px', width: 60, textAlign: 'center' }}>S.No</th>
+                  <th style={{ padding: '14px 12px', minWidth: 200 }}>Name & Details</th>
+                  <th style={{ padding: '14px 12px', minWidth: 140 }}>Address</th>
+                  <th style={{ padding: '14px 12px', width: 110 }}>Availability</th>
+                  <th style={{ padding: '14px 12px', width: 90 }}>Distance</th>
+                  <th style={{ padding: '14px 12px', width: 80 }}>ETA</th>
+                  <th style={{ padding: '14px 12px', width: 120 }}>Response Time</th>
+                  <th style={{ padding: '14px 12px', width: 120 }}>Quoted Price</th>
+                  <th style={{ padding: '14px 12px', width: 140, textAlign: 'center' }}>Action</th>
                 </tr>
               </thead>
 
@@ -302,12 +303,12 @@ const ShopTableView = ({
                       onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
                     >
                       {/* S.No */}
-                      <td style={{ padding: '16px', textAlign: 'center', color: '#64748b', fontWeight: 600 }}>
+                      <td style={{ padding: '14px 12px', textAlign: 'center', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
                         {index + 1}
                       </td>
 
                       {/* Name & Details */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <Flex gap={12} align="center">
                           <div
                             style={{
@@ -359,7 +360,7 @@ const ShopTableView = ({
                       </td>
 
                       {/* Address & View on Map */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <Flex vertical>
                           <span style={{ fontWeight: 600, color: '#334155' }}>{area}</span>
                           <Button
@@ -381,7 +382,7 @@ const ShopTableView = ({
                       </td>
 
                       {/* Availability */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <Tag
                           style={{
                             borderRadius: 9999,
@@ -398,17 +399,17 @@ const ShopTableView = ({
                       </td>
 
                       {/* Distance */}
-                      <td style={{ padding: '16px', fontWeight: 600, color: '#0f172a' }}>
+                      <td style={{ padding: '14px 12px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>
                         {distKm} km
                       </td>
 
                       {/* ETA */}
-                      <td style={{ padding: '16px', fontWeight: 700, color: '#16a34a' }}>
+                      <td style={{ padding: '14px 12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap' }}>
                         {eta}
                       </td>
 
                       {/* Response Time */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block' }}>
                           {getResponseTime(index)}
                         </Text>
@@ -418,7 +419,7 @@ const ShopTableView = ({
                       </td>
 
                       {/* Quoted Price */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', display: 'block' }}>
                           {price}
                         </span>
@@ -428,7 +429,7 @@ const ShopTableView = ({
                       </td>
 
                       {/* Action Buttons */}
-                      <td style={{ padding: '16px' }}>
+                      <td style={{ padding: '14px 12px' }}>
                         <Flex align="center" gap={6} justify="center">
                           <Button
                             type="primary"

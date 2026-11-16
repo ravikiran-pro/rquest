@@ -290,10 +290,15 @@ const ShopCard = ({
     );
   }
 
+  const ratingText = Number(rating) > 0 ? Number(rating).toFixed(1) : null;
+  const distanceText =
+    distance !== undefined && distance !== null ? `${distanceConvertor(distance)} km` : null;
+
   return (
     <Card
       hoverable
       onClick={!isEdit ? goToStore : undefined}
+      className="rq-shop-card"
       style={{
         width: '100%',
         height: '100%',
@@ -301,245 +306,109 @@ const ShopCard = ({
         border: `1px solid ${colors.border}`,
         boxShadow: shadows.card,
         cursor: isEdit ? 'default' : 'pointer',
-        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflow: 'hidden',
         background: colors.surface,
       }}
       styles={{
         body: {
-          padding: screens.xs ? 14 : 18,
+          padding: screens.xs ? 14 : 16,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
+          gap: 12,
         },
       }}
     >
-      {/* Top Banner / Avatar & Rating */}
-      <Flex gap={12} align="start" style={{ marginBottom: 12 }}>
-        <div
-          style={{
-            width: screens.xs ? 64 : 78,
-            height: screens.xs ? 64 : 78,
-            borderRadius: 12,
-            background: '#f1f5f9',
-            overflow: 'hidden',
-            flexShrink: 0,
-            border: '1px solid #e2e8f0',
-          }}
-        >
+      {/* Identity: thumbnail, name, rating and area */}
+      <Flex gap={12} align="center">
+        <div className="rq-shop-card-thumb">
           <img
-            src={
-              img_url ||
-              'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
-            }
+            src={img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'}
             alt={shop_name}
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
         </div>
 
         <Flex vertical flex={1} style={{ minWidth: 0 }}>
-          <Title
-            level={5}
-            ellipsis={{ rows: 1 }}
-            style={{
-              margin: 0,
-              fontWeight: 700,
-              color: '#0f172a',
-              fontSize: screens.xs ? 15 : 16.5,
-              lineHeight: 1.3,
-            }}
-          >
-            {shop_name}
-          </Title>
-
-          <Flex align="center" gap={6} style={{ marginTop: 4 }}>
+          <Flex align="center" gap={6} style={{ minWidth: 0 }}>
+            <Text strong ellipsis style={{ fontSize: 15, color: '#0f172a', minWidth: 0 }}>
+              {shop_name}
+            </Text>
             {isOwnShop && (
-              <Tag
-                color="green"
-                style={{
-                  fontSize: 11,
-                  padding: '0 6px',
-                  fontWeight: 700,
-                  margin: 0,
-                }}
-              >
+              <Tag color="green" style={{ fontSize: 10, padding: '0 6px', fontWeight: 700, margin: 0, flexShrink: 0 }}>
                 My Store
-              </Tag>
-            )}
-
-            {/* Show category tag on desktop/tablet; remove on mobile to prevent clutter */}
-            {!isMobile && categoryName && (
-              <Tag
-                color="indigo"
-                style={{
-                  fontSize: 11,
-                  padding: '0 6px',
-                  fontWeight: 600,
-                  margin: 0,
-                  maxWidth: 240,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {categoryName}
-              </Tag>
-            )}
-
-            {rating && Number(rating) > 0 ? (
-              <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
-                <StarFilled style={{ fontSize: 12 }} />
-                <span>{Number(rating).toFixed(1)}</span>
-              </Flex>
-            ) : (
-              <Tag style={{ fontSize: 10, padding: '0 5px', margin: 0, fontWeight: 600, color: colors.textMuted }}>
-                New
               </Tag>
             )}
           </Flex>
 
-          <Flex
-            align="center"
-            gap={6}
-            style={{
-              marginTop: 4,
-              fontSize: 12.5,
-              color: colors.textMuted,
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-            }}
-          >
-            <EnvironmentOutlined style={{ color: colors.primary, flexShrink: 0 }} />
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {area || 'Local'}
-            </span>
-            {distance !== undefined && distance !== null && (
-              <span style={{ fontWeight: 700, color: '#047857', flexShrink: 0 }}>
-                • {distanceConvertor(distance)} km
+          <Flex align="center" gap={8} style={{ marginTop: 3, minWidth: 0, fontSize: 12.5, color: colors.textMuted }}>
+            {ratingText && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>
+                <StarFilled style={{ fontSize: 11 }} />
+                {ratingText}
               </span>
             )}
+            <span className="rq-shop-card-area">{area || 'Local'}</span>
           </Flex>
         </Flex>
       </Flex>
 
-      {/* Address using Ant Design Typography.Paragraph with 2-line ellipsis */}
-      <Paragraph
-        type="secondary"
-        ellipsis={{ rows: 2 }}
-        style={{
-          fontSize: 12.5,
-          color: colors.textMuted,
-          marginBottom: 12,
-          minHeight: screens.xs ? 32 : 38,
-          lineHeight: '19px',
-        }}
-      >
-        {address}
-      </Paragraph>
+      {/* Metrics strip, same pattern as the list view */}
+      <div className="rq-shop-card-metrics">
+        <div>
+          <span>Distance</span>
+          <strong>{distanceText || '—'}</strong>
+        </div>
+        <div>
+          <span>Category</span>
+          <strong title={categoryName || ''}>{categoryName || 'Local store'}</strong>
+        </div>
+        <div>
+          <span>Rating</span>
+          <strong>{ratingText || 'New'}</strong>
+        </div>
+      </div>
 
-      {/* Action Buttons */}
-      <Flex
-        gap={8}
-        align="center"
-        style={{
-          width: '100%',
-          marginTop: 'auto',
-          paddingTop: 10,
-          borderTop: '1px solid #f1f5f9',
-        }}
-        onClick={(e) => e.stopPropagation()}
-      >
+      {/* Actions: one primary action, icon buttons beside it */}
+      <Flex gap={8} align="center" style={{ marginTop: 'auto' }} onClick={(e) => e.stopPropagation()}>
         {isEdit ? (
-          <Button
-            type="primary"
-            block
-            icon={<EditOutlined />}
-            onClick={() => handleEdit()}
-            style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
-          >
-            Manage Shop
+          <Button type="primary" block icon={<EditOutlined />} onClick={() => handleEdit()}>
+            Manage shop
           </Button>
         ) : isOwnShop ? (
           <>
-            <Button
-              type="default"
-              style={{
-                flex: 1,
-                borderRadius: 8,
-                fontWeight: 600,
-                height: 38,
-              }}
-              onClick={goToStore}
-            >
-              Preview Store <ArrowRightOutlined style={{ fontSize: 11 }} />
+            <Button type="primary" block icon={<EditOutlined />} onClick={() => history.push(`/client_register?shop_id=${id}`)}>
+              Manage store
             </Button>
-
-            <Button
-              type="primary"
-              icon={<EditOutlined />}
-              style={{
-                borderRadius: 8,
-                fontWeight: 600,
-                height: 38,
-                background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
-                border: 'none',
-              }}
-              onClick={() => history.push(`/client_register?shop_id=${id}`)}
-            >
-              Manage
-            </Button>
-
-            {directionsUrl && (
-              <Button
-                icon={<CompassOutlined />}
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ borderRadius: 8, height: 38, width: 38 }}
-                title="Get Directions"
-              />
-            )}
+            <Button onClick={goToStore}>Preview</Button>
           </>
         ) : (
           <>
-            <Button
-              type="primary"
-              style={{
-                flex: 1,
-                borderRadius: radii.md,
-                fontWeight: 600,
-                height: 38,
-                background: colors.primary,
-                borderColor: colors.primary,
-              }}
-              onClick={goToStore}
-            >
-              Visit Store <ArrowRightOutlined style={{ fontSize: 11 }} />
+            <Button type="primary" block onClick={goToStore}>
+              View store
             </Button>
-
             {!isChatDisabled && (
-              <Tooltip title={!isChat ? 'Login to chat' : 'Direct chat with owner'}>
+              <Tooltip title={isChat ? 'Chat with owner' : 'Sign in to chat'}>
                 <Button
+                  className="rq-shop-card-icon"
+                  aria-label="Chat with owner"
                   icon={<ChatIcon />}
-                  style={{ borderRadius: 8, height: 38, width: 38 }}
                   disabled={!isChat}
                   onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
                 />
               </Tooltip>
             )}
-
-            {directionsUrl && (
-              <Button
-                icon={<CompassOutlined />}
-                href={directionsUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ borderRadius: 8, height: 38, width: 38 }}
-                title="Get Directions"
-              />
-            )}
           </>
+        )}
+        {directionsUrl && !isEdit && (
+          <Button
+            className="rq-shop-card-icon"
+            aria-label="Get directions"
+            title="Get directions"
+            icon={<CompassOutlined />}
+            href={directionsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          />
         )}
       </Flex>
     </Card>
