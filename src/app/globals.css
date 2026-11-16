@@ -1510,43 +1510,73 @@ select:focus-visible {
   --overlay-glow: radial-gradient(120% 90% at 100% 0%, rgba(228, 251, 62, 0.18) 0%, rgba(228, 251, 62, 0) 55%);
 }
 
-/* ---------- In-app notification card (services/notificationService.js) ---------- */
-.ant-notification .rq-notify {
-  width: min(380px, calc(100vw - 24px));
-  padding: 16px 18px;
-  border-radius: 16px;
+/* ---------- In-app notification card (services/notificationService.js) ----------
+   Compact single row at the bottom. Auto-dismisses (progress line), swipe to close. */
+.ant-notification .ant-notification-notice-wrapper .ant-notification-notice.rq-notify {
+  width: min(360px, calc(100vw - 24px));
+  padding: 10px 10px 10px 12px;
+  margin-inline: auto;
+  border-radius: 14px;
   border: 1px solid var(--border-color);
   background: var(--overlay-glow), var(--surface);
   box-shadow: var(--shadow-popover);
-}
-
-.ant-notification .rq-notify .ant-notification-notice-icon {
-  line-height: 1;
-}
-
-.ant-notification .rq-notify .ant-notification-notice-with-icon .ant-notification-notice-message,
-.ant-notification .rq-notify .ant-notification-notice-with-icon .ant-notification-notice-description {
-  margin-inline-start: 54px;
+  touch-action: none; /* swipe gestures are handled in JS */
+  user-select: none;
+  cursor: grab;
 }
 
 .ant-notification .rq-notify .ant-notification-notice-message {
-  padding-inline-end: 24px;
-  margin-bottom: 2px;
+  margin: 0;
+  padding: 0;
 }
 
-.ant-notification .rq-notify .ant-notification-notice-close {
-  top: 14px;
-  inset-inline-end: 14px;
+.ant-notification .rq-notify .ant-notification-notice-description {
+  display: none;
+}
+
+/* The wrapper around each card carries AntD's own radius and shadow */
+.ant-notification .ant-notification-notice-wrapper:has(.rq-notify) {
+  border-radius: 14px;
+  box-shadow: none;
+  background: transparent;
+}
+
+/* Phones: sit just above the bottom navigation (AntD pins bottom inline) */
+@media (max-width: 767px) {
+  .ant-notification.ant-notification-bottom {
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+/* Thin navy line counting down to auto-dismiss */
+.ant-notification .rq-notify .ant-notification-notice-progress {
+  height: 2px;
+}
+
+.ant-notification .rq-notify .ant-notification-notice-progress::-webkit-progress-value {
+  background: var(--primary);
+}
+
+.ant-notification .rq-notify .ant-notification-notice-progress::-moz-progress-bar {
+  background: var(--primary);
+}
+
+.rq-notify-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 }
 
 .rq-notify-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  font-size: 16px;
 }
 
 .rq-notify-icon--lime { background: var(--brand-lime); color: var(--primary); }
@@ -1554,44 +1584,51 @@ select:focus-visible {
 .rq-notify-icon--lavender { background: var(--brand-purple-badge); color: var(--brand-purple-text); }
 .rq-notify-icon--default { background: var(--surface-container); color: var(--text-main); }
 
+.rq-notify-text {
+  flex: 1;
+  min-width: 0;
+}
+
 .rq-notify-title {
   font-family: var(--font-headline);
   font-weight: 700;
-  font-size: 15px;
+  font-size: 13.5px;
   line-height: 1.3;
   color: var(--text-main);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .rq-notify-body {
-  font-size: 13.5px;
-  line-height: 1.5;
+  margin-top: 1px;
+  font-size: 12.5px;
+  line-height: 1.4;
   color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.rq-notify-actions {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 12px;
+.rq-notify-action {
+  flex-shrink: 0;
+  align-self: center;
+  border: 0;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12.5px;
+  padding: 7px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
-.rq-notify .rq-notify-btn {
-  height: 32px;
-  padding: 0 14px;
-  border-radius: var(--radius-full);
-  font-weight: 600;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  /* Static notifications render outside the theme provider: set brand colours */
+.rq-notify-action:hover,
+.rq-notify-action:focus-visible {
   background: var(--primary);
-  border-color: var(--primary);
-  color: #ffffff;
-  box-shadow: var(--shadow-primary);
-}
-
-.rq-notify .rq-notify-btn:not(:disabled):hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
   color: #ffffff;
 }
 

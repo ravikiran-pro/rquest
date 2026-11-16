@@ -1,7 +1,6 @@
 import React from 'react';
-import { notification, Button } from 'antd';
+import { notification } from 'antd';
 import {
-  ArrowRightOutlined,
   BellOutlined,
   InboxOutlined,
   ShopOutlined,
@@ -175,6 +174,98 @@ export function triggerNativeNotification(title, options = {}) {
   }
 }
 
+const SWIPE_DISMISS_PX = 70;
+
+/**
+ * Compact notification row: icon tile, title, two-line body and a text action.
+ * Swipe left, right or down (touch or mouse) to dismiss it.
+ */
+function NotifyCard({ notifyKey, tone, Icon, title, body, actionLabel, onAction }) {
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const notice = ref.current?.closest('.ant-notification-notice');
+    if (!notice) return undefined;
+
+    let startX = 0;
+    let startY = 0;
+    let dx = 0;
+    let dy = 0;
+    let dragging = false;
+
+    const reset = () => {
+      notice.style.transition = 'transform 0.2s ease, opacity 0.2s ease';
+      notice.style.transform = '';
+      notice.style.opacity = '';
+    };
+
+    const onDown = (e) => {
+      if (e.target.closest('.rq-notify-action')) return;
+      dragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      dx = 0;
+      dy = 0;
+      notice.style.transition = 'none';
+      notice.setPointerCapture?.(e.pointerId);
+    };
+
+    const onMove = (e) => {
+      if (!dragging) return;
+      dx = e.clientX - startX;
+      dy = Math.max(0, e.clientY - startY); // only downward
+      const horizontal = Math.abs(dx) >= dy;
+      const dist = horizontal ? Math.abs(dx) : dy;
+      notice.style.transform = horizontal ? `translateX(${dx}px)` : `translateY(${dy}px)`;
+      notice.style.opacity = String(Math.max(0.2, 1 - dist / 220));
+    };
+
+    const onUp = () => {
+      if (!dragging) return;
+      dragging = false;
+      const horizontal = Math.abs(dx) >= dy;
+      const dist = horizontal ? Math.abs(dx) : dy;
+      if (dist > SWIPE_DISMISS_PX) {
+        notice.style.transition = 'transform 0.18s ease-out, opacity 0.18s ease-out';
+        notice.style.transform = horizontal
+          ? `translateX(${dx > 0 ? 120 : -120}%)`
+          : 'translateY(120%)';
+        notice.style.opacity = '0';
+        setTimeout(() => notification.destroy(notifyKey), 170);
+      } else {
+        reset();
+      }
+    };
+
+    notice.addEventListener('pointerdown', onDown);
+    notice.addEventListener('pointermove', onMove);
+    notice.addEventListener('pointerup', onUp);
+    notice.addEventListener('pointercancel', reset);
+    return () => {
+      notice.removeEventListener('pointerdown', onDown);
+      notice.removeEventListener('pointermove', onMove);
+      notice.removeEventListener('pointerup', onUp);
+      notice.removeEventListener('pointercancel', reset);
+    };
+  }, [notifyKey]);
+
+  const h = React.createElement;
+  return h(
+    'div',
+    { ref, className: 'rq-notify-row' },
+    h('span', { className: `rq-notify-icon rq-notify-icon--${tone}` }, h(Icon)),
+    h(
+      'div',
+      { className: 'rq-notify-text' },
+      h('div', { className: 'rq-notify-title' }, title),
+      body ? h('div', { className: 'rq-notify-body' }, body) : null
+    ),
+    actionLabel
+      ? h('button', { type: 'button', className: 'rq-notify-action', onClick: onAction }, actionLabel)
+      : null
+  );
+}
+
 /**
  * Displays an in-app rich toast notification + native popup + audio chime
  */
@@ -219,42 +310,35 @@ export function displayPushNotification(notifData, history = null) {
     targetUrl = data.url;
   }
 
-  const go = () => {
-    notification.destroy();
-    if (history) {
-      history.push(targetUrl);
-    } else {
-      window.location.href = targetUrl;
-    }
-  };
-
-  // Phones: show at the top so the bottom nav and cart stay usable
+  // 4. Compact notification card at the bottom; dismissed by timeout, swipe or action
+  const key = `rq-notify-${Date.now()}`;
   const isPhone = window.matchMedia && window.matchMedia('(max-width: 767px)').matches;
-  const h = React.createElement;
 
-  // 4. Show the in-app notification card (styles: .rq-notify in globals.css)
   notification.open({
+    key,
     className: 'rq-notify',
-    icon: h('span', { className: `rq-notify-icon rq-notify-icon--${tone}` }, h(IconComp)),
-    message: h('span', { className: 'rq-notify-title' }, stripLeadingEmoji(title)),
-    description: h(
-      'div',
-      null,
-      h('div', { className: 'rq-notify-body' }, body),
-      targetUrl
-        ? h(
-            'div',
-            { className: 'rq-notify-actions' },
-            h(
-              Button,
-              { type: 'primary', size: 'small', onClick: go, className: 'rq-notify-btn' },
-              actionLabel,
-              h(ArrowRightOutlined)
-            )
-          )
-        : null
-    ),
-    placement: isPhone ? 'top' : 'bottomRight',
-    duration: 6,
+    message: React.createElement(NotifyCard, {
+      notifyKey: key,
+      tone,
+      Icon: IconComp,
+      title: stripLeadingEmoji(title),
+      body,
+      actionLabel: targetUrl ? actionLabel : null,
+      onAction: () => {
+        notification.destroy(key);
+        if (history) {
+          history.push(targetUrl);
+        } else {
+          window.location.href = targetUrl;
+        }
+      },
+    }),
+    closeIcon: false,
+    placement: isPhone ? 'bottom' : 'bottomRight',
+    // Phones: sit just above the bottom navigation
+    bottom: isPhone ? 76 : 24,
+    duration: 5,
+    showProgress: true,
+    pauseOnHover: true,
   });
 }
