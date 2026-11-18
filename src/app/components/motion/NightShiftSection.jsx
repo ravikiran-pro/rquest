@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Row, Col, Flex } from 'antd';
 import {
   AimOutlined,
-  CheckCircleFilled,
   ClockCircleFilled,
   WalletOutlined,
 } from '@ant-design/icons';
@@ -44,7 +43,7 @@ const NIGHT_STEPS = [
  * Cinematic dark mode chapter that transitions the page into a deep midnight
  * urban landscape with glowing neon conduits connecting the 3-step ordering flow.
  */
-export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
+export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false }) => {
   const [activeStep, setActiveStep] = useState(0);
 
   return (
@@ -55,7 +54,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
       {/* Glowing Neon Connecting Track */}
       <div className="nightshift-neon-track" aria-hidden="true" />
 
-      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: 48 }}>
+      <div style={{ position: 'relative', zIndex: 2, textAlign: 'center', marginBottom: isMobile ? 32 : 48 }}>
         <div style={{ marginBottom: 14 }}>
           <span
             style={{
@@ -88,7 +87,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
 
         <h2
           style={{
-            fontSize: 'clamp(28px, 4vw, 44px)',
+            fontSize: isMobile ? 'clamp(22px, 5.5vw, 32px)' : 'clamp(28px, 4vw, 44px)',
             fontWeight: 800,
             color: '#FFFFFF',
             lineHeight: 1.18,
@@ -104,7 +103,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
 
         <p
           style={{
-            fontSize: 16,
+            fontSize: isMobile ? 14 : 16,
             color: 'rgba(255, 255, 255, 0.72)',
             maxWidth: 580,
             margin: '0 auto',
@@ -117,15 +116,20 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
       </div>
 
       {/* 3 Interactive Cards with Neon Flow */}
-      <Row gutter={[24, 24]} style={{ position: 'relative', zIndex: 2 }}>
+      <Row gutter={isMobile ? [16, 16] : [20, 20]} style={{ position: 'relative', zIndex: 2 }}>
         {NIGHT_STEPS.map((step, idx) => (
           <Col xs={24} md={8} key={step.number}>
             <div
               className="nightshift-step-card"
               onMouseEnter={() => setActiveStep(idx)}
+              onClick={() => {
+                if (idx === 0 && onOpenRadar) onOpenRadar();
+                if (idx === 1 && onOpenChat) onOpenChat();
+              }}
               style={{
                 borderColor:
                   activeStep === idx ? step.accent : 'rgba(255, 255, 255, 0.12)',
+                cursor: idx < 2 ? 'pointer' : 'default',
               }}
             >
               {/* Card Header: Step number + Icon */}
@@ -211,7 +215,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <span className="radar-blip-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#D2F82E', display: 'inline-block' }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>
-                        142 Shops Active
+                        Local Radar Active
                       </span>
                     </div>
                     <span style={{ fontSize: 11, color: '#D2F82E', fontWeight: 600 }}>
@@ -261,6 +265,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat }) => {
 NightShiftSection.propTypes = {
   onOpenRadar: PropTypes.func,
   onOpenChat: PropTypes.func,
+  isMobile: PropTypes.bool,
 };
 
 export default NightShiftSection;

@@ -472,29 +472,6 @@ const FilterSidebar = ({
           </button>
         </Flex>
       </div>
-
-      {/* Bottom Mini Trust Card */}
-      <div
-        style={{
-          background: colors.surfaceContainerLow,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radii.md,
-          padding: '12px 14px',
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: 10,
-        }}
-      >
-        <SafetyCertificateOutlined style={{ fontSize: 18, color: colors.tertiary, marginTop: 2 }} />
-        <div>
-          <div style={{ fontSize: 12, fontWeight: 700, color: colors.textMain, marginBottom: 2 }}>
-            100% Shelf Rate
-          </div>
-          <div style={{ fontSize: 11, color: colors.textMuted, lineHeight: 1.35 }}>
-            No 25–35% hidden app markups. Exact shopkeeper bills.
-          </div>
-        </div>
-      </div>
     </div>
   );
 };

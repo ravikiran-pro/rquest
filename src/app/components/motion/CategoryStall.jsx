@@ -27,11 +27,11 @@ export const CategoryStall = ({
       {/* Icon Badge with Dynamic Micro-Animation */}
       <div
         style={{
-          width: 58,
-          height: 58,
+          width: 'clamp(44px, 12vw, 58px)',
+          height: 'clamp(44px, 12vw, 58px)',
           borderRadius: '50%',
           background: iconBg || '#F1EDE8',
-          margin: '0 auto 14px',
+          margin: '0 auto clamp(8px, 2.5vw, 14px)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
@@ -40,9 +40,10 @@ export const CategoryStall = ({
           boxShadow: isHovered
             ? `0 10px 20px -4px ${iconColor || '#0B2D6B'}40`
             : 'none',
+          flexShrink: 0,
         }}
       >
-        <span style={{ display: 'inline-flex', fontSize: 26, color: iconColor }}>
+        <span style={{ display: 'inline-flex', fontSize: 'clamp(20px, 5.5vw, 26px)', color: iconColor }}>
           {icon}
         </span>
       </div>
@@ -50,32 +51,38 @@ export const CategoryStall = ({
       {/* Category Name */}
       <h3
         style={{
-          fontSize: 15,
+          fontSize: 'clamp(12.5px, 3.6vw, 15px)',
           fontWeight: 700,
           color: '#110E28',
           margin: '0 0 6px',
           letterSpacing: '-0.01em',
           fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+          lineHeight: 1.25,
+          overflowWrap: 'break-word',
+          wordBreak: 'break-word',
         }}
       >
         {title}
       </h3>
 
       {/* Count Chip */}
-      <span
-        style={{
-          display: 'inline-block',
-          fontSize: 12,
-          fontWeight: 600,
-          color: '#64748B',
-          background: '#F8F4EF',
-          padding: '2px 9px',
-          borderRadius: 9999,
-          border: '1px solid #ECE7DF',
-        }}
-      >
-        {count}
-      </span>
+      <div>
+        <span
+          style={{
+            display: 'inline-block',
+            fontSize: 'clamp(10.5px, 3vw, 12px)',
+            fontWeight: 600,
+            color: '#64748B',
+            background: '#F8F4EF',
+            padding: '2px 8px',
+            borderRadius: 9999,
+            border: '1px solid #ECE7DF',
+            whiteSpace: 'nowrap',
+          }}
+        >
+          {count}
+        </span>
+      </div>
     </div>
   );
 };

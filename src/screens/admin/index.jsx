@@ -3,7 +3,8 @@ import Category from './category';
 import ShopsManager from './shops_manager';
 import AdminOrdersAccounts from './orders_accounts';
 import Products from './products';
-import { Tabs, Card, Typography, Tag, Flex, Grid } from 'antd';
+import CatalogItems from './catalog_items';
+import { Tabs, Card, Typography, Tag, Flex, Grid, Segmented } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
@@ -18,6 +19,7 @@ const { Title, Text } = Typography;
 
 const Admin = () => {
   const [activeKey, setActiveKey] = useState('1');
+  const [productsView, setProductsView] = useState('catalog');
   const screens = Grid.useBreakpoint();
 
   const onChange = (key) => {
@@ -59,7 +61,20 @@ const Admin = () => {
           <ShoppingOutlined /> Master Products Catalog
         </span>
       ),
-      children: <Products />,
+      children: (
+        <>
+          <Segmented
+            style={{ marginBottom: 16 }}
+            value={productsView}
+            onChange={setProductsView}
+            options={[
+              { value: 'catalog', label: 'Master catalog' },
+              { value: 'legacy', label: 'Legacy master products' },
+            ]}
+          />
+          {productsView === 'catalog' ? <CatalogItems /> : <Products />}
+        </>
+      ),
     },
   ];
 

@@ -66,3 +66,4 @@ node_modules/
 .env
 docs
 .agents/
+catalog

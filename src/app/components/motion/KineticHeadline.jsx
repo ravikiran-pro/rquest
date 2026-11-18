@@ -62,7 +62,7 @@ export const KineticHeadline = ({ isMobile = false }) => {
   return (
     <h1
       style={{
-        fontSize: isMobile ? 36 : 56,
+        fontSize: isMobile ? 'clamp(24px, 7.5vw, 36px)' : 56,
         fontWeight: 800,
         color: '#110E28',
         lineHeight: 1.14,
@@ -83,14 +83,14 @@ export const KineticHeadline = ({ isMobile = false }) => {
         style={{
           position: 'relative',
           top: isMobile ? -2 : -6,
-          marginLeft: 10,
+          marginLeft: isMobile ? 6 : 10,
           display: 'inline-block',
         }}
         aria-hidden="true"
       >
         <svg
-          width={isMobile ? 34 : 44}
-          height={isMobile ? 30 : 38}
+          width={isMobile ? 26 : 44}
+          height={isMobile ? 22 : 38}
           viewBox="0 0 46 40"
           fill="none"
         >

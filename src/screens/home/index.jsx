@@ -438,9 +438,21 @@ const HomeScreen = () => {
     };
   }, [markerLocation]);
 
+  const nearbyShops = useMemo(() => {
+    if (!Array.isArray(searchMarkers) || searchMarkers.length === 0) return [];
+    if (filters.maxDistance === null || filters.maxDistance === undefined) {
+      return searchMarkers;
+    }
+    return searchMarkers.filter((shop) => {
+      if (shop.distance === undefined || shop.distance === null) return true;
+      const km = shop.distance / 1000;
+      return km <= filters.maxDistance;
+    });
+  }, [searchMarkers, filters.maxDistance]);
+
   const activeMerchantCount = useMemo(() => {
-    return new Set(searchMarkers.map((s) => s.id).filter(Boolean)).size || searchMarkers.length || 48;
-  }, [searchMarkers]);
+    return new Set(nearbyShops.map((s) => s.id).filter(Boolean)).size;
+  }, [nearbyShops]);
 
   const handleQuickCategory = (catKey) => {
     const keyMap = {
@@ -536,7 +548,7 @@ const HomeScreen = () => {
         style={{
           position: 'relative',
           background: 'linear-gradient(180deg, #FDF9F4 0%, #FAF6F0 100%)',
-          padding: isMobile ? '28px 16px 36px' : '48px 24px 56px',
+          padding: isMobile ? '36px 16px' : '56px 24px',
           borderBottom: '1px solid #ECE7DF',
           overflow: 'hidden',
           width: '100%',
@@ -553,7 +565,7 @@ const HomeScreen = () => {
         {!isMobile && <ShopperCursors />}
 
         <div style={{ maxWidth: 1240, margin: '0 auto', position: 'relative', zIndex: 1 }}>
-          <Row gutter={isMobile ? [0, 32] : [40, 24]} align="middle">
+          <Row gutter={isMobile ? [0, 24] : [40, 24]} align="middle">
             {/* Left Column: Eyebrow badge, Title, Subtitle, Search bar, Trust, Quick chips */}
             <Col xs={24} lg={13}>
               {/* Pill Badge */}
@@ -570,11 +582,11 @@ const HomeScreen = () => {
               {/* Subtitle */}
               <p
                 style={{
-                  fontSize: isMobile ? 14.5 : 16.5,
+                  fontSize: isMobile ? 14 : 16.5,
                   color: '#4B5563',
                   lineHeight: 1.6,
                   maxWidth: 540,
-                  margin: '0 0 28px',
+                  margin: '0 0 24px',
                   fontFamily: 'Inter, sans-serif',
                 }}
               >
@@ -589,11 +601,11 @@ const HomeScreen = () => {
                   background: '#FFFFFF',
                   border: '1px solid #E5E7EB',
                   borderRadius: radii.full,
-                  padding: isMobile ? '5px 6px 5px 12px' : '6px 8px 6px 18px',
+                  padding: isMobile ? '4px 5px 4px 10px' : '6px 8px 6px 18px',
                   boxShadow: '0 8px 24px -4px rgba(11, 45, 107, 0.08)',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: isMobile ? 8 : 12,
+                  gap: isMobile ? 6 : 12,
                   width: '100%',
                   maxWidth: 620,
                   marginBottom: 16,
@@ -666,8 +678,8 @@ const HomeScreen = () => {
                         border: 'none',
                         display: 'inline-flex',
                         alignItems: 'center',
-                        gap: 6,
-                        fontSize: isMobile ? 12.5 : 13.5,
+                        gap: 5,
+                        fontSize: isMobile ? 12 : 13.5,
                         fontWeight: 600,
                         color: '#111827',
                         cursor: 'pointer',
@@ -676,14 +688,14 @@ const HomeScreen = () => {
                         flexShrink: 0,
                       }}
                     >
-                      <CompassOutlined style={{ color: '#0B2D6B', fontSize: 15 }} />
-                      <span>{filters.maxDistance ? `${filters.maxDistance} km radius` : 'All radius'}</span>
-                      <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
+                      <CompassOutlined style={{ color: '#0B2D6B', fontSize: isMobile ? 14 : 15 }} />
+                      <span>{filters.maxDistance ? (isMobile ? `${filters.maxDistance} km` : `${filters.maxDistance} km radius`) : 'All radius'}</span>
+                      <DownOutlined style={{ fontSize: 9, color: '#6B7280' }} />
                     </button>
                   </Popover>
 
                   {/* Divider Line */}
-                  <div style={{ width: 1, height: 26, background: '#E5E7EB', flexShrink: 0 }} />
+                  <div style={{ width: 1, height: 24, background: '#E5E7EB', flexShrink: 0 }} />
                 </div>
 
                 {/* Search Text Input (Takes full space when selected) */}
@@ -714,14 +726,14 @@ const HomeScreen = () => {
                       isSearchFocused
                         ? "Search shops, products, brands, services..."
                         : isMobile
-                          ? "Search 'sourdough bread', '25W bulb'..."
+                          ? "Search shops, products..."
                           : "Search shops or items — 'sourdough bread', '25W bulb'..."
                     }
                     style={{
                       border: 'none',
                       outline: 'none',
                       background: 'transparent',
-                      fontSize: isMobile ? 13 : 14.5,
+                      fontSize: isMobile ? 12.5 : 14.5,
                       color: '#111827',
                       width: '100%',
                       fontFamily: 'Inter, sans-serif',
@@ -740,14 +752,14 @@ const HomeScreen = () => {
                         background: '#E5E7EB',
                         border: 'none',
                         borderRadius: '50%',
-                        width: 20,
-                        height: 20,
+                        width: 18,
+                        height: 18,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         color: '#4B5563',
                         cursor: 'pointer',
-                        fontSize: 11,
+                        fontSize: 10,
                         fontWeight: 700,
                         flexShrink: 0,
                         padding: 0,
@@ -766,7 +778,7 @@ const HomeScreen = () => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    maxWidth: (isSearchFocused || searchText) ? 0 : 40,
+                    maxWidth: (isSearchFocused || searchText) ? 0 : 36,
                     opacity: (isSearchFocused || searchText) ? 0 : 1,
                     overflow: 'hidden',
                     transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -783,7 +795,7 @@ const HomeScreen = () => {
                       border: 'none',
                       color: '#6B7280',
                       cursor: 'pointer',
-                      padding: '6px 4px',
+                      padding: '4px',
                       borderRadius: '50%',
                       display: 'flex',
                       alignItems: 'center',
@@ -791,7 +803,7 @@ const HomeScreen = () => {
                       flexShrink: 0,
                     }}
                   >
-                    <AudioOutlined style={{ fontSize: 15 }} />
+                    <AudioOutlined style={{ fontSize: 14 }} />
                   </button>
                 </div>
 
@@ -801,8 +813,8 @@ const HomeScreen = () => {
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={handleSearchSubmit}
                   style={{
-                    width: isMobile ? 38 : 44,
-                    height: isMobile ? 38 : 44,
+                    width: isMobile ? 36 : 44,
+                    height: isMobile ? 36 : 44,
                     borderRadius: '50%',
                     background: '#0F172A',
                     color: '#FFFFFF',
@@ -811,7 +823,7 @@ const HomeScreen = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: isMobile ? 14 : 16,
+                    fontSize: isMobile ? 13 : 16,
                     flexShrink: 0,
                     transition: 'all 0.18s ease',
                     boxShadow: '0 2px 8px rgba(15, 23, 42, 0.25)',
@@ -826,13 +838,17 @@ const HomeScreen = () => {
               {/* Trust Proof Points Row */}
               <Flex
                 align="center"
-                gap={isMobile ? 12 : 20}
+                gap={isMobile ? 10 : 20}
                 wrap="wrap"
-                style={{ fontSize: isMobile ? 12 : 13, color: '#374151', marginBottom: 20 }}
+                style={{ fontSize: isMobile ? 11.5 : 13, color: '#374151', marginBottom: 20 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
                   <span className="trust-proof-dot" style={{ background: '#10B981' }} />
-                  <span>{activeMerchantCount > 0 ? `${activeMerchantCount} shops online` : '142 shops online'}</span>
+                  <span>
+                    {activeMerchantCount > 0
+                      ? `${activeMerchantCount} ${activeMerchantCount === 1 ? 'shop' : 'shops'} online`
+                      : 'Local shops online'}
+                  </span>
                 </span>
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
                   <span className="trust-proof-dot" style={{ background: '#2563EB' }} />
@@ -844,59 +860,61 @@ const HomeScreen = () => {
                 </span>
               </Flex>
 
-              {/* Quick Category Chips Row - Styled to match main-inspiration-gpt.png */}
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  overflowX: 'auto',
-                  paddingBottom: 4,
-                  WebkitOverflowScrolling: 'touch',
-                }}
-                className="no-scrollbar"
-              >
-                <button
-                  type="button"
-                  className="quick-chip-gpt"
-                  onClick={() => handleQuickCategory('bakery')}
+              {/* Quick Category Chips Row - Desktop only (hidden on mobile as Categories in Focus section is right below) */}
+              {!isMobile && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    overflowX: 'auto',
+                    paddingBottom: 4,
+                    WebkitOverflowScrolling: 'touch',
+                  }}
+                  className="no-scrollbar"
                 >
-                  <CoffeeOutlined className="chip-emoji" style={{ fontSize: 15 }} />
-                  <span>Bakery</span>
-                </button>
-                <button
-                  type="button"
-                  className="quick-chip-gpt"
-                  onClick={() => handleQuickCategory('grocery')}
-                >
-                  <ShoppingCartOutlined className="chip-emoji" style={{ fontSize: 15 }} />
-                  <span>Grocery</span>
-                </button>
-                <button
-                  type="button"
-                  className="quick-chip-gpt"
-                  onClick={() => handleQuickCategory('hardware')}
-                >
-                  <ToolOutlined className="chip-emoji" style={{ fontSize: 15 }} />
-                  <span>Hardware</span>
-                </button>
-                <button
-                  type="button"
-                  className="quick-chip-gpt"
-                  onClick={() => handleQuickCategory('pharmacy')}
-                >
-                  <MedicineBoxOutlined className="chip-emoji" style={{ fontSize: 15, color: '#E11D48' }} />
-                  <span>Pharmacy</span>
-                </button>
-                <button
-                  type="button"
-                  className="quick-chip-gpt"
-                  onClick={() => handleQuickCategory('florist')}
-                >
-                  <GiftOutlined className="chip-emoji" style={{ fontSize: 15 }} />
-                  <span>Florist</span>
-                </button>
-              </div>
+                  <button
+                    type="button"
+                    className="quick-chip-gpt"
+                    onClick={() => handleQuickCategory('bakery')}
+                  >
+                    <CoffeeOutlined className="chip-emoji" style={{ fontSize: 15 }} />
+                    <span>Bakery</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="quick-chip-gpt"
+                    onClick={() => handleQuickCategory('grocery')}
+                  >
+                    <ShoppingCartOutlined className="chip-emoji" style={{ fontSize: 15 }} />
+                    <span>Grocery</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="quick-chip-gpt"
+                    onClick={() => handleQuickCategory('hardware')}
+                  >
+                    <ToolOutlined className="chip-emoji" style={{ fontSize: 15 }} />
+                    <span>Hardware</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="quick-chip-gpt"
+                    onClick={() => handleQuickCategory('pharmacy')}
+                  >
+                    <MedicineBoxOutlined className="chip-emoji" style={{ fontSize: 15, color: '#E11D48' }} />
+                    <span>Pharmacy</span>
+                  </button>
+                  <button
+                    type="button"
+                    className="quick-chip-gpt"
+                    onClick={() => handleQuickCategory('florist')}
+                  >
+                    <GiftOutlined className="chip-emoji" style={{ fontSize: 15 }} />
+                    <span>Florist</span>
+                  </button>
+                </div>
+              )}
             </Col>
 
             {/* Right Column: Living Interactive Animated Radar Map */}
@@ -923,7 +941,7 @@ const HomeScreen = () => {
           position: 'relative',
           width: '100%',
           overflow: 'hidden',
-          padding: isMobile ? '36px 16px 20px' : '56px 24px 30px',
+          padding: isMobile ? '36px 16px' : '56px 24px',
         }}
       >
         {/* Full-Bleed Organic Environmental Shapes (main-inspiration-gpt.png) */}
@@ -988,14 +1006,16 @@ const HomeScreen = () => {
             }}
           >
             <span>
-              View all {activeMerchantCount} shops in {cleanAreaName}
+              {activeMerchantCount > 0
+                ? `View all ${activeMerchantCount} ${activeMerchantCount === 1 ? 'shop' : 'shops'} in ${cleanAreaName}`
+                : `Explore shops near ${cleanAreaName}`}
             </span>
             <ArrowRightOutlined style={{ fontSize: 12 }} />
           </button>
         </Flex>
 
         {/* 4 Featured Neighborhood Shop Cards Grid */}
-        <Row gutter={[20, 20]} style={{ position: 'relative', zIndex: 1 }}>
+        <Row gutter={isMobile ? [16, 16] : [20, 20]} style={{ position: 'relative', zIndex: 1 }}>
           {FEATURED_SHOPS.map((shop, idx) => (
             <Col xs={24} sm={12} lg={6} key={shop.id}>
               <TiltCard maxTilt={5} scale={1.02}>
@@ -1190,7 +1210,7 @@ const HomeScreen = () => {
           position: 'relative',
           width: '100%',
           overflow: 'hidden',
-          padding: isMobile ? '24px 16px 36px' : '36px 24px 56px',
+          padding: isMobile ? '36px 16px' : '56px 24px',
         }}
       >
         {/* Ambient Floating Illustration Blobs */}
@@ -1216,7 +1236,7 @@ const HomeScreen = () => {
             style={{
               fontSize: isMobile ? 24 : 32,
               fontWeight: 700,
-              color: '#111827',
+              color: '#110E28',
               margin: 0,
             }}
           >
@@ -1225,10 +1245,10 @@ const HomeScreen = () => {
         </div>
 
         {/* 6 Category Stalls Grid with Micro-Animations */}
-        <Row gutter={[16, 16]} style={{ position: 'relative', zIndex: 1 }}>
+        <Row gutter={isMobile ? [16, 16] : [20, 20]} style={{ position: 'relative', zIndex: 1 }}>
           {CATEGORIES_IN_FOCUS.map((cat, idx) => (
             <Col xs={12} sm={8} lg={4} key={cat.title}>
-              <div className={`reveal-on-scroll reveal-delay-${(idx % 6) + 1}`}>
+              <div className={`reveal-on-scroll reveal-delay-${(idx % 6) + 1}`} style={{ height: '100%' }}>
                 <CategoryStall
                   title={cat.title}
                   count={cat.count}
@@ -1247,10 +1267,13 @@ const HomeScreen = () => {
       {/* =========================================================================
           SECTION 4: THE NIGHT SHIFT NOCTURNE (AgentPark-Inspired Cinematic Chapter)
           ========================================================================= */}
-      <NightShiftSection
-        onOpenRadar={handleOpenModal}
-        onOpenChat={() => useChatStore.getState().handleChatOpen(null, null)}
-      />
+      <div style={{ maxWidth: 1240, margin: '0 auto', padding: isMobile ? '0 16px 36px' : '0 24px 56px' }}>
+        <NightShiftSection
+          isMobile={isMobile}
+          onOpenRadar={handleOpenModal}
+          onOpenChat={() => useChatStore.getState().handleChatOpen(null, null)}
+        />
+      </div>
 
       {/* =========================================================================
           SECTION 5: MERCHANT CTA BANNER ("Own a shop?") (designs/Main.png)
@@ -1259,19 +1282,19 @@ const HomeScreen = () => {
         style={{
           maxWidth: 1240,
           margin: '0 auto',
-          padding: isMobile ? '0 16px 48px' : '0 24px 64px',
+          padding: isMobile ? '0 16px 36px' : '0 24px 56px',
         }}
       >
         <div
           className="reveal-on-scroll"
           style={{
             background: '#F7EDE4',
-            borderRadius: 28,
-            padding: isMobile ? '28px 20px' : '44px 44px',
+            borderRadius: isMobile ? 20 : 28,
+            padding: isMobile ? '24px 16px' : '44px 44px',
             border: '1px solid #EADBCC',
           }}
         >
-          <Row gutter={isMobile ? [0, 24] : [32, 24]} align="middle">
+          <Row gutter={isMobile ? [0, 20] : [32, 24]} align="middle">
             {/* Left Column: Heading, Subtitle, Checkmarks */}
             <Col xs={24} lg={15}>
               {/* Pill Eyebrow */}
@@ -1300,7 +1323,7 @@ const HomeScreen = () => {
               <h2
                 className="font-headline"
                 style={{
-                  fontSize: isMobile ? 24 : 34,
+                  fontSize: isMobile ? 'clamp(20px, 5.5vw, 24px)' : 34,
                   fontWeight: 700,
                   color: '#1C1917',
                   margin: '0 0 10px',
@@ -1313,7 +1336,7 @@ const HomeScreen = () => {
               {/* Subtitle */}
               <p
                 style={{
-                  fontSize: isMobile ? 14 : 15,
+                  fontSize: isMobile ? 13.5 : 15,
                   color: '#4B5563',
                   lineHeight: 1.55,
                   margin: '0 0 20px',
@@ -1328,9 +1351,9 @@ const HomeScreen = () => {
               {/* Checklist Proof Row */}
               <Flex
                 align="center"
-                gap={isMobile ? 12 : 24}
+                gap={isMobile ? 10 : 24}
                 wrap="wrap"
-                style={{ fontSize: isMobile ? 12.5 : 13.5, color: '#1C1917', fontWeight: 600 }}
+                style={{ fontSize: isMobile ? 12 : 13.5, color: '#1C1917', fontWeight: 600 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <CheckCircleFilled style={{ color: '#059669', fontSize: 15 }} />
@@ -1365,7 +1388,7 @@ const HomeScreen = () => {
                 <div
                   style={{
                     display: 'flex',
-                    gap: 12,
+                    gap: 10,
                     flexWrap: 'wrap',
                     justifyContent: isMobile ? 'stretch' : 'flex-end',
                     width: '100%',
@@ -1380,8 +1403,8 @@ const HomeScreen = () => {
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: radii.full,
-                      padding: '12px 26px',
-                      fontSize: 14,
+                      padding: isMobile ? '10px 18px' : '12px 26px',
+                      fontSize: isMobile ? 13.5 : 14,
                       fontWeight: 700,
                       cursor: 'pointer',
                       display: 'inline-flex',
@@ -1408,8 +1431,8 @@ const HomeScreen = () => {
                       border: '1px solid #D7C6B4',
                       color: '#1C1917',
                       borderRadius: radii.full,
-                      padding: '11px 22px',
-                      fontSize: 14,
+                      padding: isMobile ? '10px 18px' : '11px 22px',
+                      fontSize: isMobile ? 13.5 : 14,
                       fontWeight: 700,
                       cursor: 'pointer',
                       display: 'inline-flex',
@@ -1634,11 +1657,14 @@ const HomeScreen = () => {
       {showStickyBar && !isStickyDismissed && (
         <div className="sticky-neighborhood-bar">
           <div className="sticky-radar-pulse" />
-          <span style={{ fontSize: isMobile ? 12 : 13, fontWeight: 700, color: '#110E28', whiteSpace: 'nowrap' }}>
-            <SafetyCertificateOutlined /> {activeMerchantCount > 0 ? `${activeMerchantCount} verified shops` : 'Verified shops'}
+          <span style={{ fontSize: isMobile ? 11.5 : 13, fontWeight: 700, color: '#110E28', whiteSpace: 'nowrap' }}>
+            <SafetyCertificateOutlined />{' '}
+            {activeMerchantCount > 0
+              ? `${activeMerchantCount} verified ${activeMerchantCount === 1 ? 'shop' : 'shops'}`
+              : 'Verified neighborhood shops'}
             {!isMobile && (
               <>
-                {' open in '}
+                {activeMerchantCount > 0 ? ' open in ' : ' near '}
                 <span style={{ color: '#0159C5' }}>{cleanAreaName}</span>
               </>
             )}
@@ -1653,13 +1679,13 @@ const HomeScreen = () => {
               color: '#FFFFFF',
               border: 'none',
               borderRadius: radii.full,
-              padding: '6px 14px',
-              fontSize: 12,
+              padding: isMobile ? '5px 10px' : '6px 14px',
+              fontSize: isMobile ? 11 : 12,
               fontWeight: 700,
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: 4,
+              gap: isMobile ? 3 : 4,
               boxShadow: '0 2px 8px rgba(15, 23, 42, 0.2)',
             }}
           >
@@ -1674,7 +1700,7 @@ const HomeScreen = () => {
               border: 'none',
               color: '#9CA3AF',
               cursor: 'pointer',
-              fontSize: 13,
+              fontSize: isMobile ? 12 : 13,
               padding: '4px',
               display: 'flex',
               alignItems: 'center',

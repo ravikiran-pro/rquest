@@ -58,6 +58,13 @@ export const apiConfig = {
   master_products_create: 'master/products/create',
   master_products_delete: 'master/products',
 
+  // Master catalog (catalog.* schema) — platform admin only
+  catalog_meta: 'catalog/meta',
+  catalog_items: 'catalog/items',
+  catalog_taxonomy: 'catalog/taxonomy',
+  catalog_brands: 'catalog/brands',
+  catalog_hsn: 'catalog/hsn',
+
   upload: 'master/upload',
 
   shop_details: 'shops',

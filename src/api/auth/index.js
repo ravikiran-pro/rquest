@@ -58,7 +58,19 @@ async function authMiddleware(req, res, next) {
   }
 }
 
+const ADMIN_ROLE_ID = 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9';
+
+// Use after authMiddleware. Same rule as the orders/quotes admin endpoints.
+function requireAdmin(req, res, next) {
+  const { role_id, username } = req.headers;
+  if (role_id === ADMIN_ROLE_ID || username === 'admin' || username === 'root') {
+    return next();
+  }
+  return res.status(403).json({ error: 'Platform Super Admin access required' });
+}
+
 module.exports = {
+  requireAdmin,
   generateHash,
   validateUser,
   generateJwt,

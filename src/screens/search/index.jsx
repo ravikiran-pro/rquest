@@ -1120,7 +1120,8 @@ const SearchScreen = () => {
                   style={{
                     borderRadius: radii.full,
                     padding: '0 28px',
-                    fontWeight: 700,
+                    // fontWeight: 700,
+                    fontSize: 12,
                     borderColor: '#E5E7EB',
                   }}
                 >
@@ -1218,7 +1219,7 @@ const SearchScreen = () => {
       <Drawer
         title="Filter Listings"
         placement="bottom"
-        height="80%"
+        height="90%"
         open={isMobileFilterDrawerOpen}
         onClose={() => setIsMobileFilterDrawerOpen(false)}
       >
