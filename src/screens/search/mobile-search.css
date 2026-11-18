@@ -1,0 +1,416 @@
+/* ==========================================================================
+   Phone search header (MobileSearchBar). Flat and full width: no floating
+   card, one search field, a segmented Stores / Items switch, one scrolling
+   chip row, then the result count. Only rendered on phones.
+   ========================================================================== */
+
+.rq-m-search {
+  padding: 10px 12px 12px;
+  background: var(--surface, #ffffff);
+  border-bottom: 1px solid var(--border-color, #ebe7e0);
+}
+
+/* ---------- Search field ---------- */
+
+.rq-m-search-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.rq-m-field {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 46px;
+  padding: 0 4px 0 14px;
+  background: var(--surface-container-low, #f7f3ee);
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 9999px;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.rq-m-field.is-focused {
+  background: var(--surface, #ffffff);
+  border-color: var(--primary, #0b2d6b);
+}
+
+.rq-m-field-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+  color: var(--text-light, #575a65);
+}
+
+.rq-m-input {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding: 0 4px;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  /* 16px stops iOS zooming into the field on focus */
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--text-main, #1c1c19);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.rq-m-input::placeholder {
+  color: var(--text-light, #575a65);
+  opacity: 1;
+}
+
+.rq-m-input::-webkit-search-cancel-button,
+.rq-m-input::-webkit-search-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+
+.rq-m-icon-btn {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-muted, #444650);
+  font-size: 16px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rq-m-icon-btn.is-ai {
+  color: #0159c5;
+}
+
+.rq-m-icon-btn:active {
+  background: var(--surface-container, #f1ede8);
+}
+
+.rq-m-icon-btn:focus-visible,
+.rq-m-cancel:focus-visible,
+.rq-m-tab:focus-visible,
+.rq-m-chip:focus-visible,
+.rq-m-view button:focus-visible,
+.rq-m-clear:focus-visible,
+.rq-m-tags button:focus-visible {
+  outline: 2px solid var(--primary, #0b2d6b);
+  outline-offset: 2px;
+}
+
+.rq-m-cancel {
+  flex-shrink: 0;
+  padding: 8px 2px;
+  border: 0;
+  background: none;
+  color: var(--primary, #0b2d6b);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ---------- Stores / Items switch ---------- */
+
+.rq-m-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  margin-top: 12px;
+  padding: 3px;
+  background: var(--surface-container, #f1ede8);
+  border-radius: 9999px;
+}
+
+.rq-m-tab {
+  min-width: 0;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: transparent;
+  color: var(--text-light, #575a65);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rq-m-tab.is-active {
+  background: var(--surface, #ffffff);
+  color: var(--primary, #0b2d6b);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.rq-m-count {
+  min-width: 22px;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--surface-container-high, #ebe8e3);
+  color: var(--text-muted, #444650);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rq-m-tab.is-active .rq-m-count {
+  background: var(--brand-lime, #d2f82e);
+  color: var(--primary, #0b2d6b);
+}
+
+/* ---------- Chip row (scrolls sideways, edge to edge) ---------- */
+
+.rq-m-chips {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px -12px 0;
+  padding: 2px 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.rq-m-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.rq-m-chip {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 9999px;
+  background: var(--surface, #ffffff);
+  color: var(--text-main, #1c1c19);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rq-m-chip .anticon {
+  font-size: 14px;
+  color: var(--primary, #0b2d6b);
+}
+
+.rq-m-chip:disabled {
+  opacity: 0.7;
+}
+
+.rq-m-chip.is-active {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #1e40af;
+}
+
+.rq-m-chip.is-location {
+  max-width: 64vw;
+}
+
+.rq-m-chip-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 40vw;
+}
+
+.rq-m-chip-link {
+  color: #0159c5;
+  font-weight: 700;
+}
+
+.rq-m-chip .rq-m-chevron {
+  font-size: 10px;
+  color: var(--text-light, #575a65);
+}
+
+.rq-m-chip.is-icon {
+  width: 36px;
+  padding: 0;
+  justify-content: center;
+}
+
+.rq-m-chip-count {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9999px;
+  background: var(--primary, #0b2d6b);
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.rq-m-radius-menu {
+  width: 220px;
+  padding: 4px;
+}
+
+.rq-m-radius-title {
+  padding: 4px 10px 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted, #444650);
+}
+
+.rq-m-radius-option {
+  width: 100%;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-main, #1c1c19);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.rq-m-radius-option.is-selected {
+  background: #eff6ff;
+  color: var(--primary, #0b2d6b);
+  font-weight: 700;
+}
+
+/* ---------- Result count and layout toggle ---------- */
+
+.rq-m-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.rq-m-result-count {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted, #444650);
+}
+
+.rq-m-view {
+  flex-shrink: 0;
+  display: inline-flex;
+  padding: 2px;
+  background: var(--surface-container, #f1ede8);
+  border-radius: 10px;
+}
+
+.rq-m-view button {
+  width: 36px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-light, #575a65);
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.rq-m-view button[aria-pressed='true'] {
+  background: var(--surface, #ffffff);
+  color: var(--primary, #0b2d6b);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+/* ---------- Applied filters ---------- */
+
+.rq-m-tags {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 10px -12px 0;
+  padding: 0 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.rq-m-tags::-webkit-scrollbar {
+  display: none;
+}
+
+.rq-m-tag {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 28px;
+  padding: 0 4px 0 11px;
+  border: 1px solid #bfdbfe;
+  border-radius: 9999px;
+  background: #eff6ff;
+  color: #1e40af;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rq-m-tag button {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #1e40af;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.rq-m-clear {
+  flex: 0 0 auto;
+  height: 28px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  color: #0159c5;
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Results sit inside the page gutter; the header above is full bleed */
+@media (max-width: 767px) {
+  .rq-search-page .rq-search-results {
+    padding: 14px 12px 0;
+  }
+}

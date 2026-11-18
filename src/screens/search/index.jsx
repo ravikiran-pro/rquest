@@ -21,7 +21,6 @@ import {
   ArrowLeftOutlined,
   AppstoreOutlined,
   BarsOutlined,
-  FilterOutlined,
   CheckOutlined,
   DownOutlined,
   AudioOutlined,
@@ -58,14 +57,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { radii } from '../../app/styles';
 import './search-immersive.css';
 import Routes from '../../app/routes/routes';
-
-const RADIUS_PRESETS = [
-  { label: '1 km walking', val: 1 },
-  { label: '2 km neighborhood', val: 2 },
-  { label: '5 km cycling', val: 5 },
-  { label: '10 km citywide', val: 10 },
-  { label: 'All distances', val: null },
-];
+import MobileSearchBar, { RADIUS_PRESETS } from './MobileSearchBar';
 
 // Sort options map onto the existing `sortBy` filter that applySearchFilters already reads
 const SORT_OPTIONS = [
@@ -576,10 +568,11 @@ const SearchScreen = () => {
     <div
       className={`rq-search-page${isImmersive ? ' is-immersive' : ''}${isImmersive && isScrolled ? ' is-scrolled' : ''}`}
       onScroll={isImmersive ? handleImmersiveScroll : undefined}
-      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}
+      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '0 0 calc(40px + env(safe-area-inset-bottom, 0px))' : '24px 28px 60px' }}
     >
       <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
-        {/* Navigation Breadcrumb & Page Header */}
+        {/* Navigation Breadcrumb & Page Header (desktop only; phones use the bottom nav) */}
+        {!isMobile && (
         <Flex justify="space-between" align="center" className="rq-immersive-hide rq-page-top" style={{ marginBottom: 16 }}>
           <Link
             to={Routes.home}
@@ -600,8 +593,43 @@ const SearchScreen = () => {
             {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} found near {cleanAreaName}
           </div>
         </Flex>
+        )}
 
-        {/* Live Search & Filter Bar */}
+        {/* Phone: flat full-width search header. Desktop: the search card below */}
+        {isMobile ? (
+          <MobileSearchBar
+            searchText={searchText}
+            onSearchTextChange={setSearchText}
+            onSearchSubmit={handleSearchSubmit}
+            isFocused={isSearchFocused}
+            onFocus={() => setIsSearchFocused(true)}
+            onBlur={() => setTimeout(() => setIsSearchFocused(false), 180)}
+            onCancel={exitImmersive}
+            searchMode={searchMode}
+            onModeChange={setSearchMode}
+            shopCount={filteredShops.length}
+            itemCount={filteredItems.length}
+            resultsLabel={`${totalCount} ${searchMode === 'shops' ? 'stores' : 'items'} near ${cleanAreaName}`}
+            areaName={cleanAreaName}
+            onChangeLocation={() => setIsModalVisible(true)}
+            onNearby={() => fetchUserLocation(true)}
+            isDetecting={isDetectingLocation}
+            maxDistance={filters.maxDistance ?? undefined}
+            onRadiusChange={(value) => setFilters((prev) => ({ ...prev, maxDistance: value }))}
+            activeFiltersCount={activeFiltersCount}
+            onOpenFilters={() => setIsMobileFilterDrawerOpen(true)}
+            viewMode={viewMode}
+            onViewModeChange={handleViewModeChange}
+            activeFilterTags={activeFilterTags}
+            onClearAll={() => {
+              setSearchText('');
+              setFilters(DEFAULT_FILTERS);
+            }}
+            onVoice={() => setIsVoiceModalOpen(true)}
+            onImage={() => setIsImageModalOpen(true)}
+            onAi={() => setIsAiModalOpen(true)}
+          />
+        ) : (
         <div
           className="rq-search-card"
           style={{
@@ -836,23 +864,6 @@ const SearchScreen = () => {
             </button>
           </div>
 
-          {isMobile && !(isSearchFocused || searchText) && (
-            <div className="rq-tools-row" role="group" aria-label="Smart search">
-              <button type="button" onClick={() => setIsVoiceModalOpen(true)}>
-                <AudioOutlined />
-                <span>Voice</span>
-              </button>
-              <button type="button" onClick={() => setIsImageModalOpen(true)}>
-                <CameraOutlined />
-                <span>Photo</span>
-              </button>
-              <button type="button" className="is-ai" onClick={() => setIsAiModalOpen(true)}>
-                <ControlOutlined />
-                <span>AI</span>
-              </button>
-            </div>
-          )}
-
           <div className="rq-search-extras">
           {/* Result tabs: what the list below shows */}
           <div className="rq-mode-tabs" role="tablist" aria-label="Search results">
@@ -883,7 +894,6 @@ const SearchScreen = () => {
           {/* Controls Row: Location pin, View mode, Mobile filter */}
           <Flex justify="space-between" align="center" wrap="wrap" gap={10} className="rq-controls">
             <Flex align="center" gap={8} wrap="wrap" className="rq-controls-start">
-              {isMobile && radiusPopover}
               {/* Geolocation Pin Pill */}
               <button
                 type="button"
@@ -940,30 +950,6 @@ const SearchScreen = () => {
                 <span className="rq-nearby-label">Nearby</span>
               </button>
 
-              {/* Mobile Filters Trigger */}
-              {isMobile && (
-                <button
-                  type="button"
-                  className="rq-filters-btn"
-                  onClick={() => setIsMobileFilterDrawerOpen(true)}
-                  style={{
-                    background: activeFiltersCount > 0 ? '#EFF6FF' : '#F8F4EF',
-                    border: `1px solid ${activeFiltersCount > 0 ? '#BFDBFE' : '#ECE7DF'}`,
-                    borderRadius: 9999,
-                    padding: '6px 12px',
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: activeFiltersCount > 0 ? '#1E40AF' : '#111827',
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: 5,
-                  }}
-                >
-                  <FilterOutlined />
-                  <span className="rq-filter-label">Filters</span>{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ''}
-                </button>
-              )}
             </Flex>
 
             {/* Right Controls: Sort, View Mode & Reset */}
@@ -1084,6 +1070,7 @@ const SearchScreen = () => {
           )}
           </div>
         </div>
+        )}
 
         {/* Results Grid with Sidebar */}
         <Row gutter={isMobile ? [0, 16] : [24, 24]} className="rq-search-results">
