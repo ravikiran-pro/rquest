@@ -156,3 +156,67 @@
     padding: 10px 18px 11px;
   }
 }
+
+/* ==========================================================================
+   Narrow phones (300–400px): tabs keep both labels and counts without
+   overlapping; the page header wraps instead of squeezing the count.
+   ========================================================================== */
+@media (max-width: 400px) {
+  .rq-mode-tab {
+    gap: 4px;
+    padding: 10px 2px 11px;
+    font-size: 12px;
+  }
+
+  .rq-mode-tab .anticon {
+    display: none;
+  }
+
+  .rq-mode-tab-count {
+    min-width: 18px;
+    padding: 1px 5px;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 479px) {
+  .rq-page-top {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .rq-page-top > div:last-child {
+    font-size: 12px;
+    text-align: right;
+  }
+}
+
+/* ==========================================================================
+   Results controls: the location name truncates, Nearby becomes an icon on
+   phones, and the sort select shrinks so Filters, Sort and View fit a row.
+   ========================================================================== */
+.rq-location-chip {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.rq-location-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rq-sort-select.ant-select {
+  min-width: 150px;
+}
+
+@media (max-width: 767px) {
+  .rq-nearby-label {
+    display: none;
+  }
+
+  .rq-sort-select.ant-select {
+    min-width: 128px;
+  }
+}

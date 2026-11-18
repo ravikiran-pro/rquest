@@ -64,6 +64,13 @@ const FilterSidebar = ({
   const showFieldFilters = searchMode === 'items' && fieldFilters.length > 0;
   // Keep the panel short: show the first few groups (and any in use), the rest on demand
   const [showAllFields, setShowAllFields] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  // Top categories first; the rest sit behind "more" so they stay reachable
+  const VISIBLE_CATEGORY_COUNT = 5;
+  const visibleCategories = showAllCategories
+    ? FILTER_CATEGORIES
+    : FILTER_CATEGORIES.slice(0, VISIBLE_CATEGORY_COUNT);
+  const hiddenCategoryCount = FILTER_CATEGORIES.length - VISIBLE_CATEGORY_COUNT;
   const isFieldActive = (field) =>
     activeFields[field.key] !== undefined && activeFields[field.key] !== null && activeFields[field.key] !== '';
   const visibleFieldFilters = showAllFields
@@ -206,7 +213,7 @@ const FilterSidebar = ({
           Categories
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-          {FILTER_CATEGORIES.slice(0, 5).map((cat) => {
+          {visibleCategories.map((cat) => {
             const isChecked = (filters.categories || []).includes(cat.id);
             const count = categoryCounts[cat.id] || 0;
             return (
@@ -243,6 +250,24 @@ const FilterSidebar = ({
             );
           })}
         </div>
+        {hiddenCategoryCount > 0 && (
+          <button
+            type="button"
+            onClick={() => setShowAllCategories((prev) => !prev)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: colors.primary,
+              fontSize: 12,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: 0,
+              marginTop: 10,
+            }}
+          >
+            {showAllCategories ? 'Show fewer categories' : `+ ${hiddenCategoryCount} more categories`}
+          </button>
+        )}
       </div>
 
       {/* CATEGORY CUSTOM-FIELD FILTERS (only when the results have them) */}

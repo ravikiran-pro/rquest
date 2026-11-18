@@ -13,6 +13,7 @@ import { useChatStore, useGlobalStore } from '../../services';
 import { distanceConvertor } from '../../utils';
 import { useHistory } from 'react-router-dom';
 import { colors, radii, shadows } from '../../styles';
+import './shop-card.css';
 
 const { Text, Title, Paragraph } = Typography;
 
@@ -27,7 +28,6 @@ const ShopCard = ({
 }) => {
   const history = useHistory();
   const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
 
   const currentShop = shopDetails || shop || {};
   const {
@@ -293,124 +293,110 @@ const ShopCard = ({
   const ratingText = Number(rating) > 0 ? Number(rating).toFixed(1) : null;
   const distanceText =
     distance !== undefined && distance !== null ? `${distanceConvertor(distance)} km` : null;
+  const metaLine = [area || 'Local', categoryName].filter(Boolean).join(' · ');
+  const coverSrc =
+    img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600';
 
+  // Grid card: image first so the photo sets the scan, distance is the lead fact
   return (
     <Card
       hoverable
       onClick={!isEdit ? goToStore : undefined}
-      className="rq-shop-card"
+      className="rq-shop-card rq-shop-card--grid"
       style={{
         width: '100%',
         height: '100%',
         borderRadius: radii.lg,
         border: `1px solid ${colors.border}`,
-        boxShadow: shadows.card,
+        boxShadow: 'none',
         cursor: isEdit ? 'default' : 'pointer',
         overflow: 'hidden',
         background: colors.surface,
       }}
       styles={{
         body: {
-          padding: screens.xs ? 14 : 16,
+          padding: 0,
           display: 'flex',
           flexDirection: 'column',
           height: '100%',
-          gap: 12,
         },
       }}
     >
-      {/* Identity: thumbnail, name, rating and area */}
-      <Flex gap={12} align="center">
-        <div className="rq-shop-card-thumb">
-          <img
-            src={img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'}
-            alt={shop_name}
-          />
-        </div>
-
-        <Flex vertical flex={1} style={{ minWidth: 0 }}>
-          <Flex align="center" gap={6} style={{ minWidth: 0 }}>
-            <Text strong ellipsis style={{ fontSize: 15, color: '#0f172a', minWidth: 0 }}>
-              {shop_name}
-            </Text>
-            {isOwnShop && (
-              <Tag color="green" style={{ fontSize: 10, padding: '0 6px', fontWeight: 700, margin: 0, flexShrink: 0 }}>
-                My Store
-              </Tag>
-            )}
-          </Flex>
-
-          <Flex align="center" gap={8} style={{ marginTop: 3, minWidth: 0, fontSize: 12.5, color: colors.textMuted }}>
-            {ratingText && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, color: '#f59e0b', fontWeight: 700, flexShrink: 0 }}>
-                <StarFilled style={{ fontSize: 11 }} />
-                {ratingText}
-              </span>
-            )}
-            <span className="rq-shop-card-area">{area || 'Local'}</span>
-          </Flex>
-        </Flex>
-      </Flex>
-
-      {/* Metrics strip, same pattern as the list view */}
-      <div className="rq-shop-card-metrics">
-        <div>
-          <span>Distance</span>
-          <strong>{distanceText || '—'}</strong>
-        </div>
-        <div>
-          <span>Category</span>
-          <strong title={categoryName || ''}>{categoryName || 'Local store'}</strong>
-        </div>
-        <div>
-          <span>Rating</span>
-          <strong>{ratingText || 'New'}</strong>
-        </div>
+      <div className="rq-shop-card-cover">
+        <img src={coverSrc} alt={shop_name} loading="lazy" />
+        {distanceText && <span className="rq-shop-card-distance">{distanceText} away</span>}
+        <span className="rq-shop-card-rating">
+          {ratingText ? (
+            <>
+              <StarFilled />
+              {ratingText}
+            </>
+          ) : (
+            'New'
+          )}
+        </span>
       </div>
 
-      {/* Actions: one primary action, icon buttons beside it */}
-      <Flex gap={8} align="center" style={{ marginTop: 'auto' }} onClick={(e) => e.stopPropagation()}>
-        {isEdit ? (
-          <Button type="primary" block icon={<EditOutlined />} onClick={() => handleEdit()}>
-            Manage shop
-          </Button>
-        ) : isOwnShop ? (
-          <>
-            <Button type="primary" block icon={<EditOutlined />} onClick={() => history.push(`/client_register?shop_id=${id}`)}>
-              Manage store
+      <div className="rq-shop-card-body">
+        <Flex align="center" gap={6} style={{ minWidth: 0 }}>
+          <Text strong className="rq-shop-card-name" title={shop_name}>
+            {shop_name}
+          </Text>
+          {isOwnShop && (
+            <Tag color="green" style={{ fontSize: 10, padding: '0 6px', fontWeight: 700, margin: 0, flexShrink: 0 }}>
+              My Store
+            </Tag>
+          )}
+        </Flex>
+
+        <div className="rq-shop-card-meta" title={metaLine}>
+          {metaLine}
+        </div>
+
+        {/* Actions: one primary action, icon buttons beside it, all 40px tall */}
+        <Flex gap={8} align="center" className="rq-shop-card-actions" onClick={(e) => e.stopPropagation()}>
+          {isEdit ? (
+            <Button type="primary" icon={<EditOutlined />} onClick={() => handleEdit()}>
+              Manage shop
             </Button>
-            <Button onClick={goToStore}>Preview</Button>
-          </>
-        ) : (
-          <>
-            <Button type="primary" block onClick={goToStore}>
-              View store
-            </Button>
-            {!isChatDisabled && (
-              <Tooltip title={isChat ? 'Chat with owner' : 'Sign in to chat'}>
-                <Button
-                  className="rq-shop-card-icon"
-                  aria-label="Chat with owner"
-                  icon={<ChatIcon />}
-                  disabled={!isChat}
-                  onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
-                />
-              </Tooltip>
-            )}
-          </>
-        )}
-        {directionsUrl && !isEdit && (
-          <Button
-            className="rq-shop-card-icon"
-            aria-label="Get directions"
-            title="Get directions"
-            icon={<CompassOutlined />}
-            href={directionsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          />
-        )}
-      </Flex>
+          ) : isOwnShop ? (
+            <>
+              <Button type="primary" icon={<EditOutlined />} onClick={() => history.push(`/client_register?shop_id=${id}`)}>
+                Manage store
+              </Button>
+              <Button onClick={goToStore}>Preview</Button>
+            </>
+          ) : (
+            <>
+              <Button type="primary" onClick={goToStore}>
+                View store
+              </Button>
+              {!isChatDisabled && (
+                <Tooltip title={isChat ? 'Chat with owner' : 'Sign in to chat'}>
+                  <Button
+                    className="rq-shop-card-icon"
+                    aria-label="Chat with owner"
+                    icon={<ChatIcon />}
+                    disabled={!isChat}
+                    onClick={() => handleChatOpen(owner_id, id, { shop_name: shop_name })}
+                  />
+                </Tooltip>
+              )}
+            </>
+          )}
+          {directionsUrl && !isEdit && (
+            <Button
+              className="rq-shop-card-icon"
+              aria-label="Get directions"
+              title="Get directions"
+              icon={<CompassOutlined />}
+              href={directionsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            />
+          )}
+        </Flex>
+      </div>
     </Card>
   );
 };

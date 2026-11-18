@@ -11,6 +11,7 @@ import {
   message,
   Drawer,
   Popover,
+  Select,
 } from 'antd';
 import {
   SearchOutlined,
@@ -64,6 +65,15 @@ const RADIUS_PRESETS = [
   { label: '5 km cycling', val: 5 },
   { label: '10 km citywide', val: 10 },
   { label: 'All distances', val: null },
+];
+
+// Sort options map onto the existing `sortBy` filter that applySearchFilters already reads
+const SORT_OPTIONS = [
+  { value: 'distance_asc', label: 'Nearest first' },
+  { value: 'rating_desc', label: 'Top rated' },
+  { value: 'name_asc', label: 'Name A–Z' },
+  { value: 'price_asc', label: 'Price: low to high', itemsOnly: true },
+  { value: 'price_desc', label: 'Price: high to low', itemsOnly: true },
 ];
 
 const SearchScreen = () => {
@@ -452,8 +462,10 @@ const SearchScreen = () => {
   const activeFiltersCount = countActiveFilters(filters, searchMode);
 
   const cleanAreaName = useMemo(() => {
-    if (!locationName) return 'Koramangala';
-    return locationName.split(',')[0].trim();
+    const first = (locationName || '').split(',')[0].trim();
+    // Reverse geocoding can fall back to raw coordinates; show a readable label instead
+    if (!first || /^[-\d.\s]+$/.test(first)) return 'your area';
+    return first;
   }, [locationName]);
 
   // Mobile search mode: full screen while the input is focused or has text
@@ -482,88 +494,8 @@ const SearchScreen = () => {
     setVisibleCount(18);
   };
 
-  return (
-    <div
-      className={`rq-search-page${isImmersive ? ' is-immersive' : ''}${isImmersive && isScrolled ? ' is-scrolled' : ''}`}
-      onScroll={isImmersive ? handleImmersiveScroll : undefined}
-      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}
-    >
-      <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
-        {/* Navigation Breadcrumb & Page Header */}
-        <Flex justify="space-between" align="center" className="rq-immersive-hide" style={{ marginBottom: 16 }}>
-          <Link
-            to={Routes.home}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              color: '#0B2D6B',
-              fontWeight: 700,
-              fontSize: 13.5,
-              textDecoration: 'none',
-            }}
-          >
-            <ArrowLeftOutlined style={{ fontSize: 13 }} />
-            <span>Back to Home</span>
-          </Link>
-          <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600 }}>
-            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} found near {cleanAreaName}
-          </div>
-        </Flex>
-
-        {/* Live Search & Filter Bar */}
-        <div
-          className="rq-search-card"
-          style={{
-            background: '#FFFFFF',
-            border: '1px solid #ECE7DF',
-            borderRadius: 20,
-            padding: isMobile ? '14px 14px' : '16px 20px',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
-            marginBottom: 20,
-          }}
-        >
-          <div className="rq-immersive-count">
-            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} near {cleanAreaName}
-          </div>
-
-          {/* Top Row: Search Input + Radius + Modals */}
-          <div
-            className="rquest-search-pill"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: isMobile ? 8 : 12,
-              background: '#F8F4EF',
-              border: '1px solid #E5E7EB',
-              borderRadius: radii.full,
-              padding: isMobile ? '4px 6px 4px 12px' : '5px 8px 5px 16px',
-              marginBottom: 14,
-            }}
-          >
-            <button
-              type="button"
-              className="rq-immersive-back"
-              onClick={exitImmersive}
-              aria-label="Exit search"
-            >
-              <ArrowLeftOutlined />
-            </button>
-
-            {/* Collapsible Radius Selector */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: isMobile ? 8 : 12,
-                maxWidth: isSearchFocused ? 0 : 200,
-                opacity: isSearchFocused ? 0 : 1,
-                overflow: 'hidden',
-                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                pointerEvents: isSearchFocused ? 'none' : 'auto',
-                flexShrink: 0,
-              }}
-            >
+  // Radius selector, shared: rendered in the search pill on desktop, in the controls row on mobile
+  const radiusPopover = (
               <Popover
                 trigger="click"
                 open={isRadiusPopoverOpen}
@@ -631,9 +563,95 @@ const SearchScreen = () => {
                   <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
                 </button>
               </Popover>
+  );
+
+  return (
+    <div
+      className={`rq-search-page${isImmersive ? ' is-immersive' : ''}${isImmersive && isScrolled ? ' is-scrolled' : ''}`}
+      onScroll={isImmersive ? handleImmersiveScroll : undefined}
+      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '16px 12px 40px' : '24px 28px 60px' }}
+    >
+      <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
+        {/* Navigation Breadcrumb & Page Header */}
+        <Flex justify="space-between" align="center" className="rq-immersive-hide rq-page-top" style={{ marginBottom: 16 }}>
+          <Link
+            to={Routes.home}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              color: '#0B2D6B',
+              fontWeight: 700,
+              fontSize: 13.5,
+              textDecoration: 'none',
+            }}
+          >
+            <ArrowLeftOutlined style={{ fontSize: 13 }} />
+            <span>Back to Home</span>
+          </Link>
+          <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600 }}>
+            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} found near {cleanAreaName}
+          </div>
+        </Flex>
+
+        {/* Live Search & Filter Bar */}
+        <div
+          className="rq-search-card"
+          style={{
+            background: '#FFFFFF',
+            border: '1px solid #ECE7DF',
+            borderRadius: 20,
+            padding: isMobile ? '14px 14px' : '16px 20px',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.04)',
+            marginBottom: 20,
+          }}
+        >
+          <div className="rq-immersive-count">
+            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} near {cleanAreaName}
+          </div>
+
+          {/* Top Row: Search Input + Radius + Modals */}
+          <div
+            className="rquest-search-pill"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: isMobile ? 8 : 12,
+              background: '#F8F4EF',
+              border: '1px solid #E5E7EB',
+              borderRadius: radii.full,
+              padding: isMobile ? '4px 6px 4px 12px' : '5px 8px 5px 16px',
+              marginBottom: 14,
+            }}
+          >
+            <button
+              type="button"
+              className="rq-immersive-back"
+              onClick={exitImmersive}
+              aria-label="Exit search"
+            >
+              <ArrowLeftOutlined />
+            </button>
+
+            {!isMobile && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: isMobile ? 8 : 12,
+                maxWidth: isSearchFocused ? 0 : 200,
+                opacity: isSearchFocused ? 0 : 1,
+                overflow: 'hidden',
+                transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
+                pointerEvents: isSearchFocused ? 'none' : 'auto',
+                flexShrink: 0,
+              }}
+            >
+              {radiusPopover}
 
               <div style={{ width: 1, height: 24, background: '#E5E7EB', flexShrink: 0 }} />
             </div>
+            )}
 
             {/* Keyword Input (Takes full space when selected) */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
@@ -660,7 +678,9 @@ const SearchScreen = () => {
                   }
                 }}
                 placeholder={
-                  isSearchFocused
+                  isMobile
+                    ? 'Search'
+                  : isSearchFocused
                     ? (searchMode === 'shops'
                         ? "Search stores by name, category, or address..."
                         : "Search items, groceries, hardware, services...")
@@ -837,10 +857,12 @@ const SearchScreen = () => {
           {/* Controls Row: Location pin, View mode, Mobile filter */}
           <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
             <Flex align="center" gap={8} wrap="wrap">
+              {isMobile && radiusPopover}
               {/* Geolocation Pin Pill */}
               <button
                 type="button"
                 onClick={() => setIsModalVisible(true)}
+                className="rq-location-chip"
                 style={{
                   background: '#F8F4EF',
                   border: '1px solid #ECE7DF',
@@ -856,7 +878,7 @@ const SearchScreen = () => {
                 }}
               >
                 <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
-                <span>{cleanAreaName}</span>
+                <span className="rq-location-name">{cleanAreaName}</span>
                 {isDetectingLocation ? (
                   <Spin size="small" />
                 ) : (
@@ -873,6 +895,8 @@ const SearchScreen = () => {
                 type="button"
                 onClick={() => fetchUserLocation(true)}
                 title="Detect precise location"
+                aria-label="Detect precise location"
+                className="rq-nearby-btn"
                 style={{
                   background: '#F8F4EF',
                   border: '1px solid #ECE7DF',
@@ -887,7 +911,7 @@ const SearchScreen = () => {
                 }}
               >
                 <AimOutlined />
-                <span>Nearby</span>
+                <span className="rq-nearby-label">Nearby</span>
               </button>
 
               {/* Mobile Filters Trigger */}
@@ -915,8 +939,21 @@ const SearchScreen = () => {
               )}
             </Flex>
 
-            {/* Right Controls: View Mode & Reset */}
-            <Flex align="center" gap={8}>
+            {/* Right Controls: Sort, View Mode & Reset */}
+            <Flex align="center" gap={8} wrap="wrap">
+              <Select
+                size="small"
+                aria-label="Sort results"
+                value={
+                  SORT_OPTIONS.some((opt) => opt.value === filters.sortBy && (!opt.itemsOnly || searchMode === 'items'))
+                    ? filters.sortBy
+                    : 'distance_asc'
+                }
+                onChange={(value) => setFilters((prev) => ({ ...prev, sortBy: value }))}
+                options={SORT_OPTIONS.filter((opt) => !opt.itemsOnly || searchMode === 'items')}
+                className="rq-sort-select"
+                popupMatchSelectWidth={false}
+              />
               <div
                 style={{
                   display: 'inline-flex',
@@ -1217,11 +1254,23 @@ const SearchScreen = () => {
 
       {/* 6. Mobile Filter Drawer */}
       <Drawer
-        title="Filter Listings"
+        title="Refine results"
         placement="bottom"
-        height="90%"
+        height="88%"
         open={isMobileFilterDrawerOpen}
         onClose={() => setIsMobileFilterDrawerOpen(false)}
+        styles={{ body: { padding: '16px 16px 8px' } }}
+        footer={
+          <Button
+            type="primary"
+            block
+            size="large"
+            onClick={() => setIsMobileFilterDrawerOpen(false)}
+            style={{ borderRadius: radii.md }}
+          >
+            Show {totalCount} {searchMode === 'shops' ? 'stores' : 'items'}
+          </Button>
+        }
       >
         <FilterSidebar
           filters={filters}
@@ -1230,17 +1279,8 @@ const SearchScreen = () => {
           searchMode={searchMode}
           categoryCounts={categoryCounts}
           fieldFilters={availableFieldFilters}
+          style={{ border: 'none', boxShadow: 'none', padding: 0 }}
         />
-        <div style={{ marginTop: 20 }}>
-          <Button
-            type="primary"
-            block
-            onClick={() => setIsMobileFilterDrawerOpen(false)}
-            style={{ borderRadius: radii.md }}
-          >
-            Apply Filters ({totalCount} results)
-          </Button>
-        </div>
       </Drawer>
     </div>
   );

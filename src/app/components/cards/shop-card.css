@@ -1,0 +1,150 @@
+/* ==========================================================================
+   Grid shop card (search results). Image-first: the cover sets the scan,
+   distance is the lead fact, actions sit in one aligned row at the bottom.
+   ========================================================================== */
+
+/* The card is its own container, so the cover proportion follows the card's
+   width (3-up desktop, single-column tablet, full-width phone) */
+.rq-shop-card--grid {
+  container-type: inline-size;
+}
+
+.rq-shop-card--grid .rq-shop-card-cover {
+  position: relative;
+  aspect-ratio: 2 / 1;
+  background: var(--surface-container);
+  overflow: hidden;
+}
+
+@container (min-width: 521px) {
+  .rq-shop-card--grid .rq-shop-card-cover {
+    aspect-ratio: 16 / 10;
+  }
+}
+
+.rq-shop-card--grid .rq-shop-card-cover img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rq-shop-card--grid .rq-shop-card-distance,
+.rq-shop-card--grid .rq-shop-card-rating {
+  position: absolute;
+  top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 26px;
+  padding: 0 10px;
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.94);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.rq-shop-card--grid .rq-shop-card-distance {
+  left: 12px;
+  color: var(--primary);
+}
+
+.rq-shop-card--grid .rq-shop-card-rating {
+  right: 12px;
+}
+
+.rq-shop-card--grid .rq-shop-card-rating .anticon {
+  color: #f59e0b;
+  font-size: 11px;
+}
+
+.rq-shop-card--grid .rq-shop-card-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px 16px;
+}
+
+.rq-shop-card--grid .rq-shop-card-name {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  font-family: var(--font-sans-headline);
+  font-size: 16px;
+  line-height: 1.3;
+  color: var(--text-main);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rq-shop-card--grid .rq-shop-card-meta {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  line-height: 1.4;
+  color: var(--text-light);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rq-shop-card--grid .rq-shop-card-actions {
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+.rq-shop-card--grid .rq-shop-card-actions > * {
+  flex: 0 0 auto;
+}
+
+.rq-shop-card--grid .rq-shop-card-actions .ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  margin: 0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+.rq-shop-card--grid .rq-shop-card-actions .ant-btn-primary {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rq-shop-card--grid .rq-shop-card-actions .ant-btn.rq-shop-card-icon {
+  width: 40px;
+  min-width: 40px;
+  padding: 0;
+}
+
+@media (hover: hover) {
+  .rq-shop-card--grid:hover {
+    border-color: var(--border-color-dark);
+    box-shadow: var(--shadow-md);
+  }
+}
+
+@media (max-width: 575px) {
+  .rq-shop-card--grid .rq-shop-card-body {
+    padding: 12px 14px 14px;
+  }
+
+  .rq-shop-card--grid .rq-shop-card-distance,
+  .rq-shop-card--grid .rq-shop-card-rating {
+    top: 10px;
+  }
+
+  .rq-shop-card--grid .rq-shop-card-distance {
+    left: 10px;
+  }
+
+  .rq-shop-card--grid .rq-shop-card-rating {
+    right: 10px;
+  }
+}
