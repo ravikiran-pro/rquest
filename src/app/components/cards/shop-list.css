@@ -1,0 +1,317 @@
+/* ==========================================================================
+   List view for search results. A table when the list is wide enough, and
+   stacked rows when it is not (ShopTableView switches on its own width).
+   ========================================================================== */
+
+.rq-shop-list {
+  width: 100%;
+  min-width: 0;
+}
+
+/* ---------- Table ---------- */
+
+.rq-shop-table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.rq-shop-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: 13px;
+  color: var(--text-main);
+}
+
+.rq-shop-table th {
+  padding: 12px 14px;
+  background: var(--surface-container-low);
+  border-bottom: 1px solid var(--border-color);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-light);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.rq-shop-table td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border-color);
+  vertical-align: middle;
+  min-width: 0;
+}
+
+.rq-shop-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.rq-shop-table tbody tr:hover td {
+  background: var(--surface-container-low);
+}
+
+.rq-shop-table .is-num {
+  width: 96px;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.rq-shop-table .is-actions {
+  width: 196px;
+  text-align: right;
+}
+
+.rq-shop-table.is-items .is-actions {
+  width: 176px;
+}
+
+.rq-shop-list-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rq-shop-list-avatar {
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.rq-shop-list-avatar .rq-card-media {
+  border-radius: 50%;
+}
+
+.rq-shop-list-name-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rq-shop-list-name {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-sans-headline);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.3;
+  color: var(--text-main);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rq-shop-list-link {
+  padding: 0;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  max-width: 100%;
+}
+
+.rq-shop-list-link:hover {
+  color: var(--primary);
+  text-decoration: underline;
+}
+
+.rq-shop-list-sub {
+  min-width: 0;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--text-light);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.rq-shop-list-sub.is-strong {
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.rq-shop-list-muted {
+  font-size: 12px;
+  color: var(--text-light);
+}
+
+.rq-shop-list-rating {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.rq-shop-list-rating .anticon {
+  font-size: 11px;
+  color: #f59e0b;
+}
+
+.rq-shop-list-map.ant-btn.ant-btn-link {
+  height: auto;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 600;
+  justify-self: start;
+  width: fit-content;
+}
+
+.rq-shop-list-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+}
+
+.rq-shop-list-price-now {
+  font-family: var(--font-sans-headline);
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.rq-shop-row-price-was {
+  font-size: 12px;
+  color: var(--text-light);
+  text-decoration: line-through;
+}
+
+.rq-shop-list .is-in {
+  color: var(--semantic-success, #059669);
+  font-weight: 600;
+}
+
+.rq-shop-list .is-out {
+  color: #b45309;
+  font-weight: 600;
+}
+
+.rq-shop-list-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  max-width: 100%;
+}
+
+.rq-shop-list-actions .ant-btn {
+  height: 36px;
+  margin: 0;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.rq-shop-list-actions .ant-btn.rq-shop-list-icon {
+  width: 36px;
+  min-width: 36px;
+  padding: 0;
+}
+
+/* ---------- Stacked rows (narrow lists and phones) ---------- */
+
+.rq-shop-list-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rq-shop-row {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+}
+
+.rq-shop-row-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rq-shop-row-media {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+}
+
+.rq-shop-row-main {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.rq-shop-row-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  font-size: 12px;
+}
+
+.rq-shop-row-line .rq-shop-list-sub {
+  flex: 0 1 auto;
+}
+
+.rq-shop-row-line .rq-shop-list-map.ant-btn.ant-btn-link {
+  flex-shrink: 0;
+}
+
+.rq-shop-row-distance {
+  flex-shrink: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+}
+
+.rq-shop-row-price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 8px;
+  padding: 8px 10px;
+  background: var(--surface-container-low);
+  border-radius: var(--radius-md);
+  font-size: 12px;
+}
+
+.rq-shop-stock {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--semantic-success, #059669);
+}
+
+.rq-shop-stock.is-out {
+  color: #b45309;
+}
+
+.rq-shop-row .rq-shop-list-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  width: 100%;
+}
+
+.rq-shop-row .rq-shop-list-actions .ant-btn-primary {
+  width: 100%;
+}
+
+@media (hover: hover) {
+  .rq-shop-row:hover {
+    border-color: var(--border-color-dark);
+  }
+}

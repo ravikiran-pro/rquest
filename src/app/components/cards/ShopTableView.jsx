@@ -1,481 +1,301 @@
-import React from 'react';
+import React, { useLayoutEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Typography, Tag, Tooltip, Flex, Grid } from 'antd';
-import {
-  CheckCircleFilled,
-  StarFilled,
-  ShopOutlined,
-} from '@ant-design/icons';
+import { Button, Tooltip } from 'antd';
+import { CompassOutlined, StarFilled } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
-import { useChatStore, useGlobalStore, useCartStore } from '../../services';
-import { distanceConvertor, formatDistance } from '../../utils';
 import CardMedia from './CardMedia';
+import { useChatStore, useGlobalStore, useCartStore } from '../../services';
+import { formatDistance } from '../../utils';
 import { useHistory } from 'react-router-dom';
-import { colors, radii } from '../../styles/theme';
+import './shop-list.css';
 
-const { Text } = Typography;
+// Below this width of the list itself, the table cannot hold its columns and rows stack instead
+const TABLE_MIN_WIDTH = 860;
 
-const ShopTableView = ({
-  items = [],
-  searchMode = 'shops', // 'shops' | 'items'
-  onOpenMap,
-}) => {
+const formatPrice = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  return `₹${Number(value).toLocaleString('en-IN')}`;
+};
+
+const directionsFor = (name, address, directions) => {
+  if (directions) return directions;
+  if (!address && !name) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${name || ''} ${address || ''}`.trim())}`;
+};
+
+// One shape for both stores and items, built only from fields the backend returns
+const toRow = (item, searchMode) => {
+  if (searchMode === 'shops') {
+    return {
+      key: item.id,
+      id: item.id,
+      ownerId: item.owner_id,
+      name: item.shop_name || 'Store',
+      img: item.img_url,
+      rating: Number(item.rating) || 0,
+      meta: item.shopCategory?.name || item.shop_type || '',
+      area: item.area || '',
+      address: item.address || '',
+      distance: item.distance,
+      directionsUrl: directionsFor(item.shop_name, item.address, item.directions),
+      isShop: true,
+    };
+  }
+  const shop = item.shop || {};
+  return {
+    key: item.id,
+    id: shop.id,
+    ownerId: shop.owner_id,
+    name: item.name || 'Item',
+    img: item.img_url,
+    rating: Number(shop.rating) || 0,
+    meta: shop.shop_name || '',
+    area: shop.area || '',
+    address: shop.address || '',
+    distance: shop.distance,
+    directionsUrl: directionsFor(shop.shop_name, shop.address, shop.directions),
+    isShop: false,
+    price: formatPrice(item.price),
+    mrp: formatPrice(item.mrp),
+    unit: item.unit || '',
+    isAvailable: item.is_available !== false,
+    shop,
+    item,
+  };
+};
+
+const ShopTableView = ({ items = [], searchMode = 'shops', onOpenMap }) => {
   const history = useHistory();
-  const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
-
   const { handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { addItem, openCart } = useCartStore((state) => state);
 
+  const rootRef = useRef(null);
+  const [width, setWidth] = useState(null);
+
+  // Measure the list itself, not the viewport: the results column changes with the sidebar
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return undefined;
+    setWidth(el.getBoundingClientRect().width);
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(([entry]) => setWidth(entry.contentRect.width));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
   if (!items || items.length === 0) return null;
 
-  // Helper to compute realistic ETA based on distance
-  const getEtaString = (rawDistance) => {
-    if (rawDistance === undefined || rawDistance === null) return '10 min';
-    const km = rawDistance / 1000;
-    const mins = Math.max(5, Math.round(km * 4 + 4));
-    return `${mins} min`;
+  const compact = width !== null && width < TABLE_MIN_WIDTH;
+  const isShop = searchMode === 'shops';
+  const rows = items.map((item) => toRow(item, searchMode));
+
+  const openStore = (row) => {
+    if (row.isShop) {
+      history.push(`/shop/${row.id}`);
+    }
   };
 
-  // Helper to compute realistic response time
-  const getResponseTime = (index) => {
-    const times = ['1 min', '2 min', '3 min', '5 min'];
-    return times[index % times.length];
+  const orderItem = (row) => {
+    addItem(row.shop, row.item);
+    openCart();
   };
 
-  // Mobile Card Renderer (Thumb-friendly responsive card matching screenshot fields)
-  const renderMobileCard = (item, index) => {
-    const isShop = searchMode === 'shops';
-    const id = isShop ? item.id : item.shop?.id;
-    const name = isShop ? item.shop_name : item.name;
-    const photo = isShop
-      ? item.img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
-      : item.img_url;
-    const rating = (isShop ? item.rating : item.shop?.rating) || 4.9;
-    const rawDist = isShop ? item.distance : item.shop?.distance;
-    const distKm = rawDist !== undefined && rawDist !== null ? distanceConvertor(rawDist) : '1.2';
-    const eta = getEtaString(rawDist);
-    const area = isShop ? item.area || 'Local Area' : item.shop?.area || 'Local Area';
-    const ownerId = isShop ? item.owner_id : item.shop?.owner_id;
-    const price = isShop ? '₹350' : `₹${item.price}`;
-    const priceSub = isShop ? 'Visiting Charge' : `/ ${item.unit || 'unit'}`;
-    const isAvailable = isShop ? true : item.is_available !== false;
+  const renderActions = (row) => (
+    <div className="rq-shop-list-actions">
+      {row.isShop ? (
+        <Button type="primary" onClick={() => openStore(row)}>
+          View store
+        </Button>
+      ) : (
+        <Button type="primary" disabled={!row.isAvailable} onClick={() => orderItem(row)}>
+          {row.isAvailable ? 'Order' : 'Unavailable'}
+        </Button>
+      )}
+      <Tooltip title={user_data?.user_id ? 'Chat with owner' : 'Sign in to chat'}>
+        <Button
+          className="rq-shop-list-icon"
+          aria-label="Chat with owner"
+          icon={<ChatIcon />}
+          disabled={!user_data?.user_id}
+          onClick={() => handleChatOpen(row.ownerId, row.id, { shop_name: row.isShop ? row.name : row.shop?.shop_name })}
+        />
+      </Tooltip>
+      {row.directionsUrl && (
+        <Button
+          className="rq-shop-list-icon"
+          aria-label="Get directions"
+          title="Get directions"
+          icon={<CompassOutlined />}
+          href={row.directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+      )}
+    </div>
+  );
 
+  const renderRating = (row) =>
+    row.rating > 0 ? (
+      <span className="rq-shop-list-rating">
+        <StarFilled />
+        {row.rating.toFixed(1)}
+      </span>
+    ) : (
+      <span className="rq-shop-list-muted">New</span>
+    );
+
+  const renderMapLink = (row, item) =>
+    onOpenMap ? (
+      <Button type="link" size="small" className="rq-shop-list-map" onClick={() => onOpenMap(item)}>
+        View on map
+      </Button>
+    ) : null;
+
+  if (compact) {
     return (
-      <div
-        key={item.id || index}
-        style={{
-          background: '#ffffff',
-          borderRadius: 14,
-          border: '1px solid #e2e8f0',
-          padding: '14px',
-          boxShadow: '0 2px 8px rgba(15, 23, 42, 0.03)',
-        }}
-      >
-        {/* Top: S.No + Photo + Name + Verified + Rating + Availability */}
-        <Flex gap={12} align="start">
-          <div
-            style={{
-              width: 58,
-              height: 58,
-              borderRadius: '50%',
-              overflow: 'hidden',
-              flexShrink: 0,
-              border: '2px solid #e2e8f0',
-              background: '#f1f5f9',
-            }}
-          >
-            {photo ? (
-              <CardMedia src={photo} alt={name} size="sm" />
-            ) : (
-              <CardMedia alt={name} size="sm" />
-            )}
-          </div>
+      <div className="rq-shop-list" ref={rootRef}>
+        <div className="rq-shop-list-stack">
+          {rows.map((row, index) => {
+            const item = items[index];
+            return (
+              <article key={row.key || index} className="rq-shop-row">
+                <div className="rq-shop-row-head">
+                  <div className="rq-shop-row-media">
+                    <CardMedia src={row.img} alt={row.name} size="sm" />
+                  </div>
+                  <div className="rq-shop-row-main">
+                    <div className="rq-shop-list-name" title={row.name}>
+                      {row.name}
+                    </div>
+                    <div className="rq-shop-row-line">
+                      {renderRating(row)}
+                      {row.meta && <span className="rq-shop-list-sub" title={row.meta}>{row.meta}</span>}
+                    </div>
+                    <div className="rq-shop-row-line">
+                      <span className="rq-shop-list-sub" title={row.area || row.address}>
+                        {row.area || row.address || 'Area not listed'}
+                      </span>
+                      {renderMapLink(row, item)}
+                    </div>
+                  </div>
+                  <div className="rq-shop-row-distance">{formatDistance(row.distance) || '—'}</div>
+                </div>
 
-          <Flex vertical flex={1} style={{ minWidth: 0 }}>
-            <Flex justify="space-between" align="start">
-              <div>
-                <Flex align="center" gap={4}>
-                  <Text strong style={{ fontSize: 15, color: '#0f172a' }}>
-                    {name}
-                  </Text>
-                  <CheckCircleFilled style={{ color: '#2563eb', fontSize: 13 }} />
-                </Flex>
-                <Flex align="center" gap={4} style={{ marginTop: 2, fontSize: 12 }}>
-                  <StarFilled style={{ color: '#f59e0b', fontSize: 11 }} />
-                  <span style={{ fontWeight: 700, color: '#0f172a' }}>{rating}</span>
-                  <span style={{ color: '#94a3b8' }}>({(index + 1) * 312 + 140})</span>
-                  <span style={{ color: '#cbd5e1' }}>•</span>
-                  <span style={{ color: '#64748b', fontSize: 11 }}>ID: RQ{1000 + (index + 1) * 23}</span>
-                </Flex>
-              </div>
+                {!isShop && (
+                  <div className="rq-shop-row-price">
+                    <span className="rq-shop-row-price-now">{row.price || 'Price on request'}</span>
+                    {row.mrp && row.mrp !== row.price && <span className="rq-shop-row-price-was">{row.mrp}</span>}
+                    {row.unit && <span className="rq-shop-list-muted">/ {row.unit}</span>}
+                    <span className={`rq-shop-stock${row.isAvailable ? '' : ' is-out'}`}>
+                      {row.isAvailable ? 'In stock' : 'Out of stock'}
+                    </span>
+                  </div>
+                )}
 
-              {/* Availability Badge */}
-              <Tag
-                style={{
-                  borderRadius: 9999,
-                  fontSize: 11,
-                  fontWeight: 600,
-                  padding: '2px 8px',
-                  margin: 0,
-                  border: isAvailable ? '1px solid #bbf7d0' : '1px solid #fed7aa',
-                  background: isAvailable ? '#f0fdf4' : '#fff7ed',
-                  color: isAvailable ? '#16a34a' : '#ea580c',
-                }}
-              >
-                ● {isAvailable ? 'Available' : 'Busy'}
-              </Tag>
-            </Flex>
-
-            {/* Address & View on Map */}
-            <Flex align="center" gap={6} style={{ marginTop: 6, fontSize: 12, color: '#64748b' }}>
-              <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {area}
-              </span>
-              <span style={{ color: '#cbd5e1' }}>•</span>
-              <Button
-                type="link"
-                size="small"
-                onClick={() => onOpenMap && onOpenMap(item)}
-                style={{ padding: 0, fontSize: 12, fontWeight: 600, color: colors.primary }}
-              >
-                View on Map
-              </Button>
-            </Flex>
-          </Flex>
-        </Flex>
-
-        {/* Metrics Bar: Distance, ETA, Response Time, Price */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(4, 1fr)',
-            gap: 6,
-            background: colors.surfaceContainerLow || '#f8fafc',
-            borderRadius: radii.md,
-            padding: '8px 10px',
-            margin: '12px 0',
-            textAlign: 'center',
-          }}
-        >
-          <div>
-            <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Distance</Text>
-            <Text strong style={{ fontSize: 12, color: colors.textMain }}>{formatDistance(rawDist) || '—'}</Text>
-          </div>
-          <div>
-            <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>ETA</Text>
-            <Text strong style={{ fontSize: 12, color: '#16a34a' }}>{eta}</Text>
-          </div>
-          <div>
-            <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Replies in</Text>
-            <Text strong style={{ fontSize: 12, color: colors.secondary }}>{getResponseTime(index)}</Text>
-          </div>
-          <div>
-            <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Price</Text>
-            <Text strong style={{ fontSize: 13, color: colors.primary, display: 'block' }}>{price}</Text>
-            <Text type="secondary" style={{ fontSize: 9 }}>{priceSub}</Text>
-          </div>
+                {renderActions(row)}
+              </article>
+            );
+          })}
         </div>
-
-        {/* Action Buttons */}
-        <Flex gap={8} align="center">
-          <Button
-            type="primary"
-            block
-            style={{
-              borderRadius: radii.md,
-              fontWeight: 700,
-              height: 38,
-              background: colors.primary,
-              borderColor: colors.primary,
-            }}
-            onClick={() => {
-              if (isShop) {
-                history.push(`/shop/${id}`);
-              } else {
-                addItem(item.shop, item);
-                openCart();
-              }
-            }}
-          >
-            {isShop ? 'View Profile' : 'Order Direct'}
-          </Button>
-
-          <Tooltip title={!user_data?.user_id ? 'Login to chat' : 'Direct Chat'}>
-            <Button
-              icon={<ChatIcon style={{ fontSize: 16 }} />}
-              style={{
-                borderRadius: radii.md,
-                height: 38,
-                width: 42,
-                color: colors.primary,
-                borderColor: colors.border,
-              }}
-              disabled={!user_data?.user_id}
-              onClick={() => handleChatOpen(ownerId, id, { shop_name: name })}
-            />
-          </Tooltip>
-        </Flex>
       </div>
     );
-  };
+  }
 
   return (
-    <div style={{ width: '100%' }}>
-      {/* Mobile Card Stack */}
-      {isMobile ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {items.map((item, idx) => renderMobileCard(item, idx))}
-        </div>
-      ) : (
-        /* Desktop / Tablet Data Table matching screenshot */
-        <div
-          style={{
-            background: '#ffffff',
-            borderRadius: 16,
-            border: '1px solid #e2e8f0',
-            overflow: 'hidden',
-            boxShadow: '0 2px 10px rgba(15, 23, 42, 0.03)',
-          }}
-        >
-          <div style={{ overflowX: 'auto' }}>
-            <table
-              style={{
-                width: '100%',
-                minWidth: 900,
-                borderCollapse: 'collapse',
-                textAlign: 'left',
-                fontSize: 13,
-              }}
-            >
-              {/* Table Header */}
-              <thead>
-                <tr
-                  style={{
-                    background: '#f8fafc',
-                    borderBottom: '1px solid #e2e8f0',
-                    color: '#64748b',
-                    fontWeight: 700,
-                    fontSize: 12,
-                  }}
-                >
-                  <th style={{ padding: '14px 12px', width: 60, textAlign: 'center' }}>S.No</th>
-                  <th style={{ padding: '14px 12px', minWidth: 200 }}>Name & Details</th>
-                  <th style={{ padding: '14px 12px', minWidth: 140 }}>Address</th>
-                  <th style={{ padding: '14px 12px', width: 110 }}>Availability</th>
-                  <th style={{ padding: '14px 12px', width: 90 }}>Distance</th>
-                  <th style={{ padding: '14px 12px', width: 80 }}>ETA</th>
-                  <th style={{ padding: '14px 12px', width: 120 }}>Response Time</th>
-                  <th style={{ padding: '14px 12px', width: 120 }}>Quoted Price</th>
-                  <th style={{ padding: '14px 12px', width: 140, textAlign: 'center' }}>Action</th>
-                </tr>
-              </thead>
-
-              {/* Table Body */}
-              <tbody>
-                {items.map((item, index) => {
-                  const isShop = searchMode === 'shops';
-                  const id = isShop ? item.id : item.shop?.id;
-                  const name = isShop ? item.shop_name : item.name;
-                  const photo = isShop
-                    ? item.img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
-                    : item.img_url;
-                  const rating = (isShop ? item.rating : item.shop?.rating) || 4.9;
-                  const rawDist = isShop ? item.distance : item.shop?.distance;
-                  const distKm = rawDist !== undefined && rawDist !== null ? distanceConvertor(rawDist) : '1.2';
-                  const eta = getEtaString(rawDist);
-                  const area = isShop ? item.area || 'Coimbatore' : item.shop?.area || 'Coimbatore';
-                  const ownerId = isShop ? item.owner_id : item.shop?.owner_id;
-                  const price = isShop ? '₹350' : `₹${item.price}`;
-                  const priceSub = isShop ? 'Visiting Charge' : `/ ${item.unit || 'unit'}`;
-                  const isAvailable = isShop ? true : item.is_available !== false;
-
-                  return (
-                    <tr
-                      key={item.id || index}
-                      style={{
-                        borderBottom: '1px solid #f1f5f9',
-                        transition: 'background 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = '#f8fafc')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = '#ffffff')}
-                    >
-                      {/* S.No */}
-                      <td style={{ padding: '14px 12px', textAlign: 'center', color: '#64748b', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                        {index + 1}
-                      </td>
-
-                      {/* Name & Details */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <Flex gap={12} align="center">
-                          <div
-                            style={{
-                              width: 48,
-                              height: 48,
-                              borderRadius: '50%',
-                              overflow: 'hidden',
-                              border: '2px solid #e2e8f0',
-                              flexShrink: 0,
-                              background: '#f1f5f9',
-                            }}
-                          >
-                            {photo ? (
-                              <CardMedia src={photo} alt={name} size="sm" />
-                            ) : (
-                              <CardMedia alt={name} size="sm" />
-                            )}
+    <div className="rq-shop-list" ref={rootRef}>
+      <div className="rq-shop-table-wrap">
+        <table className={`rq-shop-table${isShop ? ' is-shops' : ' is-items'}`}>
+          <thead>
+            <tr>
+              {isShop ? (
+                <>
+                  <th scope="col">Store</th>
+                  <th scope="col">Location</th>
+                  <th scope="col">Rating</th>
+                </>
+              ) : (
+                <>
+                  <th scope="col">Item</th>
+                  <th scope="col">Store</th>
+                  <th scope="col">Price</th>
+                </>
+              )}
+              <th scope="col" className="is-num">Distance</th>
+              <th scope="col" className="is-actions">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, index) => {
+              const item = items[index];
+              return (
+                <tr key={row.key || index}>
+                  {isShop ? (
+                    <>
+                      <td>
+                        <div className="rq-shop-list-identity">
+                          <div className="rq-shop-list-avatar">
+                            <CardMedia src={row.img} alt={row.name} size="sm" />
                           </div>
-
-                          <Flex vertical style={{ minWidth: 0 }}>
-                            <Flex align="center" gap={4}>
-                              <span
-                                style={{
-                                  fontWeight: 700,
-                                  color: '#0f172a',
-                                  fontSize: 14,
-                                  cursor: 'pointer',
-                                }}
-                                onClick={() => isShop && history.push(`/shop/${id}`)}
-                              >
-                                {name}
+                          <div className="rq-shop-list-name-block">
+                            <button type="button" className="rq-shop-list-name rq-shop-list-link" onClick={() => openStore(row)}>
+                              {row.name}
+                            </button>
+                            <div className="rq-shop-list-sub" title={row.meta}>{row.meta || 'Local store'}</div>
+                          </div>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="rq-shop-list-name-block">
+                          <div className="rq-shop-list-sub is-strong" title={row.area || row.address}>
+                            {row.area || row.address || 'Area not listed'}
+                          </div>
+                          {renderMapLink(row, item)}
+                        </div>
+                      </td>
+                      <td>{renderRating(row)}</td>
+                    </>
+                  ) : (
+                    <>
+                      <td>
+                        <div className="rq-shop-list-identity">
+                          <div className="rq-shop-list-avatar">
+                            <CardMedia src={row.img} alt={row.name} size="sm" />
+                          </div>
+                          <div className="rq-shop-list-name-block">
+                            <div className="rq-shop-list-name" title={row.name}>{row.name}</div>
+                            <div className="rq-shop-list-sub">
+                              {row.unit ? `Sold per ${row.unit}` : 'Listed item'}
+                              {' · '}
+                              <span className={row.isAvailable ? 'is-in' : 'is-out'}>
+                                {row.isAvailable ? 'In stock' : 'Out of stock'}
                               </span>
-                              <CheckCircleFilled style={{ color: '#2563eb', fontSize: 13 }} />
-                            </Flex>
-
-                            <Flex align="center" gap={4} style={{ marginTop: 2, fontSize: 12 }}>
-                              <StarFilled style={{ color: '#f59e0b', fontSize: 11 }} />
-                              <span style={{ fontWeight: 700, color: '#0f172a' }}>{rating}</span>
-                              <span style={{ color: '#94a3b8' }}>({(index + 1) * 312 + 140})</span>
-                            </Flex>
-
-                            <Text type="secondary" style={{ fontSize: 11, color: '#94a3b8' }}>
-                              ID: RQ{1000 + (index + 1) * 23}
-                            </Text>
-                          </Flex>
-                        </Flex>
+                            </div>
+                          </div>
+                        </div>
                       </td>
-
-                      {/* Address & View on Map */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <Flex vertical>
-                          <span style={{ fontWeight: 600, color: '#334155' }}>{area}</span>
-                          <Button
-                            type="link"
-                            size="small"
-                            onClick={() => onOpenMap && onOpenMap(item)}
-                            style={{
-                              padding: 0,
-                              fontSize: 11,
-                              fontWeight: 600,
-                              color: colors.primary,
-                              width: 'fit-content',
-                              marginTop: 2,
-                            }}
-                          >
-                            View on Map
-                          </Button>
-                        </Flex>
+                      <td>
+                        <div className="rq-shop-list-name-block">
+                          <div className="rq-shop-list-name" title={row.meta}>{row.meta || 'Local store'}</div>
+                          <div className="rq-shop-list-sub" title={row.area}>{row.area || 'Area not listed'}</div>
+                        </div>
                       </td>
-
-                      {/* Availability */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <Tag
-                          style={{
-                            borderRadius: 9999,
-                            fontSize: 11,
-                            fontWeight: 600,
-                            padding: '3px 10px',
-                            border: isAvailable ? '1px solid #bbf7d0' : '1px solid #fed7aa',
-                            background: isAvailable ? '#f0fdf4' : '#fff7ed',
-                            color: isAvailable ? '#16a34a' : '#ea580c',
-                          }}
-                        >
-                          ● {isAvailable ? 'Available' : 'Busy'}
-                        </Tag>
+                      <td>
+                        <div className="rq-shop-list-price">
+                          <span className="rq-shop-list-price-now">{row.price || 'On request'}</span>
+                          {row.mrp && row.mrp !== row.price && <span className="rq-shop-row-price-was">{row.mrp}</span>}
+                        </div>
                       </td>
-
-                      {/* Distance */}
-                      <td style={{ padding: '14px 12px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                        {formatDistance(rawDist) || '—'}
-                      </td>
-
-                      {/* ETA */}
-                      <td style={{ padding: '14px 12px', fontWeight: 700, color: '#16a34a', whiteSpace: 'nowrap' }}>
-                        {eta}
-                      </td>
-
-                      {/* Response Time */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <Text strong style={{ fontSize: 13, color: '#0f172a', display: 'block' }}>
-                          {getResponseTime(index)}
-                        </Text>
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          Usually replies
-                        </Text>
-                      </td>
-
-                      {/* Quoted Price */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <span style={{ fontSize: 15, fontWeight: 800, color: '#0f172a', display: 'block' }}>
-                          {price}
-                        </span>
-                        <Text type="secondary" style={{ fontSize: 11 }}>
-                          {priceSub}
-                        </Text>
-                      </td>
-
-                      {/* Action Buttons */}
-                      <td style={{ padding: '14px 12px' }}>
-                        <Flex align="center" gap={6} justify="center">
-                          <Button
-                            type="primary"
-                            size="small"
-                            style={{
-                              borderRadius: radii.sm || 6,
-                              fontWeight: 700,
-                              fontSize: 12,
-                              height: 32,
-                              padding: '0 12px',
-                              background: colors.primary,
-                              borderColor: colors.primary,
-                            }}
-                            onClick={() => {
-                              if (isShop) {
-                                history.push(`/shop/${id}`);
-                              } else {
-                                addItem(item.shop, item);
-                                openCart();
-                              }
-                            }}
-                          >
-                            {isShop ? 'View Profile' : 'Order Direct'}
-                          </Button>
-
-                          <Tooltip title={!user_data?.user_id ? 'Login to chat' : 'Chat'}>
-                            <Button
-                              size="small"
-                              icon={<ChatIcon />}
-                              style={{
-                                borderRadius: radii.sm || 6,
-                                height: 32,
-                                width: 32,
-                                color: colors.primary,
-                              }}
-                              disabled={!user_data?.user_id}
-                              onClick={() => handleChatOpen(ownerId, id, { shop_name: name })}
-                            />
-                          </Tooltip>
-                        </Flex>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
+                    </>
+                  )}
+                  <td className="is-num">{formatDistance(row.distance) || '—'}</td>
+                  <td className="is-actions">{renderActions(row)}</td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };

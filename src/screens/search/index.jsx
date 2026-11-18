@@ -54,7 +54,7 @@ import {
 } from '../../app/utils/helper';
 import { apiConfig, getAvailableFilters } from '../../app/utils';
 import { useGlobalStore, useCartStore } from '../../app/services';
-import { useHistory, useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { radii } from '../../app/styles';
 import './search-immersive.css';
 import Routes from '../../app/routes/routes';
@@ -77,7 +77,6 @@ const SORT_OPTIONS = [
 ];
 
 const SearchScreen = () => {
-  const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;

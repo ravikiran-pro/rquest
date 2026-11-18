@@ -4,7 +4,6 @@ import { Checkbox, Flex } from 'antd';
 import {
   FilterOutlined,
   StarFilled,
-  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import { FILTER_CATEGORIES, countActiveFilters } from './filterUtils';
 import { colors, radii } from '../../styles';

@@ -10,7 +10,7 @@ import {
   EnvironmentOutlined,
 } from '@ant-design/icons';
 import { colors, radii } from '../../styles';
-import { distanceConvertor, formatDistance } from '../../utils';
+import { formatDistance } from '../../utils';
 import CardMedia from './CardMedia';
 
 const { Text } = Typography;
@@ -333,12 +333,13 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
                   whiteSpace: 'nowrap',
-                  maxWidth: '65%',
+                  flex: '1 1 auto',
+                  minWidth: 0,
                 }}
               >
                 {shop.shop_name || 'Neighborhood Store'}
               </span>
-              <span style={{ fontSize: 11, color: colors.textMuted, fontWeight: 500 }}>
+              <span style={{ fontSize: 11, color: colors.textMuted, fontWeight: 500, whiteSpace: 'nowrap', flexShrink: 0, marginLeft: 8 }}>
                 {shop.rating ? `${parseFloat(shop.rating).toFixed(1)} rating · ` : ''}
                 {distanceStr}
               </span>
@@ -412,10 +413,10 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             alignItems: 'center',
           }}
         >
-          <span>
+          <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {mobileStatus.icon} {mobileStatus.left}
           </span>
-          <span style={{ fontSize: 11, opacity: 0.9 }}>{mobileStatus.right}</span>
+          <span style={{ fontSize: 11, opacity: 0.9, flexShrink: 0, marginLeft: 8, whiteSpace: 'nowrap' }}>{mobileStatus.right}</span>
         </div>
 
         {/* Bottom Row: Fulfillment note on left, CTA on right */}

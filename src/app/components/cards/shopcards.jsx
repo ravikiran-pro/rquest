@@ -16,7 +16,7 @@ import { useHistory } from 'react-router-dom';
 import { colors, radii, shadows } from '../../styles';
 import './shop-card.css';
 
-const { Text, Title, Paragraph } = Typography;
+const { Text, Title } = Typography;
 
 const ShopCard = ({
   shopDetails,
