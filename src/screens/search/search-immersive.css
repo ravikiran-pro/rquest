@@ -220,3 +220,122 @@
     min-width: 128px;
   }
 }
+
+/* ==========================================================================
+   Phone search header (under 768px). The input gets the full row; voice,
+   photo and AI search sit beneath it as labelled buttons; the results
+   controls form a two-row grid: [radius, location, nearby] / [filters, sort, view].
+   ========================================================================== */
+.rq-tools-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: -2px 0 12px;
+}
+
+.rq-tools-row button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 0;
+  height: 34px;
+  padding: 0 6px;
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 9999px;
+  background: #ffffff;
+  color: var(--text-main, #1c1c19);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.rq-tools-row .anticon {
+  font-size: 14px;
+  color: var(--text-light, #575a65);
+}
+
+.rq-tools-row button.is-ai,
+.rq-tools-row button.is-ai .anticon {
+  color: #0159c5;
+}
+
+@media (max-width: 767px) {
+  .rq-search-page .rq-controls {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  /* The two groups dissolve so their children line up in the grid */
+  .rq-search-page .rq-controls-start,
+  .rq-search-page .rq-controls-end {
+    display: contents;
+  }
+
+  .rq-search-page .rq-reset-all {
+    display: none;
+  }
+
+  .rq-search-page .rq-sort-select.ant-select {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 360px) {
+  .rq-filter-label {
+    display: none;
+  }
+
+  .rq-tools-row button {
+    padding: 0 4px;
+    gap: 4px;
+  }
+}
+
+/* Phone results controls, placed explicitly:
+   row 1: location (full width) + Nearby
+   row 2: radius, filters, view toggle                                        */
+@media (max-width: 767px) {
+  .rq-search-page .rq-location-chip {
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    white-space: nowrap;
+  }
+
+  .rq-search-page .rq-nearby-btn {
+    grid-row: 1;
+    justify-self: end;
+  }
+
+  .rq-search-page .rq-radius-chip {
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .rq-search-page .rq-filters-btn {
+    grid-row: 2;
+    justify-self: start;
+  }
+
+  .rq-search-page .rq-view-toggle {
+    grid-row: 2;
+    justify-self: end;
+  }
+}
+
+/* Sort lives in the phone Filters sheet */
+.rq-drawer-sort {
+  margin-bottom: 16px;
+}
+
+.rq-drawer-sort-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #444650);
+}

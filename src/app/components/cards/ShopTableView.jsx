@@ -8,7 +8,8 @@ import {
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useGlobalStore, useCartStore } from '../../services';
-import { distanceConvertor } from '../../utils';
+import { distanceConvertor, formatDistance } from '../../utils';
+import CardMedia from './CardMedia';
 import { useHistory } from 'react-router-dom';
 import { colors, radii } from '../../styles/theme';
 
@@ -86,11 +87,9 @@ const ShopTableView = ({
             }}
           >
             {photo ? (
-              <img src={photo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <CardMedia src={photo} alt={name} size="sm" />
             ) : (
-              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                <ShopOutlined style={{ fontSize: 22 }} />
-              </div>
+              <CardMedia alt={name} size="sm" />
             )}
           </div>
 
@@ -162,7 +161,7 @@ const ShopTableView = ({
         >
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>Distance</Text>
-            <Text strong style={{ fontSize: 12, color: colors.textMain }}>{distKm} km</Text>
+            <Text strong style={{ fontSize: 12, color: colors.textMain }}>{formatDistance(rawDist) || '—'}</Text>
           </div>
           <div>
             <Text type="secondary" style={{ fontSize: 10, display: 'block' }}>ETA</Text>
@@ -322,11 +321,9 @@ const ShopTableView = ({
                             }}
                           >
                             {photo ? (
-                              <img src={photo} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <CardMedia src={photo} alt={name} size="sm" />
                             ) : (
-                              <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                                <ShopOutlined style={{ fontSize: 20 }} />
-                              </div>
+                              <CardMedia alt={name} size="sm" />
                             )}
                           </div>
 
@@ -400,7 +397,7 @@ const ShopTableView = ({
 
                       {/* Distance */}
                       <td style={{ padding: '14px 12px', fontWeight: 600, color: '#0f172a', whiteSpace: 'nowrap' }}>
-                        {distKm} km
+                        {formatDistance(rawDist) || '—'}
                       </td>
 
                       {/* ETA */}

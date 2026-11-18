@@ -1,0 +1,27 @@
+/* Shared image frame for cards: fills its container, with a monogram fallback */
+
+.rq-card-media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rq-card-media-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  font-family: var(--font-sans-headline);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.rq-card-media-lg {
+  font-size: 28px;
+}
+
+.rq-card-media-sm {
+  font-size: 16px;
+}

@@ -39,6 +39,14 @@ const netWorkCall = async (endpoint, method, payload, isAuth = false) => {
 const distanceConvertor = (distance) =>
   parseFloat((distance / 1000).toFixed(2));
 
+// Short label for a distance in metres: metres under 1 km, then km with one decimal
+const formatDistance = (distance) => {
+  if (distance === undefined || distance === null || Number.isNaN(Number(distance))) return null;
+  const meters = Number(distance);
+  if (meters < 1000) return meters < 50 ? '< 50 m' : `${Math.round(meters / 10) * 10} m`;
+  return `${(meters / 1000).toFixed(1)} km`;
+};
+
 const getColorByName = (username) => {
   // Simple hash function to generate a number from the username
   let hash = 0;
@@ -349,6 +357,7 @@ export {
   storageKeys,
   netWorkCall,
   distanceConvertor,
+  formatDistance,
   getColorByName,
   USER_ROLES,
   checkUserRole,

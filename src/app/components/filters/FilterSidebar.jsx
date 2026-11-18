@@ -3,7 +3,6 @@ import PropTypes from 'prop-types';
 import { Checkbox, Flex } from 'antd';
 import {
   FilterOutlined,
-  CheckCircleFilled,
   StarFilled,
   SafetyCertificateOutlined,
 } from '@ant-design/icons';
@@ -156,12 +155,7 @@ const FilterSidebar = ({
           style={{ cursor: 'pointer' }}
           onClick={() => updateFilter('onlyAvailable', !filters.onlyAvailable)}
         >
-          <CheckCircleFilled
-            style={{
-              fontSize: 15,
-              color: filters.onlyAvailable ? colors.semantic.success : colors.textLight,
-            }}
-          />
+          <Checkbox checked={Boolean(filters.onlyAvailable)} style={{ fontSize: 12 }} />
           <span
             style={{
               fontSize: 12,

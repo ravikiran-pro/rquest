@@ -10,7 +10,8 @@ import {
   EnvironmentOutlined,
 } from '@ant-design/icons';
 import { colors, radii } from '../../styles';
-import { distanceConvertor } from '../../utils';
+import { distanceConvertor, formatDistance } from '../../utils';
+import CardMedia from './CardMedia';
 
 const { Text } = Typography;
 
@@ -245,10 +246,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
   const isMobile = !screens.md;
 
   const shop = item.shop || {};
-  const distanceStr =
-    shop.distance !== undefined && shop.distance !== null
-      ? `${distanceConvertor(shop.distance)} km`
-      : 'Nearby';
+  const distanceStr = formatDistance(shop.distance) || 'Nearby';
   const areaStr = shop.area || shop.shop_name || 'Neighborhood';
   const ratingStr = shop.rating ? parseFloat(shop.rating).toFixed(1) : '4.8';
 
@@ -303,16 +301,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
               background: colors.surfaceContainer,
             }}
           >
-            <img
-              src={imageUrl}
-              alt={item.name}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
-            />
+            <CardMedia src={imageUrl} alt={item.name} size="sm" />
             {/* Pill badge on image */}
             <div
               style={{
@@ -505,16 +494,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
           overflow: 'hidden',
         }}
       >
-        <img
-          src={imageUrl}
-          alt={item.name}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            display: 'block',
-          }}
-        />
+        <CardMedia src={imageUrl} alt={item.name} size="lg" />
 
         {/* Top-Left Floating Geofence Distance Badge */}
         <div

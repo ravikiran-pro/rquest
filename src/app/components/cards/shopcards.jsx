@@ -10,7 +10,8 @@ import {
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useGlobalStore } from '../../services';
-import { distanceConvertor } from '../../utils';
+import { distanceConvertor, formatDistance } from '../../utils';
+import CardMedia from './CardMedia';
 import { useHistory } from 'react-router-dom';
 import { colors, radii, shadows } from '../../styles';
 import './shop-card.css';
@@ -291,11 +292,8 @@ const ShopCard = ({
   }
 
   const ratingText = Number(rating) > 0 ? Number(rating).toFixed(1) : null;
-  const distanceText =
-    distance !== undefined && distance !== null ? `${distanceConvertor(distance)} km` : null;
+  const distanceText = formatDistance(distance);
   const metaLine = [area || 'Local', categoryName].filter(Boolean).join(' · ');
-  const coverSrc =
-    img_url || 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600';
 
   // Grid card: image first so the photo sets the scan, distance is the lead fact
   return (
@@ -323,8 +321,8 @@ const ShopCard = ({
       }}
     >
       <div className="rq-shop-card-cover">
-        <img src={coverSrc} alt={shop_name} loading="lazy" />
-        {distanceText && <span className="rq-shop-card-distance">{distanceText} away</span>}
+        <CardMedia src={img_url} alt={shop_name} size="lg" />
+        {distanceText && <span className="rq-shop-card-distance">{distanceText}</span>}
         <span className="rq-shop-card-rating">
           {ratingText ? (
             <>

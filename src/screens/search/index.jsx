@@ -69,11 +69,11 @@ const RADIUS_PRESETS = [
 
 // Sort options map onto the existing `sortBy` filter that applySearchFilters already reads
 const SORT_OPTIONS = [
-  { value: 'distance_asc', label: 'Nearest first' },
+  { value: 'distance_asc', label: 'Nearest' },
   { value: 'rating_desc', label: 'Top rated' },
-  { value: 'name_asc', label: 'Name A–Z' },
-  { value: 'price_asc', label: 'Price: low to high', itemsOnly: true },
-  { value: 'price_desc', label: 'Price: high to low', itemsOnly: true },
+  { value: 'name_asc', label: 'A–Z' },
+  { value: 'price_asc', label: 'Price ↑', itemsOnly: true },
+  { value: 'price_desc', label: 'Price ↓', itemsOnly: true },
 ];
 
 const SearchScreen = () => {
@@ -490,6 +490,13 @@ const SearchScreen = () => {
     setIsScrolled((prev) => (prev ? top > 8 : top > 60));
   };
 
+  // Shared sort state for the desktop controls row and the phone Filters sheet
+  const sortValue = SORT_OPTIONS.some((opt) => opt.value === filters.sortBy && (!opt.itemsOnly || searchMode === 'items'))
+    ? filters.sortBy
+    : 'distance_asc';
+  const sortOptions = SORT_OPTIONS.filter((opt) => !opt.itemsOnly || searchMode === 'items');
+  const handleSortChange = (value) => setFilters((prev) => ({ ...prev, sortBy: value }));
+
   const handleSearchSubmit = () => {
     setVisibleCount(18);
   };
@@ -543,6 +550,7 @@ const SearchScreen = () => {
               >
                 <button
                   type="button"
+                  className="rq-radius-chip"
                   style={{
                     background: 'transparent',
                     border: 'none',
@@ -732,7 +740,8 @@ const SearchScreen = () => {
               )}
             </div>
 
-            {/* Smart Search Buttons: Voice, Image, AI (Collapsible) */}
+            {/* Smart Search Buttons: Voice, Image, AI (Collapsible). Desktop pill; phones use the tools row below */}
+            {!isMobile && (
             <div
               style={{
                 display: 'flex',
@@ -801,6 +810,7 @@ const SearchScreen = () => {
                 <ControlOutlined style={{ fontSize: 15 }} />
               </button>
             </div>
+            )}
 
             {/* Submit Arrow */}
             <button
@@ -826,6 +836,23 @@ const SearchScreen = () => {
               <SearchOutlined />
             </button>
           </div>
+
+          {isMobile && !(isSearchFocused || searchText) && (
+            <div className="rq-tools-row" role="group" aria-label="Smart search">
+              <button type="button" onClick={() => setIsVoiceModalOpen(true)}>
+                <AudioOutlined />
+                <span>Voice</span>
+              </button>
+              <button type="button" onClick={() => setIsImageModalOpen(true)}>
+                <CameraOutlined />
+                <span>Photo</span>
+              </button>
+              <button type="button" className="is-ai" onClick={() => setIsAiModalOpen(true)}>
+                <ControlOutlined />
+                <span>AI</span>
+              </button>
+            </div>
+          )}
 
           <div className="rq-search-extras">
           {/* Result tabs: what the list below shows */}
@@ -855,8 +882,8 @@ const SearchScreen = () => {
           </div>
 
           {/* Controls Row: Location pin, View mode, Mobile filter */}
-          <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
-            <Flex align="center" gap={8} wrap="wrap">
+          <Flex justify="space-between" align="center" wrap="wrap" gap={10} className="rq-controls">
+            <Flex align="center" gap={8} wrap="wrap" className="rq-controls-start">
               {isMobile && radiusPopover}
               {/* Geolocation Pin Pill */}
               <button
@@ -918,6 +945,7 @@ const SearchScreen = () => {
               {isMobile && (
                 <button
                   type="button"
+                  className="rq-filters-btn"
                   onClick={() => setIsMobileFilterDrawerOpen(true)}
                   style={{
                     background: activeFiltersCount > 0 ? '#EFF6FF' : '#F8F4EF',
@@ -934,27 +962,26 @@ const SearchScreen = () => {
                   }}
                 >
                   <FilterOutlined />
-                  <span>Filters {activeFiltersCount > 0 ? `(${activeFiltersCount})` : ''}</span>
+                  <span className="rq-filter-label">Filters</span>{activeFiltersCount > 0 ? ` (${activeFiltersCount})` : ''}
                 </button>
               )}
             </Flex>
 
             {/* Right Controls: Sort, View Mode & Reset */}
-            <Flex align="center" gap={8} wrap="wrap">
-              <Select
-                size="small"
-                aria-label="Sort results"
-                value={
-                  SORT_OPTIONS.some((opt) => opt.value === filters.sortBy && (!opt.itemsOnly || searchMode === 'items'))
-                    ? filters.sortBy
-                    : 'distance_asc'
-                }
-                onChange={(value) => setFilters((prev) => ({ ...prev, sortBy: value }))}
-                options={SORT_OPTIONS.filter((opt) => !opt.itemsOnly || searchMode === 'items')}
-                className="rq-sort-select"
-                popupMatchSelectWidth={false}
-              />
+            <Flex align="center" gap={8} wrap="wrap" className="rq-controls-end">
+              {!isMobile && (
+                <Select
+                  size="small"
+                  aria-label="Sort results"
+                  value={sortValue}
+                  onChange={handleSortChange}
+                  options={sortOptions}
+                  className="rq-sort-select"
+                  popupMatchSelectWidth={false}
+                />
+              )}
               <div
+                className="rq-view-toggle"
                 style={{
                   display: 'inline-flex',
                   background: '#F1EDE8',
@@ -997,6 +1024,7 @@ const SearchScreen = () => {
               {(activeFiltersCount > 0 || searchText) && (
                 <button
                   type="button"
+                  className="rq-reset-all"
                   onClick={() => {
                     setSearchText('');
                     setFilters(DEFAULT_FILTERS);
@@ -1272,6 +1300,16 @@ const SearchScreen = () => {
           </Button>
         }
       >
+        <div className="rq-drawer-sort">
+          <div className="rq-drawer-sort-label">Sort by</div>
+          <Select
+            aria-label="Sort results"
+            value={sortValue}
+            onChange={handleSortChange}
+            options={sortOptions}
+            style={{ width: '100%' }}
+          />
+        </div>
         <FilterSidebar
           filters={filters}
           onFilterChange={setFilters}
