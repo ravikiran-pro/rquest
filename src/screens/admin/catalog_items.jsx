@@ -363,8 +363,11 @@ const ItemModal = ({ open, item, onClose, onSaved, isPhone }) => {
     try {
       const formData = new FormData();
       formData.append('fileData', file);
+      const token =
+        sessionStorage.getItem(storageKeys.auth_token) || localStorage.getItem(storageKeys.auth_token);
       const response = await fetch(`${config.api_url}/api/v1/${apiConfig.upload}`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
       const resJson = await response.json();

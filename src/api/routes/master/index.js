@@ -14,7 +14,8 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const upload = multer({
   limits: { fileSize: MAX_UPLOAD_BYTES },
   fileFilter: (req, file, cb) => {
-    if (/^image\/(png|jpe?g|gif|webp|svg\+xml)$/i.test(file.mimetype)) return cb(null, true);
+    // Raster images only: SVG can carry script, so it is not accepted
+    if (/^image\/(png|jpe?g|gif|webp)$/i.test(file.mimetype)) return cb(null, true);
     return cb(Object.assign(new Error('Only image files are allowed'), { status: 400 }));
   },
 });
