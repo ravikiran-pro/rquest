@@ -353,12 +353,9 @@ async function saveSettings(patch, userId) {
 // Enforcement helpers
 // ---------------------------------------------------------------------------
 
-// Same rule as requireAdmin in src/api/auth (role id, or the built-in admin usernames).
-const ADMIN_ROLE_ID = 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9';
-const isAdminRequest = (req) => {
-  const { role_id, username } = (req && req.headers) || {};
-  return role_id === ADMIN_ROLE_ID || username === 'admin' || username === 'root';
-};
+// Same rule as requireAdmin in src/api/auth (role id only).
+const { isAdminReq } = require('../auth');
+const isAdminRequest = (req) => isAdminReq(req);
 
 const maintenanceMessage = (settings) => settings.maintenance_message || DEFAULT_MAINTENANCE_MESSAGE;
 

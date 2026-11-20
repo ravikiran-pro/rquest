@@ -53,8 +53,8 @@ const FormSchemaBuilderModal = ({
 }) => {
   const isShopTarget = !!shop;
   const screens = Grid.useBreakpoint();
-  // useBreakpoint is empty on the first render: treat that as desktop
-  const isPhone = screens.md === false;
+  // Under 576px the field table becomes a stacked card list; useBreakpoint is empty on the first render (desktop)
+  const isPhone = screens.sm === false;
   const controlSize = isPhone ? 'large' : 'middle';
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -553,8 +553,8 @@ const FormSchemaBuilderModal = ({
       }
       open={open}
       onCancel={onClose}
-      width="min(1000px, calc(100vw - 24px))"
-      style={{ top: isPhone ? 12 : 48, maxWidth: 'calc(100vw - 24px)' }}
+      width="min(1000px, calc(100vw - 32px))"
+      style={{ top: isPhone ? 16 : 48, maxWidth: 'calc(100vw - 32px)' }}
       footer={[
         <Button
           key="cancel"

@@ -7,13 +7,12 @@ import {
   Row,
   Col,
   Tag,
-  Card,
   Checkbox,
   message,
   Flex,
-  Grid,
   Spin,
   Modal,
+  Alert,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -29,14 +28,19 @@ import {
   SmileOutlined,
   ShopOutlined,
   CheckOutlined,
+  EyeOutlined,
+  ShareAltOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
+import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet';
 import { apiConfig, netWorkCall, getPreciseUserLocation, getLocationName } from '../../app/utils';
 import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 import ManageStore from './manage_store';
-import { colors, radii, typography, shadows } from '../../app/styles/theme';
+import { colors } from '../../app/styles/theme';
 import './client_register.css';
+import './onboarding.css';
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -125,9 +129,37 @@ const STORE_CATEGORIES = [
   },
 ];
 
+
+const DEFAULT_CENTER = [12.9716, 77.5946];
+const MERCHANT_ROLE_ID = 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5';
+const STEP_LABELS = ['Business', 'Location', 'Fulfillment', 'Review'];
+const STEP_TITLES = ['Business details', 'Store location', 'Fulfillment & payments', 'Review & launch'];
+const MAP_TILE_URL = 'https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}';
+const MAP_TILE_SUBDOMAINS = ['mt0', 'mt1', 'mt2', 'mt3'];
+
+// Turns the platform settings (GET platform/settings) into a notice when new registrations are off
+const registrationNoticeFromSettings = (settings) => {
+  if (!settings) return null;
+  if (settings.maintenance_mode) {
+    return {
+      title: 'Store registrations are paused',
+      description: settings.maintenance_message || 'Rquest is down for maintenance. Please check back shortly.',
+    };
+  }
+  if (settings.allow_new_shop_registrations === false) {
+    return {
+      title: 'New store registrations are closed',
+      description: 'Please check back later or contact Rquest support.',
+    };
+  }
+  return null;
+};
+
+const storeUrl = (shop) => `${window.location.origin}/shop/${shop.id}`;
+
 const ClientRegister = () => {
-  const screens = Grid.useBreakpoint();
   const location = useLocation();
+  const history = useHistory();
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
 
@@ -135,6 +167,9 @@ const ClientRegister = () => {
   const [loadingShops, setLoadingShops] = useState(true);
   const [managedShop, setManagedShop] = useState(null);
   const [isFormEnable, setIsFormEnable] = useState(false);
+  const [platformSettings, setPlatformSettings] = useState(null);
+  // Set when the server refuses a registration (403 REGISTRATIONS_CLOSED or 503 maintenance)
+  const [closedNotice, setClosedNotice] = useState(null);
 
   const isOnboardingShop = new URLSearchParams(location.search).get('onboarding') === 'shop';
 
@@ -148,7 +183,8 @@ const ClientRegister = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [selectedCategory, setSelectedCategory] = useState('groceries');
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);
-  const [position, setPosition] = useState([12.9716, 77.5946]);
+  const [position, setPosition] = useState(DEFAULT_CENTER);
+  const [pinSet, setPinSet] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -164,6 +200,22 @@ const ClientRegister = () => {
     payment_modes: ['direct_upi', 'cod'],
     populate_starters: true,
   });
+
+  // Public platform settings: is new store registration open right now?
+  useEffect(() => {
+    let cancelled = false;
+    netWorkCall(apiConfig.platform_settings, 'GET', null, false)
+      .then((res) => {
+        if (!cancelled && res?.success && res.data) setPlatformSettings(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const registrationNotice = closedNotice || registrationNoticeFromSettings(platformSettings);
+  const registrationsOpen = !registrationNotice;
 
   const fetchAllShops = async () => {
     setLoadingShops(true);
@@ -193,6 +245,29 @@ const ClientRegister = () => {
     fetchAllShops();
   }, []);
 
+  const startRegistration = () => {
+    setIsFormEnable(true);
+    setCurrentStep(0);
+  };
+
+  const shareStore = async (shop) => {
+    const url = storeUrl(shop);
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: shop.shop_name, url });
+        return;
+      }
+      if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        message.success('Store link copied');
+        return;
+      }
+      message.info(url);
+    } catch (err) {
+      if (err?.name !== 'AbortError') message.error('Could not share this store');
+    }
+  };
+
   const handleSelectCategory = (catId) => {
     setSelectedCategory(catId);
     const cat = STORE_CATEGORIES.find((c) => c.id === catId);
@@ -210,6 +285,7 @@ const ClientRegister = () => {
       const coords = await getPreciseUserLocation(true);
       if (coords && coords.length === 2) {
         setPosition(coords);
+        setPinSet(true);
         const name = await getLocationName(coords[0], coords[1]);
         if (name) {
           setOnboardingData((prev) => ({
@@ -303,7 +379,7 @@ const ClientRegister = () => {
         if (update_user_data && user_data) {
           update_user_data({
             ...user_data,
-            role_id: 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5',
+            role_id: MERCHANT_ROLE_ID,
             role: 'client',
             role_name: 'client',
           });
@@ -336,6 +412,12 @@ const ClientRegister = () => {
         setIsFormEnable(false);
         setCurrentStep(0);
         setManagedShop(newShop);
+      } else if (shopRes?.code === 'REGISTRATIONS_CLOSED' || shopRes?.code === 'MAINTENANCE') {
+        // 403 (registrations closed) or 503 (maintenance): show the server's words and stop
+        setClosedNotice({
+          title: shopRes.error || 'Store registrations are unavailable',
+          description: shopRes.message || '',
+        });
       } else {
         message.error(shopRes?.message || 'Error registering store');
       }
@@ -350,7 +432,7 @@ const ClientRegister = () => {
   // If a store is selected, open the ManageStore hub inside the warm merchant canvas
   if (managedShop) {
     return (
-      <div className="merchant-page-wrapper">
+      <div className="merchant-page-wrapper onb-page">
         <div className="merchant-ambient-dots" />
         <ManageStore
           shop={managedShop}
@@ -364,382 +446,247 @@ const ClientRegister = () => {
   }
 
   const activeCategoryObj = STORE_CATEGORIES.find((c) => c.id === selectedCategory);
+  const categoryTitle = activeCategoryObj?.title;
+  const areaLine = [onboardingData.address || 'Address', onboardingData.area || 'Neighborhood'].join(', ');
+
+  const registrationAlert = registrationNotice && (
+    <Alert
+      className="onb-submit-alert"
+      type="warning"
+      showIcon
+      message={registrationNotice.title}
+      description={registrationNotice.description}
+    />
+  );
+
+  const renderCategoryGrid = () => (
+    <div className="store-category-grid">
+      {STORE_CATEGORIES.map((cat) => {
+        const isSelected = selectedCategory === cat.id;
+        return (
+          <button
+            key={cat.id}
+            type="button"
+            aria-pressed={isSelected}
+            onClick={() => handleSelectCategory(cat.id)}
+            className={`store-category-card ${isSelected ? 'selected' : ''}`}
+          >
+            <div className="store-category-icon">{cat.icon}</div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div className="store-category-title">{cat.title}</div>
+              <div className="store-category-desc">{cat.desc}</div>
+            </div>
+            {isSelected && <CheckOutlined className="onb-check" />}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderReviewRow = (label, value, stepIdx) => (
+    <div className="onb-review-row">
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+      <Button type="link" size="small" icon={<EditOutlined />} onClick={() => setCurrentStep(stepIdx)} aria-label={`Edit ${label}`}>
+        Edit
+      </Button>
+    </div>
+  );
 
   return (
-    <div className="merchant-page-wrapper">
+    <div className="merchant-page-wrapper onb-page">
       <div className="merchant-ambient-dots" />
-      <div className="merchant-page-shell">
+      <div className="merchant-page-shell onb-shell">
         {/* VIEW A: Merchant Outlets Hub (When not onboarding) */}
         {!isFormEnable && (
           <div>
-            {/* Header Card */}
-            <Card
-              className="merchant-clean-card"
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radii.xl,
-                boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
-                marginBottom: 20,
-              }}
-              styles={{ body: { padding: screens.xs ? '18px 14px' : '22px 24px' } }}
-            >
-              <Flex justify="space-between" align="center" wrap="wrap" gap={14}>
-                <div>
-                  <Title
-                    level={3}
-                    style={{
-                      margin: 0,
-                      fontWeight: 800,
-                      color: colors.textMain,
-                      fontFamily: typography.fontFamily.headline,
-                      letterSpacing: '-0.02em',
-                    }}
-                  >
-                    Merchant Studio &amp; Outlets
-                  </Title>
-                  <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 4, display: 'block' }}>
-                    Manage your direct stores ({allShops.length} active), live customer orders &amp; catalog.
-                  </Text>
-                </div>
+            <div className="onb-hub-head">
+              <div className="onb-hub-head-text">
+                <Title level={3} className="onb-title">
+                  Merchant Studio &amp; Outlets
+                </Title>
+                <Text className="onb-sub">
+                  Manage your stores ({allShops.length} active), live customer orders &amp; catalog.
+                </Text>
+              </div>
+              <Button
+                type="primary"
+                size="large"
+                className="onb-hub-cta"
+                icon={<PlusOutlined />}
+                disabled={!registrationsOpen}
+                onClick={startRegistration}
+                style={{ background: colors.primary, borderColor: colors.primary }}
+              >
+                Register new store
+              </Button>
+            </div>
 
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={() => {
-                    setIsFormEnable(true);
-                    setCurrentStep(0);
-                  }}
-                  style={{
-                    borderRadius: radii.md,
-                    fontWeight: 700,
-                    background: colors.primary,
-                    borderColor: colors.primary,
-                    boxShadow: shadows.primary,
-                    height: 42,
-                    padding: '0 20px',
-                  }}
-                >
-                  + Register New Outlet
-                </Button>
-              </Flex>
-            </Card>
+            {registrationAlert}
 
-            {/* Outlets Grid */}
+            {/* Stores grid */}
             {loadingShops ? (
               <Flex justify="center" align="center" style={{ minHeight: '30vh' }}>
-                <Spin size="large" tip="Loading Your Stores..." />
+                <Spin size="large" tip="Loading your stores..." />
               </Flex>
             ) : allShops.length === 0 ? (
-              <Card
-                className="merchant-clean-card"
-                style={{
-                  textAlign: 'center',
-                  background: colors.surface,
-                  border: `1px solid ${colors.border}`,
-                  borderRadius: radii.xl,
-                  boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
-                }}
-                styles={{ body: { padding: screens.xs ? '32px 16px' : '48px 24px' } }}
-              >
-                <div
-                  style={{
-                    width: 54,
-                    height: 54,
-                    borderRadius: radii.lg,
-                    background: colors.surfaceContainerLow,
-                    border: `1px solid ${colors.border}`,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: 24,
-                    color: colors.primary,
-                    marginBottom: 16,
-                  }}
-                >
+              <div className="onb-state">
+                <div className="onb-state-icon">
                   <ShopOutlined />
                 </div>
-                <Title
-                  level={4}
-                  style={{
-                    color: colors.textMain,
-                    fontWeight: 800,
-                    fontFamily: typography.fontFamily.headline,
-                    letterSpacing: '-0.02em',
-                    marginBottom: 8,
-                  }}
-                >
-                  No Stores Registered Yet
+                <Title level={4} className="onb-state-title">
+                  Register your first store
                 </Title>
-                <Paragraph
-                  style={{
-                    fontSize: 13,
-                    color: colors.textMuted,
-                    maxWidth: 440,
-                    margin: '0 auto 20px',
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Put your store in front of nearby customers. List your products, receive orders and connect directly with your neighbourhood.
+                <Paragraph className="onb-state-text">
+                  Put your store in front of nearby customers. List your products, receive orders and connect directly
+                  with your neighbourhood.
                 </Paragraph>
-                <Button
-                  type="primary"
-                  size="large"
-                  onClick={() => setIsFormEnable(true)}
-                  style={{
-                    borderRadius: radii.md,
-                    fontWeight: 700,
-                    background: colors.primary,
-                    borderColor: colors.primary,
-                    boxShadow: shadows.primary,
-                    height: 42,
-                    padding: '0 22px',
-                  }}
-                >
-                  Start Storefront Setup
+                <ul className="onb-state-points">
+                  <li>
+                    <CheckOutlined /> List your products
+                  </li>
+                  <li>
+                    <CheckOutlined /> Take direct orders
+                  </li>
+                  <li>
+                    <CheckOutlined /> Share one storefront link
+                  </li>
+                </ul>
+                <Button type="primary" size="large" disabled={!registrationsOpen} onClick={startRegistration}>
+                  Start storefront setup
                 </Button>
-              </Card>
+              </div>
             ) : (
-              <Row gutter={screens.xs ? [12, 12] : [16, 16]}>
+              <div className="onb-store-grid">
                 {allShops.map((shop) => (
-                  <Col xs={24} sm={12} md={8} key={shop.id}>
-                    <Card
-                      hoverable
-                      className="merchant-outlet-card"
-                      style={{
-                        background: colors.surface,
-                        border: `1px solid ${colors.border}`,
-                        borderRadius: radii.lg,
-                        boxShadow: shadows.card,
-                      }}
-                      styles={{ body: { padding: '16px' } }}
-                    >
-                      <Flex gap={12} align="start" style={{ marginBottom: 12 }}>
-                        <img
-                          src={shop.img_url || STORE_CATEGORIES[0].defaultImage}
-                          alt={shop.shop_name}
-                          style={{
-                            width: 60,
-                            height: 60,
-                            borderRadius: radii.md,
-                            objectFit: 'cover',
-                            flexShrink: 0,
-                            border: `1px solid ${colors.border}`,
-                          }}
-                        />
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <Title
-                            level={5}
-                            ellipsis
-                            style={{
-                              margin: 0,
-                              fontWeight: 700,
-                              color: colors.textMain,
-                              fontFamily: typography.fontFamily.headline,
-                            }}
-                          >
-                            {shop.shop_name}
-                          </Title>
-                          <Tag
-                            style={{
-                              marginTop: 4,
-                              fontSize: 11,
-                              borderRadius: radii.xs,
-                              background: colors.serviceChipBg,
-                              color: colors.serviceChipText,
-                              border: `1px solid ${colors.serviceChipBorder}`,
-                              fontWeight: 600,
-                            }}
-                          >
-                            {shop.shop_type || 'Store Outlet'}
-                          </Tag>
-                          <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
-                            <EnvironmentOutlined style={{ color: colors.secondary, marginRight: 4 }} />
-                            {shop.area || 'Local Outlet'}
-                          </div>
+                  <article key={shop.id} className="onb-store-card">
+                    <div className="onb-store-top">
+                      <div className="onb-thumb">
+                        <img src={shop.img_url || STORE_CATEGORIES[0].defaultImage} alt="" />
+                      </div>
+                      <div className="onb-store-info">
+                        <h3 className="onb-store-name" title={shop.shop_name}>
+                          {shop.shop_name}
+                        </h3>
+                        <div className="onb-store-meta">
+                          <Tag>{shop.shop_type || 'Store outlet'}</Tag>
+                          <span className="onb-store-area">
+                            <EnvironmentOutlined />
+                            {shop.area || 'Local outlet'}
+                          </span>
                         </div>
-                      </Flex>
+                      </div>
+                    </div>
 
-                      <Paragraph
-                        ellipsis={{ rows: 2 }}
-                        style={{
-                          fontSize: 12,
-                          color: colors.textMuted,
-                          marginBottom: 14,
-                          minHeight: 36,
-                          lineHeight: 1.45,
-                        }}
-                      >
-                        {shop.address || 'Address not set'}
-                      </Paragraph>
+                    <p className={`onb-store-address ${shop.address ? '' : 'onb-store-address--empty'}`}>
+                      {shop.address || 'Address not set'}
+                    </p>
 
+                    <div className="onb-store-actions">
                       <Button
                         type="primary"
-                        block
+                        className="onb-action-primary"
                         icon={<EditOutlined />}
                         onClick={() => setManagedShop(shop)}
-                        style={{
-                          borderRadius: radii.md,
-                          fontWeight: 700,
-                          height: 38,
-                          background: colors.primary,
-                          borderColor: colors.primary,
-                          boxShadow: shadows.primary,
-                        }}
                       >
-                        Open Store Studio
+                        Manage
                       </Button>
-                    </Card>
-                  </Col>
+                      <Button icon={<EyeOutlined />} onClick={() => history.push(`/shop/${shop.id}`)}>
+                        View storefront
+                      </Button>
+                      <Button icon={<ShareAltOutlined />} onClick={() => shareStore(shop)}>
+                        Share
+                      </Button>
+                    </div>
+                  </article>
                 ))}
-              </Row>
+              </div>
             )}
           </div>
         )}
 
         {/* VIEW B: Interactive Guided Store Onboarding Wizard */}
         {isFormEnable && (
-          <div style={{ maxWidth: 740, margin: '0 auto' }}>
+          <div className="onb-wizard">
             {allShops.length > 0 && (
               <Button
                 type="text"
+                className="onb-back"
                 icon={<ArrowLeftOutlined />}
                 onClick={() => setIsFormEnable(false)}
-                style={{
-                  marginBottom: 14,
-                  fontWeight: 600,
-                  color: colors.textMuted,
-                  paddingLeft: 0,
-                }}
               >
                 Back to Merchant Studio
               </Button>
             )}
 
-            <Card
-              className="merchant-clean-card"
-              style={{
-                background: colors.surface,
-                border: `1px solid ${colors.border}`,
-                borderRadius: radii.xl,
-                boxShadow: '0 4px 20px rgba(11, 45, 107, 0.04)',
-              }}
-              styles={{ body: { padding: screens.xs ? '18px 14px' : '26px 28px' } }}
-            >
-              {/* Header */}
-              <div style={{ textAlign: 'center', marginBottom: 20 }}>
-                <Title
-                  level={3}
-                  style={{
-                    margin: 0,
-                    fontWeight: 800,
-                    color: colors.textMain,
-                    fontFamily: typography.fontFamily.headline,
-                    letterSpacing: '-0.02em',
-                  }}
-                >
+            <div className="onb-card">
+              <div className="onb-wizard-head">
+                <Title level={3} className="onb-title">
                   Storefront Registration
                 </Title>
-                <Text style={{ fontSize: 13, color: colors.textMuted, marginTop: 4, display: 'inline-block' }}>
-                  Step {currentStep + 1} of 4 • {
-                    currentStep === 0
-                      ? 'Business Details'
-                      : currentStep === 1
-                      ? 'Store Location'
-                      : currentStep === 2
-                      ? 'Fulfillment & Payments'
-                      : 'Review & Launch'
-                  }
+                <Text className="onb-sub">
+                  Step {currentStep + 1} of {STEP_LABELS.length}: {STEP_TITLES[currentStep]}
                 </Text>
               </div>
 
-              {/* Mobile-Friendly Step Dots Indicator */}
-              <div className="store-step-indicator">
-                {[0, 1, 2, 3].map((stepIdx) => (
-                  <div
-                    key={stepIdx}
-                    className={`store-step-dot ${
-                      currentStep === stepIdx
-                        ? 'active'
-                        : currentStep > stepIdx
-                        ? 'completed'
-                        : ''
-                    }`}
-                  />
-                ))}
+              {registrationAlert}
+
+              {/* Step progress: numbered, labels collapse to a caption on phones */}
+              <ol className="onb-steps" aria-label="Registration progress">
+                {STEP_LABELS.map((label, idx) => {
+                  const state = idx < currentStep ? 'is-done' : idx === currentStep ? 'is-current' : '';
+                  return (
+                    <li key={label} className={`onb-step ${state}`} aria-current={idx === currentStep ? 'step' : undefined}>
+                      <button
+                        type="button"
+                        className="onb-step-btn"
+                        disabled={idx > currentStep}
+                        onClick={() => setCurrentStep(idx)}
+                        aria-label={`Step ${idx + 1}: ${label}`}
+                      >
+                        <span className="onb-step-num">{idx < currentStep ? <CheckOutlined /> : idx + 1}</span>
+                        <span className="onb-step-label">{label}</span>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ol>
+              <div className="onb-step-caption">
+                Step {currentStep + 1} of {STEP_LABELS.length}: <strong>{STEP_TITLES[currentStep]}</strong>
               </div>
 
               {/* STEP 0: Business Category & Identity */}
               {currentStep === 0 && (
                 <div>
-                  <Title
-                    level={5}
-                    style={{
-                      marginBottom: 4,
-                      fontWeight: 700,
-                      color: colors.textMain,
-                      fontFamily: typography.fontFamily.headline,
-                    }}
-                  >
-                    1. Choose Your Business Category
-                  </Title>
-                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 14, color: colors.textMuted }}>
-                    Select the category that best describes what you sell.
-                  </Text>
+                  <div className="onb-section-title">1. Choose your business category</div>
+                  <span className="onb-section-hint">Select the category that best describes what you sell.</span>
 
-                  <div className="store-category-grid">
-                    {STORE_CATEGORIES.map((cat) => {
-                      const isSelected = selectedCategory === cat.id;
-                      return (
-                        <div
-                          key={cat.id}
-                          onClick={() => handleSelectCategory(cat.id)}
-                          className={`store-category-card ${isSelected ? 'selected' : ''}`}
-                        >
-                          <div className="store-category-icon">{cat.icon}</div>
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div className="store-category-title">{cat.title}</div>
-                            <div className="store-category-desc">{cat.desc}</div>
-                          </div>
-                          {isSelected && <CheckOutlined style={{ color: colors.primary, fontSize: 13, fontWeight: 700 }} />}
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {renderCategoryGrid()}
 
                   <Form layout="vertical">
-                    <Form.Item
-                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Store / Outlet Name</span>}
-                      required
-                      style={{ marginBottom: 14 }}
-                    >
-                      <Input
-                        className="merchant-warm-input"
-                        size="large"
-                        placeholder="e.g. City Supermarket, Biryani Pot, HealthPlus Pharmacy"
-                        value={onboardingData.shop_name}
-                        onChange={(e) =>
-                          setOnboardingData({ ...onboardingData, shop_name: e.target.value })
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Orders Phone / WhatsApp Number</span>}
-                      required
-                      style={{ marginBottom: 0 }}
-                    >
-                      <Input
-                        className="merchant-warm-input"
-                        size="large"
-                        prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
-                        placeholder="10-digit mobile number for order notifications"
-                        value={onboardingData.mobile_number}
-                        onChange={(e) =>
-                          setOnboardingData({ ...onboardingData, mobile_number: e.target.value })
-                        }
-                      />
-                    </Form.Item>
+                    <Row gutter={[16, 0]}>
+                      <Col xs={24} md={12}>
+                        <Form.Item label="Store / outlet name" required>
+                          <Input
+                            size="large"
+                            placeholder="e.g. City Supermarket, Biryani Pot, HealthPlus Pharmacy"
+                            value={onboardingData.shop_name}
+                            onChange={(e) => setOnboardingData({ ...onboardingData, shop_name: e.target.value })}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item label="Orders phone / WhatsApp number" required>
+                          <Input
+                            size="large"
+                            prefix={<PhoneOutlined style={{ color: colors.textLight }} />}
+                            placeholder="10-digit mobile number"
+                            value={onboardingData.mobile_number}
+                            onChange={(e) => setOnboardingData({ ...onboardingData, mobile_number: e.target.value })}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
                   </Form>
                 </div>
               )}
@@ -747,121 +694,84 @@ const ClientRegister = () => {
               {/* STEP 1: Store Location & Neighborhood */}
               {currentStep === 1 && (
                 <div>
-                  <Title
-                    level={5}
-                    style={{
-                      marginBottom: 4,
-                      fontWeight: 700,
-                      color: colors.textMain,
-                      fontFamily: typography.fontFamily.headline,
-                    }}
-                  >
-                    2. Store Physical Location
-                  </Title>
-                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
+                  <div className="onb-section-title">2. Store physical location</div>
+                  <span className="onb-section-hint">
                     Pin your shop on the map so nearby shoppers can find you within 1–5 km.
-                  </Text>
+                  </span>
 
-                  {/* 1-Tap GPS Detection Box */}
-                  <div
-                    style={{
-                      background: colors.surfaceContainerLow,
-                      padding: '14px 16px',
-                      borderRadius: radii.lg,
-                      border: `1px solid ${colors.border}`,
-                      marginBottom: 16,
-                    }}
-                  >
-                    <Flex justify="space-between" align="center" wrap="wrap" gap={10}>
-                      <div>
-                        <div style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
-                          <EnvironmentOutlined style={{ color: colors.primary, marginRight: 6 }} /> Store GPS Coordinates
-                        </div>
-                        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 2 }}>
-                          Lat: {position[0]?.toFixed(4)}, Lon: {position[1]?.toFixed(4)}
+                  <div className="onb-loc-card">
+                    <div className={`onb-loc-status ${pinSet ? 'is-set' : ''}`}>
+                      <span className="onb-loc-status-icon">
+                        <EnvironmentOutlined />
+                      </span>
+                      <div style={{ minWidth: 0 }}>
+                        <div className="onb-loc-status-title">{pinSet ? 'Pin saved' : 'Pin not set yet'}</div>
+                        <div className="onb-loc-status-sub">
+                          Lat {position[0]?.toFixed(4)}, Lon {position[1]?.toFixed(4)}
                         </div>
                       </div>
-                      <Flex gap={8}>
-                        <Button
-                          size="small"
-                          icon={<AimOutlined />}
-                          loading={detectingGps}
-                          onClick={handleAutoDetectGps}
-                          style={{
-                            borderRadius: radii.sm,
-                            fontWeight: 600,
-                            fontSize: 12,
-                            borderColor: colors.border,
-                            color: colors.textMain,
-                          }}
-                        >
-                          Auto-Detect GPS
-                        </Button>
-                        <Button
-                          size="small"
-                          type="primary"
-                          ghost
-                          onClick={() => setIsMapModalVisible(true)}
-                          style={{
-                            borderRadius: radii.sm,
-                            fontWeight: 600,
-                            fontSize: 12,
-                            borderColor: colors.primary,
-                            color: colors.primary,
-                          }}
-                        >
-                          Adjust Pin
-                        </Button>
-                      </Flex>
-                    </Flex>
+                    </div>
+
+                    <div className="onb-map-inline">
+                      <MapContainer
+                        key={position.join(',')}
+                        center={position}
+                        zoom={15}
+                        scrollWheelZoom={false}
+                        style={{ height: '100%', width: '100%' }}
+                      >
+                        <TileLayer url={MAP_TILE_URL} subdomains={MAP_TILE_SUBDOMAINS} />
+                        <CircleMarker
+                          center={position}
+                          radius={9}
+                          pathOptions={{ color: colors.primary, fillColor: colors.primary, fillOpacity: 0.9 }}
+                        />
+                      </MapContainer>
+                    </div>
+
+                    <div className="onb-loc-actions">
+                      <Button icon={<AimOutlined />} loading={detectingGps} onClick={handleAutoDetectGps}>
+                        Auto-detect GPS
+                      </Button>
+                      <Button icon={<EditOutlined />} onClick={() => setIsMapModalVisible(true)}>
+                        Adjust pin
+                      </Button>
+                    </div>
                   </div>
 
                   <Form layout="vertical">
-                    <Form.Item
-                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Street Address</span>}
-                      required
-                      style={{ marginBottom: 14 }}
-                    >
-                      <Input
-                        className="merchant-warm-input"
-                        size="large"
-                        placeholder="e.g. 24/A Perambur Barracks Road"
-                        value={onboardingData.address}
-                        onChange={(e) =>
-                          setOnboardingData({ ...onboardingData, address: e.target.value })
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Locality / Neighborhood</span>}
-                      required
-                      style={{ marginBottom: 14 }}
-                    >
-                      <Input
-                        className="merchant-warm-input"
-                        size="large"
-                        placeholder="e.g. Indiranagar, Anna Nagar, HSR Layout"
-                        value={onboardingData.area}
-                        onChange={(e) =>
-                          setOnboardingData({ ...onboardingData, area: e.target.value })
-                        }
-                      />
-                    </Form.Item>
-
-                    <Form.Item
-                      label={<span style={{ fontWeight: 600, color: colors.textMain }}>Google Maps Link (Optional)</span>}
-                      style={{ marginBottom: 0 }}
-                    >
-                      <Input
-                        className="merchant-warm-input"
-                        placeholder="https://maps.app.goo.gl/..."
-                        value={onboardingData.directions}
-                        onChange={(e) =>
-                          setOnboardingData({ ...onboardingData, directions: e.target.value })
-                        }
-                      />
-                    </Form.Item>
+                    <Row gutter={[16, 0]}>
+                      <Col xs={24} md={12}>
+                        <Form.Item label="Street address" required>
+                          <Input
+                            size="large"
+                            placeholder="e.g. 24/A Perambur Barracks Road"
+                            value={onboardingData.address}
+                            onChange={(e) => setOnboardingData({ ...onboardingData, address: e.target.value })}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <Form.Item label="Locality / neighbourhood" required>
+                          <Input
+                            size="large"
+                            placeholder="e.g. Indiranagar, Anna Nagar, HSR Layout"
+                            value={onboardingData.area}
+                            onChange={(e) => setOnboardingData({ ...onboardingData, area: e.target.value })}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col xs={24}>
+                        <Form.Item label="Google Maps link (optional)">
+                          <Input
+                            size="large"
+                            placeholder="https://maps.app.goo.gl/..."
+                            value={onboardingData.directions}
+                            onChange={(e) => setOnboardingData({ ...onboardingData, directions: e.target.value })}
+                          />
+                        </Form.Item>
+                      </Col>
+                    </Row>
                   </Form>
                 </div>
               )}
@@ -869,264 +779,178 @@ const ClientRegister = () => {
               {/* STEP 2: Fulfillment & Payments */}
               {currentStep === 2 && (
                 <div>
-                  <Title
-                    level={5}
-                    style={{
-                      marginBottom: 4,
-                      fontWeight: 700,
-                      color: colors.textMain,
-                      fontFamily: typography.fontFamily.headline,
-                    }}
-                  >
-                    3. Fulfillment &amp; Payments
-                  </Title>
-                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
-                    Choose how neighborhood customers will order and pay.
-                  </Text>
+                  <div className="onb-section-title">3. Fulfillment &amp; payments</div>
+                  <span className="onb-section-hint">Choose how neighbourhood customers will order and pay.</span>
 
-                  <div style={{ marginBottom: 18 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: colors.textMain }}>
-                      Order Fulfillment Options
-                    </label>
+                  <div className="onb-block">
+                    <span className="onb-section-hint" style={{ fontWeight: 600, color: colors.textMain, marginBottom: 8 }}>
+                      Order fulfillment options
+                    </span>
                     <div className="toggle-option-grid">
-                      <div
-                        onClick={() => handleToggleFulfillment('pickup')}
-                        className={`toggle-option-card ${
-                          onboardingData.fulfillment_modes.includes('pickup') ? 'active' : ''
-                        }`}
-                      >
-                        <div>
-                          <div className="toggle-option-title">Store Pickup</div>
-                          <div className="toggle-option-desc">Customers collect orders at your counter</div>
-                        </div>
-                        {onboardingData.fulfillment_modes.includes('pickup') && (
-                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
-                        )}
-                      </div>
-
-                      <div
-                        onClick={() => handleToggleFulfillment('delivery')}
-                        className={`toggle-option-card ${
-                          onboardingData.fulfillment_modes.includes('delivery') ? 'active' : ''
-                        }`}
-                      >
-                        <div>
-                          <div className="toggle-option-title">Local Delivery</div>
-                          <div className="toggle-option-desc">Direct neighborhood delivery dispatch</div>
-                        </div>
-                        {onboardingData.fulfillment_modes.includes('delivery') && (
-                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
-                        )}
-                      </div>
+                      {[
+                        { key: 'pickup', title: 'Store pickup', desc: 'Customers collect orders at your counter' },
+                        { key: 'delivery', title: 'Local delivery', desc: 'Direct neighbourhood delivery dispatch' },
+                      ].map((opt) => {
+                        const active = onboardingData.fulfillment_modes.includes(opt.key);
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => handleToggleFulfillment(opt.key)}
+                            className={`toggle-option-card ${active ? 'active' : ''}`}
+                          >
+                            <div>
+                              <div className="toggle-option-title">{opt.title}</div>
+                              <div className="toggle-option-desc">{opt.desc}</div>
+                            </div>
+                            {active && <CheckOutlined className="onb-check" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div style={{ marginBottom: 18 }}>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 8, color: colors.textMain }}>
-                      Accepted Payment Methods
-                    </label>
+                  <div className="onb-block">
+                    <span className="onb-section-hint" style={{ fontWeight: 600, color: colors.textMain, marginBottom: 8 }}>
+                      Accepted payment methods
+                    </span>
                     <div className="toggle-option-grid">
-                      <div
-                        onClick={() => handleTogglePayment('direct_upi')}
-                        className={`toggle-option-card ${
-                          onboardingData.payment_modes.includes('direct_upi') ? 'active' : ''
-                        }`}
-                      >
-                        <div>
-                          <div className="toggle-option-title">Direct UPI / QR (0% Fee)</div>
-                          <div className="toggle-option-desc">PhonePe, GPay, Paytm direct to your bank</div>
-                        </div>
-                        {onboardingData.payment_modes.includes('direct_upi') && (
-                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
-                        )}
-                      </div>
-
-                      <div
-                        onClick={() => handleTogglePayment('cod')}
-                        className={`toggle-option-card ${
-                          onboardingData.payment_modes.includes('cod') ? 'active' : ''
-                        }`}
-                      >
-                        <div>
-                          <div className="toggle-option-title">Cash on Delivery / Counter</div>
-                          <div className="toggle-option-desc">Pay cash when collecting or receiving</div>
-                        </div>
-                        {onboardingData.payment_modes.includes('cod') && (
-                          <CheckOutlined style={{ color: colors.primary, fontWeight: 700 }} />
-                        )}
-                      </div>
+                      {[
+                        { key: 'direct_upi', title: 'Direct UPI / QR (0% fee)', desc: 'PhonePe, GPay, Paytm direct to your bank' },
+                        { key: 'cod', title: 'Cash on delivery / counter', desc: 'Pay cash when collecting or receiving' },
+                      ].map((opt) => {
+                        const active = onboardingData.payment_modes.includes(opt.key);
+                        return (
+                          <button
+                            key={opt.key}
+                            type="button"
+                            aria-pressed={active}
+                            onClick={() => handleTogglePayment(opt.key)}
+                            className={`toggle-option-card ${active ? 'active' : ''}`}
+                          >
+                            <div>
+                              <div className="toggle-option-title">{opt.title}</div>
+                              <div className="toggle-option-desc">{opt.desc}</div>
+                            </div>
+                            {active && <CheckOutlined className="onb-check" />}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
 
-                  <div>
-                    <label style={{ display: 'block', fontWeight: 600, fontSize: 13, marginBottom: 6, color: colors.textMain }}>
-                      Store Cover Photo URL (Optional)
-                    </label>
-                    <Input
-                      className="merchant-warm-input"
-                      placeholder="https://images.unsplash.com/..."
-                      value={onboardingData.img_url}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, img_url: e.target.value })
-                      }
-                    />
-                  </div>
+                  <Form layout="vertical">
+                    <div className="onb-cover-row">
+                      <Form.Item label="Store cover photo URL (optional)">
+                        <Input
+                          size="large"
+                          placeholder="https://images.unsplash.com/..."
+                          value={onboardingData.img_url}
+                          onChange={(e) => setOnboardingData({ ...onboardingData, img_url: e.target.value })}
+                        />
+                      </Form.Item>
+                      <div className="onb-thumb onb-thumb--lg" aria-hidden="true">
+                        {onboardingData.img_url ? <img src={onboardingData.img_url} alt="" /> : <ShopOutlined />}
+                      </div>
+                    </div>
+                  </Form>
                 </div>
               )}
 
               {/* STEP 3: Review & Launch */}
               {currentStep === 3 && (
                 <div>
-                  <Title
-                    level={5}
-                    style={{
-                      marginBottom: 4,
-                      fontWeight: 700,
-                      color: colors.textMain,
-                      fontFamily: typography.fontFamily.headline,
-                    }}
-                  >
-                    4. Review Storefront
-                  </Title>
-                  <Text style={{ fontSize: 12, display: 'block', marginBottom: 16, color: colors.textMuted }}>
-                    Preview how your outlet card will appear to nearby customers.
-                  </Text>
+                  <div className="onb-section-title">4. Review storefront</div>
+                  <span className="onb-section-hint">Preview how your outlet card will appear to nearby customers.</span>
 
-                  {/* Live Storefront Card Preview */}
-                  <div className="store-preview-card">
-                    <Flex gap={12} align="start">
-                      <img
-                        src={onboardingData.img_url}
-                        alt="Store Cover"
-                        className="store-preview-media"
-                        style={{
-                          width: 72,
-                          height: 72,
-                          borderRadius: radii.md,
-                          objectFit: 'cover',
-                          flexShrink: 0,
-                          border: `1px solid ${colors.border}`,
-                        }}
-                      />
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <Title
-                          level={5}
-                          style={{
-                            margin: 0,
-                            fontWeight: 800,
-                            color: colors.textMain,
-                            fontFamily: typography.fontFamily.headline,
-                          }}
-                        >
-                          {onboardingData.shop_name || 'My Local Store'}
-                        </Title>
-                        <Tag
-                          style={{
-                            marginTop: 4,
-                            fontSize: 11,
-                            borderRadius: radii.xs,
-                            background: colors.verifiedChipBg,
-                            color: colors.verifiedChipText,
-                            border: `1px solid ${colors.verifiedChipBorder}`,
-                            fontWeight: 700,
-                          }}
-                        >
-                          {activeCategoryObj?.title}
-                        </Tag>
-                        <div style={{ fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
-                          <EnvironmentOutlined style={{ color: colors.secondary, marginRight: 4 }} />
-                          {onboardingData.address || 'Address'}, {onboardingData.area || 'Neighborhood'}
+                  <article className="onb-store-card" style={{ marginBottom: 16 }}>
+                    <div className="onb-store-top">
+                      <div className="onb-thumb onb-thumb--lg">
+                        {onboardingData.img_url ? <img src={onboardingData.img_url} alt="" /> : <ShopOutlined />}
+                      </div>
+                      <div className="onb-store-info">
+                        <h3 className="onb-store-name">{onboardingData.shop_name || 'My local store'}</h3>
+                        <div className="onb-store-meta">
+                          <Tag>{categoryTitle}</Tag>
                         </div>
-                        <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 600, marginTop: 4 }}>
-                          Direct Orders • Contact: {onboardingData.mobile_number}
+                        <div className="onb-store-meta">
+                          <span className="onb-store-area">
+                            <EnvironmentOutlined />
+                            {areaLine}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 12, color: colors.semantic.success, fontWeight: 600, marginTop: 6 }}>
+                          Direct orders &middot; Contact: {onboardingData.mobile_number}
                         </div>
                       </div>
-                    </Flex>
-                  </div>
+                    </div>
+                  </article>
 
-                  {/* Pre-populate Starter Items Checkbox */}
-                  <div
-                    style={{
-                      background: colors.surfaceContainerLow,
-                      border: `1px solid ${colors.border}`,
-                      borderRadius: radii.lg,
-                      padding: '12px 14px',
-                      marginBottom: 16,
-                    }}
-                  >
+                  <dl className="onb-review-list">
+                    {renderReviewRow('Store name', onboardingData.shop_name || '-', 0)}
+                    {renderReviewRow('Category', categoryTitle || '-', 0)}
+                    {renderReviewRow('Phone', onboardingData.mobile_number || '-', 0)}
+                    {renderReviewRow('Address', areaLine, 1)}
+                    {renderReviewRow(
+                      'Fulfillment',
+                      onboardingData.fulfillment_modes.map((m) => (m === 'pickup' ? 'Store pickup' : 'Local delivery')).join(', '),
+                      2
+                    )}
+                    {renderReviewRow(
+                      'Payments',
+                      onboardingData.payment_modes
+                        .map((m) => (m === 'direct_upi' ? 'Direct UPI / QR' : 'Cash on delivery / counter'))
+                        .join(', '),
+                      2
+                    )}
+                  </dl>
+
+                  <div className="onb-starter-box">
                     <Checkbox
                       checked={onboardingData.populate_starters}
-                      onChange={(e) =>
-                        setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })
-                      }
+                      onChange={(e) => setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })}
                     >
                       <span style={{ fontWeight: 600, color: colors.textMain, fontSize: 13 }}>
                         Pre-load starter sample catalog ({activeCategoryObj?.starters?.length} items)
                       </span>
                     </Checkbox>
-                    <div style={{ fontSize: 11, color: colors.textMuted, marginTop: 3, marginLeft: 24 }}>
-                      Your store launches with realistic catalog items that you can edit anytime.
+                    <div className="onb-starter-hint">
+                      Your store launches with sample catalog items that you can edit anytime.
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Stepper Navigation */}
-              <div className="store-step-nav">
+              {/* Stepper navigation: sticky above the bottom nav on phones and tablets */}
+              <div className="onb-nav">
                 {currentStep > 0 ? (
-                  <Button
-                    onClick={handlePrevStep}
-                    style={{
-                      borderRadius: radii.md,
-                      fontWeight: 600,
-                      borderColor: colors.border,
-                      color: colors.textMain,
-                      height: 40,
-                    }}
-                  >
-                    <ArrowLeftOutlined /> Previous
+                  <Button onClick={handlePrevStep} icon={<ArrowLeftOutlined />}>
+                    Previous
                   </Button>
                 ) : (
-                  <div />
+                  <span />
                 )}
 
-                {currentStep < 3 ? (
-                  <Button
-                    type="primary"
-                    onClick={handleNextStep}
-                    style={{
-                      borderRadius: radii.md,
-                      fontWeight: 700,
-                      background: colors.primary,
-                      borderColor: colors.primary,
-                      boxShadow: shadows.primary,
-                      padding: '0 24px',
-                      height: 40,
-                    }}
-                  >
+                {currentStep < STEP_LABELS.length - 1 ? (
+                  <Button type="primary" className="onb-nav-primary" onClick={handleNextStep}>
                     Continue <ArrowRightOutlined />
                   </Button>
                 ) : (
                   <Button
                     type="primary"
+                    className="onb-nav-primary"
                     icon={<CheckOutlined />}
                     loading={submitting}
+                    disabled={!registrationsOpen}
                     onClick={handleFinishOnboarding}
-                    style={{
-                      borderRadius: radii.md,
-                      fontWeight: 700,
-                      background: colors.primary,
-                      borderColor: colors.primary,
-                      boxShadow: shadows.primary,
-                      padding: '0 24px',
-                      height: 40,
-                    }}
+                    style={{ background: colors.primary, borderColor: colors.primary }}
                   >
-                    Launch Storefront &amp; Studio
+                    Launch storefront &amp; studio
                   </Button>
                 )}
               </div>
-            </Card>
+            </div>
           </div>
         )}
 
@@ -1163,7 +987,10 @@ const ClientRegister = () => {
             searchMarkers={null}
             position={position}
             setPosition={setPosition}
-            onClose={() => setIsMapModalVisible(false)}
+            onClose={() => {
+              setPinSet(true);
+              setIsMapModalVisible(false);
+            }}
           />
         </Modal>
       </div>
