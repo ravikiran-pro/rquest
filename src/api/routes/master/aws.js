@@ -33,22 +33,4 @@ const uploadFiles = async (req, res) => {
     }
 }
 
-// Modified uploadFileToS3 function
-const uploadFileToS3 = async (fileData) => {
-    try {
-        const params = {
-            Bucket: 'rquest',
-            Key: fileData.originalname,
-            Body: fileData.buffer
-        };
-        // Upload file to S3
-        const data = await s3.upload(params).promise();
-        return data;
-    } catch (error) {
-        console.error('Error uploading file to S3:', error);
-        throw error;
-    }
-}
-
-
 module.exports = uploadFiles;

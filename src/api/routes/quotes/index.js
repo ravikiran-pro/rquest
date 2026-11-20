@@ -7,6 +7,13 @@ router.use(authMiddleware);
 
 // Statuses a service quote moves through (new request, confirmed, completed, declined)
 const QUOTE_STATUSES = ['offered', 'accepted', 'completed', 'rejected'];
+// Moves the merchant UI makes: confirm or decline a new request, then mark the job completed
+const QUOTE_TRANSITIONS = {
+  offered: ['accepted', 'rejected'],
+  accepted: ['completed'],
+  completed: [],
+  rejected: [],
+};
 
 // Owner of the shop the quote belongs to, or a platform admin
 const canManageShop = async (req, shopId) => {
@@ -191,7 +198,17 @@ router.put('/:id/status', async (req, res) => {
       return res.status(403).json({ success: false, error: 'Only the shop owner can update this quote' });
     }
 
-    if (status) quote.status = status;
+    if (status && status !== quote.status) {
+      if (!(QUOTE_TRANSITIONS[quote.status] || []).includes(status)) {
+        return res.status(409).json({
+          success: false,
+          error: `Quote cannot move from ${quote.status} to ${status}`,
+        });
+      }
+      quote.status = status;
+    } else if (status) {
+      return res.status(409).json({ success: false, error: `Quote is already ${status}` });
+    }
     if (estimated_amount !== undefined) quote.estimated_amount = parseFloat(estimated_amount);
     await quote.save();
 

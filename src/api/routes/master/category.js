@@ -1,4 +1,4 @@
-const { categories, sub_categories, products } = require('../../models');
+const { categories, sub_categories, products, shops } = require('../../models');
 const {
   normalizeSchema,
   suggestTemplate,
@@ -168,6 +168,15 @@ const updateCategoryFormSchema = async (req, res) => {
 const deleteCategory = async (req, res) => {
   try {
     const { category_id } = req.body;
+
+    const shopCount = await shops.count({ where: { category_id } });
+    if (shopCount > 0) {
+      return res.status(409).json({
+        success: false,
+        error: `Category is used by ${shopCount} shop(s) and cannot be deleted`,
+        count: shopCount,
+      });
+    }
 
     const res_sub = await sub_categories.destroy({
       where:{

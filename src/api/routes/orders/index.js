@@ -14,6 +14,31 @@ const {
 
 const router = express.Router();
 
+// Status moves the merchant, customer and delivery UIs make (see manage_store.jsx getOrderActions).
+// Completed and cancelled are final. Any open order can be cancelled (handled in canMoveOrder).
+const PREPARING_MOVES = ['placed', 'packed', 'ready_for_pickup', 'open_to_delivery', 'completed'];
+const ORDER_TRANSITIONS = {
+  pending: ['placed', 'order_prepare', 'accepted'],
+  placed: ['order_prepare', 'preparing', 'accepted'],
+  order_prepare: PREPARING_MOVES,
+  preparing: PREPARING_MOVES,
+  accepted: PREPARING_MOVES,
+  packed: PREPARING_MOVES,
+  ready_for_pickup: ['out_for_delivery', 'completed'],
+  open_to_delivery: ['out_for_delivery', 'completed'],
+  out_for_delivery: ['completed'],
+  completed: [],
+  cancelled: [],
+};
+const canMoveOrder = (from, to) => {
+  if (!Object.prototype.hasOwnProperty.call(ORDER_TRANSITIONS, from) || from === to) return false;
+  if (to === 'cancelled') return ORDER_TRANSITIONS[from].length > 0; // any open order
+  return ORDER_TRANSITIONS[from].includes(to);
+};
+
+// Orders a delivery partner can take before anyone has claimed them
+const CLAIMABLE_STATUSES = ['open_to_delivery', 'accepted', 'packed', 'ready_for_pickup'];
+
 // 3. Get shop's incoming orders (Merchant side - resilient for store dashboard). Owner or admin only.
 router.get('/shop/:shop_id', authMiddleware, async (req, res) => {
   try {
@@ -68,6 +93,9 @@ router.post('/', async (req, res) => {
 
     if (!shop_id || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Shop ID and non-empty items array are required' });
+    }
+    if (items.some((it) => !it || typeof it !== 'object' || Array.isArray(it))) {
+      return res.status(400).json({ success: false, error: 'Each item must be an object with listing_id and quantity' });
     }
     // Any other value would skip the delivery fee and the enable_delivery switch
     if (!['delivery', 'pickup', 'service'].includes(order_type)) {
@@ -500,6 +528,13 @@ router.put('/:id/status', async (req, res) => {
       return res.status(403).json({ success: false, error: 'You are not allowed to change this order status' });
     }
 
+    if (!canMoveOrder(order.status, status)) {
+      return res.status(409).json({
+        success: false,
+        error: `Order cannot move from ${order.status} to ${status}`,
+      });
+    }
+
     const previousStatus = order.status;
     order.status = status;
     if (shop_upi_id) order.shop_upi_id = shop_upi_id;
@@ -597,7 +632,7 @@ router.get('/delivery/feed', async (req, res) => {
       include: [
         { model: order_items, as: 'items' },
         { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'latitude', 'longitude'] },
-        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: users, as: 'customer', attributes: ['mobile'] },
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -618,20 +653,40 @@ router.put('/:id/claim-delivery', async (req, res) => {
     const { id } = req.params;
     const { user_id } = req.headers;
 
-    const order = await orders.findByPk(id);
+    const order = await orders.findByPk(id, { attributes: ['id', 'order_type', 'status', 'delivery_partner_id'] });
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+    if (order.order_type !== 'delivery') {
+      return res.status(409).json({ success: false, error: 'Only delivery orders can be claimed' });
+    }
+    if (order.delivery_partner_id) {
+      return res.status(409).json({ success: false, error: 'Order has already been claimed by a delivery partner' });
+    }
+    if (!CLAIMABLE_STATUSES.includes(order.status)) {
+      return res.status(409).json({ success: false, error: `Order is ${order.status} and cannot be claimed` });
     }
 
-    if (order.delivery_partner_id && order.delivery_partner_id !== user_id) {
-      return res.status(400).json({ error: 'Order has already been claimed by another delivery partner' });
+    // Conditional update: only one partner can win the race for an unassigned order
+    const [claimedRows] = await orders.update(
+      {
+        delivery_partner_id: user_id,
+        status: orders.sequelize.literal(
+          "CASE WHEN status = 'ready_for_pickup' THEN 'out_for_delivery' ELSE status END"
+        ),
+      },
+      {
+        where: {
+          id,
+          order_type: 'delivery',
+          delivery_partner_id: null,
+          status: CLAIMABLE_STATUSES,
+        },
+      }
+    );
+    if (claimedRows === 0) {
+      return res.status(409).json({ success: false, error: 'Order has already been claimed or is no longer available' });
     }
-
-    order.delivery_partner_id = user_id;
-    if (order.status === 'ready_for_pickup') {
-      order.status = 'out_for_delivery';
-    }
-    await order.save();
 
     const updated = await orders.findByPk(id, {
       include: [

@@ -1,4 +1,5 @@
 const { shops, users, shop_listings } = require('../../models');
+const { normalizeSchema } = require('../../services/formSchema');
 const { sendPushNotification } = require('../../services/notificationService');
 const {
   getSettings: getPlatformSettings,
@@ -81,11 +82,28 @@ const createShops = async (req, res) => {
       }
     }
 
+    let cleanFormSchema;
+    if (shopDetails.form_schema !== undefined) {
+      const { schema, errors } = normalizeSchema(shopDetails.form_schema);
+      if (errors.length) {
+        return res.status(400).json({
+          success: false,
+          error: errors[0].message,
+          message: 'The form has fields that need fixing',
+          errors,
+        });
+      }
+      cleanFormSchema = schema;
+    }
+
     let existingShop = null;
     if (shopDetails.shop_id) {
       existingShop = await shops.findByPk(shopDetails.shop_id);
+      if (!existingShop) {
+        return res.status(404).json({ success: false, error: 'Shop not found' });
+      }
       // Only the shop's owner or a platform admin may change an existing shop
-      if (existingShop && existingShop.owner_id !== user_id && !isAdminRequest(req)) {
+      if (existingShop.owner_id !== user_id && !isAdminRequest(req)) {
         return res.status(403).json({ success: false, error: 'Only the shop owner can update this shop' });
       }
     }
@@ -139,8 +157,8 @@ const createShops = async (req, res) => {
           ? Boolean(shopDetails.allow_multi_category)
           : (existingShop ? existingShop.allow_multi_category : false),
       form_schema:
-        shopDetails.form_schema !== undefined
-          ? shopDetails.form_schema
+        cleanFormSchema !== undefined
+          ? cleanFormSchema
           : (existingShop && existingShop.form_schema ? existingShop.form_schema : []),
       directions:
         shopDetails.directions ||

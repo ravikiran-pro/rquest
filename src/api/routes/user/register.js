@@ -4,6 +4,7 @@ const { users } = require('../../models');
 const { sendPushNotification } = require('../../services/notificationService');
 
 const CUSTOMER_ROLE_ID = 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d';
+const RESERVED_USERNAMES = ['admin', 'root'];
 
 const createUser = async (req, res) => {
   try {
@@ -12,6 +13,14 @@ const createUser = async (req, res) => {
     if (userDetails.mobile && userDetails.username && userDetails.password) {
       const cleanMobile = String(userDetails.mobile).trim();
       const cleanUsername = String(userDetails.username).trim();
+
+      if (RESERVED_USERNAMES.includes(cleanUsername.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Username not available',
+          message: 'This username is reserved. Please choose another one.',
+        });
+      }
 
       const existingUser = await users.findOne({
         where: { mobile: cleanMobile },
