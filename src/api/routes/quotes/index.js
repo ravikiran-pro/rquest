@@ -1,9 +1,20 @@
 const express = require('express');
 const { quotes, shops, users } = require('../../models');
-const { authMiddleware } = require('../../auth');
+const { authMiddleware, isAdminReq } = require('../../auth');
 
 const router = express.Router();
 router.use(authMiddleware);
+
+// Statuses a service quote moves through (new request, confirmed, completed, declined)
+const QUOTE_STATUSES = ['offered', 'accepted', 'completed', 'rejected'];
+
+// Owner of the shop the quote belongs to, or a platform admin
+const canManageShop = async (req, shopId) => {
+  if (isAdminReq(req)) return true;
+  const { user_id } = req.headers;
+  const shop = await shops.findByPk(shopId, { attributes: ['id', 'owner_id'] });
+  return Boolean(shop && shop.owner_id && shop.owner_id === user_id);
+};
 
 // 1. Create a quote / estimate request
 router.post('/', async (req, res) => {
@@ -112,14 +123,7 @@ router.get('/owner', async (req, res) => {
 // 2c. Get all service quotes across all shops for Platform Admin
 router.get('/admin/all', async (req, res) => {
   try {
-    const { role_id, username } = req.headers;
-
-    const isAdmin =
-      role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
-      username === 'admin' ||
-      username === 'root';
-
-    if (!isAdmin) {
+    if (!isAdminReq(req)) {
       return res.status(403).json({ error: 'Platform Super Admin access required' });
     }
 
@@ -141,10 +145,13 @@ router.get('/admin/all', async (req, res) => {
   }
 });
 
-// 3. Get shop quotes (Merchant view)
+// 3. Get shop quotes (Merchant view). Owner or admin only.
 router.get('/shop/:shop_id', async (req, res) => {
   try {
     const { shop_id } = req.params;
+    if (!(await canManageShop(req, shop_id))) {
+      return res.status(403).json({ success: false, error: 'Only the shop owner can view these quotes' });
+    }
     const shopQuotes = await quotes.findAll({
       where: { shop_id },
       include: [
@@ -169,9 +176,19 @@ router.put('/:id/status', async (req, res) => {
     const { id } = req.params;
     const { status, estimated_amount } = req.body;
 
+    if (status !== undefined && !QUOTE_STATUSES.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        error: `Invalid status. Must be one of: ${QUOTE_STATUSES.join(', ')}`,
+      });
+    }
+
     const quote = await quotes.findByPk(id);
     if (!quote) {
       return res.status(404).json({ error: 'Quote not found' });
+    }
+    if (!(await canManageShop(req, quote.shop_id))) {
+      return res.status(403).json({ success: false, error: 'Only the shop owner can update this quote' });
     }
 
     if (status) quote.status = status;

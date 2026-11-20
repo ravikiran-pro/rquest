@@ -12,7 +12,11 @@
     "serve": "vite preview",
     "format": "prettier . --write",
     "test": ".",
-    "start": "node dist/server.js"
+    "start": "node dist/server.js",
+    "catalog:install": "cd catalog && npm install",
+    "catalog:migrate": "cd catalog && node cli.js migrate",
+    "catalog:status": "cd catalog && node cli.js status",
+    "catalog:load": "cd catalog && node cli.js run-all"
   },
   "devDependencies": {
     "concurrently": "^6.2.1",

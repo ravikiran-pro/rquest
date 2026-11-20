@@ -2272,7 +2272,6 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
         onCancel={() => setRevisingQuote(null)}
         width={420}
         centered
-        destroyOnClose
       >
         {revisingQuote && (
           <div className="ms-revise">

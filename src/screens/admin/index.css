@@ -524,3 +524,19 @@
     height: 40px;
   }
 }
+
+/* ---------- Catalog load error (Alert with hint) ---------- */
+.admin-catalog-error {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.admin-catalog-error code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+  font-size: 12px;
+}

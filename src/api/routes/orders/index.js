@@ -1,6 +1,6 @@
 const express = require('express');
-const { orders, order_items, shops, users, chats, user_addresses } = require('../../models');
-const { authMiddleware } = require('../../auth');
+const { orders, order_items, shops, shop_listings, users, chats, user_addresses } = require('../../models');
+const { authMiddleware, isAdminReq } = require('../../auth');
 const {
   getSettings: getPlatformSettings,
   computeOrderFees,
@@ -14,10 +14,18 @@ const {
 
 const router = express.Router();
 
-// 3. Get shop's incoming orders (Merchant side - resilient for store dashboard)
-router.get('/shop/:shop_id', async (req, res) => {
+// 3. Get shop's incoming orders (Merchant side - resilient for store dashboard). Owner or admin only.
+router.get('/shop/:shop_id', authMiddleware, async (req, res) => {
   try {
     const { shop_id } = req.params;
+    const { user_id } = req.headers;
+    const shop = await shops.findByPk(shop_id, { attributes: ['id', 'owner_id'] });
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+    if (!isAdminReq(req) && !(shop.owner_id && shop.owner_id === user_id)) {
+      return res.status(403).json({ success: false, error: 'Only the shop owner can view these orders' });
+    }
     const shopOrders = await orders.findAll({
       where: { shop_id },
       include: [
@@ -67,16 +75,34 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Shop not found' });
     }
 
+    // Prices and names come from this shop's own listings, never from the request body
+    const UUID_RE_LISTING = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const listingIds = [...new Set(items.map((it) => it.listing_id).filter((v) => UUID_RE_LISTING.test(String(v || ''))))];
+    const shopListings = listingIds.length
+      ? await shop_listings.findAll({
+          where: { id: listingIds, shop_id },
+          attributes: ['id', 'name', 'price'],
+        })
+      : [];
+    const listingById = new Map(shopListings.map((l) => [l.id, l]));
+    if (items.some((it) => !listingById.has(it.listing_id))) {
+      return res.status(400).json({
+        success: false,
+        error: 'One or more items are not sold by this shop. Please refresh your cart.',
+      });
+    }
+
     // Calculate subtotal
     let itemsTotal = 0;
     const validatedItems = items.map((it) => {
-      const unit_price = parseFloat(it.unit_price) || 0;
+      const listing = listingById.get(it.listing_id);
+      const unit_price = parseFloat(listing.price) || 0;
       const quantity = parseInt(it.quantity) || 1;
       const subtotal = unit_price * quantity;
       itemsTotal += subtotal;
       return {
-        listing_id: it.listing_id || null,
-        item_name: it.item_name || 'Item',
+        listing_id: listing.id,
+        item_name: listing.name || 'Item',
         unit_price,
         quantity,
         subtotal,
@@ -318,15 +344,9 @@ router.get('/owner', async (req, res) => {
 // 2c. Get all orders across all shops for Platform Admin (Backup, Accounts & Auditing)
 router.get('/admin/all', async (req, res) => {
   try {
-    const { role_id, username } = req.headers;
     const { Op } = require('sequelize');
 
-    const isAdmin =
-      role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
-      username === 'admin' ||
-      username === 'root';
-
-    if (!isAdmin) {
+    if (!isAdminReq(req)) {
       return res.status(403).json({ error: 'Platform Super Admin access required' });
     }
 
@@ -460,6 +480,19 @@ router.put('/:id/status', async (req, res) => {
     });
     if (!order) {
       return res.status(404).json({ error: 'Order not found' });
+    }
+
+    // Shop owner and platform admin manage the order. The customer may only cancel their own order,
+    // and the assigned delivery partner may only mark it out for delivery or delivered.
+    const { user_id } = req.headers;
+    const isShopOwner = Boolean(order.shop?.owner_id) && order.shop.owner_id === user_id;
+    const isCustomerCancel = order.customer_id === user_id && status === 'cancelled';
+    const isDriverUpdate =
+      Boolean(order.delivery_partner_id) &&
+      order.delivery_partner_id === user_id &&
+      ['out_for_delivery', 'completed'].includes(status);
+    if (!isAdminReq(req) && !isShopOwner && !isCustomerCancel && !isDriverUpdate) {
+      return res.status(403).json({ success: false, error: 'You are not allowed to change this order status' });
     }
 
     const previousStatus = order.status;

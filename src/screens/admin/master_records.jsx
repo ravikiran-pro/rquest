@@ -459,6 +459,12 @@ const MasterRecords = ({
         </div>
       </div>
 
+      {!canAdd && addDisabledReason && (
+        <Text type="secondary" style={{ display: 'block', margin: '8px 0 0', fontSize: 13 }}>
+          {addDisabledReason}
+        </Text>
+      )}
+
       {loaded && !error && (
         <div className="admin-filterbar">
           <div className="admin-filterbar__summary">

@@ -919,29 +919,26 @@ const CatalogItems = () => {
     const hintShown = loadError.fromApi || notSetUp;
     const alertText = notSetUp ? 'The master catalog is not set up yet' : 'Could not load the catalog';
     return (
-      <div className="admin-state" role={notSetUp ? 'status' : 'alert'}>
-        <Alert
-          type={notSetUp ? 'warning' : 'error'}
-          showIcon
-          message={alertText}
-          description={
-            <>
-              <div style={{ overflowWrap: 'anywhere' }}>{loadError.message}</div>
-              {hintShown && !/catalog:migrate/.test(loadError.message) && (
-                <div style={{ marginTop: 6 }}>
-                  Run <code>{MIGRATE_COMMAND}</code> on the server, then reload.
-                </div>
-              )}
-            </>
-          }
-          action={
+      <Alert
+        role={notSetUp ? 'status' : 'alert'}
+        type={notSetUp ? 'warning' : 'error'}
+        showIcon
+        message={alertText}
+        description={
+          <div className="admin-catalog-error">
+            <div style={{ overflowWrap: 'anywhere' }}>{loadError.message}</div>
+            {hintShown && !/catalog:migrate/.test(loadError.message) && (
+              <div>
+                Run <code>{MIGRATE_COMMAND}</code> on the server, then reload.
+              </div>
+            )}
             <Button size="small" icon={<ReloadOutlined />} onClick={reload} loading={loading}>
               {notSetUp ? 'Check again' : 'Try again'}
             </Button>
-          }
-          style={{ borderRadius: radii.md, textAlign: 'start' }}
-        />
-      </div>
+          </div>
+        }
+        style={{ borderRadius: radii.md }}
+      />
     );
   };
 

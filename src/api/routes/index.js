@@ -10,6 +10,7 @@ const locationRouter = require('./location');
 const notificationsRouter = require('./notifications');
 const aiRouter = require('./ai');
 const platformRouter = require('./platform');
+const catalogRouter = require('./catalog');
 const { requireFeature } = require('../services/platformSettings');
 const { authMiddleware } = require('../auth');
 
@@ -29,6 +30,8 @@ router.use('/listings', listingsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
 router.use('/notifications', notificationsRouter);
+// Master catalog: owner search/import, and the admin catalog console (each route checks its own auth)
+router.use('/catalog', catalogRouter);
 
 router.use(authMiddleware);
 

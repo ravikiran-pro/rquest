@@ -1,7 +1,7 @@
 const express = require('express');
 const { shop_listings, shops, products, categories, sub_categories } = require('../../models');
 const { Op, literal } = require('sequelize');
-const { authMiddleware } = require('../../auth');
+const { authMiddleware, isAdminReq } = require('../../auth');
 const {
   validateMetadata,
   resolveSchema,
@@ -73,6 +73,29 @@ const fieldErrorResponse = (res, errors) =>
     error: errors.map((e) => e.message).join('. '),
     errors,
   });
+
+// Only the shop's owner or a platform admin may change its listings
+const canManageShop = (req, shop) =>
+  Boolean(shop) &&
+  (isAdminReq(req) || (Boolean(shop.owner_id) && shop.owner_id === req.headers.user_id));
+
+const assertShopOwner = async (req, res, shopId) => {
+  const shop = await shops.findByPk(shopId, { attributes: ['id', 'owner_id'] });
+  if (!shop) {
+    res.status(404).json({ success: false, error: 'Shop not found' });
+    return false;
+  }
+  if (!canManageShop(req, shop)) {
+    res.status(403).json({ success: false, error: 'Only the shop owner can manage this shop\'s listings' });
+    return false;
+  }
+  return true;
+};
+
+const FORBIDDEN_SHOP_BODY = {
+  success: false,
+  error: 'Only the shop owner can manage this shop\'s listings',
+};
 
 // 1. Get listings by shop ID (Public)
 router.get('/shop/:shop_id', async (req, res) => {
@@ -245,6 +268,9 @@ router.post('/', async (req, res) => {
     if (!shopRecord) {
       return res.status(404).json({ success: false, error: 'Shop not found' });
     }
+    if (!canManageShop(req, shopRecord)) {
+      return res.status(403).json(FORBIDDEN_SHOP_BODY);
+    }
 
     // Check the category's custom fields. Starter items seeded at shop sign-up
     // may leave required fields empty for the owner to complete later.
@@ -328,6 +354,9 @@ router.post('/bulk', async (req, res) => {
 
     if (!shopRecord) {
       return res.status(404).json({ error: 'Shop not found', success: false });
+    }
+    if (!canManageShop(req, shopRecord)) {
+      return res.status(403).json(FORBIDDEN_SHOP_BODY);
     }
 
     const typeStr = (
@@ -467,6 +496,7 @@ router.put('/:id', async (req, res) => {
     if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
+    if (!(await assertShopOwner(req, res, listing.shop_id))) return;
 
     const {
       name,
@@ -513,11 +543,13 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const deleted = await shop_listings.destroy({ where: { id } });
-
-    if (!deleted) {
+    const listing = await shop_listings.findByPk(id);
+    if (!listing) {
       return res.status(404).json({ error: 'Listing not found' });
     }
+    if (!(await assertShopOwner(req, res, listing.shop_id))) return;
+
+    await listing.destroy();
 
     res.status(200).json({
       success: true,
@@ -545,6 +577,9 @@ router.post('/import-master', async (req, res) => {
     const shopRecord = await shops.findByPk(shop_id);
     if (!shopRecord) {
       return res.status(404).json({ error: 'Shop not found' });
+    }
+    if (!canManageShop(req, shopRecord)) {
+      return res.status(403).json(FORBIDDEN_SHOP_BODY);
     }
     // Fill the form's default values; the owner completes required fields on edit
     const schema = await loadListingSchema(shopRecord, {});

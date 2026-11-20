@@ -84,6 +84,10 @@ const createShops = async (req, res) => {
     let existingShop = null;
     if (shopDetails.shop_id) {
       existingShop = await shops.findByPk(shopDetails.shop_id);
+      // Only the shop's owner or a platform admin may change an existing shop
+      if (existingShop && existingShop.owner_id !== user_id && !isAdminRequest(req)) {
+        return res.status(403).json({ success: false, error: 'Only the shop owner can update this shop' });
+      }
     }
 
     let latitude =
