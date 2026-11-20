@@ -1929,8 +1929,28 @@
     margin-bottom: 12px;
   }
 
+  .ms-tabs .ant-tabs-nav {
+    padding: 0 6px;
+  }
+
+  .ms-tabs .ant-tabs-tab + .ant-tabs-tab {
+    margin-left: 0 !important;
+  }
+
   .ms-tabs .ant-tabs-tab-btn {
-    font-size: var(--font-size-base);
+    font-size: var(--font-size-sm);
+  }
+
+  .ms-tab-label {
+    gap: 4px;
+    font-size: var(--font-size-sm);
+  }
+
+  .ms-tab-count {
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    font-size: 10px;
   }
 
   .ms-tab-icon {
@@ -2074,10 +2094,22 @@
 
   .ms-quote-actions {
     width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .ms-quote-actions .ant-btn {
-    flex: 1 1 auto;
+  .ms-quote-actions > .ant-btn {
+    width: 100%;
+    margin: 0;
+  }
+
+  .ms-quote-actions > .ant-btn-primary {
+    grid-column: 1 / -1;
+  }
+
+  .ms-quote-actions > .ant-btn-text {
+    justify-self: center;
   }
 
   .ms-panel {

@@ -2406,7 +2406,9 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
                 <div className="ms-address">
                   <EnvironmentOutlined />
                   <div>
-                    <div className="ms-label">Delivery address</div>
+                    <div className="ms-label">
+                      {normalizeOrderType(selectedOrder.order_type) === 'service' ? 'Visit address' : 'Delivery address'}
+                    </div>
                     <div>{selectedOrder.delivery_address}</div>
                   </div>
                 </div>
