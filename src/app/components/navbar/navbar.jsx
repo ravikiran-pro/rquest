@@ -363,7 +363,7 @@ const Navbar = ({ open, handleOpen }) => {
         </div>
 
         <Flex align="center" gap={8}>
-          <Dropdown trigger={['click']} placement="bottomRight" dropdownRender={notificationsPanel}>
+          <Dropdown trigger={['click']} placement="bottomRight" popupRender={notificationsPanel}>
             <button
               type="button"
               className="navbar-orders-bell"
@@ -439,7 +439,7 @@ const Navbar = ({ open, handleOpen }) => {
         )}
 
         {isLoggedIn && (
-          <Dropdown trigger={['click']} placement="bottomRight" dropdownRender={notificationsPanel}>
+          <Dropdown trigger={['click']} placement="bottomRight" popupRender={notificationsPanel}>
             <Badge
               count={unreadNotifCount}
               offset={[-2, 4]}

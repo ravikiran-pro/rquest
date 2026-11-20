@@ -13,7 +13,7 @@ import {
   MobileOutlined,
   DownOutlined,
 } from '@ant-design/icons';
-import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../utils';
+import { apiConfig, netWorkCall, storageKeys, SOCKET, USER_ROLES } from '../../utils';
 import { useGlobalStore, subscribeToPushNotifications, requestPushPermission } from '../../services';
 import { AppIcon } from '../assets';
 import { WhatsAppIcon, AuthSocialButtons } from '../../../screens/login/AuthShared';
@@ -333,8 +333,8 @@ export const AuthModal = ({
         username: cleanName,
         password: regPassword,
         mobile: cleanMobile,
-        userRole: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
-        role_id: 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d',
+        userRole: USER_ROLES.USER,
+        role_id: USER_ROLES.USER,
       });
       const res = await netWorkCall(apiConfig.register, 'POST', body);
       if (res && res.success === true) {

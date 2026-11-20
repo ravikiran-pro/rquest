@@ -342,7 +342,7 @@ const PlatformSettings = () => {
     } else if (field.kind === 'number') {
       control = (
         <InputNumber
-          addonAfter={field.suffix}
+          suffix={field.suffix}
           min={field.min}
           max={field.max}
           precision={1}

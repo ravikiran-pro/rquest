@@ -33,7 +33,7 @@ import {
   PlusOutlined,
 } from '@ant-design/icons';
 import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet';
-import { apiConfig, netWorkCall, getPreciseUserLocation, getLocationName } from '../../app/utils';
+import { apiConfig, netWorkCall, getPreciseUserLocation, getLocationName, USER_ROLES } from '../../app/utils';
 import { LeafletComponent } from '../../app/components';
 import { useGlobalStore } from '../../app/services';
 import { useHistory, useLocation } from 'react-router-dom';
@@ -131,7 +131,7 @@ const STORE_CATEGORIES = [
 
 
 const DEFAULT_CENTER = [12.9716, 77.5946];
-const MERCHANT_ROLE_ID = 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5';
+const MERCHANT_ROLE_ID = USER_ROLES.MERCHANT;
 const STEP_LABELS = ['Business', 'Location', 'Fulfillment', 'Review'];
 const STEP_TITLES = ['Business details', 'Store location', 'Fulfillment & payments', 'Review & launch'];
 const MAP_TILE_URL = 'https://{s}.google.com/vt?lyrs=m&x={x}&y={y}&z={z}';

@@ -54,7 +54,6 @@ import './profile.css';
 
 const { Title, Text } = Typography;
 
-const SUPER_ADMIN_ROLE_ID = 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9';
 const DEFAULT_COORDS = [12.9716, 77.5946];
 
 const SHOPPING_INTERESTS = [
@@ -75,13 +74,7 @@ const ProfileScreen = () => {
   const isMobile = !screens.md;
 
   const { user_data, update_user_data } = useGlobalStore((state) => state);
-  const { isAdmin, isMerchant } = checkUserRole(user_data);
-  const isSuperAdmin = Boolean(
-    isAdmin ||
-      user_data?.role_id === SUPER_ADMIN_ROLE_ID ||
-      user_data?.username === 'admin' ||
-      user_data?.username === 'root'
-  );
+  const { isAdmin: isSuperAdmin, isMerchant } = checkUserRole(user_data);
 
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState(null);

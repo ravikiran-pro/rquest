@@ -11,7 +11,7 @@ import {
   EnvironmentFilled,
   DownOutlined,
 } from '@ant-design/icons';
-import { apiConfig, netWorkCall, storageKeys, SOCKET } from '../../app/utils';
+import { apiConfig, netWorkCall, storageKeys, SOCKET, USER_ROLES } from '../../app/utils';
 import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore, requestPushPermission } from '../../app/services';
 import Routes from '../../app/routes/routes';
@@ -19,8 +19,8 @@ import { AppIcon } from '../../app/components/assets';
 import { AuthLeftShowcase, AuthSocialButtons } from '../login/AuthShared';
 import '../login/auth.css';
 
-const CUSTOMER_ROLE_ID = 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d';
-const MERCHANT_ROLE_ID = 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5';
+const CUSTOMER_ROLE_ID = USER_ROLES.USER;
+const MERCHANT_ROLE_ID = USER_ROLES.MERCHANT;
 
 const RegisterScreen = () => {
   const history = useHistory();

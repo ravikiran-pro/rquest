@@ -844,7 +844,7 @@ const StorefrontScreen = () => {
               wrap="wrap"
             >
               {/* Left Column: Avatar + Full Info Group in one row */}
-              <Flex gap={20} align="start" style={{ flex: 1, minWidth: 340 }}>
+              <Flex gap={20} align="start" wrap="wrap" style={{ flex: 1, minWidth: 0 }}>
                 {/* Avatar */}
                 <div
                   style={{
