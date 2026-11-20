@@ -32,7 +32,19 @@ const netWorkCall = async (endpoint, method, payload, isAuth = false) => {
   }
 
   const response = await fetch(`${config.api_url}/api/v1/${endpoint}`, body);
-  let data = await response.json();
+  const httpStatus = response.status;
+
+  let data;
+  try {
+    data = JSON.parse(await response.text());
+  } catch (parseError) {
+    // Non-JSON body (proxy error page, empty 5xx, etc.)
+    return { success: false, error: `Server error (${httpStatus})`, httpStatus };
+  }
+
+  if (data && typeof data === 'object' && !Array.isArray(data)) {
+    return { ...data, httpStatus };
+  }
   return data;
 };
 
