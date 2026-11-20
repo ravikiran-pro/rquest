@@ -2001,12 +2001,13 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
 
   /* ---------------- Render: header, stats, tabs ---------------- */
 
-  const tabLabel = (icon, text, count, hot) => (
-    <span className="ms-tab-label">
+  // iconOnlyOnPhone: the text stays for screen readers but the tab shows just its icon on phones
+  const tabLabel = (icon, text, count, hot, iconOnlyOnPhone = false) => (
+    <span className={`ms-tab-label ${iconOnlyOnPhone ? 'ms-tab-label--icon-phone' : ''}`}>
       <span className="ms-tab-icon" aria-hidden="true">
         {icon}
       </span>
-      <span>{text}</span>
+      <span className="ms-tab-text">{text}</span>
       {count !== undefined && count !== null && (
         <span className={`ms-tab-count ${hot ? 'is-hot' : ''}`}>{count}</span>
       )}
@@ -2035,7 +2036,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       : []),
     {
       key: 'settings',
-      label: tabLabel(<SettingOutlined />, 'Settings'),
+      label: tabLabel(<SettingOutlined />, 'Settings', null, false, true),
       children: settingsTab,
     },
   ];

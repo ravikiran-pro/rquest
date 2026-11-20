@@ -638,6 +638,7 @@
 }
 
 .ms-tab-label {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -1934,6 +1935,21 @@
 
   .ms-tab-icon {
     display: none;
+  }
+
+  /* Settings is icon-only on phones so every store's tab row fits; the text is kept for screen readers */
+  .ms-tab-label--icon-phone .ms-tab-icon {
+    display: inline-flex;
+    font-size: var(--font-size-md);
+  }
+
+  .ms-tab-label--icon-phone .ms-tab-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
   }
 
   .ms-stat {
