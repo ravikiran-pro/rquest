@@ -527,7 +527,7 @@ const ClientRegister = () => {
             {/* Stores grid */}
             {loadingShops ? (
               <Flex justify="center" align="center" style={{ minHeight: '30vh' }}>
-                <Spin size="large" tip="Loading your stores..." />
+                <Spin size="large" aria-label="Loading your stores" />
               </Flex>
             ) : allShops.length === 0 ? (
               <div className="onb-state">
