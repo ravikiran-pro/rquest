@@ -31,7 +31,7 @@ function cleanText(value) {
   text = text
     .replace(/<[^>]*>/g, ' ')
     .replace(/&(nbsp|#160|amp|quot|#39|apos|lt|gt);/gi, (m) => ENTITIES[m.toLowerCase()] || m)
-    .replace(/[​-‍⁠﻿]/g, '')
+    .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
     .replace(/\s+/g, ' ')
     .replace(/\s+([,.;:!?%)\]])/g, '$1')
     .replace(/([([])\s+/g, '$1')

@@ -69,8 +69,13 @@ async function enrichedByIds(ids, options = {}) {
  * (curated produce: "aloo" finds Potato); a barcode or an item id also matches directly.
  */
 function searchConditions(text, replacements, { matchId = false } = {}) {
+  // Set before the early return: searchOrder() refers to these even when no word survives.
+  const raw = String(text).trim();
+  replacements.q_exact = raw.toLowerCase();
+  replacements.q_prefix = `${escapeLike(raw)}%`;
   const tokens = searchTokens(text);
-  if (!tokens.length) return null;
+  // Punctuation only (e.g. "-"): match nothing, rather than every active item
+  if (!tokens.length) return 'FALSE';
   const wordConds = tokens.map((token, i) => {
     const key = `w${i}`;
     replacements[key] = `%${escapeLike(token)}%`;
@@ -82,7 +87,6 @@ function searchConditions(text, replacements, { matchId = false } = {}) {
   });
   const alternatives = [`(${wordConds.join(' AND ')})`];
 
-  const raw = String(text).trim();
   const digits = raw.replace(/[\s-]/g, '');
   if (/^\d{8,14}$/.test(digits)) {
     const { gtin } = normalizeGtin(digits);
@@ -101,8 +105,6 @@ function searchConditions(text, replacements, { matchId = false } = {}) {
       alternatives.push('i.id ILIKE :id_part');
     }
   }
-  replacements.q_exact = raw.toLowerCase();
-  replacements.q_prefix = `${escapeLike(raw)}%`;
   return `(${alternatives.join(' OR ')})`;
 }
 

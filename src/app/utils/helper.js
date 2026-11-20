@@ -75,9 +75,7 @@ const checkUserRole = (userData) => {
   const isAdmin =
     roleId === USER_ROLES.ADMIN ||
     roleName === 'admin' ||
-    roleName === 'root' ||
-    userData.username === 'admin' ||
-    userData.username === 'root';
+    roleName === 'root';
   const isMerchant =
     !isAdmin &&
     (roleId === USER_ROLES.MERCHANT ||

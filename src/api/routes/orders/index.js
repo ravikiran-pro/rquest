@@ -69,6 +69,10 @@ router.post('/', async (req, res) => {
     if (!shop_id || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Shop ID and non-empty items array are required' });
     }
+    // Any other value would skip the delivery fee and the enable_delivery switch
+    if (!['delivery', 'pickup', 'service'].includes(order_type)) {
+      return res.status(400).json({ success: false, error: 'Unknown order type' });
+    }
 
     const shop = await shops.findByPk(shop_id);
     if (!shop) {
@@ -97,7 +101,8 @@ router.post('/', async (req, res) => {
     const validatedItems = items.map((it) => {
       const listing = listingById.get(it.listing_id);
       const unit_price = parseFloat(listing.price) || 0;
-      const quantity = parseInt(it.quantity) || 1;
+      // Positive whole number only: a negative quantity would make the server total go negative
+      const quantity = Math.max(1, parseInt(it.quantity) || 1);
       const subtotal = unit_price * quantity;
       itemsTotal += subtotal;
       return {
