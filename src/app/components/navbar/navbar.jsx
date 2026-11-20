@@ -2,24 +2,9 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import Routes from '../../routes/routes';
 import { Link, useHistory, useLocation } from 'react-router-dom';
-import { storageKeys, checkUserRole, netWorkCall, apiConfig } from '../../utils';
-import {
-  Avatar,
-  Button,
-  Badge,
-  Tooltip,
-  Dropdown,
-  Flex,
-  Grid,
-  message,
-} from 'antd';
-import {
-  useGlobalStore,
-  useCartStore,
-  useChatStore,
-  chatSocket,
-  requestPushPermission,
-} from '../../services';
+import { netWorkCall, apiConfig } from '../../utils';
+import { Avatar, Button, Badge, Tooltip, Dropdown, Flex, Grid, message } from 'antd';
+import { useCartStore, useChatStore, chatSocket, requestPushPermission } from '../../services';
 import { DesktopLogo, AppIcon } from '../assets';
 import { colors, radii } from '../../styles/theme';
 import './index.css';
@@ -34,26 +19,52 @@ import {
   CarOutlined,
   SafetyCertificateOutlined,
   BellOutlined,
+  SearchOutlined,
+  AppstoreOutlined,
+  DatabaseOutlined,
+  ShoppingOutlined,
+  ControlOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
+import {
+  useNavSession,
+  useSignOut,
+  navMatch,
+  spaLink,
+  ADMIN_TABS,
+  adminTabPath,
+} from './navConfig';
 
-const Navbar = () => {
+const ADMIN_TAB_ICONS = {
+  categories: AppstoreOutlined,
+  stores: ShopOutlined,
+  orders: DatabaseOutlined,
+  catalog: ShoppingOutlined,
+  platform: ControlOutlined,
+};
+
+/**
+ * Top bar. Desktop (>= 992px) shows the role's main links; from 768px the account capsule
+ * opens the account menu; below 768px the avatar opens the account drawer (sidebar.jsx).
+ *   guest    Explore Market, Sell with Us | cart, Login, Register
+ *   customer Explore App, My Orders       | cart, bell, account menu
+ *   owner    My stores, Orders & quotes   | bell, account menu (no cart)
+ *   admin    Admin console, Search        | bell, account menu with each console section
+ */
+const Navbar = ({ open, handleOpen }) => {
   const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
-  const { user_data, update_user_data } = useGlobalStore((state) => state);
+  const { user_data, navRole, isLoggedIn, isAdmin, isOwner, isCustomer, roleMeta } = useNavSession();
   const { cart, openCart } = useCartStore((state) => state);
   const { handleChatOpen, unreadTotal } = useChatStore((state) => state);
 
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
-
-  const { isAdmin, isMerchant } = checkUserRole(user_data);
-  const isLoggedIn = !!(
-    user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
-  );
+  // Shopping is for guests and customers; owners and admins have no cart
+  const showCart = navRole === 'guest' || isCustomer;
 
   const [notificationsList, setNotificationsList] = useState([]);
   const [unreadNotifCount, setUnreadNotifCount] = useState(0);
@@ -115,309 +126,262 @@ const Navbar = () => {
     }
   };
 
-  const logout = () => {
-    update_user_data({});
-    useChatStore.getState().setUnreadTotal(0);
+  const signOut = useSignOut(() => {
     setNotificationsList([]);
     setUnreadNotifCount(0);
-    sessionStorage.clear();
-    history.push(Routes.login);
+  });
+
+  const openNotification = (item) => {
+    if (item.data?.url) history.push(item.data.url);
+    else if (item.type === 'order_status_change' || item.type === 'order_placed') history.push(Routes.orders);
   };
 
-  const currentPath = location.pathname;
+  const logoDestination = isAdmin ? Routes.admin : isOwner ? Routes.client : Routes.home;
 
-  const logoDestination = !isLoggedIn
-    ? Routes.home
-    : isAdmin
-    ? Routes.admin
-    : isMerchant
-    ? Routes.client
-    : Routes.home;
+  // ---------------------------------------------------------------------------
+  // Account menu (capsule dropdown, >= 768px)
+  // ---------------------------------------------------------------------------
+  const go = (to) => () => history.push(to);
+  const chatMenuItem = (label) => ({
+    key: 'chat',
+    icon: <ChatIcon />,
+    label: (
+      <span className="nav-menu-label">
+        <span>{label}</span>
+        {unreadTotal > 0 && <Badge count={unreadTotal} size="small" overflowCount={99} />}
+      </span>
+    ),
+    onClick: () => handleChatOpen(null, null),
+  });
 
-  // Dropdown items for desktop user profile capsule
+  let roleMenuItems = [];
+  const activeMenuKeys = [];
+  if (isAdmin) {
+    roleMenuItems = [
+      {
+        key: 'admin',
+        icon: <SafetyCertificateOutlined />,
+        label: <span style={{ fontWeight: 700 }}>Admin console</span>,
+        onClick: go(Routes.admin),
+      },
+      {
+        key: 'admin-sections',
+        type: 'group',
+        label: 'Console sections',
+        children: ADMIN_TABS.map((tab) => {
+          const TabIcon = ADMIN_TAB_ICONS[tab.key] || AppstoreOutlined;
+          if (navMatch.adminTab(location, tab.key)) activeMenuKeys.push(`admin-${tab.key}`);
+          return {
+            key: `admin-${tab.key}`,
+            icon: <TabIcon />,
+            label: tab.label,
+            onClick: go(adminTabPath(tab.key)),
+          };
+        }),
+      },
+      { type: 'divider' },
+      { key: 'search', icon: <SearchOutlined />, label: 'Search', onClick: go(Routes.search) },
+      chatMenuItem('Messages'),
+      { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
+    ];
+    if (navMatch.search(location)) activeMenuKeys.push('search');
+  } else if (isOwner) {
+    roleMenuItems = [
+      {
+        key: 'my-stores',
+        icon: <ShopOutlined />,
+        label: <span style={{ fontWeight: 700 }}>My stores</span>,
+        onClick: go(Routes.client),
+      },
+      { key: 'orders', icon: <OrderedListOutlined />, label: 'Orders & quotes', onClick: go(Routes.orders) },
+      chatMenuItem('Messages'),
+      { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
+      {
+        key: 'marketplace',
+        icon: <CompassOutlined />,
+        label: <span className="nav-menu-muted">View marketplace</span>,
+        onClick: go(Routes.app),
+      },
+    ];
+    if (navMatch.myStores(location)) activeMenuKeys.push('my-stores');
+    if (navMatch.search(location)) activeMenuKeys.push('marketplace');
+  } else {
+    roleMenuItems = [
+      { key: 'explore', icon: <CompassOutlined />, label: 'Explore Marketplace', onClick: go(Routes.app) },
+      { key: 'orders', icon: <OrderedListOutlined />, label: 'My Orders & Quotes', onClick: go(Routes.orders) },
+      { key: 'profile', icon: <UserOutlined />, label: 'My Profile & Addresses', onClick: go(Routes.profile) },
+      {
+        key: 'delivery-portal',
+        icon: <CarOutlined style={{ color: colors.semantic.success }} />,
+        label: <span style={{ color: colors.semantic.successHover, fontWeight: 600 }}>Delivery Portal</span>,
+        onClick: go(Routes.deliveryPortal),
+      },
+      chatMenuItem('Direct Messages'),
+    ];
+    if (navMatch.search(location)) activeMenuKeys.push('explore');
+    if (navMatch.delivery(location)) activeMenuKeys.push('delivery-portal');
+  }
+  if (navMatch.orders(location)) activeMenuKeys.push('orders');
+  if (navMatch.profile(location)) activeMenuKeys.push('profile');
+
   const userMenuItems = [
     {
       key: 'user-header',
       disabled: true,
+      className: 'nav-menu-header',
       label: (
         <div style={{ padding: '4px 0' }}>
-          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: 14 }}>
-            {user_data?.username || 'Account'}
-          </div>
+          <div className="nav-menu-username">{user_data?.username || 'Account'}</div>
           <div style={{ marginTop: 4 }}>
-            {isAdmin ? (
-              <span
-                className="role-pill role-pill-admin"
-                style={{
-                  background: '#fee2e2',
-                  color: '#b91c1c',
-                  border: '1px solid #fecaca',
-                  fontWeight: 700,
-                  fontSize: 11,
-                  padding: '2px 8px',
-                  borderRadius: 6,
-                }}
-              >
-                Super Admin
-              </span>
-            ) : isMerchant ? (
-              <span className="role-pill role-pill-merchant">Shop Owner</span>
-            ) : (
-              <span className="role-pill role-pill-user">Shopper</span>
-            )}
+            <span className={roleMeta.pill}>{roleMeta.label}</span>
           </div>
         </div>
       ),
     },
     { type: 'divider' },
-    ...(isMerchant
-      ? [
-          {
-            key: 'merchant',
-            icon: <ShopOutlined style={{ color: colors.primary }} />,
-            label: (
-              <span style={{ color: colors.primary, fontWeight: 700 }}>
-                Merchant Studio
-              </span>
-            ),
-            onClick: () => history.push(Routes.client),
-          },
-          {
-            key: 'orders',
-            icon: <OrderedListOutlined />,
-            label: 'Store Orders & Quotes',
-            onClick: () => history.push(Routes.orders),
-          },
-        ]
-      : [
-          {
-            key: 'explore',
-            icon: <CompassOutlined />,
-            label: 'Explore Marketplace',
-            onClick: () => history.push(Routes.app),
-          },
-          {
-            key: 'orders',
-            icon: <OrderedListOutlined />,
-            label: 'My Orders & Quotes',
-            onClick: () => history.push(Routes.orders),
-          },
-        ]),
-    {
-      key: 'profile',
-      icon: <UserOutlined />,
-      label: isMerchant ? 'Store & Profile Details' : 'My Profile & Addresses',
-      onClick: () => history.push(Routes.profile),
-    },
-    ...(!isMerchant
-      ? [
-          {
-            key: 'delivery-portal',
-            icon: <CarOutlined style={{ color: '#10b981' }} />,
-            label: (
-              <span style={{ color: '#047857', fontWeight: 600 }}>
-                Delivery Portal
-              </span>
-            ),
-            onClick: () => history.push(Routes.deliveryPortal),
-          },
-        ]
-      : []),
-    {
-      key: 'chat',
-      icon: <ChatIcon />,
-      label: (
-        <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <span>Direct Messages</span>
-          {unreadTotal > 0 && <Badge count={unreadTotal} size="small" />}
-        </span>
-      ),
-      onClick: () => handleChatOpen(null, null),
-    },
-    ...(isMerchant
-      ? [
-          {
-            key: 'explore-shopper-view',
-            icon: <CompassOutlined style={{ color: '#64748b' }} />,
-            label: (
-              <span style={{ color: '#64748b', fontSize: 13 }}>
-                Preview Marketplace (Shopper View)
-              </span>
-            ),
-            onClick: () => history.push(Routes.app),
-          },
-        ]
-      : []),
-    ...(isAdmin || user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin' || user_data?.username === 'root'
-      ? [
-          {
-            key: 'admin-console',
-            icon: <SafetyCertificateOutlined style={{ color: colors.secondary }} />,
-            label: (
-              <span style={{ color: colors.secondary, fontWeight: 700 }}>
-                Platform Admin Console
-              </span>
-            ),
-            onClick: () => history.push(Routes.admin),
-          },
-        ]
-      : []),
+    ...roleMenuItems,
     { type: 'divider' },
     {
       key: 'logout',
       icon: <LogoutOutlined />,
       danger: true,
-      label: 'Log Out',
-      onClick: logout,
+      label: 'Sign out',
+      onClick: signOut,
     },
   ];
 
-  const isOrdersRoute = currentPath === Routes.orders;
+  // ---------------------------------------------------------------------------
+  // Desktop links (>= 992px)
+  // ---------------------------------------------------------------------------
+  const desktopLinks = {
+    guest: [
+      { key: 'explore', to: Routes.search, Icon: CompassOutlined, label: 'Explore Market', active: navMatch.search(location) },
+      { key: 'sell', to: Routes.client, Icon: ShopOutlined, label: 'Sell with Us', tone: 'success' },
+    ],
+    user: [
+      { key: 'explore', to: Routes.app, Icon: CompassOutlined, label: 'Explore App', active: navMatch.search(location) },
+      { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'My Orders', active: navMatch.orders(location) },
+    ],
+    owner: [
+      { key: 'my-stores', to: Routes.client, Icon: ShopOutlined, label: 'My stores', active: navMatch.myStores(location) },
+      { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'Orders & quotes', active: navMatch.orders(location) },
+    ],
+    admin: [
+      { key: 'admin', to: Routes.admin, Icon: SafetyCertificateOutlined, label: 'Admin console', active: navMatch.admin(location) },
+      { key: 'search', to: Routes.search, Icon: SearchOutlined, label: 'Search', active: navMatch.search(location) },
+    ],
+  }[navRole];
+
+  const isOrdersRoute = navMatch.orders(location);
   const isAuthRoute =
-    currentPath === Routes.login || currentPath === Routes.register;
+    location.pathname === Routes.login || location.pathname === Routes.register;
 
   if (isMobile && isAuthRoute) {
     return null;
   }
 
-  if (isMobile && isOrdersRoute) {
+  const notificationsPanel = () => (
+    <div className="nav-notif-panel">
+      <div className="nav-notif-head">
+        <span className="nav-notif-title">
+          Notifications{' '}
+          {unreadNotifCount > 0 && (
+            <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />
+          )}
+        </span>
+        {unreadNotifCount > 0 && (
+          <Button
+            type="link"
+            size="small"
+            onClick={handleMarkAllRead}
+            style={{ padding: 0, fontSize: 11, height: 'auto', color: colors.primary }}
+          >
+            Mark all read
+          </Button>
+        )}
+      </div>
+
+      {!isPushEnabled && (
+        <div className="nav-notif-push">
+          <span className="nav-notif-push-text">Receive OS & order alerts</span>
+          <Button
+            size="small"
+            type="primary"
+            onClick={handleEnablePush}
+            style={{
+              fontSize: 11,
+              height: 24,
+              padding: '0 8px',
+              borderRadius: radii.sm || 6,
+              background: colors.primary,
+              borderColor: colors.primary,
+            }}
+          >
+            Enable Push
+          </Button>
+        </div>
+      )}
+
+      <div className="nav-notif-list">
+        {notificationsList.length === 0 ? (
+          <div className="nav-notif-empty">No notifications yet</div>
+        ) : (
+          notificationsList.slice(0, 10).map((item, idx) => (
+            <button
+              type="button"
+              key={item.id || idx}
+              className={`nav-notif-item${item.is_read ? '' : ' unread'}`}
+              onClick={() => openNotification(item)}
+            >
+              <span className="nav-notif-item-title">{item.title}</span>
+              <span className="nav-notif-item-body">{item.body}</span>
+            </button>
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const avatarMenuButton = (extraClass = '') => (
+    <button
+      type="button"
+      className={`rq-nav-avatar-btn ${extraClass}`.trim()}
+      aria-label={`Open account menu, ${user_data?.username || 'User'}`}
+      aria-haspopup="dialog"
+      aria-expanded={!!open}
+      onClick={handleOpen}
+    >
+      <Avatar size={32} icon={<UserOutlined />} style={{ backgroundColor: roleMeta.avatar }} />
+    </button>
+  );
+
+  if (isMobile && isOrdersRoute && isLoggedIn) {
     return (
-      <header
-        className="navBar"
-        style={{
-          backgroundColor: 'var(--brand-bg, #FDF9F4)',
-          borderBottom: 'none',
-          boxShadow: 'none',
-          padding: '0 16px',
-          height: 60,
-        }}
-      >
-        {/* Mobile Orders Top App Bar matching Stitch visual design */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <img
-            src={AppIcon}
-            alt="Rquest"
-            style={{ width: 34, height: 34, borderRadius: 10, objectFit: 'contain' }}
-          />
-          <div>
-            <div style={{ fontWeight: 800, fontSize: 16, color: '#0B2D6B', lineHeight: 1.2 }}>
-              Orders
-            </div>
-            <div style={{ fontSize: 11, color: '#667085', fontWeight: 500, lineHeight: 1.2 }}>
-              Your Order History
+      <header className="navBar navBar--orders">
+        {/* Phone orders top app bar */}
+        <div className="navbar-orders-title">
+          <img src={AppIcon} alt="" className="navbar-orders-icon" />
+          <div style={{ minWidth: 0 }}>
+            <div className="navbar-orders-heading">{isOwner ? 'Store orders' : 'Orders'}</div>
+            <div className="navbar-orders-sub">
+              {isOwner ? 'Orders & quotes for your stores' : isAdmin ? 'Your orders' : 'Your Order History'}
             </div>
           </div>
         </div>
 
-        <Flex align="center" gap={10}>
-          {/* Circular Bell Notification Action */}
-          <Dropdown
-            trigger={['click']}
-            placement="bottomRight"
-            dropdownRender={() => (
-              <div
-                style={{
-                  width: 320,
-                  maxWidth: '90vw',
-                  background: '#ffffff',
-                  borderRadius: 12,
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
-                  border: '1px solid #e2e8f0',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '10px 14px',
-                    borderBottom: '1px solid #f1f5f9',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: '#f8fafc',
-                  }}
-                >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
-                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
-                  </span>
-                  {unreadNotifCount > 0 && (
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={handleMarkAllRead}
-                      style={{ padding: 0, fontSize: 11, height: 'auto', color: colors.primary }}
-                    >
-                      Mark all read
-                    </Button>
-                  )}
-                </div>
-                {notificationsList.length === 0 ? (
-                  <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
-                    No new notifications
-                  </div>
-                ) : (
-                  <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-                    {notificationsList.map((item, idx) => (
-                      <div
-                        key={idx}
-                        style={{
-                          padding: '10px 14px',
-                          borderBottom: '1px solid #f8fafc',
-                          fontSize: 12,
-                        }}
-                      >
-                        <div style={{ fontWeight: 700, color: '#0f172a' }}>{item.title}</div>
-                        <div style={{ color: '#64748b', fontSize: 11 }}>{item.body}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          >
+        <Flex align="center" gap={8}>
+          <Dropdown trigger={['click']} placement="bottomRight" dropdownRender={notificationsPanel}>
             <button
               type="button"
+              className="navbar-orders-bell"
               aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : 'Notifications'}
-              style={{
-                width: 44,
-                height: 44,
-                padding: 0,
-                borderRadius: '50%',
-                background: '#ffffff',
-                border: '1px solid #ECE7DF',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              }}
             >
               <Badge count={unreadNotifCount} size="small" offset={[2, -2]}>
-                <BellOutlined style={{ fontSize: 16, color: '#1D2939' }} />
+                <BellOutlined style={{ fontSize: 16, color: colors.textMain }} />
               </Badge>
             </button>
           </Dropdown>
-
-          {/* Circular User Avatar Trigger (Navigates to Account) */}
-          <button
-            type="button"
-            aria-label="Account"
-            onClick={() => history.push(Routes.profile)}
-            style={{
-              width: 44,
-              height: 44,
-              padding: 0,
-              border: 0,
-              borderRadius: '50%',
-              background: '#0B2D6B',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              color: '#ffffff',
-            }}
-          >
-            <UserOutlined style={{ fontSize: 16 }} />
-          </button>
+          {avatarMenuButton()}
         </Flex>
       </header>
     );
@@ -425,104 +389,31 @@ const Navbar = () => {
 
   return (
     <header className="navBar">
-      {/* Brand Logo - Navigates dynamically based on role (Desktop Logo on desktop, App Icon on mobile) */}
+      {/* Brand: role home (admin console, my stores, or the marketplace) */}
       <Link to={logoDestination} className="navbar-brand" aria-label="Rquest Home">
-        <img
-          src={DesktopLogo}
-          alt="Rquest"
-          className="navbar-logo-desktop"
-        />
-        <img
-          src={AppIcon}
-          alt="Rquest"
-          className="navbar-logo-mobile"
-        />
+        <img src={DesktopLogo} alt="Rquest" className="navbar-logo-desktop" />
+        <img src={AppIcon} alt="Rquest" className="navbar-logo-mobile" />
       </Link>
 
-      {/* Desktop Navigation Links (≥ 992px) */}
-      <nav className="navbar-desktop-nav">
-        {/* Guest: Show Explore Market, Sell with Us */}
-        {!isLoggedIn && (
-          <>
-            <Link to={Routes.search}>
-              <Button
-                type="text"
-                icon={<CompassOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.search || currentPath === '/search' ? 'active' : ''}`}
-              >
-                Explore Market
-              </Button>
-            </Link>
-
-            <Link to={Routes.client}>
-              <Button
-                type="text"
-                icon={<ShopOutlined />}
-                className="nav-item-btn"
-                style={{ color: '#059669' }}
-              >
-                Sell with Us
-              </Button>
-            </Link>
-          </>
-        )}
-
-        {/* Customer Logged In: Show Explore App, My Orders (Home and Seller links hidden) */}
-        {isLoggedIn && !isMerchant && (
-          <>
-            <Link to={Routes.app}>
-              <Button
-                type="text"
-                icon={<CompassOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.app || currentPath === Routes.search || currentPath === '/search' ? 'active' : ''}`}
-              >
-                Explore App
-              </Button>
-            </Link>
-
-            <Link to={Routes.orders}>
-              <Button
-                type="text"
-                icon={<OrderedListOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
-              >
-                My Orders
-              </Button>
-            </Link>
-          </>
-        )}
-
-        {/* Merchant Logged In: Show Merchant Studio, Store Orders (Home and Buyer explore hidden) */}
-        {isLoggedIn && isMerchant && (
-          <>
-            <Link to={Routes.client}>
-              <Button
-                type="text"
-                icon={<ShopOutlined />}
-                className={`nav-item-btn ${currentPath.startsWith('/client') ? 'active' : ''}`}
-                style={{ color: colors.primary, fontWeight: 700 }}
-              >
-                Merchant Studio
-              </Button>
-            </Link>
-
-            <Link to={Routes.orders}>
-              <Button
-                type="text"
-                icon={<OrderedListOutlined />}
-                className={`nav-item-btn ${currentPath === Routes.orders ? 'active' : ''}`}
-              >
-                Store Orders
-              </Button>
-            </Link>
-          </>
-        )}
+      {/* Desktop navigation links (>= 992px) */}
+      <nav className="navbar-desktop-nav" aria-label="Main navigation">
+        {desktopLinks.map(({ key, to, Icon, label, active, tone }) => (
+          <Button
+            key={key}
+            type="text"
+            icon={<Icon />}
+            className={`nav-item-btn${tone ? ` nav-item-btn--${tone}` : ''}${active ? ' active' : ''}`}
+            aria-current={active ? 'page' : undefined}
+            {...spaLink(history, to)}
+          >
+            {label}
+          </Button>
+        ))}
       </nav>
 
-      {/* Right Actions Container: Cart, Profile/Auth, Hamburger */}
-      <Flex align="center" gap={screens.xs ? 6 : 10}>
-        {/* Cart Button: Visible for shoppers and guests; hidden for shop owners */}
-        {(!isLoggedIn || !isMerchant) && (
+      {/* Right actions: cart, notifications, account */}
+      <Flex align="center" gap={screens.xs ? 6 : 10} className="navbar-actions">
+        {showCart && (
           <Tooltip
             title={
               cartItemCount > 0
@@ -548,119 +439,14 @@ const Navbar = () => {
                   background: cartItemCount > 0 ? colors.primaryLight : '#ffffff',
                   boxShadow: cartItemCount > 0 ? '0 2px 8px rgba(11, 45, 107, 0.2)' : 'none',
                 }}
-                aria-label="View Shopping Cart"
+                aria-label={cartItemCount > 0 ? `View shopping cart, ${cartItemCount} items` : 'View shopping cart'}
               />
             </Badge>
           </Tooltip>
         )}
 
-        {/* Notification Bell with Badge and Push Prompt */}
         {isLoggedIn && (
-          <Dropdown
-            trigger={['click']}
-            placement="bottomRight"
-            dropdownRender={() => (
-              <div
-                style={{
-                  width: 320,
-                  maxWidth: '90vw',
-                  background: '#ffffff',
-                  borderRadius: 12,
-                  boxShadow: '0 10px 30px rgba(0, 0, 0, 0.12)',
-                  border: '1px solid #e2e8f0',
-                  overflow: 'hidden',
-                }}
-              >
-                <div
-                  style={{
-                    padding: '10px 14px',
-                    borderBottom: '1px solid #f1f5f9',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    background: '#f8fafc',
-                  }}
-                >
-                  <span style={{ fontWeight: 700, fontSize: 13, color: colors.textMain }}>
-                    Notifications {unreadNotifCount > 0 && <Badge count={unreadNotifCount} style={{ backgroundColor: colors.primary }} />}
-                  </span>
-                  {unreadNotifCount > 0 && (
-                    <Button
-                      type="link"
-                      size="small"
-                      onClick={handleMarkAllRead}
-                      style={{ padding: 0, fontSize: 11, height: 'auto', color: colors.primary }}
-                    >
-                      Mark all read
-                    </Button>
-                  )}
-                </div>
-
-                {!isPushEnabled && (
-                  <div
-                    style={{
-                      padding: '8px 14px',
-                      background: colors.primaryLight,
-                      borderBottom: `1px solid ${colors.border}`,
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ fontSize: 11, color: colors.primary, fontWeight: 500 }}>
-                      Receive OS & order alerts
-                    </span>
-                    <Button
-                      size="small"
-                      type="primary"
-                      onClick={handleEnablePush}
-                      style={{
-                        fontSize: 11,
-                        height: 24,
-                        padding: '0 8px',
-                        borderRadius: radii.sm || 6,
-                        background: colors.primary,
-                        borderColor: colors.primary,
-                      }}
-                    >
-                      Enable Push
-                    </Button>
-                  </div>
-                )}
-
-                <div style={{ maxHeight: 280, overflowY: 'auto' }}>
-                  {notificationsList.length === 0 ? (
-                    <div style={{ padding: '24px 16px', textAlign: 'center', color: '#94a3b8', fontSize: 12 }}>
-                      No notifications yet
-                    </div>
-                  ) : (
-                    notificationsList.slice(0, 10).map((item) => (
-                      <div
-                        key={item.id}
-                        onClick={() => {
-                          if (item.data?.url) history.push(item.data.url);
-                          else if (item.type === 'order_status_change' || item.type === 'order_placed') history.push(Routes.orders);
-                        }}
-                        style={{
-                          padding: '10px 14px',
-                          borderBottom: '1px solid #f1f5f9',
-                          cursor: 'pointer',
-                          background: item.is_read ? '#ffffff' : '#f8fafc',
-                        }}
-                      >
-                        <div style={{ fontWeight: item.is_read ? 500 : 700, fontSize: 12, color: '#0f172a' }}>
-                          {item.title}
-                        </div>
-                        <div style={{ fontSize: 11, color: '#64748b', marginTop: 2, lineHeight: '15px' }}>
-                          {item.body}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-          >
+          <Dropdown trigger={['click']} placement="bottomRight" dropdownRender={notificationsPanel}>
             <Badge
               count={unreadNotifCount}
               offset={[-2, 4]}
@@ -677,86 +463,64 @@ const Navbar = () => {
                   color: unreadNotifCount > 0 ? colors.primary : '#64748b',
                   background: unreadNotifCount > 0 ? colors.primaryLight : '#ffffff',
                 }}
-                aria-label="Notifications"
+                aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : 'Notifications'}
               />
             </Badge>
           </Dropdown>
         )}
 
-        {/* Desktop / Tab User Profile & Auth (Screen md and up) */}
-        {!isMobile && (
-          <>
-            {isLoggedIn ? (
-              <Dropdown
-                menu={{ items: userMenuItems }}
-                placement="bottomRight"
-                arrow
-                trigger={['click']}
+        {/* Tablet and desktop (>= 768px): account capsule and menu, or sign in */}
+        {!isMobile &&
+          (isLoggedIn ? (
+            <Dropdown
+              menu={{
+                items: userMenuItems,
+                selectable: true,
+                selectedKeys: activeMenuKeys,
+                className: 'nav-account-menu',
+              }}
+              placement="bottomRight"
+              arrow
+              trigger={['click']}
+            >
+              <button
+                type="button"
+                className="navbar-user-capsule"
+                aria-label={`Account menu, ${user_data?.username || 'User'}`}
               >
-                <button
-                  type="button"
-                  className="navbar-user-capsule"
-                  aria-label={`Account menu, ${user_data?.username || 'User'}`}
-                >
-                  <Avatar
-                    size={30}
-                    icon={<UserOutlined />}
-                    style={{
-                      backgroundColor: isMerchant ? colors.secondary : colors.primary,
-                    }}
-                  />
-                  <span className="navbar-username">
-                    {user_data?.username || 'User'}
-                  </span>
-                  {isMerchant ? (
-                    <span className="role-pill role-pill-merchant">Shop Owner</span>
-                  ) : (
-                    <span className="role-pill role-pill-user">Shopper</span>
-                  )}
-                  <DownOutlined style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }} />
-                </button>
-              </Dropdown>
-            ) : (
-              <Flex align="center" gap={8} style={{ marginLeft: 4 }}>
-                <Link to={Routes.login}>
-                  <Button type="default" style={{ borderRadius: radii.md, fontWeight: 600 }}>
-                    Login
-                  </Button>
-                </Link>
-                <Link to={Routes.register}>
-                  <Button
-                    type="primary"
-                    style={{
-                      borderRadius: radii.md,
-                      fontWeight: 700,
-                      background: colors.primary,
-                      borderColor: colors.primary,
-                      color: '#ffffff',
-                    }}
-                  >
-                    Register
-                  </Button>
-                </Link>
-              </Flex>
-            )}
-          </>
-        )}
+                <Avatar size={30} icon={<UserOutlined />} style={{ backgroundColor: roleMeta.avatar }} />
+                <span className="navbar-username">{user_data?.username || 'User'}</span>
+                <span className={roleMeta.pill}>{roleMeta.short}</span>
+                <DownOutlined style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }} />
+              </button>
+            </Dropdown>
+          ) : (
+            <Flex align="center" gap={8} style={{ marginLeft: 4 }}>
+              <Button
+                type="default"
+                style={{ borderRadius: radii.md, fontWeight: 600 }}
+                {...spaLink(history, Routes.login)}
+              >
+                Login
+              </Button>
+              <Button
+                type="primary"
+                style={{
+                  borderRadius: radii.md,
+                  fontWeight: 700,
+                  background: colors.primary,
+                  borderColor: colors.primary,
+                  color: '#ffffff',
+                }}
+                {...spaLink(history, Routes.register)}
+              >
+                Register
+              </Button>
+            </Flex>
+          ))}
 
-        {/* Mobile View Quick User Indicator (1-tap to Account) */}
-        {isMobile && isLoggedIn && (
-          <button
-            type="button"
-            className="rq-nav-avatar-btn"
-            aria-label="Account"
-            onClick={() => history.push(Routes.profile)}
-          >
-            <Avatar
-              size={32}
-              icon={<UserOutlined />}
-              style={{ backgroundColor: isMerchant ? colors.secondary : colors.primary }}
-            />
-          </button>
-        )}
+        {/* Phones (< 768px): the avatar opens the account drawer with the role's full menu */}
+        {isMobile && isLoggedIn && avatarMenuButton()}
       </Flex>
     </header>
   );

@@ -1,6 +1,12 @@
 const express = require('express');
-const { orders, order_items, shops, users, shop_listings, chats } = require('../../models');
+const { orders, order_items, shops, users, shop_listings, chats, user_addresses } = require('../../models');
 const { authMiddleware } = require('../../auth');
+const {
+  getSettings: getPlatformSettings,
+  computeOrderFees,
+  orderBlock,
+  distanceKm,
+} = require('../../services/platformSettings');
 const {
   sendPushNotification,
   getOrderStatusNotification,
@@ -47,10 +53,10 @@ router.post('/', async (req, res) => {
       customer_phone,
       notes,
       items,
-      platform_fee = 5.0,
-      delivery_fee = 0.0,
+      delivery_address_id,
       shop_upi_id,
     } = req.body;
+    // platform_fee / delivery_fee in the body are ignored: fees come from platform settings
 
     if (!shop_id || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Shop ID and non-empty items array are required' });
@@ -77,9 +83,39 @@ router.post('/', async (req, res) => {
       };
     });
 
-    const parsedPlatformFee = parseFloat(platform_fee) || 0.0;
-    const parsedDeliveryFee = order_type === 'delivery' ? parseFloat(delivery_fee) || 0.0 : 0.0;
-    const totalAmount = itemsTotal + parsedPlatformFee;
+    // Order rules and fees from Admin > Platform configuration (maintenance, delivery switch,
+    // minimum order, delivery distance, platform + delivery fees)
+    const platformSettings = await getPlatformSettings();
+    const block = orderBlock({ orderType: order_type, itemsTotal }, platformSettings);
+    if (block) {
+      return res.status(block.status).json(block.body);
+    }
+
+    const maxDeliveryKm = Number(platformSettings.max_delivery_radius_km) || 0;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (
+      order_type === 'delivery' &&
+      maxDeliveryKm > 0 &&
+      UUID_RE.test(String(delivery_address_id || '')) &&
+      shop.latitude != null &&
+      shop.longitude != null
+    ) {
+      const addr = await user_addresses.findOne({ where: { id: delivery_address_id, user_id } });
+      if (addr && addr.latitude != null && addr.longitude != null) {
+        const km = distanceKm(shop.latitude, shop.longitude, addr.latitude, addr.longitude);
+        if (km > maxDeliveryKm) {
+          const msg = `${shop.shop_name || 'This store'} delivers within ${maxDeliveryKm} km and this address is about ${km.toFixed(1)} km away. Choose self-pickup or a closer address.`;
+          return res.status(400).json({ success: false, code: 'OUT_OF_DELIVERY_RANGE', error: msg, message: msg });
+        }
+      }
+    }
+
+    // Total = items + platform fee + delivery fee (what the customer pays)
+    const {
+      platformFee: parsedPlatformFee,
+      deliveryFee: parsedDeliveryFee,
+      total: totalAmount,
+    } = computeOrderFees({ itemsTotal, orderType: order_type }, platformSettings);
     const orderNumber = `RQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
     const newOrder = await orders.create({

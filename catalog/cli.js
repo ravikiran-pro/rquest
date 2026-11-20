@@ -22,7 +22,7 @@
  */
 
 const path = require('path');
-const { config } = require('./lib/env');
+const { config, redactUrl } = require('./lib/env');
 const { connect } = require('./lib/db');
 const { migrate } = require('./db/schema');
 const { runSource } = require('./lib/run');
@@ -51,6 +51,10 @@ function parseFlags(argv) {
 }
 
 async function cmdMigrate() {
+  const cfg = config();
+  if (cfg.databaseUrl) {
+    console.log(`database: ${redactUrl(cfg.databaseUrl)} (from ${cfg.databaseSource})`);
+  }
   const client = await connect();
   try {
     const n = await migrate(client);

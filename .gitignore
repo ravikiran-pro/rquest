@@ -13,7 +13,9 @@ backups/
 docs/
 mmux*
 .agents/
-catalog
+# Catalog pipeline: only its deps and local credentials stay out of git
+/catalog/node_modules/
+/catalog/.env.catalog
 # UI test runs (tests/ui): local sign-in with real credentials, and run output
 tests/ui/*.local.js
 tests/ui/output/

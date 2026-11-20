@@ -1,19 +1,9 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import Routes from '../../routes/routes';
-import {
-  Button,
-  Avatar,
-  Divider,
-  Drawer,
-  Badge,
-  Flex,
-  Typography,
-  Grid,
-} from 'antd';
-import { useGlobalStore, useCartStore, useChatStore } from '../../services';
+import { Button, Avatar, Divider, Drawer, Badge, Flex, Typography, Grid } from 'antd';
+import { useCartStore, useChatStore } from '../../services';
 import { useHistory, useLocation } from 'react-router-dom';
-import { storageKeys, checkUserRole } from '../../utils';
 import { AppIcon } from '../assets';
 import { colors, radii } from '../../styles/theme';
 import './index.css';
@@ -30,58 +20,226 @@ import {
   CompassOutlined,
   CarOutlined,
   SafetyCertificateOutlined,
+  SearchOutlined,
+  AppstoreOutlined,
+  DatabaseOutlined,
+  ShoppingOutlined,
+  ControlOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
+import { useNavSession, useSignOut, navMatch, ADMIN_TABS, adminTabPath } from './navConfig';
 
 const { Text } = Typography;
 
+const ADMIN_TAB_ICONS = {
+  categories: AppstoreOutlined,
+  stores: ShopOutlined,
+  orders: DatabaseOutlined,
+  catalog: ShoppingOutlined,
+  platform: ControlOutlined,
+};
+
+const Chevron = () => <RightOutlined className="drawer-nav-chevron" aria-hidden="true" />;
+
+/**
+ * Account drawer (opened from the header avatar on phones). Same options per role as the
+ * desktop account menu:
+ *   guest    Explore, Cart, Sell on Rquest, Sign in / Register
+ *   customer Explore, Cart, Orders, Profile, Delivery portal, Messages, Sign out
+ *   owner    My stores, Orders & quotes, Messages, Profile, View marketplace, Sign out
+ *   admin    Admin console (+ each section), Search, Messages, Profile, Sign out
+ */
 const SideBar = ({ open, handleClose }) => {
   const history = useHistory();
   const location = useLocation();
   const screens = Grid.useBreakpoint();
 
-  const { user_data, update_user_data } = useGlobalStore((state) => state);
+  const { user_data, navRole, isLoggedIn, roleMeta } = useNavSession();
   const { cart, openCart } = useCartStore((state) => state);
   const { handleChatOpen, unreadTotal } = useChatStore((state) => state);
+  const signOut = useSignOut(handleClose);
 
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const { isAdmin, isMerchant } = checkUserRole(user_data);
-  const isLoggedIn = !!(
-    user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
-  );
-
-  const currentPath = location.pathname;
   const isMobile = !screens.md;
   const isAuthRoute =
-    currentPath === Routes.login || currentPath === Routes.register;
-
-  const logout = () => {
-    update_user_data({});
-    useChatStore.getState().setUnreadTotal(0);
-    sessionStorage.clear();
-    handleClose();
-    history.push(Routes.login);
-  };
+    location.pathname === Routes.login || location.pathname === Routes.register;
 
   const handleNavigate = (path) => {
     history.push(path);
     handleClose();
   };
 
-  const handleCartClick = () => {
-    handleClose();
-    openCart();
-  };
-
-  const handleChatClick = () => {
-    handleClose();
-    handleChatOpen(null, null);
-  };
-
   if (isMobile && isAuthRoute) {
     return null;
+  }
+
+  const go = (to) => () => handleNavigate(to);
+
+  const cartItem = {
+    key: 'cart',
+    Icon: ShoppingCartOutlined,
+    label: 'My Shopping Cart',
+    active: navMatch.cart(location),
+    onClick: () => {
+      handleClose();
+      openCart();
+    },
+    trailing:
+      cartItemCount > 0 ? (
+        <Badge
+          count={`${cartItemCount} item${cartItemCount > 1 ? 's' : ''}`}
+          style={{ backgroundColor: colors.primary, fontWeight: 700, fontSize: 11 }}
+        />
+      ) : (
+        <span className="drawer-nav-meta">Empty</span>
+      ),
+  };
+
+  const chatItem = (label) => ({
+    key: 'chat',
+    Icon: ChatIcon,
+    label,
+    onClick: () => {
+      handleClose();
+      handleChatOpen(null, null);
+    },
+    trailing: unreadTotal > 0 ? <Badge count={unreadTotal} size="small" overflowCount={99} /> : <Chevron />,
+  });
+
+  const exploreItem = {
+    key: 'explore',
+    Icon: CompassOutlined,
+    label: 'Explore Market',
+    active: navMatch.home(location),
+    onClick: go(Routes.home),
+  };
+
+  let items;
+  switch (navRole) {
+    case 'admin':
+      items = [
+        {
+          key: 'admin',
+          Icon: SafetyCertificateOutlined,
+          label: 'Admin console',
+          tone: 'brand',
+          parentActive: navMatch.admin(location),
+          onClick: go(Routes.admin),
+          trailing: <span className="drawer-nav-pill">Admin</span>,
+        },
+        ...ADMIN_TABS.map((tab) => ({
+          key: `admin-${tab.key}`,
+          Icon: ADMIN_TAB_ICONS[tab.key] || AppstoreOutlined,
+          label: tab.label,
+          sub: true,
+          active: navMatch.adminTab(location, tab.key),
+          onClick: go(adminTabPath(tab.key)),
+        })),
+        {
+          key: 'search',
+          Icon: SearchOutlined,
+          label: 'Search',
+          active: navMatch.search(location),
+          onClick: go(Routes.search),
+          trailing: <Chevron />,
+        },
+        chatItem('Messages'),
+        {
+          key: 'profile',
+          Icon: UserOutlined,
+          label: 'Profile',
+          active: navMatch.profile(location),
+          onClick: go(Routes.profile),
+          trailing: <Chevron />,
+        },
+      ];
+      break;
+    case 'owner':
+      items = [
+        {
+          key: 'my-stores',
+          Icon: ShopOutlined,
+          label: 'My stores',
+          tone: 'brand',
+          active: navMatch.myStores(location),
+          onClick: go(Routes.client),
+          trailing: <span className="drawer-nav-pill">Manage</span>,
+        },
+        {
+          key: 'orders',
+          Icon: OrderedListOutlined,
+          label: 'Orders & quotes',
+          active: navMatch.orders(location),
+          onClick: go(Routes.orders),
+          trailing: <Chevron />,
+        },
+        chatItem('Messages'),
+        {
+          key: 'profile',
+          Icon: UserOutlined,
+          label: 'Profile',
+          active: navMatch.profile(location),
+          onClick: go(Routes.profile),
+          trailing: <Chevron />,
+        },
+        {
+          key: 'marketplace',
+          Icon: CompassOutlined,
+          label: 'View marketplace',
+          tone: 'muted',
+          active: navMatch.search(location),
+          onClick: go(Routes.app),
+          trailing: <Chevron />,
+        },
+      ];
+      break;
+    case 'user':
+      items = [
+        exploreItem,
+        cartItem,
+        {
+          key: 'orders',
+          Icon: OrderedListOutlined,
+          label: 'My Orders & Quotes',
+          active: navMatch.orders(location),
+          onClick: go(Routes.orders),
+          trailing: <Chevron />,
+        },
+        {
+          key: 'profile',
+          Icon: UserOutlined,
+          label: 'My Profile & Addresses',
+          active: navMatch.profile(location),
+          onClick: go(Routes.profile),
+          trailing: <Chevron />,
+        },
+        {
+          key: 'delivery',
+          Icon: CarOutlined,
+          label: 'Delivery Portal',
+          tone: 'success',
+          active: navMatch.delivery(location),
+          onClick: go(Routes.deliveryPortal),
+          trailing: <Chevron />,
+        },
+        chatItem('Direct Chat / Messages'),
+      ];
+      break;
+    default:
+      items = [
+        exploreItem,
+        cartItem,
+        {
+          key: 'sell',
+          Icon: ShopOutlined,
+          label: 'Sell on Rquest',
+          tone: 'success',
+          onClick: go(Routes.client),
+          trailing: <Chevron />,
+        },
+      ];
   }
 
   return (
@@ -90,123 +248,51 @@ const SideBar = ({ open, handleClose }) => {
       placement="right"
       onClose={handleClose}
       open={open}
-      width={screens.xs ? '86vw' : 320}
-      styles={{
-        body: {
-          padding: '20px 16px',
-          display: 'flex',
-          flexDirection: 'column',
-          height: '100%',
-        },
-      }}
+      width="min(340px, 88vw)"
+      closable={false}
     >
-      {/* Top Drawer Header with Brand & Close */}
-      <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
-        <Flex align="center" gap={10}>
-          <img
-            src={AppIcon}
-            alt="Rquest"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              objectFit: 'contain',
-              boxShadow: '0 2px 8px rgba(79, 70, 229, 0.24)',
-            }}
-          />
-          <div>
-            <div style={{ fontSize: 17, fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
-              Rquest Direct
-            </div>
-            <div style={{ fontSize: 10, color: '#64748b', fontWeight: 600 }}>
-              Hyper-Local Marketplace
-            </div>
+      {/* Brand and close */}
+      <Flex justify="space-between" align="center" className="drawer-brand">
+        <Flex align="center" gap={10} style={{ minWidth: 0 }}>
+          <img src={AppIcon} alt="" className="drawer-brand-icon" />
+          <div style={{ minWidth: 0 }}>
+            <div className="drawer-brand-title">Rquest Direct</div>
+            <div className="drawer-brand-sub">Hyper-Local Marketplace</div>
           </div>
         </Flex>
-
         <Button
           type="text"
           shape="circle"
-          icon={<CloseOutlined style={{ fontSize: 16, color: '#64748b' }} />}
+          className="drawer-close-btn"
+          aria-label="Close menu"
+          icon={<CloseOutlined style={{ fontSize: 16 }} />}
           onClick={handleClose}
         />
       </Flex>
 
-      {/* User Info Capsule (If Logged In) */}
       {isLoggedIn ? (
-        <div
-          style={{
-            padding: 12,
-            background: 'linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%)',
-            borderRadius: 14,
-            border: '1px solid #e2e8f0',
-            marginBottom: 16,
-          }}
-        >
+        <div className="drawer-user-card">
           <Flex align="center" gap={10}>
             <Avatar
               size={42}
               icon={<UserOutlined />}
-              style={{
-                backgroundColor: isMerchant ? colors.secondary : colors.primary,
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                flexShrink: 0,
-              }}
+              style={{ backgroundColor: roleMeta.avatar, flexShrink: 0 }}
             />
             <div style={{ minWidth: 0, flex: 1 }}>
-              <div
-                style={{
-                  fontWeight: 800,
-                  fontSize: 15,
-                  color: '#0f172a',
-                  whiteSpace: 'nowrap',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                }}
-              >
-                {user_data?.username || 'User'}
-              </div>
+              <div className="drawer-user-name">{user_data?.username || 'User'}</div>
               <div style={{ marginTop: 3 }}>
-                {isAdmin ? (
-                  <span
-                    className="role-pill role-pill-admin"
-                    style={{
-                      background: '#fee2e2',
-                      color: '#b91c1c',
-                      border: '1px solid #fecaca',
-                      fontWeight: 700,
-                      fontSize: 11,
-                      padding: '2px 8px',
-                      borderRadius: 6,
-                    }}
-                  >
-                    Super Admin
-                  </span>
-                ) : isMerchant ? (
-                  <span className="role-pill role-pill-merchant">Shop Owner</span>
-                ) : (
-                  <span className="role-pill role-pill-user">Shopper</span>
-                )}
+                <span className={roleMeta.pill}>{roleMeta.label}</span>
               </div>
             </div>
           </Flex>
         </div>
       ) : (
-        /* Guest Welcome & Auth Actions (If Not Logged In) */
-        <div
-          style={{
-            padding: 14,
-            background: 'linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%)',
-            borderRadius: 14,
-            border: '1px solid #e0e7ff',
-            marginBottom: 16,
-          }}
-        >
-          <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a', marginBottom: 2 }}>
+        <div className="drawer-user-card drawer-user-card--guest">
+          <div className="drawer-user-name" style={{ marginBottom: 2 }}>
             Welcome to Rquest
           </div>
           <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 12 }}>
-            Sign in to track orders,  neighborhood sellers and deals.
+            Sign in to track orders, neighbourhood sellers and deals.
           </Text>
           <Flex gap={8}>
             <Button
@@ -216,19 +302,19 @@ const SideBar = ({ open, handleClose }) => {
               style={{
                 borderRadius: radii.md,
                 fontWeight: 700,
-                height: 38,
+                height: 40,
                 background: colors.primary,
                 borderColor: colors.primary,
               }}
-              onClick={() => handleNavigate(Routes.login)}
+              onClick={go(Routes.login)}
             >
               Sign In
             </Button>
             <Button
               block
               icon={<UserAddOutlined />}
-              style={{ borderRadius: radii.md, fontWeight: 600, height: 38 }}
-              onClick={() => handleNavigate(Routes.register)}
+              style={{ borderRadius: radii.md, fontWeight: 600, height: 40 }}
+              onClick={go(Routes.register)}
             >
               Register
             </Button>
@@ -236,208 +322,45 @@ const SideBar = ({ open, handleClose }) => {
         </div>
       )}
 
-      {/* Navigation List Menu */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-        {/* Customer or Guest: Explore Market (Homescreen) */}
-        {(!isLoggedIn || !isMerchant) && (
+      <nav className="drawer-nav" aria-label="Account menu">
+        {items.map(({ key, Icon, label, tone, sub, active, parentActive, onClick, trailing }) => (
           <Button
+            key={key}
             type="text"
-            icon={<CompassOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.home || currentPath === '/app' || currentPath === '/home' ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.home)}
+            icon={<Icon className="drawer-nav-icon" />}
+            className={[
+              'drawer-nav-item',
+              sub ? 'drawer-nav-item--sub' : '',
+              tone ? `drawer-nav-item--${tone}` : '',
+              active ? 'active' : '',
+              parentActive ? 'active-parent' : '',
+            ]
+              .filter(Boolean)
+              .join(' ')}
+            aria-current={active ? 'page' : undefined}
+            onClick={onClick}
           >
-            <span style={{ flex: 1, textAlign: 'left' }}>Explore Market</span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
+            <span className="drawer-nav-label">{label}</span>
+            {trailing}
           </Button>
-        )}
+        ))}
+      </nav>
 
-        {/* Merchant: Merchant Studio */}
-        {isLoggedIn && isMerchant && (
-          <Button
-            type="text"
-            icon={<ShopOutlined style={{ fontSize: 17, color: colors.primary }} />}
-            className={`drawer-nav-item ${currentPath.startsWith('/client') ? 'active' : ''}`}
-            style={{ color: colors.primary }}
-            onClick={() => handleNavigate(Routes.client)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
-              Merchant Studio (My Stores)
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                background: colors.primaryLight,
-                color: colors.primary,
-                padding: '1px 6px',
-                borderRadius: 9999,
-                fontWeight: 700,
-              }}
-            >
-              Manage
-            </span>
-          </Button>
-        )}
-
-        {/* Cart Item with Live Counter: Only for customers or guests */}
-        {(!isLoggedIn || !isMerchant) && (
-          <Button
-            type="text"
-            icon={<ShoppingCartOutlined style={{ fontSize: 17 }} />}
-            className="drawer-nav-item"
-            onClick={handleCartClick}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>My Shopping Cart</span>
-            {cartItemCount > 0 ? (
-              <Badge
-                count={`${cartItemCount} item${cartItemCount > 1 ? 's' : ''}`}
-                style={{ backgroundColor: colors.primary, fontWeight: 700, fontSize: 11 }}
-              />
-            ) : (
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>Empty</span>
-            )}
-          </Button>
-        )}
-
-        {/* Orders (Customer & Merchant) */}
-        {isLoggedIn && (
-          <Button
-            type="text"
-            icon={<OrderedListOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.orders ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.orders)}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>
-              {isMerchant ? 'Store Orders & Quotes' : 'My Orders & Quotes'}
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* My Profile & Addresses (for logged-in users) */}
-        {isLoggedIn && (
-          <Button
-            type="text"
-            icon={<UserOutlined style={{ fontSize: 17 }} />}
-            className={`drawer-nav-item ${currentPath === Routes.profile ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.profile)}
-          >
-            <span style={{ flex: 1, textAlign: 'left' }}>
-              {isMerchant ? 'Store & Profile Details' : 'My Profile & Addresses'}
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Delivery Partner Task Board (Customer/Driver) */}
-        {isLoggedIn && !isMerchant && (
-          <Button
-            type="text"
-            icon={<CarOutlined style={{ fontSize: 17, color: '#10b981' }} />}
-            className={`drawer-nav-item ${currentPath === Routes.deliveryPortal ? 'active' : ''}`}
-            onClick={() => handleNavigate(Routes.deliveryPortal)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 600, color: '#047857' }}>
-              Delivery Portal
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Direct Chat / Messages (for logged-in users) */}
-        {isLoggedIn && (
-          <Button
-            type="text"
-            icon={<ChatIcon style={{ fontSize: 17 }} />}
-            className="drawer-nav-item"
-            onClick={handleChatClick}
-          >
-            <span style={{ flex: 1, textAlign: 'left', display: 'flex', alignItems: 'center', gap: 8 }}>
-              Direct Chat / Messages
-              {unreadTotal > 0 && <Badge count={unreadTotal} size="small" />}
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Merchant: Preview Marketplace (Shopper View) */}
-        {isLoggedIn && isMerchant && (
-          <Button
-            type="text"
-            icon={<CompassOutlined style={{ fontSize: 17, color: '#64748b' }} />}
-            className="drawer-nav-item"
-            onClick={() => handleNavigate(Routes.app)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', color: '#64748b', fontSize: 13 }}>
-              Preview Market (Shopper View)
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Sell with Us (ONLY for unauthenticated guests) */}
-        {!isLoggedIn && (
-          <Button
-            type="text"
-            icon={<ShopOutlined style={{ fontSize: 17, color: '#059669' }} />}
-            className="drawer-nav-item"
-            style={{ color: '#059669' }}
-            onClick={() => handleNavigate(Routes.client)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 600 }}>
-              Sell on Rquest
-            </span>
-            <RightOutlined style={{ fontSize: 11, color: '#94a3b8' }} />
-          </Button>
-        )}
-
-        {/* Platform Admin Console (if Admin) */}
-        {isLoggedIn && (isAdmin || user_data?.role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' || user_data?.username === 'admin' || user_data?.username === 'root') && (
-          <Button
-            type="text"
-            icon={<SafetyCertificateOutlined style={{ fontSize: 17, color: colors.secondary }} />}
-            className={`drawer-nav-item ${currentPath === Routes.admin ? 'active' : ''}`}
-            style={{ color: colors.secondary }}
-            onClick={() => handleNavigate(Routes.admin)}
-          >
-            <span style={{ flex: 1, textAlign: 'left', fontWeight: 700 }}>
-              Platform Admin Console
-            </span>
-            <span
-              style={{
-                fontSize: 10,
-                background: colors.primaryLight,
-                color: colors.primary,
-                padding: '1px 6px',
-                borderRadius: 9999,
-                fontWeight: 700,
-              }}
-            >
-              Admin
-            </span>
-          </Button>
-        )}
-      </div>
-
-      {/* Bottom Drawer Actions */}
-      <div style={{ marginTop: 'auto', paddingTop: 12 }}>
+      <div className="drawer-footer">
         <Divider style={{ margin: '8px 0 12px 0' }} />
-
         {isLoggedIn ? (
           <Button
             type="text"
             danger
             block
             icon={<LogoutOutlined />}
-            style={{
-              height: 44,
-              borderRadius: 10,
-              fontWeight: 700,
-              justifyContent: 'flex-start',
-              padding: '0 14px',
-            }}
-            onClick={logout}
+            className="drawer-signout-btn"
+            onClick={signOut}
           >
-            Log Out ({user_data?.username || 'User'})
+            <span className="drawer-nav-label">
+              Sign out
+              <span className="drawer-signout-user"> ({user_data?.username || 'User'})</span>
+            </span>
           </Button>
         ) : (
           <div style={{ textAlign: 'center', padding: '4px 0' }}>
@@ -457,4 +380,3 @@ SideBar.propTypes = {
 };
 
 export default SideBar;
-

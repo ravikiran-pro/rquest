@@ -9,9 +9,17 @@ const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
 const notificationsRouter = require('./notifications');
 const aiRouter = require('./ai');
+const platformRouter = require('./platform');
+const { requireFeature } = require('../services/platformSettings');
 const { authMiddleware } = require('../auth');
 
 const router = express.Router();
+
+// Platform configuration (public GET, admin PUT) and the feature switches it controls
+router.use('/platform', platformRouter);
+router.post('/quotes', requireFeature('enable_quotes', { pauseInMaintenance: true }));
+router.post('/chat/create', requireFeature('enable_chat'));
+router.use('/ai', requireFeature('enable_ai_search'));
 
 router.use('/location', locationRouter);
 router.use('/shops', shopsRouter);

@@ -1,21 +1,526 @@
 /* Platform Admin Console Styles */
-.admin-console-container {
+
+/* ---------- Page shell ---------- */
+.admin-console {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
   font-family: var(--font-body, 'Inter', sans-serif);
 }
 
-.admin-header-title {
+.admin-console-header {
+  margin-bottom: 16px;
+}
+
+.admin-console-heading {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+}
+
+.admin-console .admin-console-title.ant-typography {
+  margin: 0;
   font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-size: 26px;
   font-weight: 800;
+  line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--text-main, #1c1c19);
 }
 
+.admin-console .admin-role-tag {
+  margin: 0;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: var(--primary-light, #e6f0ff);
+  color: var(--primary, #0b2d6b);
+  border-color: rgba(11, 45, 107, 0.2);
+}
+
+.admin-console-subtitle.ant-typography {
+  display: block;
+  margin-top: 4px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-muted, #444650);
+}
+
+.admin-console .admin-console-card {
+  border-radius: 16px;
+  border: 1px solid var(--border-color, #ebe7e0);
+  box-shadow: 0 2px 8px rgba(11, 45, 107, 0.03);
+  background: var(--surface, #ffffff);
+}
+
+.admin-console .admin-console-panel > .ant-card-body {
+  padding: 4px 24px 24px;
+}
+
+/* ---------- Section navigation ---------- */
+.admin-tabs > .ant-tabs-nav {
+  margin-bottom: 16px;
+}
+
+.admin-tabs > .ant-tabs-nav .ant-tabs-tab {
+  padding: 14px 12px;
+}
+
+.admin-tabs > .ant-tabs-nav .ant-tabs-tab + .ant-tabs-tab {
+  margin-left: 8px;
+}
+
+.admin-tab-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+}
+
+.admin-tabs .admin-tab-label .anticon,
+.admin-section-picker .admin-tab-label .anticon {
+  margin: 0;
+  color: inherit;
+}
+
+.admin-section-picker {
+  padding: 12px 0 14px;
+}
+
+.admin-section-picker .ant-select {
+  width: 100%;
+}
+
+.admin-section-desc.ant-typography {
+  display: block;
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.admin-section-loading {
+  padding: 8px 0;
+}
+
+.admin-subview-switch {
+  margin-bottom: 16px;
+}
+
+/* ---------- Shared toolbar: search, filters, actions ---------- */
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.admin-toolbar__search {
+  flex: 1 1 260px;
+  min-width: 0;
+  max-width: 440px;
+}
+
+.admin-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+/* Second row: filters on the left, result count on the right */
+.admin-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: -4px 0 16px;
+}
+
+.admin-filterbar > .ant-select {
+  width: 172px;
+}
+
+.admin-filterbar__summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+  font-size: 13px;
+  color: var(--text-muted, #444650);
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-filterbar__summary:empty {
+  display: none;
+}
+
+/* ---------- Shared surfaces ---------- */
+.admin-table-wrap {
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 12px;
+  overflow: hidden;
+  background: var(--surface, #ffffff);
+}
+
+.admin-state {
+  border: 1px dashed var(--border-color-dark, #c2c6d5);
+  border-radius: 12px;
+  background: var(--surface-container-low, #f7f3ee);
+  padding: 8px 16px;
+}
+
+.admin-state .ant-result {
+  padding: 24px 0;
+}
+
+.admin-state .ant-result-title {
+  font-size: 18px;
+  font-weight: 700;
+  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+}
+
+.admin-hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--text-muted, #444650);
+}
+
+.admin-hint code {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: var(--surface, #ffffff);
+  border: 1px solid var(--border-color, #ebe7e0);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 12px;
+  color: var(--text-main, #1c1c19);
+}
+
+/* Stacked record cards (phones) */
+.admin-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.admin-record-card {
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 12px;
+  background: var(--surface, #ffffff);
+  padding: 12px;
+  min-width: 0;
+}
+
+.admin-record-card__head {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.admin-record-card__body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.admin-record-card__title {
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text-main, #1c1c19);
+  overflow-wrap: anywhere;
+}
+
+.admin-record-card__meta {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-muted, #444650);
+  overflow-wrap: anywhere;
+}
+
+.admin-record-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.admin-record-card__chips .ant-tag {
+  margin: 0;
+}
+
+.admin-record-card__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--text-muted, #444650);
+}
+
+.admin-record-card__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color-light, #f1ede8);
+}
+
+.admin-record-card__actions > * {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.admin-record-card__actions .ant-btn {
+  width: 100%;
+  height: 40px;
+}
+
+.admin-card-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+}
+
+/* Status pill */
+.admin-status-tag.ant-tag {
+  margin: 0;
+  border-radius: 9999px;
+  padding: 1px 10px;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+/* Completeness meter */
+.admin-quality {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-quality__track {
+  position: relative;
+  width: 56px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--surface-container-high, #ebe8e3);
+  overflow: hidden;
+}
+
+.admin-quality__fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 9999px;
+}
+
+.admin-quality__value {
+  font-weight: 700;
+  color: var(--text-main, #1c1c19);
+  min-width: 22px;
+}
+
+/* Modals sized to the screen */
+.admin-modal .ant-modal-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.admin-modal .ant-modal-footer > .ant-btn {
+  margin: 0;
+}
+
+/* Image picker row inside forms */
+.admin-image-field {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.admin-image-field__input {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+/* ---------- Form schema builder (phones) ---------- */
+.schema-field-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.schema-field-card {
+  border: 1px solid var(--border-color, #ebe7e0);
+  border-radius: 12px;
+  background: var(--surface, #ffffff);
+  padding: 12px;
+}
+
+.schema-field-card--error {
+  border-color: var(--semantic-error-border, #fecaca);
+  background: #fffafa;
+}
+
+.schema-field-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.schema-field-card__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+  border-radius: 9999px;
+  background: var(--primary-light, #e6f0ff);
+  color: var(--primary, #0b2d6b);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.schema-field-card__controls {
+  display: flex;
+  gap: 6px;
+}
+
+.schema-field-card__controls .ant-btn {
+  width: 40px;
+  height: 40px;
+}
+
+.schema-field-card__grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.schema-field-card__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted, #444650);
+}
+
+.schema-field-card__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+}
+
+.schema-field-card__checks .ant-checkbox-wrapper {
+  min-height: 40px;
+  align-items: center;
+}
+
+.schema-builder-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+/* ---------- Orders & accounts (admin-ops) ---------- */
 .admin-orders-actions-col {
   text-align: right;
+}
+
+/* ---------- Breakpoints ---------- */
+@media (max-width: 991px) {
+  .admin-console {
+    padding: 20px 16px 40px;
+  }
 }
 
 @media (max-width: 767px) {
   .admin-orders-actions-col {
     text-align: left;
+  }
+}
+
+@media (max-width: 575px) {
+  .admin-console {
+    padding: 14px 12px 32px;
+  }
+
+  .admin-console .admin-console-title.ant-typography {
+    font-size: 21px;
+  }
+
+  .admin-console-subtitle.ant-typography {
+    font-size: 13px;
+  }
+
+  .admin-console .admin-console-panel > .ant-card-body {
+    padding: 0 12px 14px;
+  }
+
+  .admin-toolbar__search {
+    flex-basis: 100%;
+    max-width: none;
+  }
+
+  .admin-filterbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    margin-top: 0;
+  }
+
+  .admin-filterbar > .ant-select {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .admin-filterbar__summary {
+    grid-column: 1 / -1;
+    justify-content: space-between;
+    margin-left: 0;
+  }
+
+  .admin-toolbar__actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .admin-toolbar__actions .admin-toolbar__primary {
+    flex: 1 1 auto;
+  }
+
+  .admin-toolbar .ant-btn {
+    height: 40px;
+  }
+
+  .admin-modal .ant-modal-footer > .ant-btn {
+    flex: 1 1 auto;
+    height: 40px;
+  }
+
+  .schema-builder-bar > .ant-btn {
+    width: 100%;
+    height: 40px;
   }
 }

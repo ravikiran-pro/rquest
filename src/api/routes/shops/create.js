@@ -1,5 +1,10 @@
 const { shops, users, shop_listings } = require('../../models');
 const { sendPushNotification } = require('../../services/notificationService');
+const {
+  getSettings: getPlatformSettings,
+  shopRegistrationBlock,
+  isAdminRequest,
+} = require('../../services/platformSettings');
 
 async function parseGoogleMapsUrl(googleMapsUrl) {
   let latitude = null,
@@ -67,6 +72,14 @@ const createShops = async (req, res) => {
   try {
     const shopDetails = req.body;
     const { user_id } = req.headers;
+
+    // New shops only: Admin > Platform configuration can close registrations (admins exempt)
+    if (!shopDetails.shop_id && !isAdminRequest(req)) {
+      const block = shopRegistrationBlock(await getPlatformSettings());
+      if (block) {
+        return res.status(block.status).json(block.body);
+      }
+    }
 
     let existingShop = null;
     if (shopDetails.shop_id) {

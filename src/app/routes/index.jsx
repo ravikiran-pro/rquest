@@ -32,7 +32,8 @@ import {
 import { apiConfig, netWorkCall, checkUserRole, storageKeys } from '../utils';
 import { Badge, message, notification, Grid } from 'antd';
 import { MessageFilled } from '@ant-design/icons';
-import PrivateRoute from './privateroute';
+import PrivateRoute, { AdminRoute } from './privateroute';
+import { ROLE_HOME } from '../components/navbar/navConfig';
 
 // Configure global message and notification toast behavior
 message.config({
@@ -160,10 +161,12 @@ export default function AppRoutes() {
   const { user_data } = useGlobalStore((state) => state);
   // Chat FAB only from 992px (below that the bottom nav has Chat), signed in, chat closed
   const fabAllowed = !!(user_data?.user_id && !isChat && screens.lg);
-  const { isMerchant } = checkUserRole(user_data);
+  const { role } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.getItem(storageKeys.auth_token)
   );
+  // Signed-in visitors to /login or /register go to their role's home
+  const signedInHome = ROLE_HOME[role] || routes.app;
 
   const handleClose = () => {
     setdrawer(false);
@@ -253,7 +256,7 @@ export default function AppRoutes() {
           </Route>
           <Route exact path={routes.login}>
             {isLoggedIn ? (
-              <Redirect to={isMerchant ? routes.client : routes.app} />
+              <Redirect to={signedInHome} />
             ) : (
               <LoginScreen />
             )}
@@ -274,13 +277,23 @@ export default function AppRoutes() {
           </Route>
           <PrivateRoute path={routes.orders} component={OrdersScreen} />
           <PrivateRoute path={routes.profile} component={ProfileScreen} />
+          {/* Any signed-in user: there is no separate delivery role and the API accepts any user */}
           <PrivateRoute path={routes.deliveryPortal} component={DeliveryPortalScreen} />
-          <PrivateRoute path={routes.admin} component={AdminScreen} />
+          {/* Platform admins only; others are redirected to their home before the console renders */}
+          <AdminRoute path={routes.admin} component={AdminScreen} />
+          {/* Signed-in, not owner-only: shoppers open it to register their first store (?onboarding=shop) */}
           <PrivateRoute path={routes.client} component={ClientRegister} />
-          <PrivateRoute path={routes.clientShop} component={ClientRegister} />
+          {/* Legacy /client and /client?shop_id=… links (server notifications) */}
+          <Route
+            exact
+            path={routes.clientShop}
+            render={({ location }) => (
+              <Redirect to={{ pathname: routes.client, search: location.search }} />
+            )}
+          />
           <Route exact path={routes.register}>
             {isLoggedIn ? (
-              <Redirect to={isMerchant ? routes.client : routes.app} />
+              <Redirect to={signedInHome} />
             ) : (
               <RegisterScreen />
             )}

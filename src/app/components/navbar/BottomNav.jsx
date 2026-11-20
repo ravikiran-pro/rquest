@@ -7,165 +7,178 @@ import {
   OrderedListOutlined,
   ShoppingCartOutlined,
   UserOutlined,
+  SearchOutlined,
+  SafetyCertificateOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
-import { useGlobalStore, useChatStore, useCartStore } from '../../services';
+import { useChatStore, useCartStore } from '../../services';
 import Routes from '../../routes/routes';
-import { storageKeys, checkUserRole } from '../../utils';
+import { useNavSession, navMatch } from './navConfig';
 import './index.css';
 
+/**
+ * Fixed bottom navigation for phones and tablets (<= 991px). Items per role:
+ *   guest    Explore, Stores, Cart, Sign In
+ *   customer Explore, Stores, Chat, Orders, Account
+ *   owner    My stores, Orders, Chat, Account
+ *   admin    Console, Search, Chat, Account
+ * The rest of each role's menu (admin sections, delivery portal, sign out) is in the account
+ * drawer opened from the header avatar.
+ */
 const BottomNav = () => {
   const history = useHistory();
   const location = useLocation();
 
-  const { user_data } = useGlobalStore((state) => state);
+  const { navRole } = useNavSession();
   const { handleChatOpen, unreadTotal } = useChatStore((state) => state);
   const { cart, openCart } = useCartStore((state) => state);
 
-  const isLoggedIn = !!(
-    user_data?.user_id && sessionStorage?.[storageKeys.auth_token]
-  );
-  const { isMerchant } = checkUserRole(user_data);
   const cartItemCount =
     cart?.items?.reduce((acc, it) => acc + (it.quantity || 1), 0) || 0;
 
-  const currentPath = location.pathname;
-  const isAuthRoute =
-    currentPath === Routes.login || currentPath === Routes.register;
-
-  if (isAuthRoute) {
+  if (location.pathname === Routes.login || location.pathname === Routes.register) {
     return null;
   }
 
-  const isSearch =
-    currentPath === Routes.search ||
-    currentPath === '/search' ||
-    currentPath === '/app';
-  const isHome =
-    currentPath === Routes.home ||
-    currentPath === '/home';
-  const isShopsMode =
-    (isSearch || isHome) && new URLSearchParams(location.search).get('mode') === 'shops';
-  const isExplore = (isHome || isSearch) && !isShopsMode;
-  const isMerchantStores =
-    currentPath === Routes.client || currentPath === Routes.clientShop;
-  const isOrders = currentPath === Routes.orders;
-  const isProfile = currentPath === Routes.profile;
+  const go = (to) => () => history.push(to);
+
+  const chatItem = {
+    key: 'chat',
+    label: 'Chat',
+    Icon: ChatIcon,
+    badge: unreadTotal,
+    ariaLabel: unreadTotal > 0 ? `Chat, ${unreadTotal} unread` : 'Chat',
+    onClick: () => handleChatOpen(null, null),
+  };
+  const accountItem = {
+    key: 'account',
+    label: 'Account',
+    Icon: UserOutlined,
+    active: navMatch.profile(location),
+    onClick: go(Routes.profile),
+  };
+  const isHome = navMatch.home(location) && !navMatch.shops(location);
+  const exploreItem = {
+    key: 'explore',
+    label: 'Explore',
+    Icon: CompassOutlined,
+    active: navMatch.explore(location),
+    // Already on the home feed: jump back to the top instead of re-navigating
+    onClick: () => (isHome ? window.scrollTo({ top: 0, behavior: 'smooth' }) : history.push(Routes.home)),
+  };
+  const storesItem = {
+    key: 'stores',
+    label: 'Stores',
+    Icon: ShopOutlined,
+    active: navMatch.shops(location),
+    onClick: go(`${Routes.search}?mode=shops`),
+  };
+
+  let items;
+  switch (navRole) {
+    case 'admin':
+      items = [
+        {
+          key: 'console',
+          label: 'Console',
+          Icon: SafetyCertificateOutlined,
+          ariaLabel: 'Admin console',
+          active: navMatch.admin(location),
+          onClick: go(Routes.admin),
+        },
+        {
+          key: 'search',
+          label: 'Search',
+          Icon: SearchOutlined,
+          active: navMatch.search(location),
+          onClick: go(Routes.search),
+        },
+        chatItem,
+        accountItem,
+      ];
+      break;
+    case 'owner':
+      items = [
+        {
+          key: 'my-stores',
+          label: 'My stores',
+          Icon: ShopOutlined,
+          active: navMatch.myStores(location),
+          onClick: go(Routes.client),
+        },
+        {
+          key: 'orders',
+          label: 'Orders',
+          Icon: OrderedListOutlined,
+          ariaLabel: 'Orders and quotes',
+          active: navMatch.orders(location),
+          onClick: go(Routes.orders),
+        },
+        chatItem,
+        accountItem,
+      ];
+      break;
+    case 'user':
+      items = [
+        exploreItem,
+        storesItem,
+        chatItem,
+        {
+          key: 'orders',
+          label: 'Orders',
+          Icon: OrderedListOutlined,
+          active: navMatch.orders(location),
+          onClick: go(Routes.orders),
+        },
+        accountItem,
+      ];
+      break;
+    default:
+      items = [
+        exploreItem,
+        storesItem,
+        {
+          key: 'cart',
+          label: 'Cart',
+          Icon: ShoppingCartOutlined,
+          badge: cartItemCount,
+          ariaLabel: cartItemCount > 0 ? `Cart, ${cartItemCount} items` : 'Cart',
+          onClick: () => openCart(),
+        },
+        {
+          key: 'sign-in',
+          label: 'Sign In',
+          Icon: UserOutlined,
+          onClick: go(Routes.login),
+        },
+      ];
+  }
 
   return (
-    <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
-      {/* 1. Explore / Home */}
-      <button
-        type="button"
-        className={`mobile-nav-item ${isExplore ? 'active' : ''}`}
-        onClick={() => {
-          if (isHome) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-          } else {
-            history.push(Routes.home);
-          }
-        }}
-      >
-        <CompassOutlined className="mobile-nav-icon" />
-        <span className="mobile-nav-label">Explore</span>
-      </button>
-
-      {/* 2. Stores / Outlets (or Merchant Portal for store owners) */}
-      <button
-        type="button"
-        className={`mobile-nav-item ${
-          isLoggedIn && isMerchant
-            ? isMerchantStores
-              ? 'active'
-              : ''
-            : isShopsMode
-            ? 'active'
-              : ''
-        }`}
-        onClick={() => {
-          history.push(
-            isLoggedIn && isMerchant ? Routes.client : `${Routes.search}?mode=shops`
-          );
-        }}
-      >
-        <ShopOutlined className="mobile-nav-icon" />
-        <span className="mobile-nav-label">
-          {isLoggedIn && isMerchant ? 'My Stores' : 'Stores'}
-        </span>
-      </button>
-
-      {isLoggedIn ? (
-        <>
-          {/* 3. Direct Chat (Logged in only) */}
-          <button
-            type="button"
-            className="mobile-nav-item"
-            onClick={() => {
-              handleChatOpen(null, null);
-            }}
-          >
-            <Badge count={unreadTotal} size="small" offset={[4, -2]}>
-              <ChatIcon className="mobile-nav-icon" />
-            </Badge>
-            <span className="mobile-nav-label">Chat</span>
-          </button>
-
-          {/* 4. Orders (Logged in only) */}
-          <button
-            type="button"
-            className={`mobile-nav-item ${isOrders ? 'active' : ''}`}
-            onClick={() => {
-              history.push(Routes.orders);
-            }}
-          >
-            <OrderedListOutlined className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Orders</span>
-          </button>
-
-          {/* 5. Account */}
-          <button
-            type="button"
-            className={`mobile-nav-item ${isProfile ? 'active' : ''}`}
-            onClick={() => {
-              history.push(Routes.profile);
-            }}
-          >
-            <UserOutlined className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Account</span>
-          </button>
-        </>
-      ) : (
-        <>
-          {/* 3. Cart (Guests) */}
-          <button
-            type="button"
-            className="mobile-nav-item"
-            onClick={() => {
-              openCart();
-            }}
-          >
-            <Badge count={cartItemCount} size="small" offset={[4, -2]}>
-              <ShoppingCartOutlined className="mobile-nav-icon" />
-            </Badge>
-            <span className="mobile-nav-label">Cart</span>
-          </button>
-
-          {/* 4. Sign In (Guests) */}
-          <button
-            type="button"
-            className="mobile-nav-item"
-            onClick={() => {
-              history.push(Routes.login);
-            }}
-          >
-            <UserOutlined className="mobile-nav-icon" />
-            <span className="mobile-nav-label">Sign In</span>
-          </button>
-        </>
-      )}
+    <nav className="mobile-bottom-nav" aria-label="Main navigation">
+      {items.map(({ key, label, Icon, badge, ariaLabel, active, onClick }) => (
+        <button
+          key={key}
+          type="button"
+          className={`mobile-nav-item${active ? ' active' : ''}`}
+          aria-current={active ? 'page' : undefined}
+          aria-label={ariaLabel}
+          onClick={onClick}
+        >
+          <span className="mobile-nav-icon-wrap" aria-hidden="true">
+            {badge ? (
+              <Badge count={badge} size="small" overflowCount={99} offset={[6, -2]}>
+                <Icon className="mobile-nav-icon" />
+              </Badge>
+            ) : (
+              <Icon className="mobile-nav-icon" />
+            )}
+          </span>
+          <span className="mobile-nav-label">{label}</span>
+        </button>
+      ))}
     </nav>
   );
 };
 
 export default BottomNav;
-

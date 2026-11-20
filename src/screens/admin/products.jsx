@@ -1,29 +1,24 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import DataTable from '../../app/components/datatable';
 import { message } from 'antd';
 import { apiConfig, netWorkCall } from '../../app/utils';
+import MasterRecords from './master_records';
 
-const Products = ({
-  category_id = null,
-  sub_category_id = null
-}) => {
+const PAGE_SIZE = 10;
 
-  console.log('category_id', category_id)
-  console.log('sub_category_id', sub_category_id)
+const Products = ({ category_id = null, sub_category_id = null }) => {
   const [rows, setRows] = useState([]);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: 7, total: 0 });
-
-  const columns = [
-    { key: "name", title: "Name" },
-    { key: "img_url", title: "Image" },
-    { key: "description", title: "Description" },
-    { key: "createdBy", title: "Created By" },
-    { key: "is_active", title: "Active" },
-    { key: "action", title: "Action" },
-  ];
+  const [pagination, setPagination] = useState({ current: 1, pageSize: PAGE_SIZE, total: 0 });
+  const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [error, setError] = useState(null);
+  const requestId = useRef(0);
+  // The server only creates products inside a subcategory
+  const canAdd = sub_category_id !== null && sub_category_id >= 0;
 
   const fetchInitData = async (current = 1) => {
+    const id = ++requestId.current;
+    setLoading(true);
     try {
       const response = await netWorkCall(
         apiConfig.master_products,
@@ -31,30 +26,39 @@ const Products = ({
         JSON.stringify({
           category_id: category_id,
           sub_category_id: sub_category_id,
-          limit: pagination.pageSize,
-          offset: (current - 1) * pagination.pageSize,
+          limit: PAGE_SIZE,
+          offset: (current - 1) * PAGE_SIZE,
         }),
         true
       );
-
-      setPagination({
-        ...pagination,
-        current,
-        total: response?.count || 0,
-      });
-      setRows(response.data || []);
-    } catch (error) {
-      console.error('Error fetching data:', error);
+      if (id !== requestId.current) return;
+      if (response?.success === false || !Array.isArray(response?.data)) {
+        setError(response?.error || response?.message || 'The server did not return the product list.');
+        return;
+      }
+      const total = response?.count || 0;
+      if (response.data.length === 0 && current > 1 && total > 0) {
+        fetchInitData(Math.max(1, Math.ceil(total / PAGE_SIZE)));
+        return;
+      }
+      setError(null);
+      setPagination({ current, pageSize: PAGE_SIZE, total });
+      setRows(response.data);
+    } catch (err) {
+      if (id !== requestId.current) return;
+      console.error('Error fetching data:', err);
+      setError('Could not reach the server. Check your connection and try again.');
+    } finally {
+      if (id === requestId.current) {
+        setLoading(false);
+        setLoaded(true);
+      }
     }
-  };
-
-  const handleTableChange = (pag) => {
-    fetchInitData(pag.current);
   };
 
   const handleDelete = async (record) => {
     try {
-      let res = await netWorkCall(
+      const res = await netWorkCall(
         apiConfig.master_products_delete,
         'DELETE',
         JSON.stringify({
@@ -62,44 +66,45 @@ const Products = ({
         }),
         true
       );
-
-      // Update the local state
+      if (!res?.success) {
+        message.error(res?.error || 'Could not delete the product');
+        return;
+      }
+      message.success('Product deleted');
       fetchInitData(pagination.current);
-
-      // Show success message
-      message.success(res.message);
-    } catch (error) {
-      console.error('Error updating category status:', error);
-      message.error('Failed to update category status');
-    }
-  }
-
-  const handleStatusChange = async ({ category_id, is_active }) => {
-    try {
-      await netWorkCall(
-        apiConfig.master_products_stauts,
-        'PUT',
-        JSON.stringify({
-          product_id: category_id,
-          is_active
-        }),
-        true
-      );
-
-      // Update the local state
-      fetchInitData(pagination.current);
-
-      // Show success message
-      message.success('Product status updated successfully');
-    } catch (error) {
-      console.error('Error updating product status:', error);
-      message.error('Failed to update product status');
+    } catch (err) {
+      console.error('Error deleting product:', err);
+      message.error('Could not delete the product');
     }
   };
 
+  const handleStatusChange = async (record, is_active) => {
+    try {
+      const res = await netWorkCall(
+        apiConfig.master_products_stauts,
+        'PUT',
+        JSON.stringify({
+          product_id: record.id,
+          is_active,
+        }),
+        true
+      );
+      if (!res?.success) {
+        message.error(res?.error || 'Could not update the product status');
+        return;
+      }
+      setRows((prev) => prev.map((row) => (row.id === record.id ? { ...row, is_active } : row)));
+      message.success(is_active ? 'Product is active' : 'Product is inactive');
+    } catch (err) {
+      console.error('Error updating product status:', err);
+      message.error('Could not update the product status');
+    }
+  };
+
+  /** Resolves true when saved, so the form closes. */
   const handleRowChange = async ({ id, name, img_url, description, is_active }) => {
     try {
-      await netWorkCall(
+      const res = await netWorkCall(
         apiConfig.master_products_create,
         'POST',
         JSON.stringify({
@@ -109,19 +114,21 @@ const Products = ({
           name: name,
           img_url: img_url,
           description: description,
-          is_active: is_active,
+          is_active: is_active ?? true,
         }),
         true
       );
-
-      // Update the local state
-      fetchInitData(pagination.current);
-
-      // Show success message
-      message.success('Product saved successfully');
-    } catch (error) {
-      console.error('Error saving product:', error);
+      if (!res?.success) {
+        message.error(res?.error || 'Failed to save product');
+        return false;
+      }
+      fetchInitData(id >= 0 ? pagination.current : 1);
+      message.success(res.message || 'Product saved');
+      return true;
+    } catch (err) {
+      console.error('Error saving product:', err);
       message.error('Failed to save product');
+      return false;
     }
   };
 
@@ -130,23 +137,25 @@ const Products = ({
   }, [category_id, sub_category_id]);
 
   return (
-    <>
-      <DataTable
-        rows={rows}
-        pagination={pagination}
-        columns={columns}
-        initRow={{
-          name: '',
-          img_url: '',
-          is_active: true
-        }}
-        isAddNew={sub_category_id !== null && sub_category_id >= 0}
-        handleTableChange={handleTableChange}
-        handleStatusChange={handleStatusChange}
-        handleRowChange={handleRowChange}
-        handleDelete={handleDelete}
-      />
-    </>
+    <MasterRecords
+      noun="product"
+      nounPlural="products"
+      rows={rows}
+      total={pagination.total}
+      page={pagination.current}
+      pageSize={PAGE_SIZE}
+      loading={loading}
+      loaded={loaded}
+      error={error}
+      onPageChange={fetchInitData}
+      onReload={() => fetchInitData(pagination.current)}
+      onSave={handleRowChange}
+      onToggleActive={handleStatusChange}
+      onDelete={handleDelete}
+      canAdd={canAdd}
+      addDisabledReason="Legacy products are added inside a subcategory. Use the master catalog for new items."
+      withDescription
+    />
   );
 };
 

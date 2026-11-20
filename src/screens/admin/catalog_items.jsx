@@ -18,6 +18,11 @@ import {
   Flex,
   Upload,
   Descriptions,
+  Empty,
+  Result,
+  Pagination,
+  Skeleton,
+  Grid,
   message,
 } from 'antd';
 import {
@@ -29,24 +34,61 @@ import {
   ReloadOutlined,
   UploadOutlined,
   SafetyCertificateOutlined,
+  CheckCircleOutlined,
+  ExclamationCircleOutlined,
+  StopOutlined,
+  MinusCircleOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
-import { apiConfig, config, netWorkCall } from '../../app/utils';
+import { apiConfig, config, storageKeys } from '../../app/utils';
 import { colors, typography, radii } from '../../app/styles/theme';
 
 const { Text } = Typography;
-
-const STATUS_COLORS = {
-  verified: 'green',
-  ready: 'blue',
-  incomplete: 'orange',
-  rejected: 'red',
-};
 
 const STATUS_HELP = {
   verified: 'Checked by a person. Pipeline re-runs never change it.',
   ready: 'Complete enough for merchants. Pipeline re-runs may update it.',
   incomplete: 'Missing brand, category or quantity. Not offered to merchants.',
   rejected: 'Removed or marked as a duplicate.',
+  removed: 'Hidden from merchants. Restore it to offer it again.',
+};
+
+const STATUS_META = {
+  verified: {
+    label: 'Verified',
+    icon: <SafetyCertificateOutlined />,
+    color: colors.semantic.successHover,
+    bg: colors.semantic.successLight,
+    border: colors.semantic.successBorder,
+  },
+  ready: {
+    label: 'Ready',
+    icon: <CheckCircleOutlined />,
+    color: colors.semantic.info,
+    bg: colors.semantic.infoLight,
+    border: colors.semantic.infoBorder,
+  },
+  incomplete: {
+    label: 'Incomplete',
+    icon: <ExclamationCircleOutlined />,
+    color: colors.tertiary,
+    bg: colors.semantic.warningLight,
+    border: colors.semantic.warningBorder,
+  },
+  rejected: {
+    label: 'Rejected',
+    icon: <StopOutlined />,
+    color: colors.semantic.error,
+    bg: colors.semantic.errorLight,
+    border: colors.semantic.errorBorder,
+  },
+  removed: {
+    label: 'Removed',
+    icon: <MinusCircleOutlined />,
+    color: colors.textMuted,
+    bg: colors.surfaceContainer,
+    border: colors.border,
+  },
 };
 
 const SOURCE_LABELS = {
@@ -56,7 +98,11 @@ const SOURCE_LABELS = {
   admin: 'Admin',
 };
 
+const KIND_LABELS = { product: 'Product', service: 'Service' };
+
 const PAGE_SIZE = 20;
+const DEFAULT_FILTERS = { search: '', source: '', status: '', kind: '', active: 'true' };
+const MIGRATE_COMMAND = 'npm run catalog:migrate';
 
 const qs = (params) =>
   Object.entries(params)
@@ -64,12 +110,43 @@ const qs = (params) =>
     .map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
     .join('&');
 
+/**
+ * Same request as netWorkCall (same URL, headers and body), but it keeps the HTTP status
+ * and survives a body that is not JSON, so the screen can tell "catalog not set up" (503)
+ * and proxy errors apart from an ordinary failure.
+ */
+const callApi = async (endpoint, method = 'GET', payload) => {
+  const headers = { 'Content-Type': 'application/json' };
+  const token =
+    sessionStorage.getItem(storageKeys.auth_token) || localStorage.getItem(storageKeys.auth_token);
+  if (token) headers.Authorization = `Bearer ${token}`;
+
+  const response = await fetch(`${config.api_url}/api/v1/${endpoint}`, { method, headers, body: payload });
+  let data = null;
+  try {
+    data = await response.json();
+  } catch (error) {
+    data = null;
+  }
+  if (!data || typeof data !== 'object') {
+    data = {
+      success: false,
+      error: `The server answered ${response.status}${response.statusText ? ` ${response.statusText}` : ''}`,
+    };
+  }
+  if (!response.ok && data.success === undefined) data.success = false;
+  return { ...data, httpStatus: response.status };
+};
+
 const getJson = (endpoint, params = {}) => {
   const query = qs(params);
-  return netWorkCall(query ? `${endpoint}?${query}` : endpoint, 'GET', undefined, true);
+  return callApi(query ? `${endpoint}?${query}` : endpoint, 'GET');
 };
 
 const itemPath = (id) => `${apiConfig.catalog_items}/${encodeURIComponent(id)}`;
+
+const isNotSetUp = (res) =>
+  res?.httpStatus === 503 || /not (been )?set up|catalog:migrate/i.test(res?.error || '');
 
 const formatQty = (r) => {
   if (r.net_quantity === null || r.net_quantity === undefined) return r.quantity_text || '—';
@@ -77,6 +154,82 @@ const formatQty = (r) => {
   if (r.unit === 'g' && n >= 1000) return `${n / 1000} kg`;
   if (r.unit === 'ml' && n >= 1000) return `${n / 1000} l`;
   return `${n} ${r.unit}`;
+};
+
+const itemSubtitle = (r) =>
+  [r.brand_name, r.gtin ? `GTIN ${r.gtin.replace(/^0+(?=\d{8,})/, '')}` : null].filter(Boolean).join(' · ') || r.id;
+
+/** Status pill: "Removed" wins over the pipeline status for inactive items. */
+const StatusTag = ({ status, active }) => {
+  const key = active === false ? 'removed' : status;
+  const meta = STATUS_META[key] || { label: key || 'Unknown', color: colors.textMuted, bg: colors.surfaceContainer, border: colors.border };
+  return (
+    <Tooltip title={STATUS_HELP[key]}>
+      <Tag
+        className="admin-status-tag"
+        icon={meta.icon}
+        style={{ color: meta.color, background: meta.bg, borderColor: meta.border }}
+      >
+        {meta.label}
+      </Tag>
+    </Tooltip>
+  );
+};
+
+StatusTag.propTypes = {
+  status: PropTypes.string,
+  active: PropTypes.bool,
+};
+
+const QUALITY_HELP =
+  'Completeness out of 100: name 25, brand 15, quantity 15, category 15, barcode 15, image 10, diet tag 5. Items need 70+ with a name, brand and category to be ready for merchants.';
+
+/** 0–100 completeness score as a number plus a short bar. */
+const QualityMeter = ({ score }) => {
+  if (score === null || score === undefined || Number.isNaN(Number(score))) {
+    return <Text type="secondary">—</Text>;
+  }
+  const value = Math.max(0, Math.min(100, Math.round(Number(score))));
+  const tone =
+    value >= 70 ? colors.semantic.success : value >= 40 ? colors.semantic.warning : colors.semantic.error;
+  return (
+    <Tooltip title={QUALITY_HELP}>
+      <span className="admin-quality" aria-label={`Quality ${value} out of 100`}>
+        <span className="admin-quality__value">{value}</span>
+        <span className="admin-quality__track" aria-hidden="true">
+          <span className="admin-quality__fill" style={{ width: `${value}%`, background: tone }} />
+        </span>
+      </span>
+    </Tooltip>
+  );
+};
+
+QualityMeter.propTypes = {
+  score: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+};
+
+const TaxCell = ({ record: r }) =>
+  r.effective_hsn ? (
+    <Tooltip
+      title={`${r.hsn_basis === 'item' ? 'Set on this item' : 'Category default'}${
+        r.gst_rate_verified ? ' · rate verified' : ' · rate unverified'
+      }`}
+    >
+      <span style={{ whiteSpace: 'nowrap' }}>
+        HSN {r.effective_hsn}
+        {r.gst_rate !== null && r.gst_rate !== undefined && (
+          <Tag style={{ marginLeft: 6, marginRight: 0 }} color={r.gst_rate_verified ? 'green' : 'default'}>
+            {Number(r.gst_rate)}% GST
+          </Tag>
+        )}
+      </span>
+    </Tooltip>
+  ) : (
+    <Text type="secondary">No HSN</Text>
+  );
+
+TaxCell.propTypes = {
+  record: PropTypes.object.isRequired,
 };
 
 /** Select backed by a search endpoint (debounced). */
@@ -92,6 +245,8 @@ const RemoteSelect = ({ endpoint, mapOption, initialOption, value, onChange, pla
       try {
         const res = await getJson(endpoint, { search: term });
         setOptions((res?.data || []).map(mapOption));
+      } catch (error) {
+        setOptions([]);
       } finally {
         setLoading(false);
       }
@@ -117,6 +272,7 @@ const RemoteSelect = ({ endpoint, mapOption, initialOption, value, onChange, pla
       placeholder={placeholder}
       notFoundContent={loading ? 'Searching…' : 'Type to search'}
       optionLabelProp="label"
+      popupMatchSelectWidth
     />
   );
 };
@@ -136,8 +292,12 @@ const BrandInput = ({ value, onChange }) => {
   const search = (term) => {
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => {
-      const res = await getJson(apiConfig.catalog_brands, { search: term });
-      setOptions((res?.data || []).map((b) => ({ value: b.name })));
+      try {
+        const res = await getJson(apiConfig.catalog_brands, { search: term });
+        setOptions((res?.data || []).map((b) => ({ value: b.name })));
+      } catch (error) {
+        setOptions([]);
+      }
     }, 300);
   };
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -158,15 +318,17 @@ BrandInput.propTypes = {
   onChange: PropTypes.func,
 };
 
-const ItemModal = ({ open, item, onClose, onSaved }) => {
+const ItemModal = ({ open, item, onClose, onSaved, isPhone }) => {
   const [form] = Form.useForm();
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [details, setDetails] = useState(null);
   const isEdit = Boolean(item && item.id);
   const imageUrl = Form.useWatch('image_url', form);
 
   useEffect(() => {
-    if (!open) return;
+    if (!open) return undefined;
+    let cancelled = false;
     setDetails(null);
     form.resetFields();
     if (isEdit) {
@@ -174,7 +336,7 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
         name: item.name,
         kind: item.kind,
         brand: item.brand_name || '',
-        net_quantity: item.net_quantity !== null ? Number(item.net_quantity) : null,
+        net_quantity: item.net_quantity !== null && item.net_quantity !== undefined ? Number(item.net_quantity) : null,
         unit: item.unit,
         quantity_text: item.quantity_text,
         taxonomy_node_id: item.taxonomy_node_id,
@@ -184,13 +346,21 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
         image_url: item.image_url,
         status: item.status === 'incomplete' || item.status === 'ready' ? 'verified' : item.status,
       });
-      getJson(itemPath(item.id)).then((res) => res?.success && setDetails(res.data));
+      getJson(itemPath(item.id))
+        .then((res) => {
+          if (!cancelled && res?.success) setDetails(res.data);
+        })
+        .catch(() => {});
     } else {
       form.setFieldsValue({ kind: 'product', status: 'verified' });
     }
+    return () => {
+      cancelled = true;
+    };
   }, [open, item]);
 
   const onImageUpload = async (file) => {
+    setUploading(true);
     try {
       const formData = new FormData();
       formData.append('fileData', file);
@@ -204,12 +374,19 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
       else message.error('Image upload failed');
     } catch (error) {
       message.error('Image upload failed');
+    } finally {
+      setUploading(false);
     }
     return false;
   };
 
   const submit = async () => {
-    const values = await form.validateFields();
+    let values;
+    try {
+      values = await form.validateFields();
+    } catch (error) {
+      return; // the form shows what to fix
+    }
     const payload = {
       ...values,
       net_quantity: values.net_quantity ?? null,
@@ -218,11 +395,10 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
     if (isEdit) delete payload.gtin;
     setSaving(true);
     try {
-      const res = await netWorkCall(
+      const res = await callApi(
         isEdit ? itemPath(item.id) : apiConfig.catalog_items,
         isEdit ? 'PUT' : 'POST',
-        JSON.stringify(payload),
-        true
+        JSON.stringify(payload)
       );
       if (!res?.success) {
         message.error(res?.error || 'Could not save the item');
@@ -241,56 +417,68 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
     isEdit && item.taxonomy_node_id
       ? { value: item.taxonomy_node_id, label: item.category_path || item.taxonomy_node_id }
       : null;
-  const hsnOption =
-    isEdit && item.hsn_code ? { value: item.hsn_code, label: item.hsn_code } : null;
+  const hsnOption = isEdit && item.hsn_code ? { value: item.hsn_code, label: item.hsn_code } : null;
 
   return (
     <Modal
       open={open}
+      className="admin-modal"
       title={isEdit ? 'Edit catalog item' : 'Add catalog item'}
       onCancel={onClose}
       onOk={submit}
       okText={isEdit ? 'Save changes' : 'Create item'}
       confirmLoading={saving}
-      width={720}
+      okButtonProps={{ disabled: uploading }}
+      width="min(720px, calc(100vw - 24px))"
+      style={{ top: isPhone ? 12 : 48, maxWidth: 'calc(100vw - 24px)', paddingBottom: 12 }}
+      maskClosable={!saving}
       forceRender
     >
       {isEdit && (
-        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 12 }}>
-          {item.id} · from {SOURCE_LABELS[item.primary_source] || item.primary_source}. Saving
-          marks the item as checked by a person, so pipeline re-runs will not overwrite your edits.
+        <Text type="secondary" style={{ display: 'block', marginBottom: 12, fontSize: 12, overflowWrap: 'anywhere' }}>
+          {item.id} · from {SOURCE_LABELS[item.primary_source] || item.primary_source}. Saving marks the item as
+          checked by a person, so pipeline re-runs will not overwrite your edits.
         </Text>
       )}
       <Form form={form} layout="vertical" requiredMark="optional">
         <Flex gap={12} wrap="wrap">
-          <Form.Item name="name" label="Name" style={{ flex: '2 1 280px' }} rules={[{ required: true, whitespace: true, message: 'Name is required' }]}>
+          <Form.Item
+            name="name"
+            label="Name"
+            style={{ flex: '2 1 260px', minWidth: 0 }}
+            rules={[{ required: true, whitespace: true, message: 'Name is required' }]}
+          >
             <Input />
           </Form.Item>
-          <Form.Item name="kind" label="Type" style={{ flex: '1 1 140px' }}>
+          <Form.Item name="kind" label="Type" style={{ flex: '1 1 140px', minWidth: 0 }}>
             <Select options={[{ value: 'product', label: 'Product' }, { value: 'service', label: 'Service' }]} />
           </Form.Item>
         </Flex>
         <Flex gap={12} wrap="wrap">
-          <Form.Item name="brand" label="Brand" style={{ flex: '1 1 240px' }}>
+          <Form.Item name="brand" label="Brand" style={{ flex: '1 1 220px', minWidth: 0 }}>
             <BrandInput />
           </Form.Item>
           <Form.Item
             name="gtin"
             label="Barcode (GTIN / EAN)"
-            style={{ flex: '1 1 200px' }}
+            style={{ flex: '1 1 200px', minWidth: 0 }}
             tooltip="Set when the item is created; it becomes the item's identity."
           >
-            {isEdit ? <Input disabled placeholder={item.gtin || 'No barcode'} /> : <Input placeholder="8, 12, 13 or 14 digits" />}
+            {isEdit ? (
+              <Input disabled placeholder={item.gtin || 'No barcode'} />
+            ) : (
+              <Input inputMode="numeric" placeholder="8, 12, 13 or 14 digits" />
+            )}
           </Form.Item>
         </Flex>
         <Flex gap={12} wrap="wrap">
-          <Form.Item name="net_quantity" label="Net quantity" style={{ flex: '1 1 140px' }}>
+          <Form.Item name="net_quantity" label="Net quantity" style={{ flex: '1 1 120px', minWidth: 0 }}>
             <InputNumber min={0} style={{ width: '100%' }} placeholder="e.g. 500" />
           </Form.Item>
           <Form.Item
             name="unit"
             label="Unit"
-            style={{ flex: '1 1 120px' }}
+            style={{ flex: '1 1 120px', minWidth: 0 }}
             dependencies={['net_quantity']}
             rules={[
               ({ getFieldValue }) => ({
@@ -299,9 +487,16 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
               }),
             ]}
           >
-            <Select allowClear options={[{ value: 'g', label: 'grams (g)' }, { value: 'ml', label: 'millilitres (ml)' }, { value: 'pc', label: 'pieces (pc)' }]} />
+            <Select
+              allowClear
+              options={[
+                { value: 'g', label: 'grams (g)' },
+                { value: 'ml', label: 'millilitres (ml)' },
+                { value: 'pc', label: 'pieces (pc)' },
+              ]}
+            />
           </Form.Item>
-          <Form.Item name="quantity_text" label="Pack label" style={{ flex: '1 1 160px' }}>
+          <Form.Item name="quantity_text" label="Pack label" style={{ flex: '1 1 160px', minWidth: 0 }}>
             <Input placeholder="e.g. 2 x 200 ml" />
           </Form.Item>
         </Flex>
@@ -317,7 +512,7 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
           <Form.Item
             name="hsn_code"
             label="HSN / SAC code"
-            style={{ flex: '2 1 280px' }}
+            style={{ flex: '2 1 260px', minWidth: 0 }}
             tooltip="Leave empty to use the category's default HSN."
           >
             <RemoteSelect
@@ -331,7 +526,12 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
               })}
             />
           </Form.Item>
-          <Form.Item name="country_of_origin" label="Country (ISO)" style={{ flex: '1 1 110px' }} rules={[{ pattern: /^[A-Za-z]{2}$/, message: '2 letters, e.g. IN' }]}>
+          <Form.Item
+            name="country_of_origin"
+            label="Country (ISO)"
+            style={{ flex: '1 1 110px', minWidth: 0 }}
+            rules={[{ pattern: /^[A-Za-z]{2}$/, message: '2 letters, e.g. IN' }]}
+          >
             <Input maxLength={2} placeholder="IN" />
           </Form.Item>
         </Flex>
@@ -339,15 +539,25 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
           <Input />
         </Form.Item>
         <Form.Item label="Image">
-          <Flex gap={12} align="center">
-            <Avatar shape="square" size={56} src={imageUrl || undefined} icon={!imageUrl ? <PictureOutlined /> : undefined} />
-            <Form.Item name="image_url" noStyle>
-              <Input placeholder="https://…" />
-            </Form.Item>
+          <div className="admin-image-field">
+            <Avatar
+              shape="square"
+              size={56}
+              src={imageUrl || undefined}
+              icon={!imageUrl ? <PictureOutlined /> : undefined}
+              style={{ background: colors.primaryLight, color: colors.primary, flexShrink: 0 }}
+            />
+            <div className="admin-image-field__input">
+              <Form.Item name="image_url" noStyle>
+                <Input placeholder="https://…" aria-label="Image URL" />
+              </Form.Item>
+            </div>
             <Upload beforeUpload={onImageUpload} showUploadList={false} accept="image/*">
-              <Button icon={<UploadOutlined />}>Upload</Button>
+              <Button icon={<UploadOutlined />} loading={uploading}>
+                Upload
+              </Button>
             </Upload>
-          </Flex>
+          </div>
         </Form.Item>
         <Form.Item name="status" label="Status" tooltip={STATUS_HELP.verified}>
           <Select
@@ -363,14 +573,22 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
       {isEdit && details && (
         <Descriptions size="small" column={1} bordered style={{ marginTop: 8 }}>
           <Descriptions.Item label="Effective HSN">
-            {details.effective_hsn || '—'} {details.hsn_basis ? <Text type="secondary">({details.hsn_basis.replace('_', ' ')})</Text> : null}
+            {details.effective_hsn || '—'}{' '}
+            {details.hsn_basis ? <Text type="secondary">({details.hsn_basis.replace('_', ' ')})</Text> : null}
           </Descriptions.Item>
           <Descriptions.Item label="Suggested GST">
             {details.gst_rate !== null && details.gst_rate !== undefined ? `${Number(details.gst_rate)}%` : '—'}{' '}
             {details.gst_rate !== null && details.gst_rate !== undefined && (
-              <Tag color={details.gst_rate_verified ? 'green' : 'default'}>{details.gst_rate_verified ? 'verified' : 'unverified'}</Tag>
+              <Tag color={details.gst_rate_verified ? 'green' : 'default'}>
+                {details.gst_rate_verified ? 'verified' : 'unverified'}
+              </Tag>
             )}
           </Descriptions.Item>
+          {details.quality_score !== undefined && details.quality_score !== null && (
+            <Descriptions.Item label="Quality">
+              <QualityMeter score={details.quality_score} />
+            </Descriptions.Item>
+          )}
           <Descriptions.Item label="Sources">
             {(details.sources || []).length
               ? details.sources.map((s) => (
@@ -379,7 +597,9 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
                     {s.source_url && (
                       <>
                         {' · '}
-                        <a href={s.source_url} target="_blank" rel="noreferrer">link</a>
+                        <a href={s.source_url} target="_blank" rel="noreferrer">
+                          link
+                        </a>
                       </>
                     )}
                   </div>
@@ -389,7 +609,9 @@ const ItemModal = ({ open, item, onClose, onSaved }) => {
           {(details.reviews || []).length > 0 && (
             <Descriptions.Item label="Open review">
               {details.reviews.map((r) => (
-                <Tag key={r.id} color="orange">{r.kind.replace(/_/g, ' ')}</Tag>
+                <Tag key={r.id} color="orange">
+                  {r.kind.replace(/_/g, ' ')}
+                </Tag>
               ))}
             </Descriptions.Item>
           )}
@@ -421,22 +643,49 @@ ItemModal.propTypes = {
   }),
   onClose: PropTypes.func.isRequired,
   onSaved: PropTypes.func.isRequired,
+  isPhone: PropTypes.bool,
+};
+
+const ItemAvatar = ({ record, size }) => (
+  <Avatar
+    shape="square"
+    size={size}
+    src={record.image_url || undefined}
+    icon={!record.image_url ? <PictureOutlined /> : undefined}
+    alt=""
+    style={{ background: colors.primaryLight, color: colors.primary, flexShrink: 0, borderRadius: radii.md }}
+  />
+);
+
+ItemAvatar.propTypes = {
+  record: PropTypes.object.isRequired,
+  size: PropTypes.number,
 };
 
 const CatalogItems = () => {
+  const screens = Grid.useBreakpoint();
+  const isPhone = screens.md === false;
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loadError, setLoadError] = useState(null);
   const [meta, setMeta] = useState(null);
-  const [filters, setFilters] = useState({ search: '', source: '', status: '', kind: '', active: 'true' });
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [searchDraft, setSearchDraft] = useState('');
   const [modal, setModal] = useState({ open: false, item: null });
+  const [busyId, setBusyId] = useState(null);
+  const requestId = useRef(0);
 
   const loadMeta = () =>
-    getJson(apiConfig.catalog_meta).then((res) => res?.success && setMeta(res.data));
+    getJson(apiConfig.catalog_meta)
+      .then((res) => res?.success && setMeta(res.data))
+      .catch(() => {});
 
   const load = useCallback(
     async (nextPage = page) => {
+      const id = ++requestId.current;
       setLoading(true);
       try {
         const res = await getJson(apiConfig.catalog_items, {
@@ -444,17 +693,36 @@ const CatalogItems = () => {
           limit: PAGE_SIZE,
           offset: (nextPage - 1) * PAGE_SIZE,
         });
+        if (id !== requestId.current) return; // a newer request owns the screen
         if (!res?.success) {
-          message.error(res?.error || 'Could not load the catalog');
+          setLoadError({
+            notSetUp: isNotSetUp(res),
+            message: res?.error || res?.message || 'Could not load the catalog',
+          });
           return;
         }
-        setRows(res.data || []);
-        setTotal(res.count || 0);
+        const data = res.data || [];
+        const count = res.count || 0;
+        // The page emptied (e.g. its last item was removed): show the last page that has items
+        if (data.length === 0 && nextPage > 1 && count > 0) {
+          const lastPage = Math.max(1, Math.ceil(count / PAGE_SIZE));
+          if (lastPage < nextPage) {
+            load(lastPage);
+            return;
+          }
+        }
+        setLoadError(null);
+        setRows(data);
+        setTotal(count);
         setPage(nextPage);
       } catch (error) {
-        message.error('Could not load the catalog');
+        if (id !== requestId.current) return;
+        setLoadError({ notSetUp: false, message: 'Could not reach the server. Check your connection and try again.' });
       } finally {
-        setLoading(false);
+        if (id === requestId.current) {
+          setLoading(false);
+          setLoaded(true);
+        }
       }
     },
     [filters, page]
@@ -470,36 +738,98 @@ const CatalogItems = () => {
 
   const setFilter = (key, value) => setFilters((prev) => ({ ...prev, [key]: value || '' }));
 
-  const removeItem = async (record) => {
-    const res = await netWorkCall(itemPath(record.id), 'DELETE', undefined, true);
-    if (!res?.success) return message.error(res?.error || 'Could not remove the item');
-    message.success(res.message);
+  const hasFilters =
+    Boolean(filters.search || filters.source || filters.status || filters.kind) || filters.active !== 'true';
+
+  const clearFilters = () => {
+    setSearchDraft('');
+    setFilters(DEFAULT_FILTERS);
+  };
+
+  const reload = () => {
     load(page);
     loadMeta();
   };
 
-  const restoreItem = async (record) => {
-    const res = await netWorkCall(`${itemPath(record.id)}/restore`, 'POST', undefined, true);
-    if (!res?.success) return message.error(res?.error || 'Could not restore the item');
-    message.success(res.message);
-    load(page);
-    loadMeta();
+  const mutate = async (record, request, fallbackError) => {
+    setBusyId(record.id);
+    try {
+      const res = await request();
+      if (!res?.success) {
+        message.error(res?.error || fallbackError);
+        return;
+      }
+      message.success(res.message || 'Done');
+      load(page);
+      loadMeta();
+    } catch (error) {
+      message.error(fallbackError);
+    } finally {
+      setBusyId(null);
+    }
   };
+
+  const removeItem = (record) =>
+    mutate(record, () => callApi(itemPath(record.id), 'DELETE'), 'Could not remove the item');
+
+  const restoreItem = (record) =>
+    mutate(record, () => callApi(`${itemPath(record.id)}/restore`, 'POST'), 'Could not restore the item');
+
+  const openEdit = (record) => setModal({ open: true, item: record });
+  const openCreate = () => setModal({ open: true, item: null });
 
   const optionsFrom = (list, labels = {}) =>
-    (list || []).map((o) => ({ value: o.value, label: `${labels[o.value] || o.value} (${o.count.toLocaleString()})` }));
+    (list || []).map((o) => ({
+      value: o.value,
+      label: `${labels[o.value] || o.value} (${Number(o.count || 0).toLocaleString()})`,
+    }));
+
+  const renderActions = (r, block = false) => {
+    const busy = busyId === r.id;
+    const size = block ? 'middle' : 'small';
+    const type = block ? 'default' : 'link';
+    const edit = (
+      <Button key="edit" type={type} size={size} icon={<EditOutlined />} onClick={() => openEdit(r)} disabled={busy}>
+        Edit
+      </Button>
+    );
+    const toggle = r.is_active ? (
+      <Popconfirm
+        key="remove"
+        title="Remove this item?"
+        description="It is hidden from merchants and can be restored later."
+        onConfirm={() => removeItem(r)}
+        okText="Remove"
+        okButtonProps={{ danger: true }}
+      >
+        <Button type={type} size={size} danger icon={<DeleteOutlined />} loading={busy}>
+          Remove
+        </Button>
+      </Popconfirm>
+    ) : (
+      <Button key="restore" type={type} size={size} icon={<UndoOutlined />} loading={busy} onClick={() => restoreItem(r)}>
+        Restore
+      </Button>
+    );
+    return block ? [edit, toggle] : (
+      <Space size={0}>
+        {edit}
+        {toggle}
+      </Space>
+    );
+  };
 
   const columns = [
     {
       title: 'Item',
       key: 'name',
       render: (_, r) => (
-        <Flex gap={10} align="center" style={{ minWidth: 260 }}>
-          <Avatar shape="square" size={40} src={r.image_url || undefined} icon={!r.image_url ? <PictureOutlined /> : undefined} style={{ background: colors.primaryLight, color: colors.primary, flexShrink: 0 }} />
+        <Flex gap={10} align="center" style={{ minWidth: 240, maxWidth: 340 }}>
+          <ItemAvatar record={r} size={40} />
           <div style={{ minWidth: 0 }}>
-            <div style={{ fontWeight: 600, color: colors.textMain }}>{r.name}</div>
+            <div style={{ fontWeight: 600, color: colors.textMain, overflowWrap: 'anywhere' }}>{r.name}</div>
             <Text type="secondary" style={{ fontSize: 12 }}>
-              {[r.brand_name, r.gtin ? `GTIN ${r.gtin.replace(/^0+(?=\d{8,})/, '')}` : null].filter(Boolean).join(' · ') || r.id}
+              {itemSubtitle(r)}
             </Text>
           </div>
         </Flex>
@@ -509,124 +839,293 @@ const CatalogItems = () => {
       title: 'Category',
       dataIndex: 'category_path',
       render: (v, r) => (
-        <Text style={{ fontSize: 12, maxWidth: 240, display: 'inline-block' }} ellipsis={{ tooltip: v }}>
-          {r.kind === 'service' && <Tag color="purple">service</Tag>}
-          {v || <Text type="secondary">Uncategorised</Text>}
-        </Text>
+        <Flex gap={6} align="center" style={{ maxWidth: 240 }}>
+          {r.kind === 'service' && (
+            <Tag color="purple" style={{ margin: 0 }}>
+              Service
+            </Tag>
+          )}
+          {v ? (
+            <Text style={{ fontSize: 12 }} ellipsis={{ tooltip: v }}>
+              {v}
+            </Text>
+          ) : (
+            <Text type="secondary" style={{ fontSize: 12 }}>
+              Uncategorised
+            </Text>
+          )}
+        </Flex>
       ),
     },
-    { title: 'Qty', key: 'qty', render: (_, r) => formatQty(r) },
     {
-      title: 'HSN · GST',
-      key: 'tax',
-      render: (_, r) =>
-        r.effective_hsn ? (
-          <Tooltip title={`${r.hsn_basis === 'item' ? 'Set on this item' : 'Category default'}${r.gst_rate_verified ? ' · rate verified' : ' · rate unverified'}`}>
-            <span style={{ whiteSpace: 'nowrap' }}>
-              {r.effective_hsn}
-              {r.gst_rate !== null && r.gst_rate !== undefined && (
-                <Tag style={{ marginLeft: 6 }} color={r.gst_rate_verified ? 'green' : 'default'}>{Number(r.gst_rate)}%</Tag>
-              )}
-            </span>
-          </Tooltip>
-        ) : (
-          <Text type="secondary">—</Text>
-        ),
+      title: 'Qty',
+      key: 'qty',
+      render: (_, r) => <span style={{ whiteSpace: 'nowrap' }}>{formatQty(r)}</span>,
+    },
+    { title: 'HSN · GST', key: 'tax', render: (_, r) => <TaxCell record={r} /> },
+    {
+      title: (
+        <Tooltip title={QUALITY_HELP}>
+          <span>Quality</span>
+        </Tooltip>
+      ),
+      key: 'quality',
+      dataIndex: 'quality_score',
+      render: (v) => <QualityMeter score={v} />,
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      render: (v, r) => (
-        <Tooltip title={STATUS_HELP[v]}>
-          <Tag color={r.is_active ? STATUS_COLORS[v] : 'default'} icon={v === 'verified' ? <SafetyCertificateOutlined /> : undefined}>
-            {r.is_active ? v : 'removed'}
-          </Tag>
-        </Tooltip>
-      ),
+      render: (v, r) => <StatusTag status={v} active={r.is_active} />,
     },
     {
       title: 'Source',
       dataIndex: 'primary_source',
-      render: (v) => <Text style={{ fontSize: 12 }}>{SOURCE_LABELS[v] || v}</Text>,
+      render: (v) => (
+        <Text style={{ fontSize: 12, whiteSpace: 'nowrap' }}>{SOURCE_LABELS[v] || v}</Text>
+      ),
     },
     {
-      title: 'Action',
+      title: 'Actions',
       key: 'action',
       fixed: 'right',
-      render: (_, r) => (
-        <Space size="small">
-          <Button type="link" size="small" icon={<EditOutlined />} onClick={() => setModal({ open: true, item: r })}>
-            Edit
-          </Button>
-          {r.is_active ? (
-            <Popconfirm title="Remove this item?" description="It is hidden from merchants and can be restored later." onConfirm={() => removeItem(r)} okText="Remove" okButtonProps={{ danger: true }}>
-              <Button type="link" size="small" danger icon={<DeleteOutlined />}>
-                Remove
-              </Button>
-            </Popconfirm>
-          ) : (
-            <Button type="link" size="small" icon={<UndoOutlined />} onClick={() => restoreItem(r)}>
-              Restore
-            </Button>
-          )}
-        </Space>
-      ),
+      render: (_, r) => renderActions(r),
     },
   ];
 
-  return (
-    <>
-      <Flex gap={10} wrap="wrap" align="center" style={{ marginBottom: 16 }}>
-        <Input.Search
-          allowClear
-          placeholder="Search name, brand, barcode or item id"
-          onSearch={(v) => setFilter('search', v.trim())}
-          style={{ flex: '1 1 260px', maxWidth: 360 }}
-        />
-        <Select allowClear placeholder="Source" style={{ minWidth: 190 }} value={filters.source || undefined} onChange={(v) => setFilter('source', v)} options={optionsFrom(meta?.sources, SOURCE_LABELS)} />
-        <Select allowClear placeholder="Status" style={{ minWidth: 160 }} value={filters.status || undefined} onChange={(v) => setFilter('status', v)} options={optionsFrom(meta?.statuses)} />
-        <Select allowClear placeholder="Type" style={{ minWidth: 150 }} value={filters.kind || undefined} onChange={(v) => setFilter('kind', v)} options={optionsFrom(meta?.kinds)} />
-        <Select
-          style={{ minWidth: 130 }}
-          value={filters.active}
-          onChange={(v) => setFilter('active', v)}
-          options={[{ value: 'true', label: 'Active' }, { value: 'false', label: 'Removed' }, { value: 'all', label: 'All' }]}
-        />
-        <Tooltip title="Reload">
-          <Button icon={<ReloadOutlined />} onClick={() => { load(page); loadMeta(); }} />
-        </Tooltip>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          style={{ marginLeft: 'auto', background: colors.primary, borderColor: colors.primary, borderRadius: radii.md, fontWeight: 600 }}
-          onClick={() => setModal({ open: true, item: null })}
-        >
-          Add item
+  const emptyState = (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={hasFilters ? 'No items match these filters.' : 'The catalog has no items yet.'}
+    >
+      {hasFilters ? (
+        <Button onClick={clearFilters}>Clear filters</Button>
+      ) : (
+        <Button type="primary" icon={<PlusOutlined />} onClick={openCreate}>
+          Add the first item
         </Button>
-      </Flex>
+      )}
+    </Empty>
+  );
 
-      <div style={{ border: `1px solid ${colors.border}`, borderRadius: radii.lg, overflow: 'hidden', background: colors.surface }}>
-        <Table
-          rowKey="id"
-          size="middle"
-          loading={loading}
-          columns={columns}
-          dataSource={rows}
-          scroll={{ x: 'max-content' }}
-          pagination={{
-            current: page,
-            pageSize: PAGE_SIZE,
-            total,
-            showSizeChanger: false,
-            showTotal: (t) => <span style={{ fontFamily: typography.fontFamily.body }}>{t.toLocaleString()} items</span>,
-          }}
-          onChange={(pag) => load(pag.current)}
+  const renderError = () =>
+    loadError.notSetUp ? (
+      <div className="admin-state" role="status">
+        <Result
+          icon={<DatabaseOutlined style={{ color: colors.primary }} />}
+          title="The master catalog is not set up yet"
+          subTitle={
+            <>
+              <div>{loadError.message}</div>
+              {!/catalog:migrate/.test(loadError.message) && (
+                <div className="admin-hint">
+                  Run <code>{MIGRATE_COMMAND}</code> on the server, then reload.
+                </div>
+              )}
+            </>
+          }
+          extra={
+            <Button icon={<ReloadOutlined />} onClick={reload} loading={loading}>
+              Check again
+            </Button>
+          }
         />
       </div>
+    ) : (
+      <div className="admin-state" role="alert">
+        <Result
+          status="warning"
+          title="Could not load the catalog"
+          subTitle={loadError.message}
+          extra={
+            <Button type="primary" icon={<ReloadOutlined />} onClick={reload} loading={loading}>
+              Try again
+            </Button>
+          }
+        />
+      </div>
+    );
+
+  const renderCards = () => {
+    if (!loaded && loading) {
+      return (
+        <div className="admin-card-list" aria-busy="true">
+          {[0, 1, 2].map((k) => (
+            <div key={k} className="admin-record-card">
+              <Skeleton avatar={{ shape: 'square' }} active paragraph={{ rows: 2 }} />
+            </div>
+          ))}
+        </div>
+      );
+    }
+    if (rows.length === 0) return <div className="admin-state">{emptyState}</div>;
+    return (
+      <>
+        <div className="admin-card-list" aria-busy={loading}>
+          {rows.map((r) => (
+            <article key={r.id} className="admin-record-card" style={{ opacity: loading ? 0.6 : 1 }}>
+              <div className="admin-record-card__head">
+                <ItemAvatar record={r} size={48} />
+                <div className="admin-record-card__body">
+                  <div className="admin-record-card__title">{r.name}</div>
+                  <div className="admin-record-card__meta">{itemSubtitle(r)}</div>
+                </div>
+              </div>
+              <div className="admin-record-card__chips">
+                <StatusTag status={r.status} active={r.is_active} />
+                {r.kind === 'service' && <Tag color="purple">Service</Tag>}
+                <Tag>{formatQty(r)}</Tag>
+                <TaxCell record={r} />
+              </div>
+              <div className="admin-record-card__row">
+                <Text type="secondary" style={{ fontSize: 12, minWidth: 0 }} ellipsis={{ tooltip: r.category_path }}>
+                  {r.category_path || 'Uncategorised'}
+                </Text>
+                <QualityMeter score={r.quality_score} />
+              </div>
+              <div className="admin-record-card__row" style={{ marginTop: 4 }}>
+                <span>{SOURCE_LABELS[r.primary_source] || r.primary_source}</span>
+              </div>
+              <div className="admin-record-card__actions">{renderActions(r, true)}</div>
+            </article>
+          ))}
+        </div>
+        {total > PAGE_SIZE && (
+          <div className="admin-card-pagination">
+            <Pagination
+              simple
+              current={page}
+              pageSize={PAGE_SIZE}
+              total={total}
+              showSizeChanger={false}
+              onChange={(p) => load(p)}
+            />
+          </div>
+        )}
+      </>
+    );
+  };
+
+  const notSetUp = Boolean(loadError?.notSetUp);
+
+  return (
+    <>
+      <div className="admin-toolbar">
+        <Input.Search
+          className="admin-toolbar__search"
+          allowClear
+          value={searchDraft}
+          onChange={(e) => setSearchDraft(e.target.value)}
+          placeholder="Search name, brand, barcode or item id"
+          aria-label="Search the catalog"
+          onSearch={(v) => setFilter('search', v.trim())}
+          disabled={notSetUp}
+        />
+        <div className="admin-toolbar__actions">
+          <Tooltip title="Reload">
+            <Button icon={<ReloadOutlined />} onClick={reload} aria-label="Reload" loading={loading && loaded} />
+          </Tooltip>
+          <Button
+            type="primary"
+            className="admin-toolbar__primary"
+            icon={<PlusOutlined />}
+            onClick={openCreate}
+            disabled={notSetUp}
+          >
+            Add item
+          </Button>
+        </div>
+      </div>
+
+      {!notSetUp && (
+        <div className="admin-filterbar">
+          <Select
+            allowClear
+            placeholder="Source"
+            aria-label="Filter by source"
+            value={filters.source || undefined}
+            onChange={(v) => setFilter('source', v)}
+            options={optionsFrom(meta?.sources, SOURCE_LABELS)}
+            popupMatchSelectWidth={false}
+          />
+          <Select
+            allowClear
+            placeholder="Status"
+            aria-label="Filter by status"
+            value={filters.status || undefined}
+            onChange={(v) => setFilter('status', v)}
+            options={optionsFrom(meta?.statuses, Object.fromEntries(Object.entries(STATUS_META).map(([k, m]) => [k, m.label])))}
+            popupMatchSelectWidth={false}
+          />
+          <Select
+            allowClear
+            placeholder="Type"
+            aria-label="Filter by type"
+            value={filters.kind || undefined}
+            onChange={(v) => setFilter('kind', v)}
+            options={optionsFrom(meta?.kinds, KIND_LABELS)}
+            popupMatchSelectWidth={false}
+          />
+          <Select
+            aria-label="Show active or removed items"
+            value={filters.active}
+            onChange={(v) => setFilter('active', v)}
+            options={[
+              { value: 'true', label: 'Active items' },
+              { value: 'false', label: 'Removed items' },
+              { value: 'all', label: 'All items' },
+            ]}
+          />
+          <div className="admin-filterbar__summary">
+            {loaded && !loadError && (
+              <span>
+                {total.toLocaleString()} {total === 1 ? 'item' : 'items'}
+              </span>
+            )}
+            {hasFilters && (
+              <Button type="link" size="small" onClick={clearFilters} style={{ padding: 0 }}>
+                Clear filters
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {loadError ? (
+        renderError()
+      ) : isPhone ? (
+        renderCards()
+      ) : (
+        <div className="admin-table-wrap">
+          <Table
+            rowKey="id"
+            size="middle"
+            loading={loading}
+            columns={columns}
+            dataSource={rows}
+            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: loading || !loaded ? ' ' : emptyState }}
+            pagination={{
+              current: page,
+              pageSize: PAGE_SIZE,
+              total,
+              showSizeChanger: false,
+              hideOnSinglePage: true,
+              showTotal: (t, range) => (
+                <span style={{ fontFamily: typography.fontFamily.body }}>
+                  {range[0]}–{range[1]} of {t.toLocaleString()}
+                </span>
+              ),
+            }}
+            onChange={(pag) => load(pag.current)}
+          />
+        </div>
+      )}
 
       <ItemModal
         open={modal.open}
         item={modal.item}
+        isPhone={isPhone}
         onClose={() => setModal({ open: false, item: null })}
         onSaved={() => {
           setModal({ open: false, item: null });
