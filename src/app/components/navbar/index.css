@@ -291,10 +291,6 @@
   width: 100%;
 }
 
-.nav-menu-muted {
-  color: var(--text-light);
-}
-
 /* Notifications dropdown */
 .nav-notif-panel {
   width: 320px;
@@ -546,11 +542,6 @@
 
 .drawer-nav-item--success {
   color: var(--success-hover) !important;
-}
-
-.drawer-nav-item--muted {
-  color: var(--text-light) !important;
-  font-size: 13px !important;
 }
 
 /* Admin console sections, indented under "Admin console" */

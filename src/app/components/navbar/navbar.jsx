@@ -196,15 +196,8 @@ const Navbar = ({ open, handleOpen }) => {
       { key: 'orders', icon: <OrderedListOutlined />, label: 'Orders & quotes', onClick: go(Routes.orders) },
       chatMenuItem('Messages'),
       { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
-      {
-        key: 'marketplace',
-        icon: <CompassOutlined />,
-        label: <span className="nav-menu-muted">View marketplace</span>,
-        onClick: go(Routes.app),
-      },
     ];
     if (navMatch.myStores(location)) activeMenuKeys.push('my-stores');
-    if (navMatch.search(location)) activeMenuKeys.push('marketplace');
   } else {
     roleMenuItems = [
       { key: 'explore', icon: <CompassOutlined />, label: 'Explore Marketplace', onClick: go(Routes.app) },

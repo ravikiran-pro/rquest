@@ -46,7 +46,7 @@ const Chevron = () => <RightOutlined className="drawer-nav-chevron" aria-hidden=
  * desktop account menu:
  *   guest    Explore, Cart, Sell on Rquest, Sign in / Register
  *   customer Explore, Cart, Orders, Profile, Delivery portal, Messages, Sign out
- *   owner    My stores, Orders & quotes, Messages, Profile, View marketplace, Sign out
+ *   owner    My stores, Orders & quotes, Messages, Profile, Sign out
  *   admin    Admin console (+ each section), Search, Messages, Profile, Sign out
  */
 const SideBar = ({ open, handleClose }) => {
@@ -182,15 +182,6 @@ const SideBar = ({ open, handleClose }) => {
           label: 'Profile',
           active: navMatch.profile(location),
           onClick: go(Routes.profile),
-          trailing: <Chevron />,
-        },
-        {
-          key: 'marketplace',
-          Icon: CompassOutlined,
-          label: 'View marketplace',
-          tone: 'muted',
-          active: navMatch.search(location),
-          onClick: go(Routes.app),
           trailing: <Chevron />,
         },
       ];

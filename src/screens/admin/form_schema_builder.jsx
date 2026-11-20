@@ -13,6 +13,7 @@ import {
   message,
   Alert,
   Tooltip,
+  Grid,
 } from 'antd';
 import {
   PlusOutlined,
@@ -32,7 +33,16 @@ import {
 import { colors, radii, typography } from '../../app/styles/theme';
 
 const { Text, Paragraph } = Typography;
-const { Option } = Select;
+
+const FIELD_TYPE_OPTIONS = [
+  { value: 'text', label: 'Text Input' },
+  { value: 'number', label: 'Numeric' },
+  { value: 'select', label: 'Select Dropdown' },
+  { value: 'radio', label: 'Radio Buttons' },
+  { value: 'boolean', label: 'Toggle / Switch' },
+  { value: 'date', label: 'Date Picker' },
+  { value: 'textarea', label: 'Text Area' },
+];
 
 const FormSchemaBuilderModal = ({
   open,
@@ -42,6 +52,10 @@ const FormSchemaBuilderModal = ({
   onSuccess,
 }) => {
   const isShopTarget = !!shop;
+  const screens = Grid.useBreakpoint();
+  // useBreakpoint is empty on the first render: treat that as desktop
+  const isPhone = screens.md === false;
+  const controlSize = isPhone ? 'large' : 'middle';
   const [fields, setFields] = useState([]);
   const [saving, setSaving] = useState(false);
   const [templates, setTemplates] = useState([]);
@@ -285,15 +299,8 @@ const FormSchemaBuilderModal = ({
           value={val}
           style={{ width: '100%', borderRadius: radii.sm }}
           onChange={(newType) => handleFieldChange(idx, 'type', newType)}
-        >
-          <Option value="text">Text Input</Option>
-          <Option value="number">Numeric</Option>
-          <Option value="select">Select Dropdown</Option>
-          <Option value="radio">Radio Buttons</Option>
-          <Option value="boolean">Toggle / Switch</Option>
-          <Option value="date">Date Picker</Option>
-          <Option value="textarea">Text Area</Option>
-        </Select>
+          options={FIELD_TYPE_OPTIONS}
+        />
       ),
     },
     {
@@ -366,6 +373,7 @@ const FormSchemaBuilderModal = ({
         <Space size={4}>
           <Button
             size="small"
+            aria-label={`Move field ${idx + 1} up`}
             icon={<ArrowUpOutlined />}
             disabled={idx === 0}
             style={{ borderRadius: radii.xs, borderColor: colors.border }}
@@ -373,6 +381,7 @@ const FormSchemaBuilderModal = ({
           />
           <Button
             size="small"
+            aria-label={`Move field ${idx + 1} down`}
             icon={<ArrowDownOutlined />}
             disabled={idx === fields.length - 1}
             style={{ borderRadius: radii.xs, borderColor: colors.border }}
@@ -384,15 +393,154 @@ const FormSchemaBuilderModal = ({
             okText="Yes"
             cancelText="No"
           >
-            <Button size="small" danger icon={<DeleteOutlined />} style={{ borderRadius: radii.xs }} />
+            <Button
+              size="small"
+              danger
+              aria-label={`Remove field ${idx + 1}`}
+              icon={<DeleteOutlined />}
+              style={{ borderRadius: radii.xs }}
+            />
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
+  const emptyFields = (
+    <div style={{ padding: '24px 0', textAlign: 'center' }}>
+      <Paragraph style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+        No custom fields configured for this category yet. It will use standard product fields.
+      </Paragraph>
+      <Button
+        type="dashed"
+        size={controlSize}
+        icon={<PlusOutlined />}
+        onClick={handleAddField}
+        style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.primary }}
+      >
+        Add First Custom Field or pick a template above
+      </Button>
+    </div>
+  );
+
+  // Phones: one card per field, controls in a 40px row, inputs full width
+  const renderFieldCard = (field, idx) => {
+    const fieldIssues = issues.filter((issue) => issue.index === idx);
+    const hasOptions = field.type === 'select' || field.type === 'radio';
+    const filterable = FILTERABLE_FIELD_TYPES.includes(field.type || 'text');
+    return (
+      <article
+        key={idx}
+        className={`schema-field-card${fieldIssues.length > 0 ? ' schema-field-card--error' : ''}`}
+      >
+        <div className="schema-field-card__head">
+          <span className="schema-field-card__index">{idx + 1}</span>
+          <div className="schema-field-card__controls">
+            <Button
+              aria-label={`Move field ${idx + 1} up`}
+              icon={<ArrowUpOutlined />}
+              disabled={idx === 0}
+              onClick={() => handleMove(idx, -1)}
+            />
+            <Button
+              aria-label={`Move field ${idx + 1} down`}
+              icon={<ArrowDownOutlined />}
+              disabled={idx === fields.length - 1}
+              onClick={() => handleMove(idx, 1)}
+            />
+            <Popconfirm
+              title="Remove this field from form?"
+              onConfirm={() => handleRemoveField(idx)}
+              okText="Yes"
+              cancelText="No"
+            >
+              <Button danger aria-label={`Remove field ${idx + 1}`} icon={<DeleteOutlined />} />
+            </Popconfirm>
+          </div>
+        </div>
+
+        <div className="schema-field-card__grid">
+          <label>
+            <span className="schema-field-card__label">Field label</span>
+            <Input
+              size={controlSize}
+              value={field.label}
+              placeholder="e.g. Expiry Date"
+              onChange={(e) => handleFieldChange(idx, 'label', e.target.value)}
+            />
+          </label>
+          <label>
+            <span className="schema-field-card__label">Field key (DB attribute)</span>
+            <Input
+              size={controlSize}
+              value={field.key}
+              placeholder="e.g. expiry_date"
+              style={{ fontFamily: typography.fontFamily.mono, fontSize: 13 }}
+              onChange={(e) => handleFieldChange(idx, 'key', e.target.value)}
+            />
+          </label>
+          <label>
+            <span className="schema-field-card__label">Type</span>
+            <Select
+              size={controlSize}
+              value={field.type}
+              style={{ width: '100%' }}
+              onChange={(newType) => handleFieldChange(idx, 'type', newType)}
+              options={FIELD_TYPE_OPTIONS}
+            />
+          </label>
+          <label>
+            <span className="schema-field-card__label">
+              {hasOptions ? 'Options (comma-separated)' : 'Placeholder or helper text'}
+            </span>
+            {hasOptions ? (
+              <Input
+                size={controlSize}
+                value={Array.isArray(field.options) ? field.options.join(', ') : ''}
+                placeholder="Tablet, Syrup, Strip"
+                onChange={(e) => handleOptionsChange(idx, e.target.value)}
+              />
+            ) : (
+              <Input
+                size={controlSize}
+                value={field.placeholder || ''}
+                placeholder="Placeholder or helper text"
+                onChange={(e) => handleFieldChange(idx, 'placeholder', e.target.value)}
+              />
+            )}
+          </label>
+        </div>
+
+        <div className="schema-field-card__checks" style={{ marginTop: 10 }}>
+          <Checkbox
+            checked={Boolean(field.required)}
+            onChange={(e) => handleFieldChange(idx, 'required', e.target.checked)}
+          >
+            Required
+          </Checkbox>
+          <Tooltip title="Show this field as a search filter for shoppers. Available for dropdown, radio and toggle fields.">
+            <Checkbox
+              checked={Boolean(field.filterable)}
+              disabled={!filterable}
+              onChange={(e) => handleFieldChange(idx, 'filterable', e.target.checked)}
+            >
+              Filter
+            </Checkbox>
+          </Tooltip>
+        </div>
+
+        {fieldIssues.length > 0 && (
+          <Text type="danger" style={{ display: 'block', marginTop: 8, fontSize: 12 }}>
+            {fieldIssues[0].message}
+          </Text>
+        )}
+      </article>
+    );
+  };
+
   return (
     <Modal
+      className="admin-modal"
       title={
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <SettingOutlined style={{ color: colors.primary, fontSize: 18 }} />
@@ -405,7 +553,8 @@ const FormSchemaBuilderModal = ({
       }
       open={open}
       onCancel={onClose}
-      width={1000}
+      width="min(1000px, calc(100vw - 24px))"
+      style={{ top: isPhone ? 12 : 48, maxWidth: 'calc(100vw - 24px)' }}
       footer={[
         <Button
           key="cancel"
@@ -481,7 +630,7 @@ const FormSchemaBuilderModal = ({
                 title={`${template.description} (${template.fields.length} fields)`}
               >
                 <Button
-                  size="small"
+                  size={isPhone ? 'large' : 'small'}
                   type={isSuggested ? 'primary' : 'default'}
                   ghost={isSuggested}
                   onClick={() => handleApplyTemplate(template)}
@@ -501,12 +650,13 @@ const FormSchemaBuilderModal = ({
         </Space>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+      <div className="schema-builder-bar">
         <Text strong style={{ fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
           Configured Fields ({fields.length}):
         </Text>
         <Button
           type="primary"
+          size={controlSize}
           icon={<PlusOutlined />}
           onClick={handleAddField}
           style={{
@@ -537,40 +687,32 @@ const FormSchemaBuilderModal = ({
         />
       )}
 
-      <div
-        style={{
-          border: `1px solid ${colors.border}`,
-          borderRadius: radii.md,
-          overflow: 'hidden',
-          background: colors.surface,
-        }}
-      >
-        <Table
-          dataSource={fields}
-          columns={columns}
-          rowKey={(record) => fields.indexOf(record)}
-          pagination={false}
-          size="small"
-          scroll={{ x: 'max-content' }}
-          locale={{
-            emptyText: (
-              <div style={{ padding: '24px 0', textAlign: 'center' }}>
-                <Paragraph style={{ color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-                  No custom fields configured for this category yet. It will use standard product fields.
-                </Paragraph>
-                <Button
-                  type="dashed"
-                  icon={<PlusOutlined />}
-                  onClick={handleAddField}
-                  style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.primary }}
-                >
-                  Add First Custom Field or pick a template above
-                </Button>
-              </div>
-            ),
+      {isPhone ? (
+        fields.length === 0 ? (
+          <div className="admin-state">{emptyFields}</div>
+        ) : (
+          <div className="schema-field-list">{fields.map((field, idx) => renderFieldCard(field, idx))}</div>
+        )
+      ) : (
+        <div
+          style={{
+            border: `1px solid ${colors.border}`,
+            borderRadius: radii.md,
+            overflow: 'hidden',
+            background: colors.surface,
           }}
-        />
-      </div>
+        >
+          <Table
+            dataSource={fields}
+            columns={columns}
+            rowKey={(record) => fields.indexOf(record)}
+            pagination={false}
+            size="small"
+            scroll={{ x: 'max-content' }}
+            locale={{ emptyText: emptyFields }}
+          />
+        </div>
+      )}
     </Modal>
   );
 };

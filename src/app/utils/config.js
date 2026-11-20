@@ -70,6 +70,7 @@ export const apiConfig = {
 
   // Platform configuration (GET is public, PUT is platform admin only)
   platform_settings: 'platform/settings',
+  platform_settings_admin: 'platform/settings/admin',
 
   upload: 'master/upload',
 

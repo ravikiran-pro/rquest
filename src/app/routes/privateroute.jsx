@@ -49,7 +49,6 @@ PrivateRoute.propTypes = {
   component: PropTypes.elementType.isRequired,
   roles: PropTypes.arrayOf(PropTypes.oneOf(['admin', 'owner', 'user'])),
   remountOnNavigate: PropTypes.bool,
-  location: PropTypes.object,
 };
 
 /** Platform admin console guard. The console keeps its section in ?tab=, so it is not remounted. */

@@ -125,9 +125,9 @@ const lineTotal = (item) => {
 };
 
 /**
- * Money for one order, matching how POST /orders stores it:
- *   total_amount = items subtotal + platform_fee   (delivery_fee is stored separately)
- *   store payout = total_amount - platform_fee
+ * Money for one order, matching how POST /orders stores it (see computeOrderFees):
+ *   total_amount = items subtotal + platform_fee + delivery_fee   (what the customer pays)
+ *   store payout = total_amount - platform_fee - delivery_fee     (delivery fee goes to the rider)
  * Missing or non-numeric values count as 0 so nothing renders as NaN.
  */
 const getOrderMoney = (order) => {
@@ -136,13 +136,13 @@ const getOrderMoney = (order) => {
   const platformFee = toNum(order?.platform_fee);
   const deliveryFee = toNum(order?.delivery_fee);
   const rawTotal = parseFloat(order?.total_amount);
-  const total = Number.isFinite(rawTotal) ? rawTotal : itemsSubtotal + platformFee;
+  const total = Number.isFinite(rawTotal) ? rawTotal : itemsSubtotal + platformFee + deliveryFee;
   return {
     itemsSubtotal: round2(itemsSubtotal),
     platformFee: round2(platformFee),
     deliveryFee: round2(deliveryFee),
     total: round2(total),
-    storePayout: round2(Math.max(total - platformFee, 0)),
+    storePayout: round2(Math.max(total - platformFee - deliveryFee, 0)),
   };
 };
 
@@ -366,9 +366,8 @@ const KpiCard = ({ label, value, fullValue, hint, accent, icon, loading, compact
           color: colors.textMuted,
           fontFamily: headFont,
           lineHeight: 1.3,
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
+          minWidth: 0,
+          overflowWrap: 'anywhere',
         }}
       >
         {label}
@@ -488,11 +487,16 @@ const AdminOrdersAccounts = () => {
   const [detailModalVisible, setDetailModalVisible] = useState(false);
   const [updatingId, setUpdatingId] = useState(null);
 
+  // Only the newest request may write state, so an older answer cannot overwrite fresher data
+  const requestIdRef = useRef(0);
+
   const fetchAdminOrders = useCallback(async ({ silent = false } = {}) => {
+    const requestId = ++requestIdRef.current;
+    const isLatest = () => aliveRef.current && requestId === requestIdRef.current;
     if (!silent) setLoading(true);
     try {
       const res = await netWorkCall(apiConfig.orders_admin, 'GET', null, true);
-      if (!aliveRef.current) return;
+      if (!isLatest()) return;
       if (res?.success && Array.isArray(res.data)) {
         setOrders(res.data);
         setAccounts(res.accounts || EMPTY_ACCOUNTS);
@@ -504,10 +508,11 @@ const AdminOrdersAccounts = () => {
       }
     } catch (err) {
       console.error('Error fetching admin orders:', err);
-      if (!aliveRef.current) return;
+      if (!isLatest()) return;
       setLoadError('Could not reach the server. Check your connection and try again.');
       if (!silent) message.error('Failed to load platform orders');
     } finally {
+      // Foreground loads always clear the spinner, even when superseded, so it cannot get stuck
       if (aliveRef.current && !silent) setLoading(false);
     }
   }, []);
@@ -1055,9 +1060,8 @@ const AdminOrdersAccounts = () => {
                 fontSize: 15,
                 color: colors.primary,
                 fontFamily: headFont,
-                whiteSpace: 'normal',
+                whiteSpace: 'nowrap',
                 textAlign: 'left',
-                wordBreak: 'break-all',
               }}
             >
               #{ord.order_number || '—'}
@@ -1333,10 +1337,10 @@ const AdminOrdersAccounts = () => {
         <div style={{ ...panelStyle, padding: '6px 12px' }}>
           <MoneyLine label="Items subtotal" value={formatINR(m.itemsSubtotal)} />
           <MoneyLine label="Platform fee" value={formatINR(m.platformFee)} accent={colors.semantic.successHover} />
+          <MoneyLine label="Delivery fee (paid to rider)" value={formatINR(m.deliveryFee)} muted />
           <div style={{ borderTop: `1px solid ${colors.borderLight}`, margin: '4px 0' }} />
           <MoneyLine label="Order total" value={formatINR(m.total)} strong accent={colors.primary} />
-          <MoneyLine label="Store payout (total − platform fee)" value={formatINR(m.storePayout)} strong />
-          <MoneyLine label="Delivery fee (to rider, billed separately)" value={formatINR(m.deliveryFee)} muted />
+          <MoneyLine label="Store payout (total − platform fee − delivery fee)" value={formatINR(m.storePayout)} strong />
         </div>
 
         {sectionTitle('Change status')}

@@ -72,7 +72,7 @@ import {
   CatalogPickerModal,
 } from '../../app/components/listings';
 import { useChatStore } from '../../app/services';
-import { colors, radii, typography } from '../../app/styles/theme';
+import { colors } from '../../app/styles/theme';
 import './client_register.css';
 
 const { Title, Text } = Typography;
@@ -2390,7 +2390,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
                     className="ms-btn-primary"
                     onClick={() =>
                       chatWithCustomer(
-                        selectedOrder.customer_id || selectedOrder.customer?.id,
+                        selectedOrder.customer_id || selectedOrder.customer?.id || selectedOrder.user_id,
                         {
                           customer_name: selectedOrder.customer?.username,
                           order_number: selectedOrder.order_number,

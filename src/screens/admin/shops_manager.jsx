@@ -125,6 +125,48 @@ const FormStatusTag = ({ shop }) => {
 };
 FormStatusTag.propTypes = { shop: PropTypes.object };
 
+// Shops have no account status column; a map pin is what delivery distance and maps depend on
+const PinStatusTag = ({ shop }) => {
+  const pinned = shop?.latitude != null && shop?.longitude != null;
+  return pinned ? (
+    <Tag
+      icon={<EnvironmentOutlined />}
+      style={{
+        margin: 0,
+        fontWeight: 600,
+        borderRadius: radii.full,
+        padding: '1px 10px',
+        background: colors.semantic.successLight,
+        borderColor: colors.semantic.successBorder,
+        color: colors.semantic.successHover,
+        fontSize: 12,
+        fontFamily: bodyFont,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      Map pin set
+    </Tag>
+  ) : (
+    <Tag
+      style={{
+        margin: 0,
+        fontWeight: 500,
+        borderRadius: radii.full,
+        padding: '1px 10px',
+        background: colors.surfaceContainerLow,
+        borderColor: colors.border,
+        color: colors.textMuted,
+        fontSize: 12,
+        fontFamily: bodyFont,
+        whiteSpace: 'nowrap',
+      }}
+    >
+      No map pin
+    </Tag>
+  );
+};
+PinStatusTag.propTypes = { shop: PropTypes.object };
+
 const ShopAvatar = ({ shop, size }) => (
   <Avatar
     shape="square"
@@ -301,13 +343,13 @@ const ShopsManager = () => {
     const hasCustom = customFieldCount(shop) > 0;
     const btnHeight = block ? 40 : 34;
     return (
-      <Flex gap={8} style={block ? { width: '100%' } : undefined}>
+      <Flex gap={8} wrap="wrap" style={block ? { width: '100%' } : undefined}>
         <Button
           type={hasCustom ? 'primary' : 'default'}
           icon={hasCustom ? <EditOutlined /> : <SettingOutlined />}
           onClick={() => handleOpenFormBuilder(shop)}
           style={{
-            flex: block ? 1 : undefined,
+            flex: block ? '1 1 150px' : undefined,
             height: btnHeight,
             borderRadius: radii.md,
             fontWeight: 600,
@@ -338,7 +380,7 @@ const ShopsManager = () => {
                 icon={<DeleteOutlined />}
                 loading={removingId === shop.id}
                 style={{
-                  flex: block ? 1 : undefined,
+                  flex: block ? '1 1 150px' : undefined,
                   height: btnHeight,
                   minWidth: btnHeight,
                   borderRadius: radii.md,
@@ -419,10 +461,15 @@ const ShopsManager = () => {
       ),
     },
     {
-      title: colTitle('Product form'),
-      key: 'form_schema',
-      width: 190,
-      render: (_, record) => <FormStatusTag shop={record} />,
+      title: colTitle('Status'),
+      key: 'status',
+      width: 200,
+      render: (_, record) => (
+        <Flex vertical gap={6} align="flex-start">
+          <PinStatusTag shop={record} />
+          <FormStatusTag shop={record} />
+        </Flex>
+      ),
     },
     {
       title: colTitle('Action'),
@@ -453,6 +500,7 @@ const ShopsManager = () => {
           </div>
           <Flex gap={6} wrap="wrap" style={{ marginTop: 6 }}>
             <CategoryTag shop={shop} />
+            <PinStatusTag shop={shop} />
             <FormStatusTag shop={shop} />
           </Flex>
         </div>
@@ -640,7 +688,7 @@ const ShopsManager = () => {
             columns={columns}
             dataSource={shopsList}
             loading={loading}
-            scroll={{ x: 1080 }}
+            scroll={{ x: 1140 }}
             locale={{ emptyText: loading ? ' ' : loadError && !hasLoaded ? 'Stores could not be loaded' : emptyState }}
             pagination={{
               current: page,

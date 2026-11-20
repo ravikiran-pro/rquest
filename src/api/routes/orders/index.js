@@ -1,5 +1,5 @@
 const express = require('express');
-const { orders, order_items, shops, users, shop_listings, chats, user_addresses } = require('../../models');
+const { orders, order_items, shops, users, chats, user_addresses } = require('../../models');
 const { authMiddleware } = require('../../auth');
 const {
   getSettings: getPlatformSettings,

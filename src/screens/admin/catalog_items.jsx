@@ -19,7 +19,7 @@ import {
   Upload,
   Descriptions,
   Empty,
-  Result,
+  Alert,
   Pagination,
   Skeleton,
   Grid,
@@ -38,7 +38,6 @@ import {
   ExclamationCircleOutlined,
   StopOutlined,
   MinusCircleOutlined,
-  DatabaseOutlined,
 } from '@ant-design/icons';
 import { apiConfig, config, storageKeys } from '../../app/utils';
 import { colors, typography, radii } from '../../app/styles/theme';
@@ -697,6 +696,7 @@ const CatalogItems = () => {
         if (!res?.success) {
           setLoadError({
             notSetUp: isNotSetUp(res),
+            fromApi: true,
             message: res?.error || res?.message || 'Could not load the catalog',
           });
           return;
@@ -717,7 +717,7 @@ const CatalogItems = () => {
         setPage(nextPage);
       } catch (error) {
         if (id !== requestId.current) return;
-        setLoadError({ notSetUp: false, message: 'Could not reach the server. Check your connection and try again.' });
+        setLoadError({ notSetUp: false, fromApi: false, message: 'Could not reach the server. Check your connection and try again.' });
       } finally {
         if (id === requestId.current) {
           setLoading(false);
@@ -756,7 +756,9 @@ const CatalogItems = () => {
     try {
       const res = await request();
       if (!res?.success) {
-        message.error(res?.error || fallbackError);
+        message.error(
+          isNotSetUp(res) ? `${res?.error || fallbackError} Run ${MIGRATE_COMMAND}.` : res?.error || fallbackError
+        );
         return;
       }
       message.success(res.message || 'Done');
@@ -908,43 +910,37 @@ const CatalogItems = () => {
     </Empty>
   );
 
-  const renderError = () =>
-    loadError.notSetUp ? (
-      <div className="admin-state" role="status">
-        <Result
-          icon={<DatabaseOutlined style={{ color: colors.primary }} />}
-          title="The master catalog is not set up yet"
-          subTitle={
+  // The API answered with an error (503 "not set up" or success:false): show its text and the fix
+  const renderError = () => {
+    const notSetUp = Boolean(loadError.notSetUp);
+    const hintShown = loadError.fromApi || notSetUp;
+    const alertText = notSetUp ? 'The master catalog is not set up yet' : 'Could not load the catalog';
+    return (
+      <div className="admin-state" role={notSetUp ? 'status' : 'alert'}>
+        <Alert
+          type={notSetUp ? 'warning' : 'error'}
+          showIcon
+          message={alertText}
+          description={
             <>
-              <div>{loadError.message}</div>
-              {!/catalog:migrate/.test(loadError.message) && (
-                <div className="admin-hint">
+              <div style={{ overflowWrap: 'anywhere' }}>{loadError.message}</div>
+              {hintShown && !/catalog:migrate/.test(loadError.message) && (
+                <div style={{ marginTop: 6 }}>
                   Run <code>{MIGRATE_COMMAND}</code> on the server, then reload.
                 </div>
               )}
             </>
           }
-          extra={
-            <Button icon={<ReloadOutlined />} onClick={reload} loading={loading}>
-              Check again
+          action={
+            <Button size="small" icon={<ReloadOutlined />} onClick={reload} loading={loading}>
+              {notSetUp ? 'Check again' : 'Try again'}
             </Button>
           }
-        />
-      </div>
-    ) : (
-      <div className="admin-state" role="alert">
-        <Result
-          status="warning"
-          title="Could not load the catalog"
-          subTitle={loadError.message}
-          extra={
-            <Button type="primary" icon={<ReloadOutlined />} onClick={reload} loading={loading}>
-              Try again
-            </Button>
-          }
+          style={{ borderRadius: radii.md, textAlign: 'start' }}
         />
       </div>
     );
+  };
 
   const renderCards = () => {
     if (!loaded && loading) {
