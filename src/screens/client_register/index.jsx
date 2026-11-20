@@ -516,7 +516,6 @@ const ClientRegister = () => {
                 icon={<PlusOutlined />}
                 disabled={!registrationsOpen}
                 onClick={startRegistration}
-                style={{ background: colors.primary, borderColor: colors.primary }}
               >
                 Register new store
               </Button>
@@ -624,9 +623,6 @@ const ClientRegister = () => {
                 <Title level={3} className="onb-title">
                   Storefront Registration
                 </Title>
-                <Text className="onb-sub">
-                  Step {currentStep + 1} of {STEP_LABELS.length}: {STEP_TITLES[currentStep]}
-                </Text>
               </div>
 
               {registrationAlert}
@@ -944,7 +940,6 @@ const ClientRegister = () => {
                     loading={submitting}
                     disabled={!registrationsOpen}
                     onClick={handleFinishOnboarding}
-                    style={{ background: colors.primary, borderColor: colors.primary }}
                   >
                     Launch storefront &amp; studio
                   </Button>

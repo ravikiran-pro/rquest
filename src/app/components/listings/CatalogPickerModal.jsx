@@ -262,6 +262,7 @@ const CatalogPickerModal = ({ open, shopId, onClose, onImported }) => {
                   loading={saving}
                   onClick={() => addItem(item)}
                   style={{
+                    flex: '1 1 150px',
                     background: colors.primary,
                     borderColor: colors.primary,
                     borderRadius: radii.md,

@@ -1071,14 +1071,13 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       <div className="ms-item-card-footer">
         {renderStockToggle(item)}
         <Button
-          size="small"
           icon={<EditOutlined />}
           className="ms-item-edit-btn"
           onClick={() => handleOpenEditModal(item)}
           aria-label={`Edit ${item.name}`}
-        >
-          Edit
-        </Button>
+          title="Edit details"
+        />
+
       </div>
     </div>
   );
