@@ -1152,11 +1152,16 @@
   background: currentColor;
 }
 
+.ms-item-row-bottom .ms-stock-toggle {
+  margin-left: auto;
+}
+
 .ms-stock-toggle {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   min-height: 40px;
+  white-space: nowrap;
   cursor: pointer;
   font-size: var(--font-size-sm);
   font-weight: var(--font-weight-semibold);
@@ -1346,7 +1351,7 @@
   background: var(--warning-light) !important;
 }
 
-.ms-table-wrap .ms-order-items {
+.ms-order-items {
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1832,12 +1837,6 @@
 
 /* Responsive: tablet and below -------------------------------------------- */
 
-@media (max-width: 1023px) {
-  .ms-stats {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
 @media (max-width: 767px) {
   .manage-store-container {
     padding: 12px 12px 40px;
@@ -1924,8 +1923,17 @@
   }
 
   .ms-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .ms-tabs .ant-tabs-tab-btn {
+    font-size: var(--font-size-base);
+  }
+
+  .ms-tab-icon {
+    display: none;
   }
 
   .ms-stat {
@@ -2068,8 +2076,9 @@
     width: 100%;
   }
 
-  .ms-drawer-footer {
-    flex-wrap: wrap;
+  .ms-drawer-footer > .ant-btn:not(.ant-btn-primary) {
+    flex: 0 0 auto;
+    min-width: 48px;
   }
 }
 
@@ -2084,12 +2093,9 @@
     font-size: 15px;
   }
 
-  .ms-toolbar-actions {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .ms-toolbar-actions .ms-toolbar-secondary {
-    width: 100%;
+  .ms-toolbar-actions .ant-btn {
+    font-size: var(--font-size-sm);
+    padding-inline: 6px;
   }
 }
 
