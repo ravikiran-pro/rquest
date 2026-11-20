@@ -456,7 +456,7 @@ const ProfileScreen = () => {
     <>
       <div className="rq-tab-head">
         <div>
-          <Title level={5} className="rq-tab-title">
+          <Title level={2} className="rq-tab-title">
             Saved addresses
           </Title>
           <Text type="secondary">Used at checkout and to find stores near you.</Text>
@@ -499,7 +499,7 @@ const ProfileScreen = () => {
 
   const personalPanel = (
     <div className="rq-tab-form">
-      <Title level={5} className="rq-tab-title">
+      <Title level={2} className="rq-tab-title">
         Personal details
       </Title>
       <Text type="secondary">Used for order confirmations and messages from stores.</Text>
@@ -518,11 +518,18 @@ const ProfileScreen = () => {
           mobile: profile?.mobile || '',
         }}
       >
-        <Form.Item name="username" label="Display name" rules={[{ required: true, message: 'Enter a display name' }]}>
+        <Form.Item name="username" label="Display name" rules={[{ required: true, whitespace: true, message: 'Enter a display name' }]}>
           <Input prefix={<UserOutlined style={{ color: '#94a3b8' }} />} placeholder="Your name" autoComplete="name" />
         </Form.Item>
 
-        <Form.Item name="mobile" label="Mobile number" rules={[{ required: true, message: 'Enter your mobile number' }]}>
+        <Form.Item
+          name="mobile"
+          label="Mobile number"
+          rules={[
+            { required: true, message: 'Enter your mobile number' },
+            { pattern: /^[0-9+\s-]{8,15}$/, message: 'Enter a valid phone number' },
+          ]}
+        >
           <Input prefix={<PhoneOutlined style={{ color: '#94a3b8' }} />} placeholder="Mobile number" inputMode="tel" autoComplete="tel" />
         </Form.Item>
 
@@ -757,7 +764,7 @@ const ProfileScreen = () => {
 
           <div className="rq-profile-hero-info">
             <div className="rq-profile-name-row">
-              <Title level={4} className="rq-profile-name">
+              <Title level={1} className="rq-profile-name" title={displayName}>
                 {displayName}
               </Title>
               {isMerchant ? (
@@ -776,7 +783,10 @@ const ProfileScreen = () => {
                 <PhoneOutlined /> {profile?.mobile || user_data?.mobile || 'No phone number'}
               </span>
               <span>
-                <MailOutlined /> {profile?.email || 'No email added'}
+                <MailOutlined />
+                <span className="rq-contact-text" title={profile?.email || undefined}>
+                  {profile?.email || 'No email added'}
+                </span>
               </span>
             </div>
           </div>
@@ -862,7 +872,12 @@ const ProfileScreen = () => {
         {/* Main column: tabbed details */}
         <Col xs={24} lg={16} className="rq-profile-main">
           <Card className="rq-profile-tabs">
-            <Tabs activeKey={activeTabKey} onChange={setActiveTabKey} items={tabItems} />
+            <Tabs
+              activeKey={activeTabKey}
+              onChange={setActiveTabKey}
+              items={tabItems}
+              tabBarGutter={isMobile ? 0 : undefined}
+            />
           </Card>
         </Col>
       </Row>

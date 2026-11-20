@@ -133,22 +133,22 @@ const MobileSearchBar = ({
         <button
           type="button"
           role="tab"
-          aria-selected={searchMode === 'shops'}
-          className={`rq-m-tab${searchMode === 'shops' ? ' is-active' : ''}`}
-          onClick={() => onModeChange('shops')}
-        >
-          Stores
-          <span className="rq-m-count">{shopCount}</span>
-        </button>
-        <button
-          type="button"
-          role="tab"
           aria-selected={searchMode === 'items'}
           className={`rq-m-tab${searchMode === 'items' ? ' is-active' : ''}`}
           onClick={() => onModeChange('items')}
         >
           Items
           <span className="rq-m-count">{itemCount}</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={searchMode === 'shops'}
+          className={`rq-m-tab${searchMode === 'shops' ? ' is-active' : ''}`}
+          onClick={() => onModeChange('shops')}
+        >
+          Stores
+          <span className="rq-m-count">{shopCount}</span>
         </button>
       </div>
 

@@ -4,7 +4,7 @@ export * from './cards';
 export * from './chat';
 export * from './assets';
 export * from './datatable';
-export { default as CartDrawer } from './cart';
+export { default as CartScreen, CartOpenBridge } from './cart';
 export * from './listings';
 export * from './profile';
 export { default as ErrorBoundary } from './common/ErrorBoundary';

@@ -110,7 +110,8 @@ const LoginScreen = () => {
     const returnPath = takeReturnPath();
     const { isAdmin, isMerchant } = checkUserRole(res.user_data);
     if (returnPath) {
-      history.push(returnPath);
+      // replace: Back from the returned page must not land on /login (which bounces to /search)
+      history.replace(returnPath);
     } else if (isAdmin) {
       history.push(Routes.admin);
     } else if (isMerchant) {

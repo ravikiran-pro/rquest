@@ -917,3 +917,13 @@
   }
 }
 
+
+/* Overlay receives focus programmatically on open; keep focus rings for real controls */
+.rquest-chat-overlay:focus {
+  outline: none;
+}
+
+.rquest-chat-overlay .cs-conversation:focus-visible {
+  outline: 2px solid var(--primary, #0b2d6b);
+  outline-offset: -2px;
+}

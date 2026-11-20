@@ -185,7 +185,7 @@ const SideBar = ({ open, handleClose }) => {
                 ) : isMerchant ? (
                   <span className="role-pill role-pill-merchant">Shop Owner</span>
                 ) : (
-                  <span className="role-pill role-pill-user">Customer</span>
+                  <span className="role-pill role-pill-user">Shopper</span>
                 )}
               </div>
             </div>

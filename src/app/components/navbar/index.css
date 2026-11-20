@@ -186,12 +186,12 @@
   border-left: 3px solid var(--primary) !important;
 }
 
-/* Mobile Fixed Bottom Navigation Bar matching Mobile Mockups */
+/* Fixed bottom navigation for phones and tablets (<= 991px; the header links only show from 992px) */
 .mobile-bottom-nav {
   display: none;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 991px) {
   .mobile-bottom-nav {
     display: flex;
     position: fixed;
@@ -233,7 +233,7 @@
   }
 
   .mobile-nav-label {
-    font-size: 10.5px;
+    font-size: 12px;
     font-weight: var(--font-weight-medium);
     font-family: var(--font-body);
     color: var(--text-muted);
@@ -251,4 +251,36 @@
     color: var(--primary);
     font-weight: var(--font-weight-bold);
   }
+}
+
+/* Header icon buttons and account controls: real buttons, 44px touch targets */
+.navBar .rq-nav-icon-btn.ant-btn {
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+}
+
+button.navbar-user-capsule {
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+
+button.navbar-user-capsule:focus-visible,
+.rq-nav-avatar-btn:focus-visible {
+  outline: 3px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.rq-nav-avatar-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
 }

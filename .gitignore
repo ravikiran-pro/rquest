@@ -14,3 +14,8 @@ docs/
 mmux*
 .agents/
 catalog
+# UI test runs (tests/ui): local sign-in with real credentials, and run output
+tests/ui/*.local.js
+tests/ui/output/
+.playwright-mcp/
+tests/ui/*

@@ -21,11 +21,10 @@ import {
   DeliveryPortalScreen,
   AdminScreen,
 } from '../../screens';
-import { ChatApp, NavBar, SideBar, BottomNav, CartDrawer, ErrorBoundary } from '../components';
+import { ChatApp, NavBar, SideBar, BottomNav, CartScreen, CartOpenBridge, ErrorBoundary } from '../components';
 import {
   useChatStore,
   useGlobalStore,
-  useCartStore,
   chatSocket,
   displayPushNotification,
   subscribeToPushNotifications,
@@ -67,19 +66,60 @@ function RouteChangeHandler({ onRouteChange }) {
   return null;
 }
 
-function RouteShell({ children }) {
+// Floating chat button: desktop only (>= 992px, where there is no bottom nav), never on /cart
+// (the cart has its own "Chat with store" action and the FAB would cover the bill card).
+const useShowChatFab = (fabAllowed) => {
   const location = useLocation();
+  return fabAllowed && location.pathname !== routes.cart;
+};
+
+// The one <main> landmark for every page. NavBar, BottomNav, chat and the FAB stay outside it.
+function RouteShell({ children, fabAllowed }) {
+  const location = useLocation();
+  const showFab = useShowChatFab(fabAllowed);
   const isAuthRoute =
     location.pathname === routes.login || location.pathname === routes.register;
 
   return (
-    <div
-      className={`app-route-shell${isAuthRoute ? ' app-route-shell--auth' : ''}`}
+    <main
+      id="main-content"
+      tabIndex={-1}
+      className={`app-route-shell${isAuthRoute ? ' app-route-shell--auth' : ''}${
+        showFab ? ' app-route-shell--fab' : ''
+      }`}
     >
       {children}
-    </div>
+    </main>
   );
 }
+
+function ChatFab({ fabAllowed, unreadTotal, onOpen }) {
+  const showFab = useShowChatFab(fabAllowed);
+  if (!showFab) return null;
+
+  const label = unreadTotal > 0 ? `Open messages, ${unreadTotal} unread` : 'Open messages';
+  return (
+    <button
+      type="button"
+      className="rquest-chat-fab"
+      onClick={onOpen}
+      title="Direct messages and store chat"
+      aria-label={label}
+    >
+      <Badge count={unreadTotal} overflowCount={99}>
+        <span className="rquest-chat-fab-inner">
+          <MessageFilled style={{ fontSize: 25, color: '#ffffff' }} aria-hidden="true" />
+        </span>
+      </Badge>
+    </button>
+  );
+}
+
+ChatFab.propTypes = {
+  fabAllowed: PropTypes.bool,
+  unreadTotal: PropTypes.number,
+  onOpen: PropTypes.func.isRequired,
+};
 
 RouteChangeHandler.propTypes = {
   onRouteChange: PropTypes.func,
@@ -87,6 +127,7 @@ RouteChangeHandler.propTypes = {
 
 RouteShell.propTypes = {
   children: PropTypes.node.isRequired,
+  fabAllowed: PropTypes.bool,
 };
 
 function PushNotificationHandler() {
@@ -114,11 +155,11 @@ function PushNotificationHandler() {
 
 export default function AppRoutes() {
   const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
   const [drawer, setdrawer] = useState(false);
   const { isChat, unreadTotal, handleChatOpen } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
-  const isCartOpen = useCartStore((state) => state.isCartOpen);
+  // Chat FAB only from 992px (below that the bottom nav has Chat), signed in, chat closed
+  const fabAllowed = !!(user_data?.user_id && !isChat && screens.lg);
   const { isMerchant } = checkUserRole(user_data);
   const isLoggedIn = !!(
     user_data?.user_id && sessionStorage?.getItem(storageKeys.auth_token)
@@ -187,6 +228,9 @@ export default function AppRoutes() {
 
   return (
     <Router>
+      <a className="rq-skip-link" href="#main-content">
+        Skip to content
+      </a>
       <RouteChangeHandler onRouteChange={handleClose} />
       <PushNotificationHandler />
       <NavBar open={drawer} handleOpen={handleOpen} handleClose={handleClose} />
@@ -196,7 +240,7 @@ export default function AppRoutes() {
         handleOpen={handleOpen}
       />
       <BottomNav />
-      <RouteShell>
+      <RouteShell fabAllowed={fabAllowed}>
         <Switch>
           <Route exact path="/">
             <HomeScreen />
@@ -223,6 +267,11 @@ export default function AppRoutes() {
           <Route exact path={routes.storefront}>
             <StorefrontScreen />
           </Route>
+          <Route exact path={routes.cart}>
+            <ErrorBoundary>
+              <CartScreen />
+            </ErrorBoundary>
+          </Route>
           <PrivateRoute path={routes.orders} component={OrdersScreen} />
           <PrivateRoute path={routes.profile} component={ProfileScreen} />
           <PrivateRoute path={routes.deliveryPortal} component={DeliveryPortalScreen} />
@@ -239,24 +288,13 @@ export default function AppRoutes() {
           <Redirect to="/" />
         </Switch>
       </RouteShell>
-      <ErrorBoundary fallback={null}>
-        <CartDrawer />
-      </ErrorBoundary>
+      <CartOpenBridge />
       {isChat && <ChatApp />}
-      {user_data?.user_id && !isChat && !isCartOpen && !isMobile && (
-        <div
-          className="rquest-chat-fab"
-          onClick={() => handleChatOpen(null, null)}
-          title="Direct Messages & Store Chat"
-          aria-label="Open Messages"
-        >
-          <Badge count={unreadTotal} overflowCount={99}>
-            <div className="rquest-chat-fab-inner">
-              <MessageFilled style={{ fontSize: 25, color: '#ffffff' }} />
-            </div>
-          </Badge>
-        </div>
-      )}
+      <ChatFab
+        fabAllowed={fabAllowed}
+        unreadTotal={unreadTotal}
+        onOpen={() => handleChatOpen(null, null)}
+      />
     </Router>
   );
 }

@@ -1,19 +1,18 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Drawer,
   Button,
   Input,
   Radio,
   Segmented,
   Result,
   Descriptions,
-  Typography,
   Tag,
   Empty,
   Flex,
   Form,
   Grid,
+  Popconfirm,
   message,
 } from 'antd';
 import {
@@ -32,6 +31,7 @@ import {
   EditOutlined,
   CarOutlined,
   UserOutlined,
+  ArrowLeftOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import { useCartStore, useGlobalStore, useChatStore } from '../../services';
@@ -41,8 +41,6 @@ import Routes from '../../routes/routes';
 import { AddressModal, AddressOption, getFormattedAddress } from '../profile';
 import { setCartReturn, takeReopenCartFlag } from '../../utils/returnTo';
 import './cart.css';
-
-const { Text } = Typography;
 
 const PREBUILT_QUERIES = [
   {
@@ -72,6 +70,33 @@ const PREBUILT_QUERIES = [
   },
 ];
 
+// Checkout choices kept per tab (sessionStorage) so signing in from the cart doesn't reset them
+const CHECKOUT_DRAFT_KEY = 'rq_cart_checkout_draft';
+
+const readCheckoutDraft = () => {
+  try {
+    return JSON.parse(sessionStorage.getItem(CHECKOUT_DRAFT_KEY)) || {};
+  } catch {
+    return {};
+  }
+};
+
+const writeCheckoutDraft = (draft) => {
+  try {
+    sessionStorage.setItem(CHECKOUT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    /* private mode: nothing to keep */
+  }
+};
+
+const clearCheckoutDraft = () => {
+  try {
+    sessionStorage.removeItem(CHECKOUT_DRAFT_KEY);
+  } catch {
+    /* ignore */
+  }
+};
+
 const SummaryRow = ({ label, value }) => (
   <div className="rq-cart-summary-row">
     <span>{label}</span>
@@ -84,20 +109,41 @@ SummaryRow.propTypes = {
   value: PropTypes.string.isRequired,
 };
 
-const CartDrawer = () => {
+// Opening the cart (from any "cart" button) now goes to the /cart page.
+// Mounted once inside the router; it turns the open flag into navigation.
+export const CartOpenBridge = () => {
   const history = useHistory();
-  const { cart, isCartOpen, openCart, closeCart, updateQuantity, removeItem, clearCart } =
-    useCartStore((state) => state);
+  const isCartOpen = useCartStore((state) => state.isCartOpen);
+  const closeCart = useCartStore((state) => state.closeCart);
+
+  useEffect(() => {
+    if (isCartOpen) {
+      closeCart();
+      if (history.location.pathname !== Routes.cart) {
+        history.push(Routes.cart);
+      }
+    }
+  }, [isCartOpen]);
+
+  return null;
+};
+
+const CartScreen = () => {
+  const history = useHistory();
+  const { cart, updateQuantity, removeItem, clearCart } = useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
   const screens = Grid.useBreakpoint();
-  const isMobile = !screens.md;
+  // Two columns (items left, bill right) from laptop width up; single column below
+  const isWide = !!screens.lg;
 
-  const [orderType, setOrderType] = useState('delivery');
-  const [paymentMode, setPaymentMode] = useState('direct_upi');
-  const [address, setAddress] = useState('');
-  const [phone, setPhone] = useState(user_data?.mobile || '');
-  const [notes, setNotes] = useState('');
+  // Checkout choices survive a guest's trip to /login and back (the page unmounts on the way)
+  const [draft] = useState(readCheckoutDraft);
+  const [orderType, setOrderType] = useState(draft.orderType || 'delivery');
+  const [paymentMode, setPaymentMode] = useState(draft.paymentMode || 'direct_upi');
+  const [address, setAddress] = useState(draft.manualAddress || '');
+  const [phone, setPhone] = useState(draft.phone || user_data?.mobile || '');
+  const [notes, setNotes] = useState(draft.notes || '');
   const [loading, setLoading] = useState(false);
   const [orderSuccess, setOrderSuccess] = useState(null);
 
@@ -106,11 +152,26 @@ const CartDrawer = () => {
   const [showCustomQuery, setShowCustomQuery] = useState(false);
   const [customQueryText, setCustomQueryText] = useState('');
 
+  // Focus targets and screen-reader announcements after items change
+  const itemsHeadingRef = useRef(null);
+  const queryToggleRef = useRef(null);
+  const addressReturnFocusRef = useRef(null);
+  const [liveMessage, setLiveMessage] = useState('');
 
   // Address state
   const [savedAddresses, setSavedAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState(null);
-  const [addressMode, setAddressMode] = useState('saved'); // 'saved' | 'manual'
+  const [addressMode, setAddressMode] = useState(draft.manualAddress ? 'manual' : 'saved'); // 'saved' | 'manual'
+
+  useEffect(() => {
+    writeCheckoutDraft({
+      orderType,
+      paymentMode,
+      notes,
+      phone,
+      manualAddress: addressMode === 'manual' ? address : '',
+    });
+  }, [orderType, paymentMode, notes, phone, address, addressMode]);
   const [isAddAddressModalOpen, setIsAddAddressModalOpen] = useState(false);
   const [detectingGps, setDetectingGps] = useState(false);
 
@@ -135,18 +196,17 @@ const CartDrawer = () => {
   };
 
   useEffect(() => {
-    if (isCartOpen && user_data?.user_id) {
+    if (user_data?.user_id) {
       fetchSavedAddresses();
       if (!phone && user_data?.mobile) {
         setPhone(user_data.mobile);
       }
     }
-  }, [isCartOpen, user_data?.user_id]);
+  }, [user_data?.user_id]);
 
-  // Back from the login page: reopen the cart so the user can place the order
+  // Back from the login page: the cart page is the place to finish the order
   useEffect(() => {
     if (user_data?.user_id && takeReopenCartFlag()) {
-      openCart();
       message.success('Signed in. Review your order and place it.');
     }
   }, [user_data?.user_id]);
@@ -192,7 +252,6 @@ const CartDrawer = () => {
   const goToLogin = () => {
     const here = `${history.location.pathname}${history.location.search || ''}`;
     setCartReturn(here);
-    closeCart();
     history.push('/login');
   };
 
@@ -200,8 +259,19 @@ const CartDrawer = () => {
     if (!user_data?.user_id) {
       goToLogin();
     } else {
+      addressReturnFocusRef.current = document.activeElement;
       setIsAddAddressModalOpen(true);
     }
+  };
+
+  // The address modal is unmounted on close, so hand focus back to whatever opened it
+  const closeAddAddress = () => {
+    setIsAddAddressModalOpen(false);
+    const el = addressReturnFocusRef.current;
+    addressReturnFocusRef.current = null;
+    setTimeout(() => {
+      if (el && el.isConnected) el.focus();
+    }, 0);
   };
 
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
@@ -259,6 +329,7 @@ const CartDrawer = () => {
       if (res?.data) {
         setOrderSuccess(res.data);
         clearCart();
+        clearCheckoutDraft();
         message.success('Order placed successfully!');
       } else {
         message.error(res?.error || res?.message || 'Failed to place order');
@@ -326,11 +397,9 @@ const CartDrawer = () => {
       message.success('Question sent to the store owner');
       setShowCustomQuery(false);
       setCustomQueryText('');
-      closeCart();
       handleChatOpen(targetOwnerId, cart.shop_id, { shop_name: cart.shop_name });
     } catch (err) {
       console.error('Failed to send inquiry to chat:', err);
-      closeCart();
       handleChatOpen(targetOwnerId, cart.shop_id, { shop_name: cart.shop_name });
     } finally {
       setQuerySending(false);
@@ -345,28 +414,39 @@ const CartDrawer = () => {
     }
     const ownerId = await resolveOwnerId();
     if (!ownerId) return;
-    closeCart();
     handleChatOpen(ownerId, cart.shop_id, { shop_name: cart.shop_name });
   };
 
-  const handleClose = () => {
+  // Go back inside the app. The first entry of a tab has no location key, so a cart opened
+  // from a link or bookmark goes to the market instead of leaving the site.
+  const goBackToShopping = () => {
     setOrderSuccess(null);
-    closeCart();
+    if (history.location.key) {
+      history.goBack();
+    } else {
+      history.push(Routes.search);
+    }
+  };
+
+  const handleRemoveItem = (item) => {
+    removeItem(item.listing_id);
+    setLiveMessage(`${item.item_name} removed from your cart`);
+    // The removed row (and its focused button) is gone: move focus to a stable heading
+    setTimeout(() => itemsHeadingRef.current?.focus(), 0);
   };
 
   // ---------------------------------------------------------------------------
   // Render helpers
   // ---------------------------------------------------------------------------
   const hasSavedList = addressMode === 'saved' && savedAddresses.length > 0;
-  const showItems = !orderSuccess && cart.items.length > 0;
 
-  const title = (
+  const pageTitle = (
     <div className="rq-cart-title">
       <span className="rq-cart-title-icon">
         <ShoppingCartOutlined />
       </span>
       <div style={{ minWidth: 0 }}>
-        <div className="rq-cart-title-main">Your cart</div>
+        <h1 className="rq-cart-title-main">Your cart</h1>
         {cart.shop_name && (
           <div className="rq-cart-title-sub" title={cart.shop_name}>
             From {cart.shop_name}
@@ -376,34 +456,39 @@ const CartDrawer = () => {
     </div>
   );
 
-  const footer = showItems ? (
-    <div className="rq-cart-footer">
-      <div className="rq-cart-footer-total">
-        <Text type="secondary" style={{ fontSize: 13 }}>
-          Total · {itemCount} {itemCount === 1 ? 'item' : 'items'}
-        </Text>
-        <span className="rq-cart-footer-amount">₹{finalTotal.toFixed(2)}</span>
-      </div>
+  // Place order + chat. `compact` is the sticky bar on phones and tablets;
+  // the full version sits under the bill on laptop and up.
+  const renderActions = (compact) => (
+    <div className={compact ? 'rq-cart-actions rq-cart-actions--compact' : 'rq-cart-actions'}>
+      {compact && (
+        <div className="rq-cart-actions-total">
+          <span className="rq-cart-actions-label">
+            Total · {itemCount} {itemCount === 1 ? 'item' : 'items'}
+          </span>
+          <span className="rq-cart-footer-amount">₹{finalTotal.toFixed(2)}</span>
+        </div>
+      )}
       {user_data?.user_id ? (
         <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
-          Place order
+          {compact ? 'Place order' : `Place order · ₹${finalTotal.toFixed(2)}`}
         </Button>
       ) : (
         <Button type="primary" size="large" block onClick={goToLogin}>
           Sign in to place order
         </Button>
       )}
-      <Button
-        type="text"
-        block
-        icon={<ChatIcon />}
-        disabled={loading || !!querySending}
-        onClick={handleChatWithStore}
-      >
-        Chat with store
-      </Button>
+      {!compact && (
+        <Button
+          block
+          icon={<ChatIcon />}
+          disabled={loading || !!querySending}
+          onClick={handleChatWithStore}
+        >
+          Chat with store
+        </Button>
+      )}
     </div>
-  ) : null;
+  );
 
   const renderSuccess = () => (
     <Result
@@ -420,13 +505,13 @@ const CartDrawer = () => {
           type="primary"
           key="orders"
           onClick={() => {
-            handleClose();
+            setOrderSuccess(null);
             history.push(Routes.orders);
           }}
         >
           View order details
         </Button>,
-        <Button key="continue" onClick={handleClose}>
+        <Button key="continue" onClick={goBackToShopping}>
           Continue browsing
         </Button>,
       ]}
@@ -473,7 +558,7 @@ const CartDrawer = () => {
         </>
       }
     >
-      <Button type="primary" onClick={closeCart}>
+      <Button type="primary" onClick={() => history.push(Routes.search)}>
         Explore market
       </Button>
     </Empty>
@@ -482,7 +567,12 @@ const CartDrawer = () => {
   const renderItems = () => (
     <section className="rq-cart-section">
       <div className="rq-cart-section-head">
-        <span className="rq-cart-section-title">Items ({itemCount})</span>
+        <h2 className="rq-cart-section-title" ref={itemsHeadingRef} tabIndex={-1}>
+          Items ({itemCount})
+        </h2>
+      </div>
+      <div className="rq-sr-only" aria-live="polite">
+        {liveMessage}
       </div>
 
       {cart.items.map((item) => (
@@ -507,28 +597,39 @@ const CartDrawer = () => {
           </div>
 
           <div className="rq-qty" role="group" aria-label={`Quantity of ${item.item_name}`}>
+            {/* At 1 the minus button is disabled: removing is the bin button's job (with a confirm) */}
             <Button
               type="text"
               icon={<MinusOutlined />}
               onClick={() => updateQuantity(item.listing_id, -1)}
-              aria-label="Decrease quantity"
+              disabled={item.quantity <= 1}
+              aria-label={`Decrease quantity of ${item.item_name}`}
             />
-            <span className="rq-qty-value">{item.quantity}</span>
+            <span className="rq-qty-value" aria-live="polite">
+              {item.quantity}
+            </span>
             <Button
               type="text"
               icon={<PlusOutlined />}
               onClick={() => updateQuantity(item.listing_id, 1)}
-              aria-label="Increase quantity"
+              aria-label={`Increase quantity of ${item.item_name}`}
             />
           </div>
 
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            onClick={() => removeItem(item.listing_id)}
-            aria-label="Remove item"
-          />
+          <Popconfirm
+            title={`Remove ${item.item_name}?`}
+            okText="Remove"
+            cancelText="Keep"
+            okButtonProps={{ danger: true }}
+            onConfirm={() => handleRemoveItem(item)}
+          >
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              aria-label={`Remove ${item.item_name}`}
+            />
+          </Popconfirm>
         </div>
       ))}
     </section>
@@ -537,7 +638,7 @@ const CartDrawer = () => {
   const renderAddressSection = () => (
     <section className="rq-cart-section">
       <div className="rq-cart-section-head">
-        <span className="rq-cart-section-title">Delivery address</span>
+        <h2 className="rq-cart-section-title">Delivery address</h2>
         <div className="rq-cart-section-links">
           {savedAddresses.length > 0 && (
             <Button
@@ -580,6 +681,7 @@ const CartDrawer = () => {
         <>
           <Input.TextArea
             autoSize={{ minRows: 2, maxRows: 4 }}
+            aria-label="Delivery address"
             placeholder="House no., street, landmark, locality"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
@@ -615,11 +717,12 @@ const CartDrawer = () => {
   const renderFulfilment = () => (
     <section className="rq-cart-section">
       <div className="rq-cart-section-head">
-        <span className="rq-cart-section-title">Fulfilment</span>
+        <h2 className="rq-cart-section-title">Fulfilment</h2>
       </div>
       <Segmented
         block
         size="large"
+        aria-label="Fulfilment method"
         value={orderType}
         onChange={setOrderType}
         options={[
@@ -647,8 +750,9 @@ const CartDrawer = () => {
   const renderContactAndNotes = () => (
     <section className="rq-cart-section">
       <Form layout="vertical" size="large" requiredMark={false} className="rq-cart-form">
-        <Form.Item label="Contact phone" required>
+        <Form.Item label="Contact phone" required htmlFor="rq-cart-phone">
           <Input
+            id="rq-cart-phone"
             prefix={<PhoneOutlined style={{ color: 'var(--outline)' }} />}
             placeholder="Mobile number for order updates"
             value={phone}
@@ -656,8 +760,9 @@ const CartDrawer = () => {
             onChange={(e) => setPhone(e.target.value)}
           />
         </Form.Item>
-        <Form.Item label="Instructions for the store (optional)">
+        <Form.Item label="Instructions for the store (optional)" htmlFor="rq-cart-notes">
           <Input
+            id="rq-cart-notes"
             placeholder="e.g. Ring the bell, call before delivery"
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
@@ -672,7 +777,7 @@ const CartDrawer = () => {
   const renderPayment = () => (
     <section className="rq-cart-section">
       <div className="rq-cart-section-head">
-        <span className="rq-cart-section-title">Payment method</span>
+        <h2 className="rq-cart-section-title">Payment method</h2>
       </div>
       <Radio.Group
         className="rq-payment-group"
@@ -701,7 +806,7 @@ const CartDrawer = () => {
   const renderSummary = () => (
     <section className="rq-cart-section">
       <div className="rq-cart-section-head">
-        <span className="rq-cart-section-title">Bill summary</span>
+        <h2 className="rq-cart-section-title">Bill summary</h2>
       </div>
       <div className="rq-cart-summary">
         <SummaryRow label="Subtotal" value={`₹${itemsTotal.toFixed(2)}`} />
@@ -744,21 +849,32 @@ const CartDrawer = () => {
         {showCustomQuery ? (
           <div style={{ marginTop: 12 }}>
             <Input.TextArea
+              id="rq-cart-custom-question"
               rows={2}
               maxLength={500}
               showCount
+              autoFocus
+              aria-label="Your question for the store owner"
               placeholder="Type your question for the store owner"
               value={customQueryText}
               onChange={(e) => setCustomQueryText(e.target.value)}
             />
             <Flex justify="flex-end" gap={8} style={{ marginTop: 8 }}>
-              <Button size="small" onClick={() => setShowCustomQuery(false)}>
+              <Button
+                size="small"
+                onClick={() => {
+                  setShowCustomQuery(false);
+                  // the toggle remounts; put focus back on it
+                  setTimeout(() => queryToggleRef.current?.focus(), 0);
+                }}
+              >
                 Cancel
               </Button>
               <Button
                 type="primary"
                 size="small"
                 loading={querySending === 'custom'}
+                disabled={!customQueryText.trim()}
                 onClick={() => handleSendPrebuiltInquiry(customQueryText)}
               >
                 Send question
@@ -767,9 +883,12 @@ const CartDrawer = () => {
           </div>
         ) : (
           <Button
+            ref={queryToggleRef}
             type="link"
             size="small"
             icon={<EditOutlined />}
+            aria-expanded={false}
+            aria-controls="rq-cart-custom-question"
             onClick={() => setShowCustomQuery(true)}
             style={{ padding: 0, marginTop: 8 }}
           >
@@ -780,12 +899,8 @@ const CartDrawer = () => {
     </section>
   );
 
-  const renderBody = () => {
-    if (orderSuccess) return renderSuccess();
-    if (cart.items.length === 0) return renderEmpty();
-
-    return (
-      <>
+  const renderSignInBanner = () => (
+    <>
         {!user_data?.user_id && (
           <div className="rq-cart-signin">
             <span className="rq-cart-signin-icon">
@@ -793,61 +908,73 @@ const CartDrawer = () => {
             </span>
             <div className="rq-cart-signin-text">
               <div className="rq-cart-signin-title">Sign in to place your order</div>
-              <div className="rq-cart-signin-sub">Your cart is saved. You'll come straight back here.</div>
+              <div className="rq-cart-signin-sub">Your cart is saved. You&apos;ll come straight back here.</div>
             </div>
             <Button type="primary" className="rq-cart-signin-btn" onClick={goToLogin}>
               Sign in
             </Button>
           </div>
         )}
+    </>
+  );
 
-        {renderItems()}
-        {renderFulfilment()}
-        {orderType !== 'pickup' && renderAddressSection()}
-        {renderContactAndNotes()}
-        {renderPayment()}
-        {renderSummary()}
-        {renderQueries()}
-      </>
+  const renderLayout = () => {
+    if (orderSuccess) return <div className="rq-cart-single">{renderSuccess()}</div>;
+    if (cart.items.length === 0) return <div className="rq-cart-single">{renderEmpty()}</div>;
+
+    return (
+      <div className={isWide ? 'rq-cart-layout rq-cart-layout--wide' : 'rq-cart-layout'}>
+        <div className="rq-cart-main">
+          {renderSignInBanner()}
+          {renderItems()}
+          {renderFulfilment()}
+          {orderType !== 'pickup' && renderAddressSection()}
+          {renderContactAndNotes()}
+          {renderPayment()}
+          {!isWide && renderSummary()}
+          {renderQueries()}
+        </div>
+        <aside className={isWide ? 'rq-cart-aside rq-cart-aside--wide' : 'rq-cart-aside'}>
+          {isWide ? (
+            <div className="rq-cart-aside-card">
+              {renderSummary()}
+              {renderActions(false)}
+            </div>
+          ) : (
+            renderActions(true)
+          )}
+        </aside>
+      </div>
     );
   };
 
   return (
-    <>
-      <Drawer
-        title={title}
-        placement={isMobile ? 'bottom' : 'right'}
-        height={isMobile ? '100dvh' : undefined}
-        width={isMobile ? undefined : 440}
-        open={isCartOpen}
-        onClose={handleClose}
-        zIndex={1200}
-        footer={footer}
-        rootClassName={isMobile ? 'rq-cart-drawer rq-cart-drawer--mobile' : 'rq-cart-drawer'}
-        styles={{
-          body: { padding: isMobile ? '16px' : '20px 24px' },
-          footer: {
-            padding: isMobile
-              ? '12px 16px calc(12px + env(safe-area-inset-bottom, 0px))'
-              : '16px 24px',
-            borderTop: '1px solid #ebe7e0',
-          },
-        }}
-      >
-        {renderBody()}
-      </Drawer>
+    <div className="rq-cart-page">
+      <div className="rq-cart-page-inner">
+        <header className="rq-cart-page-head">
+          <Button
+            type="text"
+            icon={<ArrowLeftOutlined />}
+            onClick={goBackToShopping}
+            aria-label="Go back"
+            className="rq-cart-back"
+          />
+          {pageTitle}
+        </header>
+        {renderLayout()}
+      </div>
 
       {isAddAddressModalOpen && (
         <AddressModal
           open={isAddAddressModalOpen}
-          onClose={() => setIsAddAddressModalOpen(false)}
+          onClose={closeAddAddress}
           onSuccess={handleNewAddressCreated}
           userProfile={user_data}
           zIndex={1400}
         />
       )}
-    </>
+    </div>
   );
 };
 
-export default CartDrawer;
+export default CartScreen;

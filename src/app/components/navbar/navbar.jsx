@@ -163,7 +163,7 @@ const Navbar = () => {
             ) : isMerchant ? (
               <span className="role-pill role-pill-merchant">Shop Owner</span>
             ) : (
-              <span className="role-pill role-pill-user">Customer</span>
+              <span className="role-pill role-pill-user">Shopper</span>
             )}
           </div>
         </div>
@@ -285,7 +285,7 @@ const Navbar = () => {
       <header
         className="navBar"
         style={{
-          backgroundColor: '#F8F4EF',
+          backgroundColor: 'var(--brand-bg, #FDF9F4)',
           borderBottom: 'none',
           boxShadow: 'none',
           padding: '0 16px',
@@ -374,12 +374,13 @@ const Navbar = () => {
               </div>
             )}
           >
-            <div
-              role="button"
-              tabIndex={0}
+            <button
+              type="button"
+              aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : 'Notifications'}
               style={{
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
+                padding: 0,
                 borderRadius: '50%',
                 background: '#ffffff',
                 border: '1px solid #ECE7DF',
@@ -393,17 +394,19 @@ const Navbar = () => {
               <Badge count={unreadNotifCount} size="small" offset={[2, -2]}>
                 <BellOutlined style={{ fontSize: 16, color: '#1D2939' }} />
               </Badge>
-            </div>
+            </button>
           </Dropdown>
 
           {/* Circular User Avatar Trigger (Navigates to Account) */}
-          <div
-            role="button"
-            tabIndex={0}
+          <button
+            type="button"
+            aria-label="Account"
             onClick={() => history.push(Routes.profile)}
             style={{
-              width: 38,
-              height: 38,
+              width: 44,
+              height: 44,
+              padding: 0,
+              border: 0,
               borderRadius: '50%',
               background: '#0B2D6B',
               display: 'flex',
@@ -414,7 +417,7 @@ const Navbar = () => {
             }}
           >
             <UserOutlined style={{ fontSize: 16 }} />
-          </div>
+          </button>
         </Flex>
       </header>
     );
@@ -534,6 +537,7 @@ const Navbar = () => {
               size={screens.xs ? 'small' : 'default'}
             >
               <Button
+                className="rq-nav-icon-btn"
                 shape="circle"
                 size={screens.xs ? 'middle' : 'large'}
                 icon={<ShoppingCartOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
@@ -664,6 +668,7 @@ const Navbar = () => {
               size={screens.xs ? 'small' : 'default'}
             >
               <Button
+                className="rq-nav-icon-btn"
                 shape="circle"
                 size={screens.xs ? 'middle' : 'large'}
                 icon={<BellOutlined style={{ fontSize: screens.xs ? 17 : 19 }} />}
@@ -688,7 +693,11 @@ const Navbar = () => {
                 arrow
                 trigger={['click']}
               >
-                <div className="navbar-user-capsule">
+                <button
+                  type="button"
+                  className="navbar-user-capsule"
+                  aria-label={`Account menu, ${user_data?.username || 'User'}`}
+                >
                   <Avatar
                     size={30}
                     icon={<UserOutlined />}
@@ -702,10 +711,10 @@ const Navbar = () => {
                   {isMerchant ? (
                     <span className="role-pill role-pill-merchant">Shop Owner</span>
                   ) : (
-                    <span className="role-pill role-pill-user">Customer</span>
+                    <span className="role-pill role-pill-user">Shopper</span>
                   )}
                   <DownOutlined style={{ fontSize: 10, color: '#94a3b8', marginLeft: 2 }} />
-                </div>
+                </button>
               </Dropdown>
             ) : (
               <Flex align="center" gap={8} style={{ marginLeft: 4 }}>
@@ -735,15 +744,18 @@ const Navbar = () => {
 
         {/* Mobile View Quick User Indicator (1-tap to Account) */}
         {isMobile && isLoggedIn && (
-          <Avatar
-            size={32}
-            icon={<UserOutlined />}
+          <button
+            type="button"
+            className="rq-nav-avatar-btn"
+            aria-label="Account"
             onClick={() => history.push(Routes.profile)}
-            style={{
-              cursor: 'pointer',
-              backgroundColor: isMerchant ? colors.secondary : colors.primary,
-            }}
-          />
+          >
+            <Avatar
+              size={32}
+              icon={<UserOutlined />}
+              style={{ backgroundColor: isMerchant ? colors.secondary : colors.primary }}
+            />
+          </button>
         )}
       </Flex>
     </header>

@@ -51,6 +51,32 @@ import AdminOrdersAccounts from '../admin/orders_accounts';
 const { Title, Text } = Typography;
 const { Option } = Select;
 
+// "12 min ago", "3 hr ago", "2 days ago" (instead of raw minutes like "5109m ago")
+const formatTimeAgo = (iso) => {
+  if (!iso) return 'just now';
+  const mins = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins} min ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs} hr ago`;
+  const days = Math.round(hrs / 24);
+  return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+};
+
+// tel: URIs must not contain spaces ("tel:095599 55239" fails on some dialers)
+const telHref = (number) => {
+  const digits = number ? String(number).replace(/[^\d+]/g, '') : '';
+  return digits ? `tel:${digits}` : undefined;
+};
+
+// Payment wording follows the order state: nothing is "paid" or "confirmed" before completion
+const paymentLabel = (ord) => {
+  const isUpi = ord?.payment_mode === 'direct_upi';
+  if (ord?.status === 'completed') return isUpi ? 'Paid by UPI' : 'Paid in cash';
+  const when = ord?.order_type === 'pickup' ? 'at pickup' : 'on delivery';
+  return isUpi ? `UPI ${when}` : `Cash ${when}`;
+};
+
 const OrdersScreen = () => {
   const history = useHistory();
   const { user_data } = useGlobalStore((state) => state);
@@ -343,7 +369,7 @@ const OrdersScreen = () => {
     const steps = [
       { key: 'placed', label: 'Placed', sub: timeStr, done: true, active: isPlaced },
       { key: 'prep', label: 'Confirmed', sub: isPreparing || isReadyOrDispatched || isCompleted ? 'Confirmed' : 'Pending', done: isPreparing || isReadyOrDispatched || isCompleted, active: isPreparing },
-      { key: 'ready', label: 'Fulfilling', sub: isReadyOrDispatched ? 'In Progress' : isCompleted ? 'Ready' : 'Pending', done: isCompleted, active: isReadyOrDispatched || isPreparing },
+      { key: 'ready', label: 'Fulfilling', sub: isReadyOrDispatched || isPreparing ? 'In progress' : isCompleted ? 'Ready' : 'Pending', done: isCompleted, active: isReadyOrDispatched || isPreparing },
       { key: 'done', label: 'Delivery', sub: isCompleted ? 'Delivered' : 'Pending', done: isCompleted, active: isCompleted },
     ];
 
@@ -359,7 +385,7 @@ const OrdersScreen = () => {
           <span style={{ fontSize: 13, fontWeight: 700, color: colors.textMain || '#1D2939' }}>Order Progress</span>
           <span style={{ fontSize: 12, fontWeight: 700, color: colors.secondary, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
             <span style={{ width: 6, height: 6, borderRadius: '50%', background: colors.secondary, display: 'inline-block' }} />
-            {isCompleted ? 'Completed' : '● In Progress'}
+            {isCompleted ? 'Completed' : 'In Progress'}
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', position: 'relative', margin: '4px 0 12px 0' }}>
@@ -418,7 +444,7 @@ const OrdersScreen = () => {
                       border: step.done ? 'none' : '2px solid #D0D5DD',
                       color: '#ffffff',
                       fontSize: 12,
-                      fontWeight: 800,
+                      fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -426,14 +452,14 @@ const OrdersScreen = () => {
                       boxShadow: step.done ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                     }}
                   >
-                    {step.done ? <CheckOutlined style={{ fontSize: 10 }} /> : <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#98A2B3' }} />}
+                    {step.done ? <CheckOutlined style={{ fontSize: 11 }} /> : <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#98A2B3' }} />}
                   </div>
                 )}
                 <div style={{ fontSize: 11, fontWeight: isBeacon || step.done ? 700 : 600, color: isBeacon ? colors.secondary : step.done ? '#1D2939' : '#667085' }}>
                   {step.label}
                 </div>
                 {step.sub && (
-                  <div style={{ fontSize: 10, color: isBeacon ? colors.secondary : '#667085', fontWeight: isBeacon ? 700 : 500 }}>
+                  <div style={{ fontSize: 11, color: isBeacon ? colors.secondary : '#667085', fontWeight: isBeacon ? 700 : 500 }}>
                     {step.sub}
                   </div>
                 )}
@@ -548,7 +574,7 @@ const OrdersScreen = () => {
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F8F4EF', paddingBottom: 100 }}>
+    <div style={{ minHeight: '100vh', background: colors.bg, paddingBottom: 100 }}>
       <div
         style={{
           maxWidth: isCustomerOnly ? 640 : activeTab === 'admin_all' ? 1200 : 1040,
@@ -565,9 +591,9 @@ const OrdersScreen = () => {
                   level={2}
                   style={{
                     margin: 0,
-                    fontWeight: 800,
+                    fontWeight: 700,
                     color: '#0B2D6B',
-                    fontSize: 'clamp(20px, 4vw, 26px)',
+                    fontSize: 20,
                     letterSpacing: '-0.5px',
                   }}
                 >
@@ -652,7 +678,7 @@ const OrdersScreen = () => {
                 <div style={{ fontSize: 11, color: colors.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Total Orders
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
                   {storeMetrics.total}
                 </div>
               </Card>
@@ -670,7 +696,7 @@ const OrdersScreen = () => {
                 <div style={{ fontSize: 11, color: colors.semantic.warning, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Action Needed
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: colors.semantic.warning, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: colors.semantic.warning, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
                   {storeMetrics.actionRequired}
                 </div>
               </Card>
@@ -688,7 +714,7 @@ const OrdersScreen = () => {
                 <div style={{ fontSize: 11, color: colors.secondary, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   In Fulfillment
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: colors.secondary, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: colors.secondary, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
                   {storeMetrics.inFulfillment}
                 </div>
               </Card>
@@ -706,7 +732,7 @@ const OrdersScreen = () => {
                 <div style={{ fontSize: 11, color: colors.semantic.success, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                   Total Revenue
                 </div>
-                <div style={{ fontSize: 22, fontWeight: 800, color: colors.semantic.success, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
+                <div style={{ fontSize: 20, fontWeight: 700, color: colors.semantic.success, fontFamily: typography.fontFamily.headline, marginTop: 2 }}>
                   ₹{storeMetrics.revenue.toFixed(0)}
                 </div>
               </Card>
@@ -822,14 +848,14 @@ const OrdersScreen = () => {
                           size={46}
                           style={{
                             backgroundColor: colors.primary,
-                            fontWeight: 800,
+                            fontWeight: 700,
                             flexShrink: 0,
                           }}
                         >
                           {(ord.customer?.username || 'C').charAt(0).toUpperCase()}
                         </Avatar>
                         <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 800, fontSize: 15, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+                          <div style={{ fontWeight: 700, fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                             Customer: {ord.customer?.username || 'Guest Customer'}
                           </div>
                           <div style={{ fontSize: 12, color: colors.textMuted }}>
@@ -891,7 +917,7 @@ const OrdersScreen = () => {
                                 background: colors.surface,
                                 border: `1px solid ${colors.borderLight}`,
                                 color: colors.textMain,
-                                fontWeight: 800,
+                                fontWeight: 700,
                                 fontSize: 11,
                                 padding: '1px 6px',
                                 borderRadius: radii.xs,
@@ -932,7 +958,7 @@ const OrdersScreen = () => {
                             <><WalletOutlined style={{ color: colors.semantic.warning }} /> Cash</>
                           )}
                         </span>
-                        <span style={{ fontSize: 17, fontWeight: 800, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
+                        <span style={{ fontSize: 16, fontWeight: 700, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
                           ₹{ord.total_amount?.toFixed(2)}
                         </span>
                       </div>
@@ -1057,7 +1083,7 @@ const OrdersScreen = () => {
                         {(ord.customer_phone || ord.customer?.mobile) && (
                           <Button
                             icon={<PhoneOutlined />}
-                            href={`tel:${ord.customer_phone || ord.customer?.mobile}`}
+                            href={telHref(ord.customer_phone || ord.customer?.mobile)}
                             style={{ borderRadius: 8, fontWeight: 600 }}
                           >
                             Call
@@ -1080,31 +1106,18 @@ const OrdersScreen = () => {
         <div style={{ maxWidth: 640, margin: '0 auto' }}>
           {/* Top Hyperlocal Tracker Header */}
           <div style={{ marginBottom: 14 }}>
-            <div
-              style={{
-                fontSize: 11,
-                fontWeight: 800,
-                color: '#0056bd',
-                letterSpacing: '0.06em',
-                textTransform: 'uppercase',
-                marginBottom: 2,
-              }}
-            >
-              HYPERLOCAL TRACK
-            </div>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <h1
                   style={{
                     margin: 0,
                     fontFamily: typography.fontFamily.headline,
-                    fontWeight: 800,
-                    fontSize: 'clamp(22px, 5vw, 28px)',
+                    fontWeight: 700,
+                    fontSize: 20,
                     color: '#0B2D6B',
-                    letterSpacing: '-0.5px',
-                  }}
+                    }}
                 >
-                  Your Orders
+                  Your orders
                 </h1>
                 <div
                   style={{
@@ -1128,66 +1141,77 @@ const OrdersScreen = () => {
                       display: 'inline-block',
                     }}
                   />
-                  {activeCustomerOrders.length > 0 ? activeCustomerOrders.length : 1} Live
+                  {activeCustomerOrders.length} live
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Segmented Switcher Pills: Active Orders vs Past Orders */}
+          {/* Active / Past: ARIA tabs (arrow keys switch). Same neutral segmented look as the cart's toggle. */}
           <div
+            role="tablist"
+            aria-label="Order status"
+            onKeyDown={(e) => {
+              if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+              e.preventDefault();
+              const next =
+                e.key === 'Home' ? 'active' : e.key === 'End' ? 'completed' : customerOrderFilter === 'completed' ? 'active' : 'completed';
+              setCustomerOrderFilter(next);
+              setTimeout(() => document.getElementById(`orders-tab-${next}`)?.focus(), 0);
+            }}
             style={{
               display: 'flex',
-              background: '#EDEAE3',
+              background: '#EFEBE5',
               padding: 4,
-              borderRadius: 9999,
+              borderRadius: radii.lg,
               marginBottom: 18,
               gap: 4,
             }}
           >
-            <button
-              type="button"
-              onClick={() => setCustomerOrderFilter('active')}
-              style={{
-                flex: 1,
-                padding: '9px 16px',
-                borderRadius: 9999,
-                border: 'none',
-                background: customerOrderFilter === 'active' || customerOrderFilter === 'all' ? '#0B2D6B' : 'transparent',
-                color: customerOrderFilter === 'active' || customerOrderFilter === 'all' ? '#ffffff' : '#475467',
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: customerOrderFilter === 'active' || customerOrderFilter === 'all' ? '0 2px 6px rgba(11, 45, 107, 0.2)' : 'none',
-              }}
-            >
-              Active Orders ({activeCustomerOrders.length > 0 ? activeCustomerOrders.length : 1})
-            </button>
-            <button
-              type="button"
-              onClick={() => setCustomerOrderFilter('completed')}
-              style={{
-                flex: 1,
-                padding: '9px 16px',
-                borderRadius: 9999,
-                border: 'none',
-                background: customerOrderFilter === 'completed' ? '#0B2D6B' : 'transparent',
-                color: customerOrderFilter === 'completed' ? '#ffffff' : '#475467',
-                fontWeight: 700,
-                fontSize: 13,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                boxShadow: customerOrderFilter === 'completed' ? '0 2px 6px rgba(11, 45, 107, 0.2)' : 'none',
-              }}
-            >
-              Past Orders ({pastCustomerOrders.length})
-            </button>
+            {[
+              { key: 'active', label: `Active orders (${activeCustomerOrders.length})` },
+              { key: 'completed', label: `Past orders (${pastCustomerOrders.length})` },
+            ].map((tab) => {
+              const selected =
+                tab.key === 'active'
+                  ? customerOrderFilter === 'active' || customerOrderFilter === 'all'
+                  : customerOrderFilter === 'completed';
+              return (
+                <button
+                  key={tab.key}
+                  type="button"
+                  role="tab"
+                  id={`orders-tab-${tab.key}`}
+                  aria-selected={selected}
+                  aria-controls={`orders-panel-${tab.key}`}
+                  tabIndex={selected ? 0 : -1}
+                  onClick={() => setCustomerOrderFilter(tab.key)}
+                  style={{
+                    flex: 1,
+                    minWidth: 0,
+                    padding: '10px 12px',
+                    minHeight: 44,
+                    borderRadius: radii.md,
+                    border: 'none',
+                    background: selected ? '#ffffff' : 'transparent',
+                    color: selected ? colors.primary : '#575a65',
+                    fontWeight: selected ? 700 : 600,
+                    fontSize: 14,
+                    fontFamily: 'inherit',
+                    cursor: 'pointer',
+                    transition: 'background 0.2s ease, color 0.2s ease',
+                    boxShadow: selected ? '0 1px 3px rgba(28, 28, 25, 0.12)' : 'none',
+                  }}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
           </div>
 
           {/* ACTIVE ORDERS SECTION */}
           {customerOrderFilter === 'active' && (
-            <div>
+            <div role="tabpanel" id="orders-panel-active" aria-labelledby="orders-tab-active">
               {activeCustomerOrders.length === 0 ? (
                 <Card
                   style={{
@@ -1221,9 +1245,7 @@ const OrdersScreen = () => {
                     const isExpanded = expandedOrders[ord.id];
                     const items = ord.items || [];
                     const totalItemQty = items.reduce((sum, it) => sum + (it.quantity || 1), 0);
-                    const timeAgo = ord.createdAt
-                      ? `${Math.max(1, Math.round((Date.now() - new Date(ord.createdAt).getTime()) / 60000))}m ago`
-                      : 'Just now';
+                    const timeAgo = formatTimeAgo(ord.createdAt);
 
                     return (
                       <div
@@ -1240,8 +1262,8 @@ const OrdersScreen = () => {
                         {/* Top Row: #RQ-84291 Placed badge ... Price & UPI Confirmed */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                           <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
-                              <span style={{ fontWeight: 800, fontSize: 16, color: colors.textMain }}>
+                            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 8, marginBottom: 2 }}>
+                              <span style={{ fontWeight: 700, fontSize: 16, color: colors.textMain, whiteSpace: 'nowrap' }}>
                                 #{ord.order_number}
                               </span>
                               {getStatusBadge(ord.status)}
@@ -1252,7 +1274,7 @@ const OrdersScreen = () => {
                           </div>
 
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontWeight: 800, fontSize: 20, color: colors.textMain, lineHeight: 1.1 }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: colors.textMain, lineHeight: 1.1 }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
                             </div>
                             <span
@@ -1261,13 +1283,14 @@ const OrdersScreen = () => {
                                 marginTop: 3,
                                 background: colors.primaryLight,
                                 color: colors.primary,
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: 700,
                                 borderRadius: 4,
                                 padding: '1px 6px',
+                                whiteSpace: 'nowrap',
                               }}
                             >
-                              {ord.payment_mode === 'direct_upi' ? 'UPI Confirmed' : 'Cash on Counter'}
+                              {paymentLabel(ord)}
                             </span>
                           </div>
                         </div>
@@ -1279,7 +1302,7 @@ const OrdersScreen = () => {
                         <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
                           <Button
                             icon={<PhoneOutlined />}
-                            href={ord.shop?.mobile_number ? `tel:${ord.shop.mobile_number}` : undefined}
+                            href={telHref(ord.shop?.mobile_number)}
                             onClick={() => {
                               if (!ord.shop?.mobile_number) {
                                 handleChatOpen(ord.shop?.owner_id, ord.shop_id, { shop_name: ord.shop?.shop_name });
@@ -1287,7 +1310,8 @@ const OrdersScreen = () => {
                             }}
                             style={{
                               flex: 1,
-                              height: 38,
+                              minWidth: 0,
+                              height: 44,
                               borderRadius: radii.md,
                               fontWeight: 700,
                               borderColor: colors.border,
@@ -1295,15 +1319,18 @@ const OrdersScreen = () => {
                               background: '#ffffff',
                             }}
                           >
-                            Call Shop
+                            Call shop
                           </Button>
                           <Button
                             type="primary"
                             icon={<FileDoneOutlined />}
                             onClick={() => toggleExpand(ord.id)}
+                            aria-expanded={isExpanded}
+                            aria-controls={`order-summary-${ord.id}`}
                             style={{
                               flex: 1,
-                              height: 38,
+                              minWidth: 0,
+                              height: 44,
                               borderRadius: radii.md,
                               fontWeight: 700,
                               background: colors.primary,
@@ -1311,13 +1338,14 @@ const OrdersScreen = () => {
                               color: '#ffffff',
                             }}
                           >
-                            {isExpanded ? 'Hide Summary' : 'View Summary'}
+                            {isExpanded ? 'Hide summary' : 'View summary'}
                           </Button>
                         </div>
 
                         {/* Expanded Receipt Breakdown if requested */}
                         {isExpanded && (
                           <div
+                            id={`order-summary-${ord.id}`}
                             style={{
                               background: colors.surfaceContainerLow,
                               borderRadius: radii.md,
@@ -1349,16 +1377,16 @@ const OrdersScreen = () => {
                               <span>Platform Micro-Fee</span>
                               <span>₹{(parseFloat(ord.platform_fee) || 0).toFixed(2)}</span>
                             </div>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 800, color: colors.textMain, marginTop: 4 }}>
-                              <span>Total Paid</span>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontWeight: 700, color: colors.textMain, marginTop: 4 }}>
+                              <span>{ord.status === 'completed' ? 'Total paid' : 'Total'}</span>
                               <span>₹{(parseFloat(ord.total_amount) || 0).toFixed(2)}</span>
                             </div>
                           </div>
                         )}
 
                         {/* STORE FULFILLMENT SECTION */}
-                        <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', letterSpacing: '0.05em', marginBottom: 8, textTransform: 'uppercase' }}>
-                          STORE FULFILLMENT
+                        <div style={{ fontSize: 13, fontWeight: 600, color: colors.textMuted, marginBottom: 8 }}>
+                          Store fulfilment
                         </div>
 
                         <div
@@ -1385,7 +1413,7 @@ const OrdersScreen = () => {
                                 }}
                               />
                               <div>
-                                <div style={{ fontWeight: 800, fontSize: 14, color: colors.textMain }}>
+                                <div style={{ fontWeight: 700, fontSize: 14, color: colors.textMain }}>
                                   {ord.shop?.shop_name || 'Neighborhood Store'}
                                 </div>
                                 <div style={{ fontSize: 11, color: '#64748b' }}>
@@ -1398,13 +1426,15 @@ const OrdersScreen = () => {
                               style={{
                                 background: ord.order_type === 'pickup' ? '#fef3c7' : colors.primaryLight,
                                 color: ord.order_type === 'pickup' ? '#92400e' : colors.primary,
-                                fontSize: 10,
+                                fontSize: 11,
                                 fontWeight: 700,
                                 borderRadius: 4,
                                 padding: '2px 6px',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0,
                               }}
                             >
-                              {ord.order_type === 'pickup' ? 'Pickup Requested' : 'Delivery Active'}
+                              {ord.order_type === 'pickup' ? 'Pickup' : 'Delivery'}
                             </span>
                           </div>
 
@@ -1447,7 +1477,7 @@ const OrdersScreen = () => {
                                 ? `Self-Pickup OTP: ${ord.order_number ? ord.order_number.slice(-4) : '4921'}`
                                 : 'Local courier / delivery runner dispatched'}
                             </span>
-                            <span style={{ fontWeight: 800, color: colors.textMain }}>
+                            <span style={{ fontWeight: 700, color: colors.textMain }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
                             </span>
                           </div>
@@ -1466,42 +1496,20 @@ const OrdersScreen = () => {
                             </div>
                           )}
 
-                          {/* Secondary actions: Call Shop & Chat */}
-                          <div style={{ display: 'flex', gap: 8 }}>
-                            <Button
-                              icon={<PhoneOutlined />}
-                              href={ord.shop?.mobile_number ? `tel:${ord.shop.mobile_number}` : undefined}
-                              onClick={() => {
-                                if (!ord.shop?.mobile_number) {
-                                  handleChatOpen(ord.shop?.owner_id, ord.shop_id, { shop_name: ord.shop?.shop_name });
-                                }
-                              }}
-                              style={{
-                                flex: 1,
-                                height: 36,
-                                borderRadius: radii.md,
-                                fontWeight: 700,
-                                borderColor: colors.border,
-                                color: colors.textMain,
-                              }}
-                            >
-                              Call Shop
-                            </Button>
-                            <Button
-                              type="primary"
-                              onClick={() => handleChatOpen(ord.shop?.owner_id, ord.shop_id, { shop_name: ord.shop?.shop_name })}
-                              style={{
-                                flex: 1,
-                                height: 36,
-                                borderRadius: radii.md,
-                                fontWeight: 700,
-                                background: colors.primary,
-                                borderColor: colors.primary,
-                              }}
-                            >
-                              Order Chat
-                            </Button>
-                          </div>
+                          {/* Chat with the store (Call shop already sits in the action row above) */}
+                          <Button
+                            block
+                            onClick={() => handleChatOpen(ord.shop?.owner_id, ord.shop_id, { shop_name: ord.shop?.shop_name })}
+                            style={{
+                              height: 44,
+                              borderRadius: radii.md,
+                              fontWeight: 700,
+                              borderColor: colors.border,
+                              color: colors.primary,
+                            }}
+                          >
+                            Chat with store
+                          </Button>
                         </div>
                       </div>
                     );
@@ -1513,7 +1521,12 @@ const OrdersScreen = () => {
 
           {/* RECENT ORDERS / PAST ORDERS SECTION */}
           {(customerOrderFilter === 'completed' || customerOrderFilter === 'active' || customerOrderFilter === 'all') && (
-            <div style={{ marginTop: 22 }}>
+            <div
+              style={{ marginTop: 22 }}
+              {...(customerOrderFilter === 'completed'
+                ? { role: 'tabpanel', id: 'orders-panel-completed', 'aria-labelledby': 'orders-tab-completed' }
+                : {})}
+            >
               <div
                 style={{
                   display: 'flex',
@@ -1522,17 +1535,17 @@ const OrdersScreen = () => {
                   marginBottom: 12,
                 }}
               >
-                <h3
+                <h2
                   style={{
                     margin: 0,
                     fontFamily: typography.fontFamily.headline,
-                    fontWeight: 800,
-                    fontSize: 18,
-                    color: '#0B2D6B',
+                    fontWeight: 700,
+                    fontSize: 16,
+                    color: colors.primary,
                   }}
                 >
-                  Recent Orders
-                </h3>
+                  Recent orders
+                </h2>
                 <span style={{ fontSize: 12, color: '#667085' }}>
                   All neighborhood verified
                 </span>
@@ -1566,8 +1579,8 @@ const OrdersScreen = () => {
                           </span>
                           <span
                             style={{
-                              background: ord.status === 'completed' ? '#FEF3C7' : '#fef2f2',
-                              color: ord.status === 'completed' ? '#92400E' : '#b91c1c',
+                              background: ord.status === 'completed' ? '#ECFDF3' : '#fef2f2',
+                              color: ord.status === 'completed' ? '#05603A' : '#b91c1c',
                               borderRadius: 6,
                               padding: '2px 8px',
                               fontSize: 11,
@@ -1594,8 +1607,8 @@ const OrdersScreen = () => {
                             <div style={{ minWidth: 0, flex: 1, paddingRight: 8 }}>
                               <div
                                 style={{
-                                  fontWeight: 800,
-                                  fontSize: 15,
+                                  fontWeight: 700,
+                                  fontSize: 14,
                                   color: '#0B2D6B',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
@@ -1615,14 +1628,14 @@ const OrdersScreen = () => {
                               >
                                 {itemsSummary}
                               </div>
-                              <div style={{ fontSize: 11.5, color: '#0056bd', fontWeight: 600, marginTop: 1 }}>
-                                Paid directly via UPI
+                              <div style={{ fontSize: 12, color: '#0056bd', fontWeight: 600, marginTop: 1 }}>
+                                {paymentLabel(ord)}
                               </div>
                             </div>
                           </div>
 
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 800, fontSize: 18, color: '#0B2D6B' }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: '#0B2D6B' }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
                             </div>
                           </div>
@@ -1630,7 +1643,7 @@ const OrdersScreen = () => {
 
                         {/* Bottom row: Order ID & Action Button */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px solid #F2EFE9' }}>
-                          <span style={{ fontSize: 11.5, color: '#667085' }}>
+                          <span style={{ fontSize: 12, color: '#667085' }}>
                             Order ID: #{ord.order_number}
                           </span>
                           <Button
@@ -1648,7 +1661,7 @@ const OrdersScreen = () => {
                               borderRadius: 9999,
                               fontWeight: 700,
                               padding: '0 18px',
-                              height: 32,
+                              minHeight: 44,
                               fontSize: 12,
                             }}
                           >
@@ -1734,7 +1747,7 @@ const OrdersScreen = () => {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
                           <div>
-                            <div style={{ fontWeight: 800, fontSize: 15, color: '#0f172a' }}>{q.service_title}</div>
+                            <div style={{ fontWeight: 700, fontSize: 14, color: '#0f172a' }}>{q.service_title}</div>
                             <div style={{ fontSize: 12, color: '#64748b' }}>
                               From Customer: <strong style={{ color: '#0f172a' }}>{q.customer?.username || 'Customer'}</strong> ({q.customer?.mobile || 'No Phone'})
                             </div>
@@ -1743,7 +1756,7 @@ const OrdersScreen = () => {
                             )}
                           </div>
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 16, fontWeight: 800, color: colors.primary }}>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: colors.primary }}>
                               ₹{q.estimated_amount?.toFixed(2)}
                             </div>
                             <Tag color="blue">{q.status}</Tag>
@@ -1790,7 +1803,7 @@ const OrdersScreen = () => {
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 8 }}>
                           <div>
-                            <div style={{ fontWeight: 800, fontSize: 16, color: '#0f172a' }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: '#0f172a' }}>
                               {q.service_title}
                             </div>
                             <div style={{ fontSize: 12, color: '#64748b' }}>
@@ -1800,7 +1813,7 @@ const OrdersScreen = () => {
                           </div>
 
                           <div style={{ textAlign: 'right' }}>
-                            <div style={{ fontSize: 18, fontWeight: 800, color: colors.primary }}>
+                            <div style={{ fontSize: 16, fontWeight: 700, color: colors.primary }}>
                               ₹{q.estimated_amount?.toFixed(2)}
                             </div>
                             <Tag color="blue" style={{ margin: 0, fontWeight: 700, borderRadius: 9999 }}>

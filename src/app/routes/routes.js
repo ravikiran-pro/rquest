@@ -8,6 +8,7 @@ const Routes = {
   chat: '/chat',
   register: '/register',
   storefront: '/shop/:shop_id',
+  cart: '/cart',
   orders: '/orders',
   profile: '/profile',
   deliveryPortal: '/delivery-portal',

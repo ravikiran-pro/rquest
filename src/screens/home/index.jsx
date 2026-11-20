@@ -196,6 +196,7 @@ const HomeScreen = () => {
   const location = useLocation();
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
+  const isDesktop = Boolean(screens.lg);
 
   const { user_data } = useGlobalStore((state) => state);
 
@@ -1373,25 +1374,38 @@ const HomeScreen = () => {
             {/* Right Column: Interactive Live Merchant Console Mock & CTA Buttons */}
             <Col xs={24} lg={9}>
               <div
+                className="merchant-partner-console-col"
                 style={{
                   display: 'flex',
                   flexDirection: 'column',
                   gap: 16,
-                  alignItems: isMobile ? 'stretch' : 'flex-end',
+                  alignItems: isDesktop ? 'flex-end' : 'center',
+                  width: '100%',
                 }}
               >
                 {/* Live Console with Animated Tickers & Order Toasts */}
-                <div style={{ width: '100%', maxWidth: 360 }}>
+                <div
+                  className="merchant-partner-widget-wrapper"
+                  style={{
+                    width: '100%',
+                    maxWidth: 360,
+                    margin: isDesktop ? 0 : '0 auto',
+                  }}
+                >
                   <LiveDashboardMock />
                 </div>
 
                 <div
+                  className="merchant-partner-cta-row"
                   style={{
                     display: 'flex',
                     gap: 10,
-                    flexWrap: 'wrap',
-                    justifyContent: isMobile ? 'stretch' : 'flex-end',
+                    flexWrap: isMobile ? 'wrap' : 'nowrap',
+                    alignItems: 'center',
+                    justifyContent: isDesktop ? 'flex-end' : 'center',
                     width: '100%',
+                    maxWidth: isMobile ? 360 : 380,
+                    margin: isDesktop ? 0 : '0 auto',
                   }}
                 >
                   {/* Sell on Rquest Dark Pill Button */}
@@ -1403,14 +1417,15 @@ const HomeScreen = () => {
                       color: '#FFFFFF',
                       border: 'none',
                       borderRadius: radii.full,
-                      padding: isMobile ? '10px 18px' : '12px 26px',
-                      fontSize: isMobile ? 13.5 : 14,
+                      padding: isMobile ? '10px 18px' : '11px 18px',
+                      fontSize: 13.5,
                       fontWeight: 700,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 8,
+                      gap: 7,
+                      whiteSpace: 'nowrap',
                       boxShadow: '0 4px 12px rgba(35, 21, 15, 0.25)',
                       transition: 'all 0.18s ease',
                       flex: isMobile ? '1 1 100%' : 'initial',
@@ -1431,14 +1446,15 @@ const HomeScreen = () => {
                       border: '1px solid #D7C6B4',
                       color: '#1C1917',
                       borderRadius: radii.full,
-                      padding: isMobile ? '10px 18px' : '11px 22px',
-                      fontSize: isMobile ? 13.5 : 14,
+                      padding: isMobile ? '10px 18px' : '10px 16px',
+                      fontSize: 13.5,
                       fontWeight: 700,
                       cursor: 'pointer',
                       display: 'inline-flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: 8,
+                      gap: 7,
+                      whiteSpace: 'nowrap',
                       transition: 'all 0.18s ease',
                       flex: isMobile ? '1 1 100%' : 'initial',
                     }}

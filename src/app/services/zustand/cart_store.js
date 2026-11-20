@@ -102,6 +102,13 @@ const useCartStore = create(
     {
       name: 'rquest-cart-storage',
       storage: createJSONStorage(() => localStorage),
+      // isCartOpen is a transient UI signal (it now means "go to /cart"); never restore it on load
+      partialize: (state) => {
+        const { isCartOpen, ...rest } = state; // eslint-disable-line no-unused-vars
+        return rest;
+      },
+      // ...and drop a stale value saved by older builds (it would redirect to /cart once)
+      merge: (persisted, current) => ({ ...current, ...(persisted || {}), isCartOpen: false }),
     }
   )
 );

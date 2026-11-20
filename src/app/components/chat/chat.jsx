@@ -93,6 +93,18 @@ function ChatApp() {
   } = useChatStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
 
+  // Dialog behaviour: focus moves into the panel, Escape closes it, focus returns to the opener
+  const overlayRef = useRef(null);
+  useEffect(() => {
+    const opener = document.activeElement;
+    overlayRef.current?.focus();
+    return () => {
+      if (opener && opener !== document.body && opener.isConnected && typeof opener.focus === 'function') {
+        opener.focus();
+      }
+    };
+  }, []);
+
   const [allShops, setAllShops] = useState([]);
   const [selectedChat, setSelectedChat] = useState(receiver_id);
   const [userMenu, setUserMenu] = useState({});
@@ -882,7 +894,20 @@ function ChatApp() {
 
   const activeMessages = selectedChat ? userMenu[selectedChat] || [] : [];
   return (
-    <div className="rquest-chat-overlay">
+    <div
+      className="rquest-chat-overlay"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Messages"
+      tabIndex={-1}
+      ref={overlayRef}
+      onKeyDown={(e) => {
+        if (e.key === 'Escape') {
+          e.stopPropagation();
+          handleChatClose();
+        }
+      }}
+    >
       <div className="rquest-chat-app">
         <MainContainer responsive={false}>
           {/* Left Sidebar Pane (Kept in DOM to eliminate mobile unmounting crashes) */}
@@ -1038,6 +1063,16 @@ function ChatApp() {
                         key={item.partnerId}
                         active={selectedChat === item.partnerId}
                         onClick={() => handleSelectConversation(item.partnerId)}
+                        role="button"
+                        tabIndex={0}
+                        aria-label={`Open chat with ${item.name || 'user'}`}
+                        aria-current={selectedChat === item.partnerId ? 'true' : undefined}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            handleSelectConversation(item.partnerId);
+                          }
+                        }}
                       >
                         <Avatar
                           name={item.name}

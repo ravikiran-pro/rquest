@@ -138,8 +138,8 @@
 }
 
 .rq-mode-tab.is-active .rq-mode-tab-count {
-  background: var(--brand-lime, #d2f82e);
-  color: var(--primary, #0b2d6b);
+  background: var(--tertiary, #5B3A29);
+  color: #FFFFFF;
 }
 
 @media (max-width: 400px) {

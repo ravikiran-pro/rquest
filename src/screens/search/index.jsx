@@ -80,7 +80,7 @@ const SearchScreen = () => {
   const queryParams = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const initialQ = queryParams.get('q') || '';
   const initialCat = queryParams.get('category');
-  const initialMode = queryParams.get('mode') === 'items' ? 'items' : 'shops';
+  const initialMode = queryParams.get('mode') === 'shops' ? 'shops' : 'items';
   const initialRadius = queryParams.get('radius') ? Number(queryParams.get('radius')) : 2;
 
   const [searchText, setSearchText] = useState(initialQ);
@@ -870,17 +870,6 @@ const SearchScreen = () => {
             <button
               type="button"
               role="tab"
-              aria-selected={searchMode === 'shops'}
-              className={`rq-mode-tab${searchMode === 'shops' ? ' is-active' : ''}`}
-              onClick={() => setSearchMode('shops')}
-            >
-              <ShopOutlined />
-              <span>Stores &amp; Outlets</span>
-              <span className="rq-mode-tab-count">{filteredShops.length}</span>
-            </button>
-            <button
-              type="button"
-              role="tab"
               aria-selected={searchMode === 'items'}
               className={`rq-mode-tab${searchMode === 'items' ? ' is-active' : ''}`}
               onClick={() => setSearchMode('items')}
@@ -888,6 +877,17 @@ const SearchScreen = () => {
               <ShoppingOutlined />
               <span>Items &amp; Services</span>
               <span className="rq-mode-tab-count">{filteredItems.length}</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={searchMode === 'shops'}
+              className={`rq-mode-tab${searchMode === 'shops' ? ' is-active' : ''}`}
+              onClick={() => setSearchMode('shops')}
+            >
+              <ShopOutlined />
+              <span>Stores &amp; Outlets</span>
+              <span className="rq-mode-tab-count">{filteredShops.length}</span>
             </button>
           </div>
 
@@ -1268,7 +1268,7 @@ const SearchScreen = () => {
 
       {/* 6. Mobile Filter Drawer */}
       <Drawer
-        title="Refine results"
+        title="Filter results"
         placement="bottom"
         height="88%"
         open={isMobileFilterDrawerOpen}

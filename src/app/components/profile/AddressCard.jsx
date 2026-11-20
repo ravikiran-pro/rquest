@@ -90,7 +90,7 @@ const AddressCard = ({
             </span>
           )}
           {hasCoords && (
-            <Text type="secondary" style={{ fontSize: 12, fontFamily: 'ui-monospace, monospace' }}>
+            <Text type="secondary" style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
               <EnvironmentOutlined /> {Number(address.latitude).toFixed(4)}, {Number(address.longitude).toFixed(4)}
             </Text>
           )}

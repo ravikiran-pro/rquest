@@ -170,8 +170,8 @@
 }
 
 .rq-m-tab.is-active .rq-m-count {
-  background: var(--brand-lime, #d2f82e);
-  color: var(--primary, #0b2d6b);
+  background: var(--tertiary, #5B3A29);
+  color: #FFFFFF;
 }
 
 /* ---------- Chip row (scrolls sideways, edge to edge) ---------- */

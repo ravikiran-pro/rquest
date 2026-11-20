@@ -1,7 +1,37 @@
 /* ==========================================================================
-   Cart drawer. Right side panel on desktop, bottom sheet on phones.
+   Cart page (/cart). Two columns from laptop width up; a single column with
+   a sticky Place-order bar on phones and tablets.
    Palette mirrors styles/theme.js.
    ========================================================================== */
+
+/* ---------- Page shell ---------- */
+.rq-cart-page-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 16px 16px 150px;
+}
+
+.rq-cart-page-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+
+.rq-cart-back.ant-btn {
+  margin-left: -8px;
+  flex-shrink: 0;
+}
+
+.rq-cart-single {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.rq-cart-main {
+  min-width: 0;
+}
 
 /* ---------- Header ---------- */
 .rq-cart-title {
@@ -25,10 +55,11 @@
 }
 
 .rq-cart-title-main {
+  margin: 0;
   font-weight: 700;
-  font-size: 16px;
+  font-size: 20px;
   line-height: 1.2;
-  color: #1c1c19;
+  color: var(--primary, #0b2d6b);
 }
 
 .rq-cart-title-sub {
@@ -37,16 +68,6 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-/* Phones: the cart takes the whole screen */
-.rq-cart-drawer--mobile .ant-drawer-content {
-  border-radius: 0;
-  overflow: hidden;
-}
-
-.rq-cart-drawer--mobile .ant-drawer-header {
-  padding-top: calc(12px + env(safe-area-inset-top, 0px));
 }
 
 /* ---------- Sections ---------- */
@@ -70,9 +91,33 @@
 }
 
 .rq-cart-section-title {
+  margin: 0;
   font-weight: 700;
-  font-size: 14px;
+  font-size: 15px;
+  line-height: 1.3;
   color: #1c1c19;
+}
+
+.rq-cart-section-title:focus {
+  outline: none;
+}
+
+.rq-cart-section-title:focus-visible {
+  outline: 2px solid var(--primary, #0b2d6b);
+  outline-offset: 2px;
+}
+
+/* Visually hidden, still announced by screen readers */
+.rq-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .rq-cart-section-links {
@@ -149,6 +194,7 @@
   align-items: center;
   gap: 6px;
   font-weight: 600;
+  font-size: 14px;
 }
 
 .rq-seg-opt em {
@@ -226,7 +272,7 @@
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  height: 36px;
+  height: 40px;
   border: 1px solid #ebe7e0;
   border-radius: 8px;
   overflow: hidden;
@@ -234,8 +280,8 @@
 }
 
 .rq-qty .ant-btn {
-  width: 34px;
-  height: 34px;
+  width: 40px;
+  height: 40px;
   padding: 0;
   display: inline-flex;
   align-items: center;
@@ -323,7 +369,7 @@
 
 .rq-cart-summary-total strong {
   color: #0b2d6b;
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 800;
 }
 
@@ -358,29 +404,110 @@
   background: #ffffff;
 }
 
-/* ---------- Sticky footer ---------- */
-.rq-cart-footer {
+/* ---------- Place-order actions ---------- */
+.rq-cart-actions {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.rq-cart-footer-total {
+.rq-cart-actions-total {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.rq-cart-actions-label {
+  font-size: 12px;
+  color: #575a65;
+  white-space: nowrap;
 }
 
 .rq-cart-footer-amount {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
   color: #0b2d6b;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
-/* ---------- Mobile tuning ---------- */
+/* Desktop: the bill and actions sit in a sticky card beside the items */
+.rq-cart-layout--wide {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 32px;
+  align-items: start;
+}
+
+.rq-cart-aside--wide {
+  position: sticky;
+  top: 88px;
+  /* line the bill card up with the first item card, not with the "Items" heading */
+  margin-top: 30px;
+}
+
+/* Inside the white bill card the rows sit directly on the card (no card-in-card) */
+.rq-cart-aside-card .rq-cart-summary {
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.rq-cart-aside-card {
+  padding: 20px;
+  background: #ffffff;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+}
+
+.rq-cart-aside-card .rq-cart-section {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.rq-cart-aside-card .rq-cart-actions {
+  margin-top: 16px;
+}
+
+/* Phones and tablets: sticky Place-order bar above the bottom nav */
+@media (max-width: 991px) {
+  .rq-cart-aside {
+    position: fixed;
+    left: 0;
+    right: 0;
+    /* sits on top of the fixed 60px bottom nav (whose height already includes the safe-area padding) */
+    bottom: 60px;
+    z-index: 900;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.98);
+    border-top: 1px solid #ebe7e0;
+  }
+
+  .rq-cart-actions--compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .rq-cart-actions--compact .ant-btn {
+    flex: 1;
+    min-width: 0;
+    min-height: 48px;
+  }
+}
+
 @media (max-width: 767px) {
+  .rq-cart-back.ant-btn,
+  .rq-cart-item > .ant-btn {
+    width: 40px;
+    height: 40px;
+  }
+
+  .rq-cart-page-inner {
+    padding: 12px 12px 180px;
+  }
+
   .rq-cart-item {
     padding: 10px;
     gap: 10px;
@@ -392,7 +519,40 @@
     height: 48px;
   }
 
-  .rq-cart-footer .ant-btn-lg {
+  .rq-cart-actions .ant-btn-lg {
     height: 48px;
+  }
+}
+
+/* Very narrow phones (320px): keep both fulfilment options and their prices on one line */
+@media (max-width: 359px) {
+  .rq-seg-opt {
+    gap: 4px;
+    font-size: 13px;
+  }
+
+  .rq-seg-opt .anticon {
+    display: none;
+  }
+
+  .rq-cart-item-name {
+    font-size: 13px;
+  }
+
+  .rq-qty .ant-btn {
+    width: 34px;
+  }
+}
+
+@media (min-width: 992px) {
+  .rq-cart-page-inner {
+    padding: 28px 24px 56px;
+  }
+}
+
+/* Keep focused controls clear of the Place-order bar + bottom nav when tabbing */
+@media (max-width: 991px) {
+  html:has(.rq-cart-aside) {
+    scroll-padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px));
   }
 }
