@@ -193,27 +193,41 @@ const getOrderActions = (order) => {
   return { primary, secondary, canCancel, cancelLabel };
 };
 
-// The bill rebuilt from its parts: older orders stored total_amount without the
-// delivery fee the customer was charged, so the line items are the source of truth.
+// A numeric value from the API, or null when it is missing or not a number
+const toAmount = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : null;
+};
+
+// The bill as the customer was charged it. The stored total_amount (items + fees)
+// wins; the parts are only recomputed when the stored value is missing.
 const getOrderTotals = (order) => {
   const items = Array.isArray(order?.items) ? order.items : [];
-  const deliveryFee = Number(order?.delivery_fee) || 0;
-  const platformFee = Number(order?.platform_fee) || 0;
-  const stored = Number(order?.total_amount) || 0;
-  if (items.length === 0) {
-    return {
-      subtotal: Math.max(stored - platformFee - deliveryFee, 0),
-      deliveryFee,
-      platformFee,
-      total: stored,
-    };
-  }
-  const subtotal = items.reduce((sum, it) => {
-    const line = Number(it.subtotal);
-    if (Number.isFinite(line) && line > 0) return sum + line;
-    return sum + (Number(it.unit_price) || 0) * (Number(it.quantity) || 0);
+  const storedDelivery = toAmount(order?.delivery_fee);
+  const storedPlatform = toAmount(order?.platform_fee);
+  const deliveryFee = storedDelivery ?? 0;
+  const platformFee = storedPlatform ?? 0;
+  const storedTotal = toAmount(order?.total_amount);
+
+  const itemsSubtotal = items.reduce((sum, it) => {
+    const line = toAmount(it?.subtotal);
+    if (line !== null && line > 0) return sum + line;
+    return sum + (toAmount(it?.unit_price) ?? 0) * (toAmount(it?.quantity) ?? 0);
   }, 0);
-  return { subtotal, deliveryFee, platformFee, total: subtotal + deliveryFee + platformFee };
+
+  if (storedTotal !== null) {
+    const subtotal =
+      items.length > 0 ? itemsSubtotal : Math.max(storedTotal - platformFee - deliveryFee, 0);
+    return { subtotal, deliveryFee, platformFee, total: storedTotal };
+  }
+
+  return {
+    subtotal: itemsSubtotal,
+    deliveryFee,
+    platformFee,
+    total: itemsSubtotal + deliveryFee + platformFee,
+  };
 };
 
 const getOrderSteps = (order) => {

@@ -226,11 +226,13 @@ const ClientRegister = () => {
         if (response.data.length === 0) {
           setIsFormEnable(true); // Open onboarding if merchant has 0 shops
         } else {
+          // The ?shop_id= outlet opens only when no outlet is already being managed,
+          // so a refresh after a save never pulls the owner back to the URL's outlet.
           const params = new URLSearchParams(location.search);
           const queryShopId = params.get('shop_id');
           if (queryShopId) {
             const found = response.data.find((s) => s.id === queryShopId);
-            if (found) setManagedShop(found);
+            if (found) setManagedShop((prev) => prev ?? found);
           }
         }
       }
@@ -248,6 +250,15 @@ const ClientRegister = () => {
   const startRegistration = () => {
     setIsFormEnable(true);
     setCurrentStep(0);
+  };
+
+  // Outlet switch from inside ManageStore: keep the URL's ?shop_id= in step
+  // so a refresh or back navigation lands on the same outlet.
+  const handleSwitchShop = (target) => {
+    setManagedShop(target);
+    const params = new URLSearchParams(location.search);
+    params.set('shop_id', target.id);
+    history.replace({ pathname: location.pathname, search: `?${params.toString()}`, hash: location.hash });
   };
 
   const shareStore = async (shop) => {
@@ -437,7 +448,7 @@ const ClientRegister = () => {
         <ManageStore
           shop={managedShop}
           allShops={allShops}
-          onSwitchShop={(target) => setManagedShop(target)}
+          onSwitchShop={handleSwitchShop}
           onClose={() => setManagedShop(null)}
           onRefreshShop={fetchAllShops}
         />
