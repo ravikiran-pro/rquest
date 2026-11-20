@@ -64,6 +64,12 @@ export const apiConfig = {
   catalog_taxonomy: 'catalog/taxonomy',
   catalog_brands: 'catalog/brands',
   catalog_hsn: 'catalog/hsn',
+  // Owner-facing master catalog: search the shared catalog and add an item to a shop
+  catalog_search: 'catalog/search',
+  catalog_import: 'catalog/import',
+
+  // Platform configuration (GET is public, PUT is platform admin only)
+  platform_settings: 'platform/settings',
 
   upload: 'master/upload',
 
