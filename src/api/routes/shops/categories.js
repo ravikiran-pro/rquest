@@ -1,4 +1,5 @@
 const { categories, sub_categories } = require('../../models');
+const { DEFAULT_MAX_SUB_CATEGORIES } = require('../../services/shopSubCategories');
 
 /**
  * GET /shops/my_categories
@@ -47,6 +48,8 @@ const getAllCategories = async (req, res) => {
 
     res.status(200).json({
       data: results,
+      // Platform limits for onboarding (a shop's own cap can be set higher or lower by an admin)
+      limits: { max_sub_categories: DEFAULT_MAX_SUB_CATEGORIES },
       success: true,
     });
   } catch (error) {

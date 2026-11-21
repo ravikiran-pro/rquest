@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Tag, message } from 'antd';
+import { Button, Select, Tag, Typography, message } from 'antd';
 import { SettingOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import MasterRecords from './master_records';
@@ -13,9 +13,19 @@ const LISTING_TYPE_LABELS = {
   rental: 'Rentals',
 };
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
+const SEARCH_DELAY_MS = 300;
 
-const SubCategory = ({ category_id = null, handleProducts = null }) => {
+/**
+ * All sub-categories across every category: a category filter and a search (both
+ * applied on the server), status toggle, shop count, listing type and the listing form.
+ */
+const SubCategory = ({ handleProducts = null }) => {
+  const [categories, setCategories] = useState([]);
+  // 'all' or a category id
+  const [categoryFilter, setCategoryFilter] = useState('all');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
   const [rows, setRows] = useState([]);
   const [pagination, setPagination] = useState({
     current: 1,
@@ -27,7 +37,37 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
   const [error, setError] = useState(null);
   const requestId = useRef(0);
   const [schemaTarget, setSchemaTarget] = useState(null);
-  const hasCategory = category_id !== null && category_id >= 0;
+
+  const filterCategoryId = categoryFilter === 'all' ? null : categoryFilter;
+
+  const categoryNames = useMemo(
+    () => new Map(categories.map((c) => [c.id, c.name])),
+    [categories]
+  );
+
+  // Category names for the filter and the Category column
+  useEffect(() => {
+    let cancelled = false;
+    netWorkCall(
+      apiConfig.master_categories,
+      'POST',
+      JSON.stringify({ limit: 500, offset: 0 }),
+      true
+    )
+      .then((res) => {
+        if (!cancelled && Array.isArray(res?.data)) setCategories(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Search as the admin types, after a short pause
+  useEffect(() => {
+    const t = setTimeout(() => setSearch(searchInput.trim()), SEARCH_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [searchInput]);
 
   const fetchInitData = async (current = 1) => {
     const id = ++requestId.current;
@@ -37,7 +77,8 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
         apiConfig.master_sub_categories,
         'POST',
         JSON.stringify({
-          category_id: category_id,
+          category_id: filterCategoryId ?? undefined,
+          search: search || undefined,
           limit: PAGE_SIZE,
           offset: (current - 1) * PAGE_SIZE,
         }),
@@ -124,14 +165,16 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
   };
 
   /** Resolves true when saved, so the form closes. */
-  const handleRowChange = async ({ id, name, img_url, is_active }) => {
+  const handleRowChange = async ({ id, name, img_url, is_active, category_id: rowCategoryId }) => {
     try {
+      // An existing sub-category keeps its own category; a new one goes to the filtered category
+      const categoryForSave = id >= 0 && rowCategoryId ? rowCategoryId : filterCategoryId;
       const res = await netWorkCall(
         apiConfig.master_sub_categories_create,
         'POST',
         JSON.stringify({
           subcategory_id: id >= 0 ? id : undefined,
-          category_id: category_id,
+          category_id: categoryForSave ?? undefined,
           name: name,
           img_url: img_url,
           is_active: is_active ?? true,
@@ -153,9 +196,10 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
     }
   };
 
+  // Refetch from page 1 when the category filter or the search changes
   useEffect(() => {
-    fetchInitData();
-  }, [category_id]);
+    fetchInitData(1);
+  }, [filterCategoryId, search]);
 
   // Every sub-category has its own listing form; shops in it use that form
   const formColumn = {
@@ -180,6 +224,16 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
         </Button>
       );
     },
+  };
+
+  const categoryColumn = {
+    key: 'category',
+    title: 'Category',
+    render: (record) => (
+      <Typography.Text style={{ whiteSpace: 'nowrap' }}>
+        {categoryNames.get(record.category_id) || '—'}
+      </Typography.Text>
+    ),
   };
 
   const usageColumn = {
@@ -210,6 +264,21 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
     ),
   };
 
+  const categoryFilterControl = (
+    <Select
+      aria-label="Filter sub-categories by category"
+      value={categoryFilter}
+      onChange={(value) => setCategoryFilter(value)}
+      showSearch
+      optionFilterProp="label"
+      style={{ width: 220, maxWidth: '100%' }}
+      options={[
+        { value: 'all', label: 'All categories' },
+        ...categories.map((c) => ({ value: c.id, label: c.name })),
+      ]}
+    />
+  );
+
   return (
     <>
       <MasterRecords
@@ -227,10 +296,19 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
         onSave={handleRowChange}
         onToggleActive={handleStatusChange}
         onDelete={handleDelete}
-        canAdd={hasCategory}
-        addDisabledReason="Open a category first to add subcategories to it."
+        searchValue={searchInput}
+        onSearchChange={(value) => setSearchInput(value)}
+        searchPlaceholder="Search sub-categories by name"
+        toolbarFilters={categoryFilterControl}
+        canAdd={Boolean(filterCategoryId)}
+        addDisabledReason="Pick a category in the filter first. New sub-categories are added to it."
         deleteWarning="Its products are deleted too. Sub-categories used by shops cannot be deleted; deactivate them instead."
-        extraColumns={[usageColumn, formColumn, ...(handleProducts ? [productsColumn] : [])]}
+        extraColumns={[
+          categoryColumn,
+          usageColumn,
+          formColumn,
+          ...(handleProducts ? [productsColumn] : []),
+        ]}
       />
       <FormSchemaBuilderModal
         open={Boolean(schemaTarget)}
@@ -243,7 +321,6 @@ const SubCategory = ({ category_id = null, handleProducts = null }) => {
 };
 
 SubCategory.propTypes = {
-  category_id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   handleProducts: PropTypes.func,
 };
 

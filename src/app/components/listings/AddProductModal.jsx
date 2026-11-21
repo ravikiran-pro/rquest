@@ -30,6 +30,7 @@ import {
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 import { subCategoryArchetype } from '../../utils/form_schema';
+import { getShopSubCategoryIds } from '../../utils/shopSubCategories';
 import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text } = Typography;
@@ -177,8 +178,9 @@ const AddProductModal = ({
   const [autofillHidden, setAutofillHidden] = useState(false);
   const autofillSeq = useRef(0);
   const [categoriesList, setCategoriesList] = useState([]);
-  // The sub-category this item follows: the shop's, or (multi-category shops) one picked per item
+  // The sub-category this item follows: one of the shop's own sub-categories, picked per item
   const [selectedSubId, setSelectedSubId] = useState(null);
+  const shopSubIds = useMemo(() => getShopSubCategoryIds(shop), [shop]);
 
 
   // Derive default shop archetype and category
@@ -209,10 +211,10 @@ const AddProductModal = ({
 
   // The sub-category and category this item follows
   const activeSub = useMemo(() => {
-    const id = selectedSubId ?? shop?.sub_category_id ?? null;
+    const id = selectedSubId ?? shopSubIds[0] ?? null;
     if (id === null || id === undefined) return null;
     return allSubCategories.find((sc) => sc.id === id) || (shop?.shopSubCategory?.id === id ? shop.shopSubCategory : null);
-  }, [selectedSubId, shop, allSubCategories]);
+  }, [selectedSubId, shopSubIds, shop, allSubCategories]);
 
   const activeCategory = useMemo(() => {
     const id = activeSub?.category_id ?? shop?.category_id ?? null;
@@ -228,17 +230,22 @@ const AddProductModal = ({
     return [];
   }, [shop, activeSub, activeCategory, isCustomShopForm]);
 
-  // Multi-category shops pick a sub-category per item
-  const subCategoryOptions = useMemo(
-    () =>
-      categoriesList
-        .filter((c) => (c.sub_categories || []).length > 0)
-        .map((c) => ({
-          label: c.name,
-          options: c.sub_categories.map((sc) => ({ value: sc.id, label: sc.name })),
-        })),
-    [categoriesList]
-  );
+  // The item's sub-category is picked from the shop's own sub-categories, grouped by category.
+  // If the category tree has not loaded yet, the active one is still offered so its name shows.
+  const shopSubOptions = useMemo(() => {
+    const groups = categoriesList
+      .map((c) => ({
+        label: c.name,
+        options: (c.sub_categories || [])
+          .filter((sc) => shopSubIds.includes(sc.id))
+          .map((sc) => ({ value: sc.id, label: sc.name })),
+      }))
+      .filter((g) => g.options.length > 0);
+    if (groups.length === 0 && activeSub?.id !== undefined && activeSub?.id !== null) {
+      return [{ label: activeCategory?.name || 'Your store', options: [{ value: activeSub.id, label: activeSub.name }] }];
+    }
+    return groups;
+  }, [categoriesList, shopSubIds, activeSub, activeCategory]);
 
   // Debounce the autofill search box
   useEffect(() => {
@@ -256,13 +263,9 @@ const AddProductModal = ({
     }
     const seq = ++autofillSeq.current;
     netWorkCall(
-      // With a shop, catalog items linked to its sub-category come first
+      // With a shop, the search covers all of the shop's sub-categories and ranks its items first
       `${apiConfig.catalog_search}?q=${encodeURIComponent(autofillDebounced)}&limit=8${
-        activeSub?.id !== undefined && activeSub?.id !== null
-          ? `&sub_category_id=${activeSub.id}`
-          : shop?.id
-          ? `&shop_id=${encodeURIComponent(shop.id)}`
-          : ''
+        shop?.id ? `&shop_id=${encodeURIComponent(shop.id)}` : ''
       }`,
       'GET',
       null,
@@ -303,7 +306,7 @@ const AddProductModal = ({
         setAutofillHidden(true);
         setAutofillOptions([]);
       });
-  }, [open, editingItem, autofillDebounced, activeSub, shop]);
+  }, [open, editingItem, autofillDebounced, shop]);
 
   // Prefill the fields this form has from a catalog item
   const applyCatalogItem = (item) => {
@@ -329,7 +332,7 @@ const AddProductModal = ({
         const itemType = editingItem.listing_type || defaultListingType;
         setCurrentType(itemType);
         const itemSub = Number.parseInt(editingItem.metadata?.sub_category_id, 10);
-        setSelectedSubId(Number.isInteger(itemSub) ? itemSub : shop?.sub_category_id ?? null);
+        setSelectedSubId(Number.isInteger(itemSub) && shopSubIds.includes(itemSub) ? itemSub : shopSubIds[0] ?? null);
 
         form.setFieldsValue({
           ...editingItem,
@@ -338,7 +341,7 @@ const AddProductModal = ({
       } else {
         form.resetFields();
         setCurrentType(defaultListingType);
-        setSelectedSubId(shop?.sub_category_id ?? null);
+        setSelectedSubId(shopSubIds[0] ?? null);
 
         const config = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
         form.setFieldsValue({
@@ -362,7 +365,7 @@ const AddProductModal = ({
         });
       }
     }
-  }, [open, editingItem, shop, defaultListingType, storeArchetype]);
+  }, [open, editingItem, shop, shopSubIds, defaultListingType, storeArchetype]);
 
   // Show a rejected save: the server names the custom fields that need fixing
   const showSaveError = (res, fallback) => {
@@ -390,9 +393,9 @@ const AddProductModal = ({
         metadata: {
           ...(editingItem?.metadata || {}),
           ...(values.metadata || {}),
-          // A per-item sub-category only for multi-category shops; otherwise the item
-          // follows the shop's sub-category (the server fills in its ids and name)
-          ...(shop?.allow_multi_category && activeSub
+          // The item's own sub-category when the shop sells in more than one; a single-sub-category
+          // shop lets the server fill in the ids and name
+          ...((shopSubIds.length > 1 || shop?.allow_multi_category) && activeSub
             ? { sub_category_id: activeSub.id, category_id: activeSub.category_id }
             : {}),
         },
@@ -581,7 +584,7 @@ const AddProductModal = ({
               </Button>
             )}
           </Flex>
-          {shop?.allow_multi_category && subCategoryOptions.length > 0 && (
+          {shopSubOptions.length > 0 && (
             <div style={{ marginTop: 10 }}>
               <Text style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
                 This item belongs to
@@ -590,12 +593,17 @@ const AddProductModal = ({
                 showSearch
                 optionFilterProp="label"
                 value={activeSub?.id}
-                options={subCategoryOptions}
+                options={shopSubOptions}
                 onChange={(id) => setSelectedSubId(id)}
-                placeholder="Choose a business type for this item"
+                placeholder="Choose a sub-category for this item"
                 style={{ width: '100%', marginTop: 4 }}
-                aria-label="Business type for this item"
+                aria-label="Sub-category for this item"
               />
+              {shopSubIds.length > 1 && (
+                <Text style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
+                  Only the sub-categories your store sells in are listed.
+                </Text>
+              )}
             </div>
           )}
         </div>

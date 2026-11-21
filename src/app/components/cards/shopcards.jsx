@@ -12,6 +12,7 @@ import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useGlobalStore } from '../../services';
 import { distanceConvertor, formatDistance } from '../../utils';
 import CardMedia from './CardMedia';
+import SubCategoryChips from '../common/SubCategoryChips';
 import { useHistory } from 'react-router-dom';
 import { colors, radii, shadows } from '../../styles';
 import './shop-card.css';
@@ -138,11 +139,7 @@ const ShopCard = ({
                   </Tag>
                 )}
 
-                {categoryName && (
-                  <Tag color="indigo" style={{ fontSize: 10, padding: '0 6px', fontWeight: 600, margin: 0 }}>
-                    {categoryName}
-                  </Tag>
-                )}
+                {categoryName && <SubCategoryChips shop={currentShop} size="sm" />}
 
                 {rating && Number(rating) > 0 ? (
                   <Flex align="center" gap={2} style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b' }}>
@@ -293,7 +290,7 @@ const ShopCard = ({
 
   const ratingText = Number(rating) > 0 ? Number(rating).toFixed(1) : null;
   const distanceText = formatDistance(distance);
-  const metaLine = [area || 'Local', categoryName].filter(Boolean).join(' · ');
+  const metaLine = [area || 'Local'].filter(Boolean).join(' · ');
 
   // Grid card: image first so the photo sets the scan, distance is the lead fact
   return (
@@ -350,6 +347,12 @@ const ShopCard = ({
         <div className="rq-shop-card-meta" title={metaLine}>
           {metaLine}
         </div>
+
+        {categoryName && (
+          <div style={{ marginTop: 6, minWidth: 0 }}>
+            <SubCategoryChips shop={currentShop} size="sm" />
+          </div>
+        )}
 
         {/* Actions: one primary action, icon buttons beside it, all 40px tall */}
         <Flex gap={8} align="center" className="rq-shop-card-actions" onClick={(e) => e.stopPropagation()}>
@@ -416,6 +419,13 @@ const shopPropShape = PropTypes.shape({
   shopSubCategory: PropTypes.shape({
     name: PropTypes.string,
   }),
+  sub_category_ids: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])),
+  shopSubCategories: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+      name: PropTypes.string,
+    })
+  ),
 });
 
 ShopCard.propTypes = {

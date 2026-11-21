@@ -11,12 +11,14 @@ import {
   ToolOutlined,
 } from '@ant-design/icons';
 import { matchesSchemaFilters } from '../../utils/form_schema';
+import { shopSubCategoryIds } from '../../utils/shopSubCategories';
 
 const icon = (Comp) => React.createElement(Comp);
 
 export const DEFAULT_FILTERS = {
   maxDistance: null, // null = unlimited / any distance, or number in km
   categories: [],    // array of category IDs/keys
+  subCategoryIds: [], // shops: match any of these sub-category ids (strings)
   minPrice: null,    // number or null
   maxPrice: null,    // number or null
   minRating: null,   // number or null (e.g. 4.0)
@@ -104,6 +106,12 @@ export const applySearchFilters = (items, filters, searchMode = 'items') => {
   if (!Array.isArray(items)) return [];
 
   let result = items.filter((item) => {
+    // 0. Shops: keep a shop when any of its sub-categories is selected
+    if (searchMode === 'shops' && filters.subCategoryIds?.length > 0) {
+      const wanted = new Set(filters.subCategoryIds.map(String));
+      if (!shopSubCategoryIds(item).some((id) => wanted.has(id))) return false;
+    }
+
     // 1. Distance filter (in kilometers)
     if (filters.maxDistance !== null && filters.maxDistance !== undefined) {
       const rawDistance = searchMode === 'shops' ? item.distance : item.shop?.distance;
@@ -229,6 +237,7 @@ export const countActiveFilters = (filters, searchMode = 'items') => {
   let count = 0;
   if (filters.maxDistance !== null && filters.maxDistance !== undefined) count++;
   if (filters.categories && filters.categories.length > 0) count += filters.categories.length;
+  if (searchMode === 'shops' && filters.subCategoryIds?.length > 0) count++;
   if (filters.minRating !== null && filters.minRating !== undefined) count++;
   if (filters.sortBy && filters.sortBy !== 'distance_asc') count++;
 

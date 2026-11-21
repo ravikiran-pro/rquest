@@ -20,6 +20,7 @@ import {
   ProfileScreen,
   DeliveryPortalScreen,
   AnalyticsScreen,
+  StoreCatalogueScreen,
   AdminScreen,
 } from '../../screens';
 import { ChatApp, NavBar, SideBar, BottomNav, CartScreen, CartOpenBridge, ErrorBoundary } from '../components';
@@ -282,6 +283,8 @@ export default function AppRoutes() {
           <PrivateRoute path={routes.deliveryPortal} component={DeliveryPortalScreen} />
           {/* Owner + admin dashboard; shoppers and guests are bounced to their own home */}
           <PrivateRoute path={routes.analytics} component={AnalyticsScreen} roles={['owner', 'admin']} />
+          {/* Owner master catalogue table; reached from the listings page */}
+          <PrivateRoute path={routes.storeCatalogue} component={StoreCatalogueScreen} roles={['owner', 'admin']} />
           {/* Platform admins only; others are redirected to their home before the console renders */}
           <AdminRoute path={routes.admin} component={AdminScreen} />
           {/* Signed-in, not owner-only: shoppers open it to register their first store (?onboarding=shop) */}

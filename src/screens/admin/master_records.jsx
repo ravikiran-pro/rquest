@@ -31,6 +31,7 @@ import {
 } from '@ant-design/icons';
 import { apiConfig, config, storageKeys } from '../../app/utils';
 import { colors, radii } from '../../app/styles/theme';
+import './admin_tables.css';
 
 const { Text } = Typography;
 
@@ -219,14 +220,23 @@ const MasterRecords = ({
   deleteWarning = 'This cannot be undone.',
   withDescription = false,
   extraColumns = [],
+  searchValue,
+  onSearchChange,
+  searchPlaceholder,
+  toolbarFilters = null,
 }) => {
   const screens = Grid.useBreakpoint();
   const isPhone = screens.md === false;
-  const [query, setQuery] = useState('');
+  // Controlled search: the parent fetches the matching rows (server-side); otherwise
+  // the search filters the rows already on this page
+  const serverSearch = typeof onSearchChange === 'function';
+  const [localQuery, setLocalQuery] = useState('');
+  const query = serverSearch ? searchValue || '' : localQuery;
+  const setQuery = serverSearch ? onSearchChange : setLocalQuery;
   const [modal, setModal] = useState({ open: false, record: null });
   const [busy, setBusy] = useState({}); // { [id]: 'status' | 'delete' }
 
-  const q = query.trim().toLowerCase();
+  const q = serverSearch ? '' : query.trim().toLowerCase();
   const visibleRows = q
     ? rows.filter((r) =>
         [r.name, r.description].some((v) => String(v || '').toLowerCase().includes(q))
@@ -359,8 +369,14 @@ const MasterRecords = ({
     </Tooltip>
   );
 
-  const emptyState = q ? (
-    <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={`No ${nounPlural} on this page match "${query.trim()}".`}>
+  const hasQuery = Boolean(query.trim());
+  const emptyState = hasQuery ? (
+    <Empty
+      image={Empty.PRESENTED_IMAGE_SIMPLE}
+      description={
+        serverSearch ? `No ${nounPlural} match "${query.trim()}".` : `No ${nounPlural} on this page match "${query.trim()}".`
+      }
+    >
       <Button onClick={() => setQuery('')}>Clear filter</Button>
     </Empty>
   ) : (
@@ -445,12 +461,13 @@ const MasterRecords = ({
           className="admin-toolbar__search"
           allowClear
           prefix={<SearchOutlined style={{ color: colors.textLight }} />}
-          placeholder={`Filter ${nounPlural} on this page`}
-          aria-label={`Filter ${nounPlural} on this page`}
+          placeholder={searchPlaceholder || `Filter ${nounPlural} on this page`}
+          aria-label={searchPlaceholder || `Filter ${nounPlural} on this page`}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={Boolean(error)}
         />
+        {toolbarFilters}
         <div className="admin-toolbar__actions">
           <Tooltip title="Reload">
             <Button icon={<ReloadOutlined />} aria-label="Reload" onClick={onReload} loading={loading && loaded} />
@@ -490,13 +507,15 @@ const MasterRecords = ({
       ) : isPhone ? (
         renderCards()
       ) : (
-        <div className="admin-table-wrap">
+        // overflow: clip keeps the rounded corners without making the wrapper a scroll box, so the header can stick to the page
+        <div className="admin-table-wrap" style={{ overflow: 'clip' }}>
           <Table
             rowKey="id"
             size="middle"
             columns={columns}
             dataSource={visibleRows}
             loading={loading}
+            sticky={{ offsetHeader: 64 }}
             scroll={{ x: 'max-content' }}
             locale={{ emptyText: loading || !loaded ? ' ' : emptyState }}
             pagination={false}
@@ -542,6 +561,12 @@ MasterRecords.propTypes = {
   extraColumns: PropTypes.arrayOf(
     PropTypes.shape({ key: PropTypes.string.isRequired, title: PropTypes.node, render: PropTypes.func.isRequired })
   ),
+  /** Pass both to search on the server: the parent refetches when the value changes. */
+  searchValue: PropTypes.string,
+  onSearchChange: PropTypes.func,
+  searchPlaceholder: PropTypes.string,
+  /** Extra toolbar controls (e.g. a filter), shown before the reload and add buttons. */
+  toolbarFilters: PropTypes.node,
 };
 
 

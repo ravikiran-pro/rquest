@@ -1,5 +1,6 @@
 const { shops, categories, sub_categories } = require('../../models');
 const { Op, literal } = require('sequelize');
+const { serializeShops, subCategoryFilter } = require('../../services/shopSubCategories');
 
 // Category and sub-category as shops carry them. The sub-category form is what the
 // shop's listings follow (unless the shop has its own form).
@@ -12,6 +13,10 @@ const categoryIncludes = () => [
 
 const getShopsFilter = async (req, res) => {
   const { lat, lon, search, category_id, sub_category_id } = req.body;
+  // Several sub-categories match any of them (the frontend sends a list)
+  const subCategoryIds = Array.isArray(req.body.sub_category_ids)
+    ? req.body.sub_category_ids.map((id) => Number.parseInt(id, 10)).filter((id) => id > 0)
+    : [];
   const searchLat = parseFloat(lat) || 12.9631025;
   const searchLon = parseFloat(lon) || 80.25476;
   const queryText = typeof search === 'string' ? search.trim() : '';
@@ -29,6 +34,7 @@ const getShopsFilter = async (req, res) => {
         'img_url',
         'category_id',
         'sub_category_id',
+        'max_sub_categories',
         'shop_type',
         'latitude',
         'longitude',
@@ -43,33 +49,37 @@ const getShopsFilter = async (req, res) => {
         ],
       ],
       include: categoryIncludes(),
+      // A sub-category filter matches the shop's primary and any of its other sub-categories
       where: {
-        ...(Number.parseInt(category_id, 10) ? { category_id: Number.parseInt(category_id, 10) } : {}),
-        ...(Number.parseInt(sub_category_id, 10)
-          ? { sub_category_id: Number.parseInt(sub_category_id, 10) }
-          : {}),
-        [Op.or]: [
-          { '$shopSubCategory.name$': { [Op.iLike]: `%${queryText}%` } },
-          { '$shopCategory.name$': { [Op.iLike]: `%${queryText}%` } },
+        [Op.and]: [
+          ...(Number.parseInt(category_id, 10) ? [{ category_id: Number.parseInt(category_id, 10) }] : []),
+          ...(Number.parseInt(sub_category_id, 10) ? [subCategoryFilter(sub_category_id)] : []),
+          ...(subCategoryIds.length ? [{ [Op.or]: subCategoryIds.map((id) => subCategoryFilter(id)) }] : []),
           {
-            shop_name: {
-              [Op.iLike]: `%${queryText}%`,
+          [Op.or]: [
+            { '$shopSubCategory.name$': { [Op.iLike]: `%${queryText}%` } },
+            { '$shopCategory.name$': { [Op.iLike]: `%${queryText}%` } },
+            {
+              shop_name: {
+                [Op.iLike]: `%${queryText}%`,
+              },
             },
-          },
-          {
-            address: {
-              [Op.iLike]: `%${queryText}%`,
+            {
+              address: {
+                [Op.iLike]: `%${queryText}%`,
+              },
             },
-          },
-          {
-            area: {
-              [Op.iLike]: `%${queryText}%`,
+            {
+              area: {
+                [Op.iLike]: `%${queryText}%`,
+              },
             },
-          },
-          {
-            shop_type: {
-              [Op.iLike]: `%${queryText}%`,
+            {
+              shop_type: {
+                [Op.iLike]: `%${queryText}%`,
+              },
             },
+          ],
           },
         ],
       },
@@ -81,7 +91,7 @@ const getShopsFilter = async (req, res) => {
     });
 
     res.status(200).json({
-      data: results,
+      data: await serializeShops(results),
       success: true,
     });
   } catch (error) {
@@ -115,6 +125,7 @@ const getMyShops = async (req, res) => {
         'id',
         'owner_id',
         'form_schema',
+        'max_sub_categories',
       ],
       include: categoryIncludes(),
       where: {
@@ -124,7 +135,7 @@ const getMyShops = async (req, res) => {
     });
 
     res.status(200).json({
-      data: results,
+      data: await serializeShops(results),
       success: true,
     });
   } catch (error) {
@@ -145,7 +156,7 @@ const getShopDetails = async (req, res) => {
     }
 
     res.status(200).json({
-      data: shop,
+      data: await serializeShops(shop),
       success: true,
     });
   } catch (error) {

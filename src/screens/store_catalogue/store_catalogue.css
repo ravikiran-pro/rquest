@@ -1,0 +1,238 @@
+/* Owner master-catalogue screen. Shares the ms-* toolbar/filter/thumb classes from client_register.css. */
+.sc-page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 16px 16px 120px;
+  box-sizing: border-box;
+  width: 100%;
+  /* clip, not hidden: a scroll container would stop the table header sticking to the page */
+  overflow-x: clip;
+}
+
+/* globals.css sets overflow-x: hidden on body, which turns body into a scroll container and stops the
+   sticky table header. Lift it while the catalogue is open (phones keep the card view, no table). */
+body:has(.sc-page) {
+  overflow: visible;
+}
+
+.sc-topbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sc-title {
+  font-family: 'Manrope', 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  color: #1c1c19;
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.sc-scope-select {
+  flex: 1 1 280px;
+  max-width: 420px;
+  min-width: 0;
+}
+
+.sc-note {
+  font-size: 13px;
+  color: #6b6b66;
+  margin: 0 0 12px;
+}
+
+.sc-filterbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.sc-filterbar .ms-filter-search {
+  flex: 1 1 240px;
+  min-width: 0;
+  max-width: 360px;
+}
+
+.sc-touch,
+.sc-page .ant-btn {
+  min-height: 44px;
+}
+
+.sc-page .ant-btn-icon-only {
+  min-width: 44px;
+}
+
+.sc-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sc-item-name {
+  font-weight: 600;
+  color: #1c1c19;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.sc-item-meta {
+  font-size: 12px;
+  color: #6b6b66;
+  margin-top: 2px;
+  overflow-wrap: anywhere;
+}
+
+.sc-thumb {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: 1px solid #ebe7e0;
+  background: #f5f2ed;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sc-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sc-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sc-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sc-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px 10px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+}
+
+.sc-card-check {
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.sc-card-check .ant-checkbox-wrapper {
+  min-width: 44px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-card-body {
+  min-width: 0;
+}
+
+.sc-card-actions {
+  grid-column: 1 / -1;
+}
+
+.sc-bulkbar {
+  position: sticky;
+  bottom: 16px;
+  z-index: 5;
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #ebe7e0;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(28, 28, 25, 0.12);
+}
+
+.sc-bulkbar.is-phone {
+  position: fixed;
+  left: 0;
+  right: 0;
+  /* sits above the fixed mobile bottom nav (60px + home-indicator inset) */
+  bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+  z-index: 999;
+  margin: 0;
+  border-radius: 16px 16px 0 0;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+}
+
+.sc-bulkbar .ant-btn {
+  min-height: 44px;
+}
+
+.sc-bulk-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ebe7e0;
+}
+
+.sc-bulk-row-name {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.sc-bulk-list {
+  max-height: 52vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+@media (max-width: 575px) {
+  .sc-page {
+    padding: 12px 16px 140px;
+  }
+  .sc-scope-select {
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .sc-filterbar .ms-filter-search {
+    max-width: none;
+    flex-basis: 100%;
+  }
+  .sc-page .ant-segmented-item-label {
+    min-height: 44px;
+    line-height: 44px;
+    padding: 0 12px;
+  }
+  .sc-cards .ant-pagination-item,
+  .sc-cards .ant-pagination-prev,
+  .sc-cards .ant-pagination-next {
+    min-width: 44px;
+    height: 44px;
+    line-height: 42px;
+  }
+  .sc-cards .ant-pagination-item-link {
+    height: 44px;
+    min-width: 44px;
+  }
+}

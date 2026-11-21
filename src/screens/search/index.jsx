@@ -187,6 +187,8 @@ const SearchScreen = () => {
   const [searchMarkers, setSearchMarkers] = useState([]);
   const [itemListings, setItemListings] = useState([]);
   const [filterFields, setFilterFields] = useState([]);
+  // Sub-categories a store can be in, for the store filter: "Name · Category"
+  const [subCategoryOptions, setSubCategoryOptions] = useState([]);
   const [loading, setLoading] = useState(false);
 
   // User Saved Addresses
@@ -316,6 +318,32 @@ const SearchScreen = () => {
     };
   }, [markerLocation]);
 
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      netWorkCall(apiConfig.master_categories, 'POST', JSON.stringify({ limit: 500, offset: 0 }), false),
+      netWorkCall(apiConfig.master_sub_categories, 'POST', JSON.stringify({ limit: 500, offset: 0 }), false),
+    ])
+      .then(([catRes, subRes]) => {
+        if (cancelled || !Array.isArray(subRes?.data)) return;
+        const categoryNames = new Map((catRes?.data || []).map((c) => [c.id, c.name]));
+        setSubCategoryOptions(
+          subRes.data
+            .filter((sub) => sub.is_active !== false)
+            .map((sub) => ({
+              value: String(sub.id),
+              label: [sub.name, categoryNames.get(sub.category_id)].filter(Boolean).join(' · '),
+            }))
+        );
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const subCategoryKey = (filters.subCategoryIds || []).map(String).sort().join(',');
+
   // Fetch shops or items based on searchMode & query
   useEffect(() => {
     let isCancelled = false;
@@ -329,10 +357,13 @@ const SearchScreen = () => {
 
       try {
         if (searchMode === 'shops') {
+          const selectedSubCategories = (filters.subCategoryIds || []).map(String);
           const body = JSON.stringify({
             lat: coords[0],
             lon: coords[1],
             search: searchText || '',
+            // A store matches when it is in any of these sub-categories
+            ...(selectedSubCategories.length > 0 ? { sub_category_ids: selectedSubCategories } : {}),
           });
 
           const response = await netWorkCall(apiConfig.shops_search, 'POST', body, false);
@@ -367,7 +398,7 @@ const SearchScreen = () => {
     return () => {
       isCancelled = true;
     };
-  }, [markerLocation, searchText, searchMode]);
+  }, [markerLocation, searchText, searchMode, subCategoryKey]);
 
   // Reactive filtered and sorted results using applySearchFilters
   const filteredShops = useMemo(() => {
@@ -590,7 +621,7 @@ const SearchScreen = () => {
             <span>Back to Home</span>
           </Link>
           <div style={{ fontSize: 12.5, color: '#64748B', fontWeight: 600 }}>
-            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} found near {cleanAreaName}
+            {totalCount} {searchMode === 'shops' ? (totalCount === 1 ? 'store' : 'stores') : (totalCount === 1 ? 'item' : 'items')} found near {cleanAreaName}
           </div>
         </Flex>
         )}
@@ -609,7 +640,7 @@ const SearchScreen = () => {
             onModeChange={setSearchMode}
             shopCount={filteredShops.length}
             itemCount={filteredItems.length}
-            resultsLabel={`${totalCount} ${searchMode === 'shops' ? 'stores' : 'items'} near ${cleanAreaName}`}
+            resultsLabel={`${totalCount} ${searchMode === 'shops' ? (totalCount === 1 ? 'store' : 'stores') : (totalCount === 1 ? 'item' : 'items')} near ${cleanAreaName}`}
             areaName={cleanAreaName}
             onChangeLocation={() => setIsModalVisible(true)}
             onNearby={() => fetchUserLocation(true)}
@@ -642,7 +673,7 @@ const SearchScreen = () => {
           }}
         >
           <div className="rq-immersive-count">
-            {totalCount} {searchMode === 'shops' ? 'stores' : 'items'} near {cleanAreaName}
+            {totalCount} {searchMode === 'shops' ? (totalCount === 1 ? 'store' : 'stores') : (totalCount === 1 ? 'item' : 'items')} near {cleanAreaName}
           </div>
 
           {/* Top Row: Search Input + Radius + Modals */}
@@ -1083,6 +1114,7 @@ const SearchScreen = () => {
                 searchMode={searchMode}
                 categoryCounts={categoryCounts}
                 fieldFilters={availableFieldFilters}
+                subCategoryOptions={subCategoryOptions}
               />
             </Col>
           )}
@@ -1282,7 +1314,7 @@ const SearchScreen = () => {
             onClick={() => setIsMobileFilterDrawerOpen(false)}
             style={{ borderRadius: radii.md }}
           >
-            Show {totalCount} {searchMode === 'shops' ? 'stores' : 'items'}
+            Show {totalCount} {searchMode === 'shops' ? (totalCount === 1 ? 'store' : 'stores') : (totalCount === 1 ? 'item' : 'items')}
           </Button>
         }
       >
@@ -1303,6 +1335,7 @@ const SearchScreen = () => {
           searchMode={searchMode}
           categoryCounts={categoryCounts}
           fieldFilters={availableFieldFilters}
+          subCategoryOptions={subCategoryOptions}
           style={{ border: 'none', boxShadow: 'none', padding: 0 }}
         />
       </Drawer>

@@ -7,7 +7,7 @@ const {
   updateSubCategoryFormSchema,
   deleteSubCategory,
 } = require('./subcategory');
-const { getAllMasterShops, updateShopFormSchema } = require('./shops');
+const { getAllMasterShops, updateShopFormSchema, updateShopMaxSubCategories } = require('./shops');
 const uploadFiles = require('./aws');
 const { authMiddleware, requireAdmin } = require('../../auth');
 const multer = require('multer');
@@ -63,5 +63,6 @@ router.delete('/products', requireAdmin, deleteProducts);
 
 router.post('/shops', requireAdmin, getAllMasterShops);
 router.put('/shops/form_schema', requireAdmin, updateShopFormSchema);
+router.put('/shops/max_sub_categories', requireAdmin, updateShopMaxSubCategories);
 
 module.exports = router;

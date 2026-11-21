@@ -1,5 +1,13 @@
-const { shops, users, shop_listings, categories, sub_categories } = require('../../models');
+const { sequelize, shops, users, shop_listings, categories } = require('../../models');
 const { normalizeSchema } = require('../../services/formSchema');
+const {
+  parseSubCategoryIds,
+  capFor,
+  capError,
+  loadSubCategories,
+  saveShopSubCategories,
+  serializeShops,
+} = require('../../services/shopSubCategories');
 const { sendPushNotification } = require('../../services/notificationService');
 const {
   getSettings: getPlatformSettings,
@@ -134,8 +142,8 @@ const createShops = async (req, res) => {
       });
     }
 
-    // Category: a sub-category decides its category; a category alone is allowed too
-    // (the shop then uses the category's fallback form until a sub-category is picked).
+    // Category: the first sub-category decides it; a category alone is allowed too (the shop
+    // then uses the category's fallback form until a sub-category is picked).
     const parseOptionalId = (value) => {
       if (value === undefined) return undefined;
       if (value === null || value === '') return null;
@@ -143,25 +151,34 @@ const createShops = async (req, res) => {
       return Number.isInteger(n) && n >= 0 ? n : NaN;
     };
     let categoryId = parseOptionalId(shopDetails.category_id);
-    let subCategoryId = parseOptionalId(shopDetails.sub_category_id);
-    if (Number.isNaN(categoryId) || Number.isNaN(subCategoryId)) {
+    if (Number.isNaN(categoryId)) {
       return res.status(400).json({ success: false, error: 'Invalid category or sub-category' });
     }
-    if (subCategoryId !== undefined && subCategoryId !== null) {
-      const sub = await sub_categories.findByPk(subCategoryId, { attributes: ['id', 'category_id', 'is_active'] });
-      if (!sub || (!sub.is_active && !isAdminRequest(req))) {
-        return res.status(400).json({ success: false, error: 'Sub-category not found' });
-      }
-      if (categoryId !== undefined && categoryId !== null && categoryId !== sub.category_id) {
+    // sub_category_ids (ordered, primary first) or the older single sub_category_id
+    const subParse = parseSubCategoryIds(shopDetails);
+    if (subParse.error) return res.status(400).json({ success: false, error: subParse.error });
+    let subIds = subParse.provided ? subParse.ids : undefined;
+
+    const maxSubCategories = capFor(existingShop);
+    const tooMany = subIds && capError(subIds, maxSubCategories);
+    if (tooMany) {
+      return res.status(400).json({ success: false, error: tooMany, max_sub_categories: maxSubCategories });
+    }
+
+    if (subIds && subIds.length) {
+      const loaded = await loadSubCategories(subIds, { allowInactive: isAdminRequest(req) });
+      if (loaded.error) return res.status(400).json({ success: false, error: loaded.error });
+      const primary = loaded.rows[0];
+      if (categoryId !== undefined && categoryId !== null && categoryId !== primary.category_id) {
         return res.status(400).json({ success: false, error: 'Sub-category does not belong to that category' });
       }
-      categoryId = sub.category_id;
+      categoryId = primary.category_id;
     } else if (categoryId !== undefined && categoryId !== null) {
       const category = await categories.findByPk(categoryId, { attributes: ['id'] });
       if (!category) return res.status(400).json({ success: false, error: 'Category not found' });
-      // A new category without a sub-category clears a sub-category from another category
-      if (subCategoryId === undefined && existingShop && existingShop.category_id !== categoryId) {
-        subCategoryId = null;
+      // A new category without a sub-category clears the sub-categories of the old one
+      if (subIds === undefined && existingShop && existingShop.category_id !== categoryId) {
+        subIds = [];
       }
     }
 
@@ -182,7 +199,7 @@ const createShops = async (req, res) => {
           : (existingShop ? existingShop.products_list : ''),
       shop_type: shopDetails.shop_type || (existingShop ? existingShop.shop_type : ''),
       category_id: categoryId !== undefined ? categoryId : (existingShop ? existingShop.category_id : null),
-      sub_category_id: subCategoryId !== undefined ? subCategoryId : (existingShop ? existingShop.sub_category_id : null),
+      sub_category_id: subIds !== undefined ? (subIds[0] ?? null) : (existingShop ? existingShop.sub_category_id : null),
       allow_multi_category:
         shopDetails.allow_multi_category !== undefined
           ? Boolean(shopDetails.allow_multi_category)
@@ -199,16 +216,31 @@ const createShops = async (req, res) => {
     };
 
     let createdShop = null;
+    const transaction = await sequelize.transaction();
+    try {
+      if (shopDetails.shop_id) {
+        await shops.update(payload, {
+          where: {
+            id: shopDetails.shop_id,
+          },
+          transaction,
+        });
+      } else {
+        createdShop = await shops.create(payload, { transaction });
+      }
+      if (subIds !== undefined) {
+        const shopId = shopDetails.shop_id || createdShop.id;
+        await saveShopSubCategories(shopId, subIds, { transaction, categoryId: payload.category_id });
+      }
+      await transaction.commit();
+    } catch (err) {
+      await transaction.rollback();
+      throw err;
+    }
+
     if (shopDetails.shop_id) {
-      await shops.update(payload, {
-        where: {
-          id: shopDetails.shop_id,
-        },
-      });
       createdShop = await shops.findByPk(shopDetails.shop_id);
     } else {
-      createdShop = await shops.create(payload);
-
       // Only update user role to client/merchant if not already an admin
       if (req.headers?.role_id !== 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9') {
         await users.update(
@@ -239,7 +271,7 @@ const createShops = async (req, res) => {
       }
     }
 
-    return res.status(201).json({ success: true, data: createdShop });
+    return res.status(201).json({ success: true, data: await serializeShops(createdShop) });
   } catch (error) {
     console.error('Error creating/updating shop:', error);
     return res.status(500).json({

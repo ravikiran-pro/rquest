@@ -69,6 +69,63 @@ function identityFor({ gtin, brandKey, nameKeyValue, netQuantity, unit }) {
  * Validates an item form. `existing` is the stored row on edit (its barcode and status
  * are kept). Returns { errors, value } with cleaned values ready for SQL.
  */
+/**
+ * sub_category_ids from the form: undefined means "not sent" (links unchanged), null or []
+ * clears them, otherwise a list of distinct positive ids.
+ */
+function parseSubCategoryIds(raw) {
+  if (raw === undefined) return { ids: null };
+  if (raw === null) return { ids: [] };
+  if (!Array.isArray(raw)) return { error: 'Sub-categories must be a list' };
+  if (raw.length > 30) return { error: 'An item can be linked to at most 30 sub-categories' };
+  const ids = [];
+  for (const entry of raw) {
+    const id = Number.parseInt(entry, 10);
+    if (!Number.isInteger(id) || id <= 0) return { error: 'Invalid sub-category id' };
+    if (!ids.includes(id)) ids.push(id);
+  }
+  return { ids };
+}
+
+/**
+ * Makes the item's links match the admin's choice. Chosen ids become 'manual' links.
+ * A deselected manual link is removed; a deselected rule link becomes 'excluded' so the
+ * next rebuild does not bring it back.
+ */
+async function syncSubCategoryLinks(itemId, subIds, transaction) {
+  const current = await select(
+    'SELECT sub_category_id, source FROM catalog_item_sub_categories WHERE catalog_item_id = :itemId',
+    { itemId },
+    { transaction }
+  );
+  const keep = new Set(subIds);
+  for (const row of current) {
+    if (keep.has(row.sub_category_id)) continue;
+    if (row.source === 'manual') {
+      await select(
+        'DELETE FROM catalog_item_sub_categories WHERE catalog_item_id = :itemId AND sub_category_id = :sub',
+        { itemId, sub: row.sub_category_id },
+        { transaction }
+      );
+    } else if (row.source === 'rule') {
+      await select(
+        "UPDATE catalog_item_sub_categories SET source = 'excluded', updated_at = now() WHERE catalog_item_id = :itemId AND sub_category_id = :sub",
+        { itemId, sub: row.sub_category_id },
+        { transaction }
+      );
+    }
+  }
+  for (const sub of subIds) {
+    await select(
+      `INSERT INTO catalog_item_sub_categories (catalog_item_id, sub_category_id, source)
+       VALUES (:itemId, :sub, 'manual')
+       ON CONFLICT (catalog_item_id, sub_category_id) DO UPDATE SET source = 'manual', updated_at = now()`,
+      { itemId, sub },
+      { transaction }
+    );
+  }
+}
+
 function parseItemForm(body, { creating, existing = null }) {
   const errors = [];
   const value = {};
@@ -119,6 +176,10 @@ function parseItemForm(body, { creating, existing = null }) {
 
   value.taxonomyNodeId = nullableText(body.taxonomy_node_id, 200);
 
+  const subIds = parseSubCategoryIds(body.sub_category_ids);
+  if (subIds.error) errors.push(subIds.error);
+  value.subCategoryIds = subIds.ids;
+
   value.hsnCode = nullableText(body.hsn_code, 8);
   if (value.hsnCode && !HSN_PATTERN.test(value.hsnCode)) errors.push('HSN code must be 2, 4, 6 or 8 digits');
 
@@ -149,6 +210,13 @@ async function checkReferences(value) {
       id: value.taxonomyNodeId,
     });
     if (!node) return 'Category not found';
+  }
+  if (value.subCategoryIds && value.subCategoryIds.length) {
+    const found = await select(
+      'SELECT id FROM sub_categories WHERE id IN (:ids) AND is_active',
+      { ids: value.subCategoryIds }
+    );
+    if (found.length !== value.subCategoryIds.length) return 'Sub-category not found';
   }
   if (value.hsnCode) {
     const [code] = await select('SELECT code FROM catalog.hsn_codes WHERE code = :code AND is_active', {
@@ -360,6 +428,29 @@ router.get(
 // ---------------------------------------------------------------------------------------
 // POST /catalog/items: a new item created by an admin (primary_source 'admin')
 // ---------------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------------
+// GET /catalog/sub-category-options: every active sub-category, for the item form's picker.
+// ---------------------------------------------------------------------------------------
+router.get(
+  '/sub-category-options',
+  handle('sub-category options', async (req, res) => {
+    const subs = await sub_categories.findAll({
+      attributes: ['id', 'key', 'name', 'category_id', 'sort_order'],
+      where: { is_active: true },
+      include: [{ model: categories, as: 'categories', attributes: ['id', 'name', 'sort_order'] }],
+      order: [['sort_order', 'ASC'], ['id', 'ASC']],
+    });
+    const data = subs.map((s) => ({
+      id: s.id,
+      key: s.key,
+      name: s.name,
+      category_id: s.category_id,
+      category_name: s.categories ? s.categories.name : '',
+    }));
+    res.json({ success: true, data });
+  })
+);
+
 router.post(
   '/items',
   handle('create item', async (req, res) => {
@@ -422,6 +513,7 @@ router.post(
           { ...row, content_hash: contentHash(row) },
           { transaction }
         );
+        await syncSubCategoryLinks(id, value.subCategoryIds || [], transaction);
       });
     } catch (err) {
       const constraint = uniqueConstraint(err);
@@ -487,7 +579,7 @@ router.put(
 
     const updated = await sequelize.transaction(async (transaction) => {
       await ensureBrand(value, transaction);
-      return select(
+      const result = await select(
         `UPDATE catalog.items SET
            kind = :kind, name = :name, name_key = :name_key, brand_key = :brand_key,
            net_quantity = :net_quantity, unit = :unit, quantity_text = :quantity_text,
@@ -500,6 +592,10 @@ router.put(
         { ...row, content_hash: contentHash(row) },
         { transaction }
       );
+      if (value.subCategoryIds !== null && result.length) {
+        await syncSubCategoryLinks(id, value.subCategoryIds, transaction);
+      }
+      return result;
     });
     if (!updated.length) return fail(res, 404, 'Item not found');
 

@@ -8,4 +8,5 @@ export { default as OrdersScreen } from './orders';
 export { default as ProfileScreen } from './profile';
 export { default as DeliveryPortalScreen } from './delivery_portal';
 export { default as AnalyticsScreen } from './analytics';
+export { default as StoreCatalogueScreen } from './store_catalogue';
 export { default as AdminScreen } from './admin';
