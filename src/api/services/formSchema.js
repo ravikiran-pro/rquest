@@ -21,6 +21,9 @@ const RESERVED_KEYS = [
   'category',
   'category_id',
   'category_name',
+  'sub_category_id',
+  'sub_category_name',
+  'catalog_item_id',
   'allow_instant_order',
   'allow_enquiry',
   'imported_from_master',
@@ -195,6 +198,200 @@ const FORM_TEMPLATES = [
       { key: 'language', label: 'Language', type: 'select', options: ['English', 'Tamil', 'Hindi', 'Telugu', 'Kannada', 'Malayalam', 'Other'], filterable: true },
       { key: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Like New', 'Used - Good'], defaultValue: 'New', filterable: true },
       { key: 'edition', label: 'Edition / Class', type: 'text', placeholder: 'e.g. 2025 edition, Class 10' },
+    ],
+  },
+  {
+    key: 'produce',
+    label: 'Fruits & Vegetables',
+    icon: '🥦',
+    description: 'Fresh fruits, vegetables, greens and herbs',
+    keywords: ['vegetable', 'fruit', 'greengrocer', 'produce', 'greens', 'sabzi'],
+    fields: [
+      { key: 'produce_type', label: 'Type', type: 'select', options: ['Vegetable', 'Fruit', 'Leafy Greens', 'Herbs', 'Exotic'], defaultValue: 'Vegetable', filterable: true },
+      { key: 'sold_by', label: 'Sold By', type: 'select', options: ['Per kg', 'Per 500 g', 'Per Piece', 'Per Bunch', 'Per Dozen'], defaultValue: 'Per kg' },
+      { key: 'organic', label: 'Organic', type: 'boolean', defaultValue: false, filterable: true },
+      { key: 'grade', label: 'Grade', type: 'select', options: ['Premium', 'Regular', 'Economy'], defaultValue: 'Regular', filterable: true },
+      { key: 'origin', label: 'Origin', type: 'text', placeholder: 'e.g. Ooty, Nashik, local farm' },
+    ],
+  },
+  {
+    key: 'meat_fish',
+    label: 'Meat & Fish',
+    icon: '🍗',
+    description: 'Chicken, mutton, fish, seafood and eggs',
+    keywords: ['meat', 'chicken', 'mutton', 'fish', 'seafood', 'butcher'],
+    fields: [
+      { key: 'meat_type', label: 'Meat', type: 'select', options: ['Chicken', 'Mutton', 'Fish', 'Prawns & Seafood', 'Eggs', 'Other'], required: true, filterable: true },
+      { key: 'cut', label: 'Cut', type: 'select', options: ['Whole', 'Curry Cut', 'Boneless', 'Fillet', 'Mince', 'Not Applicable'], defaultValue: 'Curry Cut', filterable: true },
+      { key: 'freshness', label: 'Fresh or Frozen', type: 'radio', options: ['Fresh', 'Frozen'], defaultValue: 'Fresh', filterable: true },
+      { key: 'net_weight', label: 'Net Weight', type: 'text', placeholder: 'e.g. 500 g, 1 kg' },
+      { key: 'halal', label: 'Halal', type: 'boolean', defaultValue: false, filterable: true },
+    ],
+  },
+  {
+    key: 'jewellery',
+    label: 'Jewellery',
+    icon: '💍',
+    description: 'Gold, silver, diamond and fashion jewellery',
+    keywords: ['jewel', 'gold', 'silver', 'diamond'],
+    fields: [
+      { key: 'metal', label: 'Metal', type: 'select', options: ['Gold', 'Silver', 'Platinum', 'Diamond', 'Imitation / Fashion', 'Other'], required: true, filterable: true },
+      { key: 'purity', label: 'Purity', type: 'select', options: ['24K', '22K', '18K', '14K', '925 Sterling', 'Not Applicable'], filterable: true },
+      { key: 'weight_grams', label: 'Weight (Grams)', type: 'number', placeholder: '8.5' },
+      { key: 'hallmarked', label: 'BIS Hallmarked', type: 'boolean', defaultValue: false, filterable: true },
+      { key: 'making_charges', label: 'Making Charges', type: 'text', placeholder: 'e.g. 12% or ₹800' },
+    ],
+  },
+  {
+    key: 'health_services',
+    label: 'Clinics & Health Services',
+    icon: '🩺',
+    description: 'Clinics, hospitals, labs, physiotherapy, home nursing and vets',
+    keywords: ['clinic', 'hospital', 'doctor', 'dental', 'diagnostic', 'physio', 'nursing', 'vet'],
+    fields: [
+      { key: 'consultation_mode', label: 'Consultation Mode', type: 'select', options: ['In Clinic', 'Home Visit', 'Online / Video', 'In Clinic and Online'], defaultValue: 'In Clinic', filterable: true },
+      { key: 'practitioner', label: 'Doctor / Practitioner', type: 'text', placeholder: 'e.g. Dr. A. Kumar, MBBS, MD' },
+      { key: 'specialty', label: 'Specialty', type: 'text', placeholder: 'e.g. General physician, Pediatrics' },
+      { key: 'duration_mins', label: 'Duration (Minutes)', type: 'number', defaultValue: 15 },
+      { key: 'appointment_required', label: 'Appointment Required', type: 'boolean', defaultValue: true, filterable: true },
+    ],
+  },
+  {
+    key: 'fitness',
+    label: 'Gym, Yoga & Fitness',
+    icon: '🏋️',
+    description: 'Gyms, yoga studios and fitness memberships',
+    keywords: ['gym', 'fitness', 'yoga', 'zumba', 'crossfit'],
+    fields: [
+      { key: 'plan_period', label: 'Plan', type: 'select', options: ['Per Session', 'Monthly', 'Quarterly', 'Half-Yearly', 'Yearly'], defaultValue: 'Monthly', filterable: true },
+      { key: 'for_gender', label: 'For', type: 'select', options: ['Men', 'Women', 'Unisex'], defaultValue: 'Unisex', filterable: true },
+      { key: 'trainer_included', label: 'Personal Trainer Included', type: 'boolean', defaultValue: false, filterable: true },
+      { key: 'timings', label: 'Timings', type: 'text', placeholder: 'e.g. 5–10 AM, 5–9 PM' },
+    ],
+  },
+  {
+    key: 'education',
+    label: 'Classes & Education',
+    icon: '🎓',
+    description: 'Tuition, coaching, hobby classes, schools and driving lessons',
+    keywords: ['tuition', 'coaching', 'class', 'academy', 'school', 'college', 'institute', 'training'],
+    fields: [
+      { key: 'mode', label: 'Mode', type: 'select', options: ['At Centre', 'Online', 'Home Tuition', 'Hybrid'], defaultValue: 'At Centre', filterable: true },
+      { key: 'level', label: 'Class / Level', type: 'text', placeholder: 'e.g. Class 6–10, Beginner, NEET' },
+      { key: 'subject', label: 'Subject / Skill', type: 'text', placeholder: 'e.g. Maths, Carnatic vocals, Swimming' },
+      { key: 'course_duration', label: 'Course Duration', type: 'text', placeholder: 'e.g. 3 months, 24 classes' },
+      { key: 'batch_size', label: 'Batch Size', type: 'number', placeholder: '10' },
+      { key: 'demo_class', label: 'Free Demo Class', type: 'boolean', defaultValue: false, filterable: true },
+    ],
+  },
+  {
+    key: 'events',
+    label: 'Events, Photography & Decor',
+    icon: '🎉',
+    description: 'Photographers, event planners, decorators and entertainers',
+    keywords: ['event', 'photograph', 'decoration', 'decorator', 'wedding planner', 'dj'],
+    fields: [
+      { key: 'event_type', label: 'Event Type', type: 'select', options: ['Wedding', 'Birthday', 'Corporate', 'Religious / Pooja', 'Any Event'], defaultValue: 'Any Event', filterable: true },
+      { key: 'guest_capacity', label: 'Guests Up To', type: 'number', placeholder: '200' },
+      { key: 'duration_hours', label: 'Duration (Hours)', type: 'number', placeholder: '4' },
+      { key: 'advance_booking_days', label: 'Book Days in Advance', type: 'number', placeholder: '7' },
+      { key: 'at_your_venue', label: 'Comes to Your Venue', type: 'boolean', defaultValue: true, filterable: true },
+    ],
+  },
+  {
+    key: 'venue',
+    label: 'Venues & Halls',
+    icon: '🏟️',
+    description: 'Marriage halls, party halls, turfs, courts, pools and play zones',
+    keywords: ['hall', 'mahal', 'mandapam', 'venue', 'turf', 'court', 'swimming pool', 'cinema'],
+    fields: [
+      { key: 'venue_type', label: 'Venue Type', type: 'select', options: ['Marriage Hall', 'Party Hall', 'Sports Turf / Court', 'Swimming Pool', 'Auditorium', 'Play / Gaming Zone', 'Other'], filterable: true },
+      { key: 'capacity', label: 'Capacity (People)', type: 'number', placeholder: '300' },
+      { key: 'booking_unit', label: 'Booked', type: 'select', options: ['Per Hour', 'Per Session', 'Per Day'], defaultValue: 'Per Hour', filterable: true },
+      { key: 'air_conditioned', label: 'Air Conditioned', type: 'boolean', defaultValue: false, filterable: true },
+      { key: 'amenities', label: 'Amenities', type: 'textarea', placeholder: 'e.g. Parking for 50 cars, dining hall, generator backup' },
+    ],
+  },
+  {
+    key: 'professional',
+    label: 'Professional Services',
+    icon: '💼',
+    description: 'Accountants, lawyers, consultants, agencies and online services',
+    keywords: ['accountant', 'lawyer', 'advocate', 'consultant', 'agency', 'insurance', 'finance', 'software', 'marketing'],
+    fields: [
+      { key: 'service_mode', label: 'Service Mode', type: 'select', options: ['At Office', 'Online', 'Doorstep Visit', 'Any'], defaultValue: 'At Office', filterable: true },
+      { key: 'turnaround', label: 'Turnaround', type: 'text', placeholder: 'e.g. Same day, 3 working days' },
+      { key: 'experience_years', label: 'Experience (Years)', type: 'number', placeholder: '5' },
+      { key: 'qualification', label: 'Qualification / Licence', type: 'text', placeholder: 'e.g. CA, LLB, IRDAI licensed' },
+    ],
+  },
+  {
+    key: 'property',
+    label: 'Property & Real Estate',
+    icon: '🏠',
+    description: 'Houses, flats, plots, shops and PG beds for rent or sale',
+    keywords: ['real estate', 'property', 'pg', 'hostel', 'rent', 'flat', 'plot'],
+    fields: [
+      { key: 'deal_type', label: 'Deal', type: 'select', options: ['Rent', 'Sale', 'Lease', 'PG / Hostel'], required: true, filterable: true },
+      { key: 'property_type', label: 'Property Type', type: 'select', options: ['Apartment', 'Independent House', 'Villa', 'Plot / Land', 'Shop / Office', 'Room / PG Bed'], filterable: true },
+      { key: 'bedrooms', label: 'Bedrooms', type: 'select', options: ['1 RK', '1 BHK', '2 BHK', '3 BHK', '4+ BHK', 'Not Applicable'], filterable: true },
+      { key: 'area_sqft', label: 'Area (sq ft)', type: 'number', placeholder: '1100' },
+      { key: 'furnishing', label: 'Furnishing', type: 'select', options: ['Unfurnished', 'Semi-Furnished', 'Fully Furnished'], filterable: true },
+      { key: 'available_from', label: 'Available From', type: 'date' },
+    ],
+  },
+  {
+    key: 'travel',
+    label: 'Travel & Transport',
+    icon: '🚕',
+    description: 'Taxis, drivers, travel agents, tours, movers and goods transport',
+    keywords: ['taxi', 'cab', 'travels', 'tour', 'movers', 'packers', 'transport', 'driver'],
+    fields: [
+      { key: 'vehicle_type', label: 'Vehicle', type: 'select', options: ['Bike', 'Auto', 'Car (Hatchback / Sedan)', 'SUV / MUV', 'Tempo / Mini Truck', 'Bus / Van', 'Not Applicable'], filterable: true },
+      { key: 'trip_type', label: 'Trip Type', type: 'select', options: ['Within City', 'Outstation', 'Airport / Station', 'Tour Package', 'Not Applicable'], filterable: true },
+      { key: 'capacity', label: 'Seats / Load Capacity', type: 'text', placeholder: 'e.g. 4 passengers, 1 tonne' },
+      { key: 'advance_booking_hours', label: 'Book Hours in Advance', type: 'number', placeholder: '2' },
+    ],
+  },
+  {
+    key: 'lodging',
+    label: 'Hotels & Stays',
+    icon: '🛏️',
+    description: 'Hotel rooms, lodges, homestays and service apartments',
+    keywords: ['lodge', 'room', 'homestay', 'resort', 'guest house'],
+    fields: [
+      { key: 'room_type', label: 'Room Type', type: 'select', options: ['Single', 'Double', 'Deluxe', 'Suite', 'Dormitory Bed', 'Entire Home'], required: true, filterable: true },
+      { key: 'max_guests', label: 'Max Guests', type: 'number', defaultValue: 2 },
+      { key: 'air_conditioned', label: 'Air Conditioned', type: 'boolean', defaultValue: false, filterable: true },
+      { key: 'meals_included', label: 'Meals Included', type: 'select', options: ['None', 'Breakfast', 'All Meals'], defaultValue: 'None', filterable: true },
+      { key: 'check_in_time', label: 'Check-in Time', type: 'text', placeholder: 'e.g. 12:00 PM' },
+    ],
+  },
+  {
+    key: 'vehicles',
+    label: 'Vehicles (New & Used)',
+    icon: '🏍️',
+    description: 'New and pre-owned bikes, scooters, cars and EVs',
+    keywords: ['showroom', 'dealer', 'used car', 'pre-owned'],
+    fields: [
+      { key: 'vehicle_class', label: 'Vehicle', type: 'select', options: ['Bike / Scooter', 'Car', 'Commercial', 'Electric 2-Wheeler', 'Electric Car'], required: true, filterable: true },
+      { key: 'condition', label: 'Condition', type: 'radio', options: ['New', 'Pre-Owned'], defaultValue: 'New', filterable: true },
+      { key: 'fuel_type', label: 'Fuel', type: 'select', options: ['Petrol', 'Diesel', 'CNG', 'Electric', 'Hybrid'], filterable: true },
+      { key: 'model_year', label: 'Model Year', type: 'number', placeholder: '2023' },
+      { key: 'km_driven', label: 'Km Driven', type: 'number', placeholder: '12000' },
+    ],
+  },
+  {
+    key: 'pets',
+    label: 'Pet Supplies',
+    icon: '🐾',
+    description: 'Pet food, accessories, aquariums and pet care products',
+    keywords: ['pet', 'aquarium', 'dog', 'cat'],
+    fields: [
+      { key: 'pet_type', label: 'For', type: 'select', options: ['Dog', 'Cat', 'Bird', 'Fish', 'Small Pets', 'All Pets'], required: true, filterable: true },
+      { key: 'life_stage', label: 'Life Stage', type: 'select', options: ['Puppy / Kitten', 'Adult', 'Senior', 'All Ages'], defaultValue: 'All Ages', filterable: true },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Pedigree, Whiskas' },
+      { key: 'pack_size', label: 'Pack Size', type: 'text', placeholder: 'e.g. 1.2 kg, 400 g' },
     ],
   },
   {
@@ -435,17 +632,17 @@ const validateMetadata = (schema, metadata, { enforceRequired = true } = {}) => 
   return { metadata: result, errors };
 };
 
+const hasFields = (record) =>
+  Boolean(record) && Array.isArray(record.form_schema) && record.form_schema.length > 0;
+
 /**
- * The schema a shop's listings follow: the shop's own form if it has one,
- * otherwise the category's.
+ * The schema a shop's listings follow, most specific first: the shop's own form,
+ * then its sub-category's form, then its category's form.
  */
-const resolveSchema = (shop, category) => {
-  if (shop && Array.isArray(shop.form_schema) && shop.form_schema.length > 0) {
-    return shop.form_schema;
-  }
-  if (category && Array.isArray(category.form_schema)) {
-    return category.form_schema;
-  }
+const resolveSchema = (shop, category, subCategory) => {
+  if (hasFields(shop)) return shop.form_schema;
+  if (hasFields(subCategory)) return subCategory.form_schema;
+  if (category && Array.isArray(category.form_schema)) return category.form_schema;
   return [];
 };
 

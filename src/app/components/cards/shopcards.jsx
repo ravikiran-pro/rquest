@@ -57,7 +57,7 @@ const ShopCard = ({
     }
   };
 
-  const categoryName = shopCategory?.name || shopSubCategory?.name || shop_type;
+  const categoryName = shopSubCategory?.name || shopCategory?.name || shop_type;
 
   const directionsUrl =
     directions ||

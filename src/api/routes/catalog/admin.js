@@ -9,7 +9,8 @@
 const express = require('express');
 const { randomUUID } = require('crypto');
 const { sequelize, select, handle } = require('./db');
-const { enrichedByIds, searchConditions, searchOrder } = require('./items');
+const { enrichedByIds, searchConditions, searchOrder, subCategoryCondition } = require('./items');
+const { categories, sub_categories } = require('../../models');
 const {
   ITEM_STATUSES,
   EDITABLE_STATUSES,
@@ -222,6 +223,7 @@ router.get(
     const status = textParam(req.query.status, 32);
     const kind = textParam(req.query.kind, 32);
     const active = textParam(req.query.active, 8) || 'true';
+    const subCategoryId = textParam(req.query.sub_category_id, 12);
     if (status && !ITEM_STATUSES.includes(status)) return fail(res, 400, 'Unknown status');
     if (kind && !KINDS.includes(kind)) return fail(res, 400, 'Unknown type');
     if (!['true', 'false', 'all'].includes(active)) return fail(res, 400, 'active must be true, false or all');
@@ -246,6 +248,13 @@ router.get(
     }
     if (active === 'true') where.push('i.is_active');
     if (active === 'false') where.push('NOT i.is_active');
+    if (subCategoryId) {
+      const sub = await sub_categories.findByPk(Number.parseInt(subCategoryId, 10) || -1, {
+        attributes: ['id', 'key', 'catalog_nodes'],
+      });
+      if (!sub) return fail(res, 400, 'Unknown sub-category');
+      where.push(subCategoryCondition(sub, replacements));
+    }
 
     const whereSql = where.length ? `WHERE ${where.join(' AND ')}` : '';
     const from = 'FROM catalog.items i LEFT JOIN catalog.brands b ON b.brand_key = i.brand_key';
@@ -261,6 +270,61 @@ router.get(
     ]);
     const data = await enrichedByIds(page.map((row) => row.id));
     res.json({ success: true, data, count, limit: limit.value, offset: offset.value });
+  })
+);
+
+// ---------------------------------------------------------------------------------------
+// GET /catalog/sub-category-coverage: how many active catalog items each sub-category is
+// linked to (its catalog_nodes and their descendants, plus service items tagged with its
+// key), and which linked nodes do not exist in the catalog. Sorted by category.
+// ---------------------------------------------------------------------------------------
+router.get(
+  '/sub-category-coverage',
+  handle('sub-category coverage', async (req, res) => {
+    const subs = await sub_categories.findAll({
+      attributes: ['id', 'key', 'name', 'category_id', 'catalog_nodes', 'is_active'],
+      include: [{ model: categories, as: 'categories', attributes: ['id', 'name', 'sort_order'] }],
+      order: [['sort_order', 'ASC'], ['id', 'ASC']],
+    });
+    const allNodes = [...new Set(subs.flatMap((s) => (Array.isArray(s.catalog_nodes) ? s.catalog_nodes : [])))];
+    const known = allNodes.length
+      ? new Set(
+          (await select('SELECT id FROM catalog.taxonomy_nodes WHERE id IN (:ids) AND is_active', { ids: allNodes })).map(
+            (r) => r.id
+          )
+        )
+      : new Set();
+
+    const data = [];
+    for (const sub of subs) {
+      const replacements = {};
+      const condition = subCategoryCondition(sub, replacements);
+      const [{ count }] = await select(
+        `SELECT count(*)::int AS count FROM catalog.items i
+          WHERE i.is_active AND i.status <> 'rejected' AND ${condition}`,
+        replacements
+      );
+      const nodes = Array.isArray(sub.catalog_nodes) ? sub.catalog_nodes : [];
+      data.push({
+        id: sub.id,
+        key: sub.key,
+        name: sub.name,
+        is_active: sub.is_active,
+        category: sub.categories ? sub.categories.name : null,
+        catalog_nodes: nodes,
+        missing_nodes: nodes.filter((n) => !known.has(n)),
+        item_count: count,
+      });
+    }
+    res.json({
+      success: true,
+      data,
+      summary: {
+        sub_categories: data.length,
+        with_items: data.filter((d) => d.item_count > 0).length,
+        without_links: data.filter((d) => d.catalog_nodes.length === 0).length,
+      },
+    });
   })
 );
 

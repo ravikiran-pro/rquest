@@ -1,8 +1,17 @@
 const { shops, categories, sub_categories } = require('../../models');
 const { Op, literal } = require('sequelize');
 
+// Category and sub-category as shops carry them. The sub-category form is what the
+// shop's listings follow (unless the shop has its own form).
+const CATEGORY_ATTRS = ['id', 'key', 'name', 'icon', 'form_schema'];
+const SUB_CATEGORY_ATTRS = ['id', 'key', 'name', 'category_id', 'listing_type', 'template_key', 'form_schema'];
+const categoryIncludes = () => [
+  { model: categories, as: 'shopCategory', attributes: CATEGORY_ATTRS },
+  { model: sub_categories, as: 'shopSubCategory', attributes: SUB_CATEGORY_ATTRS },
+];
+
 const getShopsFilter = async (req, res) => {
-  const { lat, lon, search } = req.body;
+  const { lat, lon, search, category_id, sub_category_id } = req.body;
   const searchLat = parseFloat(lat) || 12.9631025;
   const searchLon = parseFloat(lon) || 80.25476;
   const queryText = typeof search === 'string' ? search.trim() : '';
@@ -33,20 +42,15 @@ const getShopsFilter = async (req, res) => {
           'distance',
         ],
       ],
-      include: [
-        {
-          model: categories,
-          as: 'shopCategory',
-          attributes: ['id', 'name', 'form_schema'],
-        },
-        {
-          model: sub_categories,
-          as: 'shopSubCategory',
-          attributes: ['id', 'name'],
-        },
-      ],
+      include: categoryIncludes(),
       where: {
+        ...(Number.parseInt(category_id, 10) ? { category_id: Number.parseInt(category_id, 10) } : {}),
+        ...(Number.parseInt(sub_category_id, 10)
+          ? { sub_category_id: Number.parseInt(sub_category_id, 10) }
+          : {}),
         [Op.or]: [
+          { '$shopSubCategory.name$': { [Op.iLike]: `%${queryText}%` } },
+          { '$shopCategory.name$': { [Op.iLike]: `%${queryText}%` } },
           {
             shop_name: {
               [Op.iLike]: `%${queryText}%`,
@@ -112,18 +116,7 @@ const getMyShops = async (req, res) => {
         'owner_id',
         'form_schema',
       ],
-      include: [
-        {
-          model: categories,
-          as: 'shopCategory',
-          attributes: ['id', 'name', 'form_schema'],
-        },
-        {
-          model: sub_categories,
-          as: 'shopSubCategory',
-          attributes: ['id', 'name'],
-        },
-      ],
+      include: categoryIncludes(),
       where: {
         owner_id: user_id,
       },
@@ -144,18 +137,7 @@ const getShopDetails = async (req, res) => {
   try {
     const { shop_id } = req.params;
     const shop = await shops.findByPk(shop_id, {
-      include: [
-        {
-          model: categories,
-          as: 'shopCategory',
-          attributes: ['id', 'name', 'form_schema'],
-        },
-        {
-          model: sub_categories,
-          as: 'shopSubCategory',
-          attributes: ['id', 'name'],
-        },
-      ],
+      include: categoryIncludes(),
     });
 
     if (!shop) {

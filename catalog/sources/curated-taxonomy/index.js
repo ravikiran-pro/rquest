@@ -34,6 +34,20 @@ const FORM_TEMPLATES = new Set([
   'rentals',
   'books',
   'general',
+  'produce',
+  'meat_fish',
+  'jewellery',
+  'health_services',
+  'fitness',
+  'education',
+  'events',
+  'venue',
+  'professional',
+  'property',
+  'travel',
+  'lodging',
+  'vehicles',
+  'pets',
 ]);
 const LISTING_TYPES = new Set(['product', 'food', 'service', 'rental']);
 const RELATIONS = new Set(['exact', 'broader', 'narrower', 'related']);

@@ -48,10 +48,22 @@ const FormSchemaBuilderModal = ({
   open,
   onClose,
   category,
+  subCategory,
   shop,
   onSuccess,
 }) => {
   const isShopTarget = !!shop;
+  // A sub-category's form (the form its shops' listings follow), edited like a category's
+  const isSubTarget = !isShopTarget && !!subCategory;
+  const target = isSubTarget ? subCategory : category;
+  // The standard form a shop falls back to: its sub-category's, else its category's
+  const shopStandardSchema =
+    Array.isArray(shop?.shopSubCategory?.form_schema) && shop.shopSubCategory.form_schema.length > 0
+      ? shop.shopSubCategory.form_schema
+      : Array.isArray(shop?.shopCategory?.form_schema)
+      ? shop.shopCategory.form_schema
+      : [];
+  const shopStandardName = shop?.shopSubCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'Category';
   const screens = Grid.useBreakpoint();
   // Under 576px the field table becomes a stacked card list; useBreakpoint is empty on the first render (desktop)
   const isPhone = screens.sm === false;
@@ -64,8 +76,8 @@ const FormSchemaBuilderModal = ({
 
   // The name the server matches a template against
   const targetName = isShopTarget
-    ? shop?.shopCategory?.name || shop?.shop_type || ''
-    : category?.name || '';
+    ? shop?.shopSubCategory?.name || shop?.shopCategory?.name || shop?.shop_type || ''
+    : target?.name || '';
 
   // Load the ready-made templates and the one suggested for this category
   useEffect(() => {
@@ -96,16 +108,16 @@ const FormSchemaBuilderModal = ({
       if (isShopTarget && shop) {
         const existing = Array.isArray(shop.form_schema) && shop.form_schema.length > 0
           ? shop.form_schema
-          : Array.isArray(shop.shopCategory?.form_schema)
-          ? shop.shopCategory.form_schema
-          : [];
+          : shopStandardSchema;
         setFields(JSON.parse(JSON.stringify(existing)));
-      } else if (category) {
-        const existing = Array.isArray(category.form_schema) ? category.form_schema : [];
+      } else if (target) {
+        const existing = Array.isArray(target.form_schema) ? target.form_schema : [];
         setFields(JSON.parse(JSON.stringify(existing)));
       }
     }
-  }, [open, category, shop, isShopTarget]);
+    // shopStandardSchema is derived from shop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, target, shop, isShopTarget]);
 
   const handleAddField = () => {
     const newField = {
@@ -187,9 +199,32 @@ const FormSchemaBuilderModal = ({
   };
 
   const handleResetToCategoryDefault = () => {
-    if (isShopTarget && shop?.shopCategory?.form_schema) {
-      setFields(JSON.parse(JSON.stringify(shop.shopCategory.form_schema)));
-      message.info('Reverted to default category schema');
+    if (isSubTarget) {
+      Modal.confirm({
+        title: `Reset ${subCategory.name} to its standard form?`,
+        content: 'The standard fields for this kind of business replace the current ones and are saved right away.',
+        okText: 'Reset form',
+        onOk: async () => {
+          const res = await netWorkCall(
+            apiConfig.master_sub_categories_schema,
+            'PUT',
+            JSON.stringify({ subcategory_id: subCategory.id, reset: true }),
+            true
+          );
+          if (res?.success) {
+            message.success(res.message || 'Form reset');
+            onSuccess?.();
+            onClose();
+          } else {
+            message.error(res?.error || 'Could not reset the form');
+          }
+        },
+      });
+      return;
+    }
+    if (isShopTarget && shopStandardSchema.length > 0) {
+      setFields(JSON.parse(JSON.stringify(shopStandardSchema)));
+      message.info(`Reverted to the standard ${shopStandardName} form`);
     } else {
       setFields([]);
       message.info('Cleared custom fields');
@@ -202,7 +237,7 @@ const FormSchemaBuilderModal = ({
 
   const handleSave = async () => {
     if (isShopTarget && !shop?.id) return;
-    if (!isShopTarget && !category?.id) return;
+    if (!isShopTarget && (target?.id === undefined || target?.id === null)) return;
 
     if (issues.length > 0) {
       message.error(issues[0].message);
@@ -213,10 +248,14 @@ const FormSchemaBuilderModal = ({
     try {
       const endpoint = isShopTarget
         ? apiConfig.master_shops_schema
+        : isSubTarget
+        ? apiConfig.master_sub_categories_schema
         : apiConfig.master_categories_schema;
 
       const payload = isShopTarget
         ? { shop_id: shop.id, form_schema: fields }
+        : isSubTarget
+        ? { subcategory_id: subCategory.id, form_schema: fields }
         : { category_id: category.id, form_schema: fields };
 
       const res = await netWorkCall(
@@ -230,7 +269,7 @@ const FormSchemaBuilderModal = ({
         message.success(
           isShopTarget
             ? `Custom form saved for ${shop.shop_name}`
-            : `Form configuration saved for ${category.name}`
+            : `Form configuration saved for ${target.name}`
         );
         onSuccess?.();
         onClose();
@@ -547,7 +586,9 @@ const FormSchemaBuilderModal = ({
           <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain, fontSize: 16 }}>
             {isShopTarget
               ? `Custom Product Form — Store: ${shop?.shop_name || 'Shop'}`
-              : `Product Form Configuration — Category: ${category?.name || 'Category'}`}
+              : isSubTarget
+              ? `Listing Form — Sub-category: ${subCategory?.name || 'Sub-category'}`
+              : `Fallback Form — Category: ${category?.name || 'Category'}`}
           </span>
         </div>
       }
@@ -563,14 +604,14 @@ const FormSchemaBuilderModal = ({
         >
           Cancel
         </Button>,
-        ...(isShopTarget
+        ...(isShopTarget || isSubTarget
           ? [
               <Button
                 key="reset"
                 onClick={handleResetToCategoryDefault}
                 style={{ borderRadius: radii.md, borderColor: colors.border, color: colors.textMuted, fontFamily: typography.fontFamily.body }}
               >
-                Reset to Standard Category Default
+                {isSubTarget ? 'Reset to Standard Form' : `Reset to ${shopStandardName} Form`}
               </Button>,
             ]
           : []),
@@ -597,16 +638,22 @@ const FormSchemaBuilderModal = ({
       destroyOnHidden
     >
       <Alert
-        message={isShopTarget ? 'Store-Specific Form Override' : 'Standard Category Schema'}
+        message={
+          isShopTarget ? 'Store-Specific Form Override' : isSubTarget ? 'Sub-category Listing Form' : 'Category Fallback Form'
+        }
         description={
           <div style={{ fontFamily: typography.fontFamily.body }}>
             {isShopTarget ? (
               <>
-                Fields defined here will apply <strong>only to {shop?.shop_name}</strong>. If empty or cleared, this store will use standard <strong>{shop?.shopCategory?.name || shop?.shop_type || 'Category'}</strong> fields.
+                Fields defined here will apply <strong>only to {shop?.shop_name}</strong>. If empty or cleared, this store will use the standard <strong>{shopStandardName}</strong> fields.
+              </>
+            ) : isSubTarget ? (
+              <>
+                These fields appear on the <strong>Add/Edit Item form</strong> for every <strong>{subCategory?.name}</strong> shop. Values are stored in each listing&apos;s <code>metadata</code>. Once saved, this form is marked as customised and a taxonomy sync will not overwrite it; use <em>Reset to Standard Form</em> to go back.
               </>
             ) : (
               <>
-                Fields defined here will automatically appear on the <strong>Add/Edit Product Form</strong> for all shops belonging to <strong>{category?.name}</strong>. Values are automatically stored inside each listing&apos;s <code>metadata</code> JSON.
+                Used only for <strong>{category?.name}</strong> shops that have no sub-category yet. Each sub-category has its own form; edit those from the Sub-categories screen.
               </>
             )}
           </div>
@@ -725,12 +772,21 @@ FormSchemaBuilderModal.propTypes = {
     name: PropTypes.string,
     form_schema: PropTypes.array,
   }),
+  subCategory: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+    name: PropTypes.string,
+    form_schema: PropTypes.array,
+  }),
   shop: PropTypes.shape({
     id: PropTypes.string,
     shop_name: PropTypes.string,
     shop_type: PropTypes.string,
     form_schema: PropTypes.array,
     shopCategory: PropTypes.shape({
+      name: PropTypes.string,
+      form_schema: PropTypes.array,
+    }),
+    shopSubCategory: PropTypes.shape({
       name: PropTypes.string,
       form_schema: PropTypes.array,
     }),

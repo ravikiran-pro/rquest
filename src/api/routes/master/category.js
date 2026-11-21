@@ -34,10 +34,10 @@ const getAllCategories = async (req, res) => {
     const { limit, offset } = req.body;
 
     const results = await categories.findAndCountAll({
-      attributes: ['id', 'name', 'img_url', 'is_active', 'form_schema', 'createdAt', 'updatedAt'],
+      attributes: ['id', 'key', 'name', 'description', 'icon', 'img_url', 'is_active', 'sort_order', 'form_schema', 'createdAt', 'updatedAt'],
       limit: parseInt(limit) || 20,
       offset: parseInt(offset) || 0,
-      order: [['updatedAt', 'DESC']]
+      order: [['sort_order', 'ASC'], ['id', 'ASC']]
     });
 
     res.status(200).json({
@@ -97,7 +97,14 @@ const editCategory = async (req, res) => {
         cleanSchema = normalizeSchema(appliedTemplate.fields).schema;
       }
 
+      let key = String(name).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 40) || 'category';
+      if (!/^[a-z]/.test(key)) key = `cat_${key}`;
+      for (let n = 2, base = key; await categories.count({ where: { key } }); n += 1) key = `${base}_${n}`;
+      const maxOrder = (await categories.max('sort_order')) || 0;
+
       const newCategory = await categories.create({
+        key,
+        sort_order: maxOrder + 1,
         name: String(name).trim(),
         img_url: img_url || '',
         is_active: true,

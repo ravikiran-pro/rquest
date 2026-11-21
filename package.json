@@ -16,7 +16,9 @@
     "catalog:install": "cd catalog && npm install",
     "catalog:migrate": "cd catalog && node cli.js migrate",
     "catalog:status": "cd catalog && node cli.js status",
-    "catalog:load": "cd catalog && node cli.js run-all"
+    "catalog:load": "cd catalog && node cli.js run-all",
+    "taxonomy:sync": "node scripts/taxonomy-sync.js",
+    "taxonomy:export-catalog": "node scripts/taxonomy-export-catalog.js"
   },
   "devDependencies": {
     "concurrently": "^6.2.1",

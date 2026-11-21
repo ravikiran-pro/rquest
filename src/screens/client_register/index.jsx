@@ -13,6 +13,7 @@ import {
   Spin,
   Modal,
   Alert,
+  Select,
 } from 'antd';
 import {
   EnvironmentOutlined,
@@ -22,10 +23,13 @@ import {
   EditOutlined,
   AimOutlined,
   ShoppingOutlined,
-  CoffeeOutlined,
   MedicineBoxOutlined,
-  ToolOutlined,
-  SmileOutlined,
+  SkinOutlined,
+  MobileOutlined,
+  HomeOutlined,
+  CarOutlined,
+  GiftOutlined,
+  BankOutlined,
   ShopOutlined,
   CheckOutlined,
   EyeOutlined,
@@ -44,90 +48,87 @@ import './onboarding.css';
 
 const { Title, Text, Paragraph } = Typography;
 
-// Real-world, clean local business categories (no cheesy emojis or AI placeholders)
+// The 8 categories (keys match src/api/data/taxonomy.js). Ids, names and sub-categories
+// come from GET /shops/my_categories; this only adds the onboarding picture, icon and the
+// sub-category picked by default.
+const IMG = {
+  grocery: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
+  restaurant: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
+  pharmacy: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80',
+  repairs: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
+  salon: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&auto=format&fit=crop&q=80',
+  retail: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
+};
+
 const STORE_CATEGORIES = [
-  {
-    id: 'groceries',
-    title: 'Grocery & Supermarket',
-    icon: <ShoppingOutlined />,
-    desc: 'Daily essentials, packaged goods, staples & provisions',
-    shop_type: 'Provision Store',
-    category_id: 0,
-    defaultImage: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Chakki Atta Flour (5kg)', price: 235, mrp: 260, unit: 'pack', listing_type: 'product' },
-      { name: 'Refined Sunflower Oil (1L)', price: 130, mrp: 150, unit: 'pouch', listing_type: 'product' },
-      { name: 'Basmati Rice (1kg)', price: 95, mrp: 110, unit: 'pack', listing_type: 'product' },
-    ],
-  },
-  {
-    id: 'food',
-    title: 'Restaurant & Eatery',
-    icon: <CoffeeOutlined />,
-    desc: 'Hot meals, snacks, cafes, bakeries & cloud kitchens',
-    shop_type: 'Food & Dining',
-    category_id: 7,
-    defaultImage: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Chicken Dum Biryani (Full)', price: 220, unit: 'plate', listing_type: 'food' },
-      { name: 'Paneer Butter Masala', price: 180, unit: 'portion', listing_type: 'food' },
-      { name: 'Fresh Mint Lime Juice', price: 50, unit: 'glass', listing_type: 'food' },
-    ],
-  },
-  {
-    id: 'pharmacy',
-    title: 'Pharmacy & Wellness',
-    icon: <MedicineBoxOutlined />,
-    desc: 'Medicines, first aid, healthcare devices & wellness products',
-    shop_type: 'Health & Medicine',
-    category_id: 8,
-    defaultImage: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Paracetamol 500mg (Strip of 10)', price: 30, mrp: 35, unit: 'strip', listing_type: 'product' },
-      { name: 'Digital Thermometer', price: 450, mrp: 600, unit: 'piece', listing_type: 'product' },
-      { name: 'First Aid Antiseptic Liquid (100ml)', price: 65, mrp: 72, unit: 'bottle', listing_type: 'product' },
-    ],
-  },
-  {
-    id: 'repairs',
-    title: 'Technician & Home Repairs',
-    icon: <ToolOutlined />,
-    desc: 'Electricians, plumbers, AC service, appliance repair',
-    shop_type: 'Hardware and tools',
-    category_id: 4,
-    defaultImage: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Doorstep Inspection & Safety Check', price: 199, unit: 'visit', listing_type: 'service' },
-      { name: 'AC Filter Cleaning & Gas Check', price: 499, unit: 'service', listing_type: 'service' },
-    ],
-  },
-  {
-    id: 'salon',
-    title: 'Salon, Spa & Beauty',
-    icon: <SmileOutlined />,
-    desc: 'Hair styling, grooming, spa & wellness services',
-    shop_type: 'Small business',
-    category_id: 14,
-    defaultImage: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Men’s Haircut & Styling', price: 150, unit: 'session', listing_type: 'service' },
-      { name: 'Herbal Glow Facial (45 min)', price: 699, unit: 'session', listing_type: 'service' },
-    ],
-  },
-  {
-    id: 'retail',
-    title: 'Local Retail & Boutique',
-    icon: <ShopOutlined />,
-    desc: 'Clothing, footwear, stationery, gifts & home goods',
-    shop_type: 'Small business',
-    category_id: 12,
-    defaultImage: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
-    starters: [
-      { name: 'Cotton Round-Neck T-Shirt', price: 399, mrp: 599, unit: 'piece', listing_type: 'product' },
-      { name: 'Classic Leather Wallet', price: 450, mrp: 699, unit: 'piece', listing_type: 'product' },
-    ],
-  },
+  { key: 'food_groceries', title: 'Food & Groceries', icon: <ShoppingOutlined />, defaultSub: 'kirana', defaultImage: IMG.grocery },
+  { key: 'health_wellness', title: 'Health & Wellness', icon: <MedicineBoxOutlined />, defaultSub: 'pharmacy', defaultImage: IMG.pharmacy },
+  { key: 'fashion_beauty', title: 'Fashion & Beauty', icon: <SkinOutlined />, defaultSub: 'clothing', defaultImage: IMG.salon },
+  { key: 'electronics_appliances', title: 'Electronics & Appliances', icon: <MobileOutlined />, defaultSub: 'mobile_phones', defaultImage: IMG.retail },
+  { key: 'home_property', title: 'Home & Property', icon: <HomeOutlined />, defaultSub: 'hardware_store', defaultImage: IMG.repairs },
+  { key: 'vehicles_travel', title: 'Vehicles & Travel', icon: <CarOutlined />, defaultSub: 'vehicle_repair', defaultImage: IMG.repairs },
+  { key: 'lifestyle_events', title: 'Lifestyle & Events', icon: <GiftOutlined />, defaultSub: 'gifts', defaultImage: IMG.retail },
+  { key: 'business_professional', title: 'Business & Professional', icon: <BankOutlined />, defaultSub: 'printing', defaultImage: IMG.retail },
 ];
+
+// Pictures for sub-categories that have a better one than their category's
+const SUB_IMAGES = {
+  restaurant: IMG.restaurant,
+  fast_food: IMG.restaurant,
+  cafe: IMG.restaurant,
+  home_kitchen: IMG.restaurant,
+  catering: IMG.restaurant,
+  salon: IMG.salon,
+  beauty_parlour: IMG.salon,
+  makeup_artist: IMG.salon,
+  home_repair: IMG.repairs,
+  electronics_repair: IMG.repairs,
+};
+
+// Sample items a new shop can start with, by sub-category. Types match the sub-category.
+const STARTERS = {
+  kirana: [
+    { name: 'Chakki Atta Flour (5kg)', price: 235, mrp: 260, unit: 'pack', listing_type: 'product' },
+    { name: 'Refined Sunflower Oil (1L)', price: 130, mrp: 150, unit: 'pouch', listing_type: 'product' },
+    { name: 'Basmati Rice (1kg)', price: 95, mrp: 110, unit: 'pack', listing_type: 'product' },
+  ],
+  supermarket: 'kirana',
+  restaurant: [
+    { name: 'Chicken Dum Biryani (Full)', price: 220, unit: 'plate', listing_type: 'food' },
+    { name: 'Paneer Butter Masala', price: 180, unit: 'portion', listing_type: 'food' },
+    { name: 'Fresh Mint Lime Juice', price: 50, unit: 'glass', listing_type: 'food' },
+  ],
+  fast_food: 'restaurant',
+  pharmacy: [
+    { name: 'Paracetamol 500mg (Strip of 10)', price: 30, mrp: 35, unit: 'strip', listing_type: 'product' },
+    { name: 'Digital Thermometer', price: 450, mrp: 600, unit: 'piece', listing_type: 'product' },
+    { name: 'First Aid Antiseptic Liquid (100ml)', price: 65, mrp: 72, unit: 'bottle', listing_type: 'product' },
+  ],
+  home_repair: [
+    { name: 'Doorstep Inspection & Safety Check', price: 199, unit: 'visit', listing_type: 'service' },
+    { name: 'Tap / Pipe Leak Repair', price: 299, unit: 'visit', listing_type: 'service' },
+  ],
+  electronics_repair: [
+    { name: 'Doorstep Inspection & Diagnosis', price: 199, unit: 'visit', listing_type: 'service' },
+    { name: 'AC Filter Cleaning & Gas Check', price: 499, unit: 'service', listing_type: 'service' },
+  ],
+  salon: [
+    { name: 'Men’s Haircut & Styling', price: 150, unit: 'session', listing_type: 'service' },
+    { name: 'Beard Trim & Shave', price: 80, unit: 'session', listing_type: 'service' },
+  ],
+  beauty_parlour: [
+    { name: 'Herbal Glow Facial (45 min)', price: 699, unit: 'session', listing_type: 'service' },
+    { name: 'Eyebrow Threading', price: 50, unit: 'session', listing_type: 'service' },
+  ],
+  clothing: [
+    { name: 'Cotton Round-Neck T-Shirt', price: 399, mrp: 599, unit: 'piece', listing_type: 'product' },
+    { name: 'Classic Leather Wallet', price: 450, mrp: 699, unit: 'piece', listing_type: 'product' },
+  ],
+};
+const startersFor = (subKey) => {
+  const entry = STARTERS[subKey];
+  return (typeof entry === 'string' ? STARTERS[entry] : entry) || [];
+};
 
 
 const DEFAULT_CENTER = [12.9716, 77.5946];
@@ -181,7 +182,11 @@ const ClientRegister = () => {
 
   // Guided Onboarding Wizard State
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState('groceries');
+  const [selectedCategory, setSelectedCategory] = useState(STORE_CATEGORIES[0].key);
+  const [selectedSubKey, setSelectedSubKey] = useState(STORE_CATEGORIES[0].defaultSub);
+  // The category tree from the server: [{ id, key, name, sub_categories: [...] }]
+  const [categoryTree, setCategoryTree] = useState([]);
+  const [categoryTreeError, setCategoryTreeError] = useState(false);
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);
   const [position, setPosition] = useState(DEFAULT_CENTER);
   const [pinSet, setPinSet] = useState(false);
@@ -200,6 +205,20 @@ const ClientRegister = () => {
     payment_modes: ['direct_upi', 'cod'],
     populate_starters: true,
   });
+
+  useEffect(() => {
+    let cancelled = false;
+    netWorkCall(apiConfig.my_categories, 'GET', null, false)
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.success && Array.isArray(res.data)) setCategoryTree(res.data);
+        else setCategoryTreeError(true);
+      })
+      .catch(() => !cancelled && setCategoryTreeError(true));
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Public platform settings: is new store registration open right now?
   useEffect(() => {
@@ -279,15 +298,20 @@ const ClientRegister = () => {
     }
   };
 
-  const handleSelectCategory = (catId) => {
-    setSelectedCategory(catId);
-    const cat = STORE_CATEGORIES.find((c) => c.id === catId);
-    if (cat) {
-      setOnboardingData((prev) => ({
-        ...prev,
-        img_url: cat.defaultImage,
-      }));
-    }
+  const imageFor = (catKey, subKey) =>
+    SUB_IMAGES[subKey] || STORE_CATEGORIES.find((c) => c.key === catKey)?.defaultImage || IMG.retail;
+
+  const handleSelectCategory = (catKey) => {
+    const cat = STORE_CATEGORIES.find((c) => c.key === catKey);
+    if (!cat) return;
+    setSelectedCategory(catKey);
+    setSelectedSubKey(cat.defaultSub);
+    setOnboardingData((prev) => ({ ...prev, img_url: imageFor(catKey, cat.defaultSub) }));
+  };
+
+  const handleSelectSubCategory = (subKey) => {
+    setSelectedSubKey(subKey);
+    setOnboardingData((prev) => ({ ...prev, img_url: imageFor(selectedCategory, subKey) }));
   };
 
   const handleAutoDetectGps = async () => {
@@ -340,6 +364,10 @@ const ClientRegister = () => {
         message.error('Please enter your store or business name');
         return;
       }
+      if (!activeSub) {
+        message.error('Please choose what kind of business it is');
+        return;
+      }
       if (!onboardingData.mobile_number.trim()) {
         message.error('Please enter a phone number for customer orders');
         return;
@@ -361,19 +389,21 @@ const ClientRegister = () => {
   const handleFinishOnboarding = async () => {
     setSubmitting(true);
     try {
-      const activeCat = STORE_CATEGORIES.find((c) => c.id === selectedCategory);
+      const activeCat = STORE_CATEGORIES.find((c) => c.key === selectedCategory);
+      const serverCategory = categoryTree.find((c) => c.key === selectedCategory);
+      const serverSub = serverCategory?.sub_categories?.find((sc) => sc.key === selectedSubKey);
       const payload = {
         owner_id: user_data?.user_id,
         shop_name: onboardingData.shop_name.trim(),
-        shop_type: activeCat?.shop_type || 'Small business',
+        shop_type: serverSub?.name || serverCategory?.name || activeCat?.title || 'Local business',
         address: onboardingData.address.trim(),
         area: onboardingData.area.trim(),
         mobile_number: onboardingData.mobile_number.trim(),
         website: onboardingData.website ? onboardingData.website.trim() : '',
         directions: onboardingData.directions || `https://www.google.com/maps/@${position[0]},${position[1]}`,
         img_url: onboardingData.img_url || activeCat?.defaultImage,
-        category_id: activeCat?.category_id !== undefined && activeCat?.category_id !== null ? activeCat.category_id : null,
-        sub_category_id: null,
+        category_id: serverCategory ? serverCategory.id : null,
+        sub_category_id: serverSub ? serverSub.id : null,
         allow_multi_category: false,
         latitude: position[0],
         longitude: position[1],
@@ -397,8 +427,8 @@ const ClientRegister = () => {
         }
 
         // Seed starter listings if opted in
-        if (onboardingData.populate_starters && activeCat?.starters) {
-          for (const starter of activeCat.starters) {
+        if (onboardingData.populate_starters && starters.length) {
+          for (const starter of starters) {
             await netWorkCall(
               apiConfig.listings_create,
               'POST',
@@ -456,8 +486,16 @@ const ClientRegister = () => {
     );
   }
 
-  const activeCategoryObj = STORE_CATEGORIES.find((c) => c.id === selectedCategory);
-  const categoryTitle = activeCategoryObj?.title;
+  const activeServerCategory = categoryTree.find((c) => c.key === selectedCategory);
+  const subOptions = (activeServerCategory?.sub_categories || []).map((sc) => ({
+    value: sc.key,
+    label: sc.name,
+    search: `${sc.name} ${(sc.keywords || []).join(' ')} ${sc.description || ''}`.toLowerCase(),
+    description: sc.description,
+  }));
+  const activeSub = activeServerCategory?.sub_categories?.find((sc) => sc.key === selectedSubKey);
+  const categoryTitle = [activeServerCategory?.name, activeSub?.name].filter(Boolean).join(' · ');
+  const starters = startersFor(selectedSubKey);
   const areaLine = [onboardingData.address || 'Address', onboardingData.area || 'Neighborhood'].join(', ');
 
   const registrationAlert = registrationNotice && (
@@ -473,19 +511,20 @@ const ClientRegister = () => {
   const renderCategoryGrid = () => (
     <div className="store-category-grid">
       {STORE_CATEGORIES.map((cat) => {
-        const isSelected = selectedCategory === cat.id;
+        const isSelected = selectedCategory === cat.key;
+        const serverCat = categoryTree.find((c) => c.key === cat.key);
         return (
           <button
-            key={cat.id}
+            key={cat.key}
             type="button"
             aria-pressed={isSelected}
-            onClick={() => handleSelectCategory(cat.id)}
+            onClick={() => handleSelectCategory(cat.key)}
             className={`store-category-card ${isSelected ? 'selected' : ''}`}
           >
             <div className="store-category-icon">{cat.icon}</div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="store-category-title">{cat.title}</div>
-              <div className="store-category-desc">{cat.desc}</div>
+              <div className="store-category-title">{serverCat?.name || cat.title}</div>
+              <div className="store-category-desc">{serverCat?.description || ''}</div>
             </div>
             {isSelected && <CheckOutlined className="onb-check" />}
           </button>
@@ -669,6 +708,32 @@ const ClientRegister = () => {
                   <span className="onb-section-hint">Select the category that best describes what you sell.</span>
 
                   {renderCategoryGrid()}
+
+                  {/* antd drops the item's bottom margin when it shows help text */}
+                  <Form layout="vertical" style={{ marginBottom: 20 }}>
+                    <Form.Item
+                      label="What kind of business is it?"
+                      required
+                      help={
+                        categoryTreeError
+                          ? 'Could not load business types. Check your connection and reload.'
+                          : activeSub?.description || 'Type to search, e.g. "tiffin", "xerox", "AC repair"'
+                      }
+                      validateStatus={categoryTreeError ? 'error' : undefined}
+                    >
+                      <Select
+                        size="large"
+                        showSearch
+                        value={activeSub ? selectedSubKey : undefined}
+                        placeholder="Choose your business type"
+                        loading={!categoryTree.length && !categoryTreeError}
+                        options={subOptions}
+                        onChange={handleSelectSubCategory}
+                        filterOption={(input, option) => option.search.includes(input.trim().toLowerCase())}
+                        aria-label="Business type"
+                      />
+                    </Form.Item>
+                  </Form>
 
                   <Form layout="vertical">
                     <Row gutter={[16, 0]}>
@@ -913,19 +978,21 @@ const ClientRegister = () => {
                     )}
                   </dl>
 
-                  <div className="onb-starter-box">
-                    <Checkbox
-                      checked={onboardingData.populate_starters}
-                      onChange={(e) => setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })}
-                    >
-                      <span style={{ fontWeight: 600, color: colors.textMain, fontSize: 13 }}>
-                        Pre-load starter sample catalog ({activeCategoryObj?.starters?.length} items)
-                      </span>
-                    </Checkbox>
-                    <div className="onb-starter-hint">
-                      Your store launches with sample catalog items that you can edit anytime.
+                  {starters.length > 0 && (
+                    <div className="onb-starter-box">
+                      <Checkbox
+                        checked={onboardingData.populate_starters}
+                        onChange={(e) => setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })}
+                      >
+                        <span style={{ fontWeight: 600, color: colors.textMain, fontSize: 13 }}>
+                          Pre-load starter sample catalog ({starters.length} items)
+                        </span>
+                      </Checkbox>
+                      <div className="onb-starter-hint">
+                        Your store launches with sample catalog items that you can edit anytime.
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
 

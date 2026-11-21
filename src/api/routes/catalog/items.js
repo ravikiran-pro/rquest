@@ -130,7 +130,9 @@ function categoryCondition(category, replacements) {
   }
   replacements.cat_id = value;
   replacements.cat_shop_type = value.startsWith('shop_type:') ? value.slice('shop_type:'.length) : null;
-  return `(i.taxonomy_node_id IN (
+  // COALESCE: an item with no node and no shop_type would otherwise be NULL, which sorts
+  // before true in "linked DESC"
+  return `COALESCE(i.taxonomy_node_id IN (
              WITH RECURSIVE start AS (
                SELECT CAST(:cat_id AS text) AS id
                UNION
@@ -146,8 +148,35 @@ function categoryCondition(category, replacements) {
                AND i.attributes->>'shop_type' = :cat_shop_type))`;
 }
 
+/**
+ * Items that apply to a sub-category: items under any of its catalog nodes (or their
+ * descendants), plus service items tagged with its key (attributes.shop_type — the
+ * sub-category key equals the catalog shop-type key). Returns a SQL boolean over `i`.
+ */
+function subCategoryCondition(subCategory, replacements, prefix = 'sc') {
+  const nodes = (Array.isArray(subCategory?.catalog_nodes) ? subCategory.catalog_nodes : []).filter(
+    (n) => typeof n === 'string' && n.includes(':')
+  );
+  const key = typeof subCategory?.key === 'string' && subCategory.key ? subCategory.key : null;
+  if (!nodes.length && !key) return 'FALSE';
+  replacements[`${prefix}_nodes`] = nodes.length ? nodes : ['-'];
+  replacements[`${prefix}_key`] = key || '-';
+  // COALESCE: an item with no node and no shop_type would otherwise be NULL, which sorts
+  // before true in "linked DESC"
+  return `COALESCE(i.taxonomy_node_id IN (
+             WITH RECURSIVE sub AS (
+               SELECT n.id FROM catalog.taxonomy_nodes n
+                WHERE n.id = ANY (ARRAY[:${prefix}_nodes]::text[])
+               UNION
+               SELECT n.id FROM catalog.taxonomy_nodes n JOIN sub ON n.parent_id = sub.id
+             )
+             SELECT id FROM sub)
+           OR i.attributes->>'shop_type' = :${prefix}_key, false)`;
+}
+
 module.exports = {
   ENRICHED_COLUMNS,
+  subCategoryCondition,
   shapeItem,
   enrichedByIds,
   searchConditions,

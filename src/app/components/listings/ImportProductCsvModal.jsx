@@ -64,6 +64,17 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
     return shop?.shopCategory || null;
   }, [shop, categoriesList]);
 
+  // The shop's sub-category (with its form) from the category tree
+  const activeSub = useMemo(() => {
+    const id = shop?.sub_category_id ?? shop?.shopSubCategory?.id;
+    if (id === null || id === undefined) return null;
+    for (const c of categoriesList) {
+      const match = (c.sub_categories || []).find((sc) => sc.id === id);
+      if (match) return match;
+    }
+    return shop?.shopSubCategory || null;
+  }, [shop, categoriesList]);
+
   // Auto-derived shop archetype
   const autoArchetype = useMemo(() => {
     return getShopArchetype(shop, activeCategory);
@@ -81,8 +92,8 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         categoryName: CATEGORY_PRESETS[selectedArchetypeOverride].label,
       };
     }
-    return getCategoryCsvConfig(shop, activeCategory);
-  }, [shop, activeCategory, selectedArchetypeOverride]);
+    return getCategoryCsvConfig(shop, activeCategory, resolveShopSchema(shop, activeCategory, activeSub));
+  }, [shop, activeCategory, activeSub, selectedArchetypeOverride]);
 
   // Reset state on open/close
   useEffect(() => {
@@ -93,7 +104,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
   }, [open]);
 
   const handleDownloadSample = () => {
-    const csvContent = generateCategorySampleCsv(shop, activeCategory);
+    const csvContent = generateCategorySampleCsv(shop, activeCategory, resolveShopSchema(shop, activeCategory, activeSub));
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -111,7 +122,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
     reader.onload = (e) => {
       try {
         const text = e.target.result;
-        const items = parseCSV(text, resolveShopSchema(shop, activeCategory));
+        const items = parseCSV(text, resolveShopSchema(shop, activeCategory, activeSub));
         if (items.length === 0) {
           message.error('No valid product rows found in CSV. Please verify column headers and data.');
           return;
@@ -140,12 +151,11 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           unit: item.unit || csvConfig.defaultUnit || 'piece',
           section: item.section || item.metadata?.section || '',
           description: item.description || '',
-          listing_type: csvConfig.listingType || 'product',
+          listing_type: activeSub?.listing_type || csvConfig.listingType || 'product',
+          // The rows follow the shop's sub-category form (the server picks it)
           metadata: {
             ...(item.metadata || {}),
             section: item.section || item.metadata?.section || '',
-            category_id: activeCategory?.id || shop?.category_id || null,
-            category_name: activeCategory?.name || csvConfig.label,
           },
         })),
       };

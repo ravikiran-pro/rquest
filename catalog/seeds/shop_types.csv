@@ -1,75 +1,134 @@
 # Rquest shop types (scheme "shop_type"). Rows with an empty parent are groups.
+# GENERATED from src/api/data/taxonomy.js by `npm run taxonomy:export-catalog` — edit that file, not this one.
+#  groups        the app's 8 categories; types are its sub-categories (same keys)
 #  osm_tags      OpenStreetMap tags for this kind of business (";"-separated), for map imports
 #  ondc_domains  ONDC retail domains the shop typically sells in (";"-separated)
 #  form_template key of the app's listing form template (src/api/services/formSchema.js)
 #  listing_type  product | food | service | rental (matches shop_listings.listing_type)
 key,name,parent,osm_tags,ondc_domains,form_template,listing_type
-grocery_food,Grocery & Food Retail,,,,,
-kirana,Kirana / General Store,grocery_food,shop=convenience;shop=general,RET10,grocery,product
-supermarket,Supermarket,grocery_food,shop=supermarket,RET10,grocery,product
-fruits_vegetables,Fruits & Vegetables,grocery_food,shop=greengrocer,RET10,grocery,product
-dairy,Dairy / Milk Booth,grocery_food,shop=dairy,RET10,grocery,product
-meat_fish,Meat & Fish,grocery_food,shop=butcher;shop=seafood,RET10,grocery,product
-bakery,Bakery,grocery_food,shop=bakery,RET11,bakery,food
-sweet_shop,Sweet Shop (Mithai),grocery_food,shop=confectionery;shop=pastry,RET11,bakery,food
-dry_fruits_spices,Dry Fruits & Spices,grocery_food,shop=spices;shop=nuts,RET10,grocery,product
-organic_store,Organic & Health Foods,grocery_food,shop=health_food,RET10,grocery,product
-drinking_water,Drinking Water Supplier,grocery_food,shop=water,RET10,grocery,product
-food_service,Restaurants & Prepared Food,,,,,
-restaurant,Restaurant,food_service,amenity=restaurant,RET11,food,food
-fast_food,Fast Food & Street Food,food_service,amenity=fast_food,RET11,food,food
-cafe,Café & Tea Stall,food_service,amenity=cafe,RET11,food,food
-home_kitchen,Home Kitchen / Tiffin Service,food_service,,RET11,food,food
-health,Health & Pharmacy,,,,,
-pharmacy,Pharmacy / Chemist,health,amenity=pharmacy,RET19;RET18,pharmacy,product
-medical_supply,Medical & Surgical Supplies,health,shop=medical_supply,RET18,pharmacy,product
-optician,Optician,health,shop=optician,RET18,general,product
-beauty_care,Beauty & Personal Care,,,,,
-cosmetics,Cosmetics & Beauty Store,beauty_care,shop=cosmetics;shop=perfumery,RET13,general,product
-salon,Salon & Barber,beauty_care,shop=hairdresser,,salon,service
-beauty_parlour,Beauty Parlour & Spa,beauty_care,shop=beauty;shop=massage,,salon,service
-fashion,Fashion & Jewellery,,,,,
-clothing,Clothing Store,fashion,shop=clothes;shop=boutique,RET12,fashion,product
-footwear,Footwear,fashion,shop=shoes,RET12,fashion,product
-fabric,Fabric & Saree Store,fashion,shop=fabric,RET12,fashion,product
-jewellery,Jewellery,fashion,shop=jewelry,RET12,fashion,product
-bags_accessories,Bags & Accessories,fashion,shop=bag;shop=fashion_accessories,RET12,fashion,product
-tailor,Tailor & Alterations,fashion,shop=tailor;craft=tailor,,services,service
-electronics,Electronics & Appliances,,,,,
-electronics_store,Electronics Store,electronics,shop=electronics,RET14,electronics,product
-mobile_phones,Mobile Phones & Accessories,electronics,shop=mobile_phone,RET14,electronics,product
-computers,Computers & IT,electronics,shop=computer,RET14,electronics,product
-home_appliances,Home Appliances,electronics,shop=appliance,RET15,electronics,product
-electronics_repair,Electronics & Mobile Repair,electronics,craft=electronics_repair,,services,service
-home_hardware,Home & Hardware,,,,,
-hardware_store,Hardware Store,home_hardware,shop=hardware;shop=doityourself,RET1B,hardware,product
-electrical_supplies,Electrical Supplies,home_hardware,shop=electrical,RET1B,hardware,product
-paints,Paints,home_hardware,shop=paint,RET1C,hardware,product
-building_materials,Building Materials,home_hardware,shop=trade,RET1C,hardware,product
-furniture,Furniture,home_hardware,shop=furniture,RET16,general,product
-home_decor,Home Décor & Furnishings,home_hardware,shop=interior_decoration;shop=curtain,RET16,general,product
-kitchenware,Utensils & Kitchenware,home_hardware,shop=houseware,RET16,general,product
-garden_nursery,Plant Nursery & Garden,home_hardware,shop=garden_centre,RET16,general,product
-florist,Florist,home_hardware,shop=florist,RET16,general,product
-automotive,Automotive,,,,,
-auto_parts,Auto Parts & Accessories,automotive,shop=car_parts;shop=motorcycle,RET1A,automotive,product
-tyres,Tyres,automotive,shop=tyres,RET1A,automotive,product
-vehicle_repair,Car & Bike Repair,automotive,shop=car_repair;shop=motorcycle_repair,,automotive,service
-leisure,Books Toys & Leisure,,,,,
-stationery,Stationery,leisure,shop=stationery,RET10,books,product
-books,Bookstore,leisure,shop=books,,books,product
-toys,Toys & Games,leisure,shop=toys,RET17,general,product
-sports,Sports Goods,leisure,shop=sports,,general,product
-gifts,Gift Shop,leisure,shop=gift,RET16,general,product
-pet_shop,Pet Shop,leisure,shop=pet,RET10,general,product
-pooja_store,Pooja & Religious Items,leisure,shop=religion,RET10,general,product
-local_services,Local Services,,,,,
-laundry,Laundry & Dry Cleaning,local_services,shop=laundry;shop=dry_cleaning,,services,service
-home_repair,"Home Repair (Plumber, Electrician, Carpenter)",local_services,craft=plumber;craft=electrician;craft=carpenter,,services,service
-printing,Printing & Photocopy,local_services,shop=copyshop,,services,service
-photo_studio,Photo Studio,local_services,shop=photo,,services,service
-tuition,Tuition & Coaching,local_services,amenity=prep_school,,services,service
-rentals,Rentals,,,,,
-equipment_rental,"Rentals (Tools, Furniture, Vehicles)",rentals,shop=tool_hire;amenity=car_rental,,rentals,rental
-general,General Merchandise,,,,,
-variety_store,Variety / Discount Store,general,shop=variety_store,RET16;RET10,general,product
+food_groceries,Food & Groceries,,,,,
+kirana,Kirana / General Store,food_groceries,shop=convenience;shop=general,RET10,grocery,product
+supermarket,Supermarket,food_groceries,shop=supermarket,RET10,grocery,product
+fruits_vegetables,Fruits & Vegetables,food_groceries,shop=greengrocer,RET10,produce,product
+dairy,Dairy / Milk Booth,food_groceries,shop=dairy,RET10,grocery,product
+meat_fish,Meat & Fish,food_groceries,shop=butcher;shop=seafood,RET10,meat_fish,product
+bakery,Bakery & Cake Shop,food_groceries,shop=bakery,RET11,bakery,food
+sweet_shop,Sweet Shop (Mithai),food_groceries,shop=confectionery;shop=pastry,RET11,bakery,food
+dry_fruits_spices,Dry Fruits & Spices,food_groceries,shop=spices;shop=nuts,RET10,grocery,product
+organic_store,Organic & Health Foods,food_groceries,shop=health_food,RET10,grocery,product
+flour_mill,Flour Mill (Chakki),food_groceries,,RET10,grocery,product
+drinking_water,Drinking Water Supplier,food_groceries,shop=water,RET10,grocery,product
+paan_shop,Paan & Petty Shop,food_groceries,shop=tobacco;shop=kiosk,RET10,general,product
+restaurant,Restaurant,food_groceries,amenity=restaurant,RET11,food,food
+fast_food,Fast Food & Street Food,food_groceries,amenity=fast_food,RET11,food,food
+cafe,Café & Tea Stall,food_groceries,amenity=cafe,RET11,food,food
+ice_cream_juice,Ice Cream & Juice Shop,food_groceries,amenity=ice_cream,RET11,food,food
+home_kitchen,Home Kitchen / Tiffin Service,food_groceries,,RET11,food,food
+catering,Catering Service,food_groceries,,RET11,food,service
+food_others,Other Food Shop,food_groceries,,RET10,grocery,product
+health_wellness,Health & Wellness,,,,,
+pharmacy,Pharmacy / Chemist,health_wellness,amenity=pharmacy,RET19;RET18,pharmacy,product
+medical_supply,Medical & Surgical Supplies,health_wellness,shop=medical_supply,RET18,pharmacy,product
+optician,Optician & Eyewear,health_wellness,shop=optician,RET18,general,product
+clinic,Clinic & Doctor,health_wellness,amenity=clinic;amenity=doctors,,health_services,service
+hospital,Hospital & Nursing Home,health_wellness,amenity=hospital,,health_services,service
+dental,Dental Clinic,health_wellness,amenity=dentist,,health_services,service
+diagnostic_lab,Diagnostic Lab & Scan Centre,health_wellness,healthcare=laboratory,,health_services,service
+physiotherapy,Physiotherapy & Rehab,health_wellness,healthcare=physiotherapist,,health_services,service
+ayush,"Ayurveda, Siddha & Homeopathy",health_wellness,healthcare=alternative,RET18,health_services,service
+home_nursing,Home Nursing & Elder Care,health_wellness,,,health_services,service
+gym_fitness,"Gym, Yoga & Fitness",health_wellness,leisure=fitness_centre,,fitness,service
+health_others,Other Health Service,health_wellness,,RET18,health_services,service
+fashion_beauty,Fashion & Beauty,,,,,
+clothing,Clothing Store,fashion_beauty,shop=clothes;shop=boutique,RET12,fashion,product
+footwear,Footwear,fashion_beauty,shop=shoes,RET12,fashion,product
+fabric,Fabric & Saree Store,fashion_beauty,shop=fabric,RET12,fashion,product
+jewellery,Jewellery,fashion_beauty,shop=jewelry,RET12,jewellery,product
+bags_accessories,"Bags, Watches & Accessories",fashion_beauty,shop=bag;shop=fashion_accessories;shop=watches,RET12,fashion,product
+kids_baby,Baby & Kids Store,fashion_beauty,shop=baby_goods,RET12;RET10,fashion,product
+cosmetics,Cosmetics & Beauty Store,fashion_beauty,shop=cosmetics;shop=perfumery,RET13,general,product
+salon,Salon & Barber,fashion_beauty,shop=hairdresser,,salon,service
+beauty_parlour,Beauty Parlour & Spa,fashion_beauty,shop=beauty;shop=massage,,salon,service
+makeup_artist,Makeup & Mehendi Artist,fashion_beauty,,,salon,service
+tailor,Tailor & Alterations,fashion_beauty,shop=tailor;craft=tailor,,services,service
+laundry,Laundry & Dry Cleaning,fashion_beauty,shop=laundry;shop=dry_cleaning,,services,service
+fashion_others,Other Fashion & Beauty,fashion_beauty,,RET12;RET13,fashion,product
+electronics_appliances,Electronics & Appliances,,,,,
+mobile_phones,Mobile Phones & Accessories,electronics_appliances,shop=mobile_phone,RET14,electronics,product
+electronics_store,Electronics Store,electronics_appliances,shop=electronics,RET14,electronics,product
+computers,Computers & Laptops,electronics_appliances,shop=computer,RET14,electronics,product
+home_appliances,Home Appliances,electronics_appliances,shop=appliance,RET15,electronics,product
+inverter_battery,"Inverter, Battery & Solar",electronics_appliances,,RET15,electronics,product
+cctv_security,CCTV & Security Systems,electronics_appliances,,RET14,electronics,product
+electronics_repair,"Electronics, Mobile & AC Repair",electronics_appliances,craft=electronics_repair,,services,service
+telecom_recharge,"Recharge, DTH & Internet",electronics_appliances,,,professional,service
+electronics_others,Other Electronics,electronics_appliances,,RET14;RET15,electronics,product
+home_property,Home & Property,,,,,
+hardware_store,Hardware Store,home_property,shop=hardware;shop=doityourself,RET1B,hardware,product
+electrical_supplies,Electrical Supplies,home_property,shop=electrical,RET1B,hardware,product
+plumbing_sanitary,Plumbing & Sanitaryware,home_property,shop=bathroom_furnishing,RET1C,hardware,product
+paints,Paints,home_property,shop=paint,RET1C,hardware,product
+building_materials,Building Materials,home_property,shop=trade,RET1C,hardware,product
+tiles_plywood,"Tiles, Plywood & Glass",home_property,shop=tiles;shop=glaziery,RET1C,hardware,product
+furniture,Furniture,home_property,shop=furniture,RET16,general,product
+home_decor,Home Décor & Furnishings,home_property,shop=interior_decoration;shop=curtain,RET16,general,product
+kitchenware,Utensils & Kitchenware,home_property,shop=houseware,RET16,general,product
+garden_nursery,Plant Nursery & Garden,home_property,shop=garden_centre,RET16,general,product
+variety_store,Variety / Discount Store,home_property,shop=variety_store;shop=department_store,RET16;RET10,general,product
+lpg_gas,LPG Gas Agency,home_property,shop=gas,,general,product
+home_repair,"Home Repair (Plumber, Electrician, Carpenter)",home_property,craft=plumber;craft=electrician;craft=carpenter,,services,service
+cleaning_pest_control,Cleaning & Pest Control,home_property,,,services,service
+interior_design,Interior Design & Modular Kitchen,home_property,,,services,service
+construction_contractor,"Builders, Architects & Contractors",home_property,,,professional,service
+real_estate,Real Estate Agent,home_property,office=estate_agent,,property,service
+house_rental,"House, PG & Hostel Rental",home_property,,,property,rental
+equipment_rental,"Furniture, Appliance & Tool Rental",home_property,shop=tool_hire,,rentals,rental
+home_others,Other Home Service,home_property,,RET16,general,product
+vehicles_travel,Vehicles & Travel,,,,,
+auto_parts,Auto Parts & Accessories,vehicles_travel,shop=car_parts;shop=motorcycle,RET1A,automotive,product
+tyres,Tyres & Puncture,vehicles_travel,shop=tyres,RET1A,automotive,product
+vehicle_repair,Car & Bike Service,vehicles_travel,shop=car_repair;shop=motorcycle_repair,,automotive,service
+car_wash,Car & Bike Wash,vehicles_travel,amenity=car_wash,,services,service
+fuel_station,Fuel & EV Charging,vehicles_travel,amenity=fuel;amenity=charging_station,,general,product
+vehicle_dealer,Vehicle Showroom (New & Used),vehicles_travel,shop=car;shop=motorcycle,,vehicles,product
+vehicle_rental,Car & Bike Rental,vehicles_travel,amenity=car_rental;amenity=motorcycle_rental,,rentals,rental
+taxi_auto,"Taxi, Auto & Drivers",vehicles_travel,amenity=taxi,,travel,service
+packers_movers,"Packers, Movers & Transport",vehicles_travel,,,travel,service
+courier,Courier & Local Delivery,vehicles_travel,office=courier,,professional,service
+travel_agency,Travel Agent & Tours,vehicles_travel,shop=travel_agency,,travel,service
+hotel_lodge,"Hotels, Lodges & Homestays",vehicles_travel,tourism=hotel;tourism=guest_house,,lodging,rental
+driving_school,Driving School,vehicles_travel,amenity=driving_school,,education,service
+vehicles_others,Other Vehicle & Travel Service,vehicles_travel,,RET1A,automotive,service
+lifestyle_events,Lifestyle & Events,,,,,
+stationery,Stationery,lifestyle_events,shop=stationery,RET10,books,product
+books,Bookstore,lifestyle_events,shop=books,,books,product
+toys,Toys & Games,lifestyle_events,shop=toys,RET17,general,product
+sports,Sports & Fitness Goods,lifestyle_events,shop=sports;shop=bicycle,,general,product
+gifts,Gift & Novelty Shop,lifestyle_events,shop=gift,RET16,general,product
+florist,Florist,lifestyle_events,shop=florist,RET16,general,product
+pooja_store,Pooja & Religious Items,lifestyle_events,shop=religion,RET10,general,product
+pet_shop,Pet Shop,lifestyle_events,shop=pet,RET10,pets,product
+vet_pet_care,Vet & Pet Care,lifestyle_events,amenity=veterinary,,health_services,service
+musical_instruments,Musical Instruments,lifestyle_events,shop=musical_instrument,,general,product
+tuition,Tuition & Coaching,lifestyle_events,amenity=prep_school,,education,service
+hobby_classes,"Music, Dance & Hobby Classes",lifestyle_events,amenity=music_school;amenity=dancing_school,,education,service
+school_college,"Schools, Colleges & Play Schools",lifestyle_events,amenity=school;amenity=college;amenity=kindergarten,,education,service
+photo_studio,Photo Studio & Photographers,lifestyle_events,shop=photo;craft=photographer,,events,service
+event_planner,Event Planners & Decorators,lifestyle_events,,,events,service
+tent_sound_rental,"Tent, Light & Sound Rental",lifestyle_events,,,rentals,rental
+wedding_venue,Marriage Halls & Party Venues,lifestyle_events,amenity=events_venue,,venue,rental
+sports_venue,"Turfs, Courts & Swimming Pools",lifestyle_events,leisure=sports_centre;leisure=swimming_pool;leisure=pitch,,venue,rental
+entertainment_venue,"Cinemas, Gaming & Play Zones",lifestyle_events,amenity=cinema;leisure=amusement_arcade,,venue,service
+lifestyle_others,Other Lifestyle & Events,lifestyle_events,,RET17,general,product
+business_professional,Business & Professional,,,,,
+printing,Printing & Photocopy,business_professional,shop=copyshop,,professional,service
+online_services,Online Services & e-Sevai,business_professional,,,professional,service
+accountant_tax,Accountants & Tax Consultants,business_professional,office=accountant;office=tax_advisor,,professional,service
+legal,Lawyers & Notary,business_professional,office=lawyer;office=notary,,professional,service
+insurance_finance,"Insurance, Loans & Finance",business_professional,office=insurance;office=financial,,professional,service
+it_services,Software & IT Services,business_professional,office=it,,professional,service
+marketing_design,"Marketing, Advertising & Design",business_professional,office=advertising_agency,,professional,service
+staffing_security,"Staffing, Security & Facility Services",business_professional,office=employment_agency,,professional,service
+wholesale,Wholesale & Distributors,business_professional,shop=wholesale,,general,product
+manufacturing,Manufacturers & Industrial Supplies,business_professional,craft=metal_construction,RET1B;RET1D,hardware,product
+business_others,Other Business Service,business_professional,,,professional,service

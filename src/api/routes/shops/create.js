@@ -1,4 +1,4 @@
-const { shops, users, shop_listings } = require('../../models');
+const { shops, users, shop_listings, categories, sub_categories } = require('../../models');
 const { normalizeSchema } = require('../../services/formSchema');
 const { sendPushNotification } = require('../../services/notificationService');
 const {
@@ -134,6 +134,37 @@ const createShops = async (req, res) => {
       });
     }
 
+    // Category: a sub-category decides its category; a category alone is allowed too
+    // (the shop then uses the category's fallback form until a sub-category is picked).
+    const parseOptionalId = (value) => {
+      if (value === undefined) return undefined;
+      if (value === null || value === '') return null;
+      const n = Number.parseInt(value, 10);
+      return Number.isInteger(n) && n >= 0 ? n : NaN;
+    };
+    let categoryId = parseOptionalId(shopDetails.category_id);
+    let subCategoryId = parseOptionalId(shopDetails.sub_category_id);
+    if (Number.isNaN(categoryId) || Number.isNaN(subCategoryId)) {
+      return res.status(400).json({ success: false, error: 'Invalid category or sub-category' });
+    }
+    if (subCategoryId !== undefined && subCategoryId !== null) {
+      const sub = await sub_categories.findByPk(subCategoryId, { attributes: ['id', 'category_id', 'is_active'] });
+      if (!sub || (!sub.is_active && !isAdminRequest(req))) {
+        return res.status(400).json({ success: false, error: 'Sub-category not found' });
+      }
+      if (categoryId !== undefined && categoryId !== null && categoryId !== sub.category_id) {
+        return res.status(400).json({ success: false, error: 'Sub-category does not belong to that category' });
+      }
+      categoryId = sub.category_id;
+    } else if (categoryId !== undefined && categoryId !== null) {
+      const category = await categories.findByPk(categoryId, { attributes: ['id'] });
+      if (!category) return res.status(400).json({ success: false, error: 'Category not found' });
+      // A new category without a sub-category clears a sub-category from another category
+      if (subCategoryId === undefined && existingShop && existingShop.category_id !== categoryId) {
+        subCategoryId = null;
+      }
+    }
+
     const payload = {
       owner_id: existingShop ? existingShop.owner_id : user_id,
       shop_name: shopDetails.shop_name || (existingShop ? existingShop.shop_name : ''),
@@ -150,8 +181,8 @@ const createShops = async (req, res) => {
           ? shopDetails.products_list
           : (existingShop ? existingShop.products_list : ''),
       shop_type: shopDetails.shop_type || (existingShop ? existingShop.shop_type : ''),
-      category_id: shopDetails.category_id !== undefined ? (shopDetails.category_id ? parseInt(shopDetails.category_id) : null) : (existingShop ? existingShop.category_id : null),
-      sub_category_id: shopDetails.sub_category_id !== undefined ? (shopDetails.sub_category_id ? parseInt(shopDetails.sub_category_id) : null) : (existingShop ? existingShop.sub_category_id : null),
+      category_id: categoryId !== undefined ? categoryId : (existingShop ? existingShop.category_id : null),
+      sub_category_id: subCategoryId !== undefined ? subCategoryId : (existingShop ? existingShop.sub_category_id : null),
       allow_multi_category:
         shopDetails.allow_multi_category !== undefined
           ? Boolean(shopDetails.allow_multi_category)

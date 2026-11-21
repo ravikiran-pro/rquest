@@ -697,7 +697,7 @@ const StorefrontScreen = () => {
                         borderColor: 'rgba(11, 45, 107, 0.2)',
                       }}
                     >
-                      {shop.shopCategory?.name || shop.shop_type || 'Store'}
+                      {shop.shopSubCategory?.name || shop.shopCategory?.name || shop.shop_type || 'Store'}
                     </Tag>
                     <Flex
                       align="center"
@@ -917,7 +917,7 @@ const StorefrontScreen = () => {
                         borderColor: 'rgba(11, 45, 107, 0.2)',
                       }}
                     >
-                      {shop.shopCategory?.name || shop.shop_type || 'Store'}
+                      {shop.shopSubCategory?.name || shop.shopCategory?.name || shop.shop_type || 'Store'}
                     </Tag>
 
                     {shop.area && (

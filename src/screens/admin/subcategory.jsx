@@ -1,19 +1,32 @@
 import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, message } from 'antd';
-import { ShoppingOutlined } from '@ant-design/icons';
+import { Button, Tag, message } from 'antd';
+import { SettingOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import MasterRecords from './master_records';
+import FormSchemaBuilderModal from './form_schema_builder';
+
+const LISTING_TYPE_LABELS = {
+  product: 'Products',
+  food: 'Food menu',
+  service: 'Services',
+  rental: 'Rentals',
+};
 
 const PAGE_SIZE = 10;
 
-const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
+const SubCategory = ({ category_id = null, handleProducts = null }) => {
   const [rows, setRows] = useState([]);
-  const [pagination, setPagination] = useState({ current: 1, pageSize: PAGE_SIZE, total: 0 });
+  const [pagination, setPagination] = useState({
+    current: 1,
+    pageSize: PAGE_SIZE,
+    total: 0,
+  });
   const [loading, setLoading] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [error, setError] = useState(null);
   const requestId = useRef(0);
+  const [schemaTarget, setSchemaTarget] = useState(null);
   const hasCategory = category_id !== null && category_id >= 0;
 
   const fetchInitData = async (current = 1) => {
@@ -32,7 +45,11 @@ const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
       );
       if (id !== requestId.current) return;
       if (response?.success === false || !Array.isArray(response?.data)) {
-        setError(response?.error || response?.message || 'The server did not return the subcategory list.');
+        setError(
+          response?.error ||
+            response?.message ||
+            'The server did not return the subcategory list.'
+        );
         return;
       }
       const total = response?.count || 0;
@@ -46,7 +63,9 @@ const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
     } catch (err) {
       if (id !== requestId.current) return;
       console.error('Error fetching data:', err);
-      setError('Could not reach the server. Check your connection and try again.');
+      setError(
+        'Could not reach the server. Check your connection and try again.'
+      );
     } finally {
       if (id === requestId.current) {
         setLoading(false);
@@ -92,8 +111,12 @@ const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
         message.error(res?.error || 'Could not update the subcategory status');
         return;
       }
-      setRows((prev) => prev.map((row) => (row.id === record.id ? { ...row, is_active } : row)));
-      message.success(is_active ? 'Subcategory is active' : 'Subcategory is inactive');
+      setRows((prev) =>
+        prev.map((row) => (row.id === record.id ? { ...row, is_active } : row))
+      );
+      message.success(
+        is_active ? 'Subcategory is active' : 'Subcategory is inactive'
+      );
     } catch (err) {
       console.error('Error updating subcategory status:', err);
       message.error('Could not update the subcategory status');
@@ -134,6 +157,44 @@ const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
     fetchInitData();
   }, [category_id]);
 
+  // Every sub-category has its own listing form; shops in it use that form
+  const formColumn = {
+    key: 'form_schema',
+    title: 'Listing form',
+    render: (record, { block } = {}) => {
+      const fieldCount = Array.isArray(record.form_schema)
+        ? record.form_schema.length
+        : 0;
+      return (
+        <Button
+          type={fieldCount > 0 ? 'default' : 'dashed'}
+          size={block ? 'middle' : 'small'}
+          block={block}
+          icon={<SettingOutlined />}
+          onClick={() => setSchemaTarget(record)}
+        >
+          {fieldCount > 0
+            ? `${fieldCount} ${fieldCount === 1 ? 'field' : 'fields'}`
+            : 'Set up form'}
+          {record.form_customized ? ' · customised' : ''}
+        </Button>
+      );
+    },
+  };
+
+  const usageColumn = {
+    key: 'usage',
+    title: 'Type · Shops',
+    render: (record) => (
+      <span style={{ whiteSpace: 'nowrap' }}>
+        <Tag style={{ margin: 0 }}>
+          {LISTING_TYPE_LABELS[record.listing_type] || 'Products'}
+        </Tag>{' '}
+        {record.shop_count || 0} {record.shop_count === 1 ? 'shop' : 'shops'}
+      </span>
+    ),
+  };
+
   const productsColumn = {
     key: 'products',
     title: 'Products',
@@ -150,26 +211,34 @@ const SubCategory = ({ category_id = null, handleProducts = () => {} }) => {
   };
 
   return (
-    <MasterRecords
-      noun="subcategory"
-      nounPlural="subcategories"
-      rows={rows}
-      total={pagination.total}
-      page={pagination.current}
-      pageSize={PAGE_SIZE}
-      loading={loading}
-      loaded={loaded}
-      error={error}
-      onPageChange={fetchInitData}
-      onReload={() => fetchInitData(pagination.current)}
-      onSave={handleRowChange}
-      onToggleActive={handleStatusChange}
-      onDelete={handleDelete}
-      canAdd={hasCategory}
-      addDisabledReason="Open a category first to add subcategories to it."
-      deleteWarning="Its products are deleted too. This cannot be undone."
-      extraColumns={[productsColumn]}
-    />
+    <>
+      <MasterRecords
+        noun="subcategory"
+        nounPlural="subcategories"
+        rows={rows}
+        total={pagination.total}
+        page={pagination.current}
+        pageSize={PAGE_SIZE}
+        loading={loading}
+        loaded={loaded}
+        error={error}
+        onPageChange={fetchInitData}
+        onReload={() => fetchInitData(pagination.current)}
+        onSave={handleRowChange}
+        onToggleActive={handleStatusChange}
+        onDelete={handleDelete}
+        canAdd={hasCategory}
+        addDisabledReason="Open a category first to add subcategories to it."
+        deleteWarning="Its products are deleted too. Sub-categories used by shops cannot be deleted; deactivate them instead."
+        extraColumns={[usageColumn, formColumn, ...(handleProducts ? [productsColumn] : [])]}
+      />
+      <FormSchemaBuilderModal
+        open={Boolean(schemaTarget)}
+        onClose={() => setSchemaTarget(null)}
+        subCategory={schemaTarget}
+        onSuccess={() => fetchInitData(pagination.current)}
+      />
+    </>
   );
 };
 
