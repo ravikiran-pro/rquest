@@ -1,6 +1,126 @@
+const path = require('path');
+const fs = require('fs');
+const { v4: uuidv4 } = require('uuid');
+const AWS = require('aws-sdk');
 const { chats, users, shops } = require('../../models');
 const { Op, literal } = require('sequelize');
 const { isUserOnline, emitToUser } = require('../../socket');
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
+
+const detectMessageType = (chatDetails) => {
+  if (chatDetails.message_type && chatDetails.message_type !== 'text') {
+    return chatDetails.message_type;
+  }
+  const msg = chatDetails.message || '';
+  if (
+    msg.startsWith('🚚 Store Update') ||
+    msg.startsWith('🎉 Store Update') ||
+    msg.startsWith('✅ Store Update') ||
+    msg.startsWith('👨‍🍳 Store Update') ||
+    msg.startsWith('🛵 Store Update') ||
+    msg.startsWith('❌ Store Update') ||
+    msg.startsWith('📋 Store Update') ||
+    msg.includes('New Delivery Order') ||
+    msg.includes('New Self-Pickup Order') ||
+    msg.includes('New Service Booking') ||
+    msg.startsWith('Customer Pre-order Inquiry')
+  ) {
+    return 'order_update';
+  }
+  return 'custom';
+};
+
+const uploadChatAttachment = async (req, res) => {
+  try {
+    const file = req.file || (req.files && (req.files.file?.[0] || req.files.fileData?.[0]));
+    if (!file) {
+      return res.status(400).json({ success: false, message: 'No file uploaded' });
+    }
+
+    // Validate mime type: images and pdf only
+    const allowedMimeTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/svg+xml',
+      'application/pdf',
+    ];
+
+    if (!allowedMimeTypes.includes(file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid file type. Only images (PNG, JPG, WebP, GIF, SVG) and PDF documents are allowed.',
+      });
+    }
+
+    // Max 15MB
+    const MAX_SIZE = 15 * 1024 * 1024;
+    if (file.size > MAX_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: 'File size exceeds maximum allowed limit of 15MB.',
+      });
+    }
+
+    const isPdf = file.mimetype === 'application/pdf';
+    const ext = path.extname(file.originalname) || (isPdf ? '.pdf' : '.jpg');
+    const safeBaseName = path.basename(file.originalname, ext).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const uniqueKey = `${uuidv4()}-${safeBaseName}${ext}`;
+
+    let fileUrl = null;
+
+    // Try AWS S3 first
+    try {
+      const s3Params = {
+        Bucket: process.env.AWS_BUCKET_NAME || 'rquest',
+        Key: `chat/${uniqueKey}`,
+        Body: file.buffer,
+        ContentType: file.mimetype,
+        ContentDisposition: isPdf ? 'inline' : undefined,
+      };
+      const s3Res = await s3.upload(s3Params).promise();
+      if (s3Res && s3Res.Location) {
+        fileUrl = s3Res.Location;
+      }
+    } catch (s3Err) {
+      console.warn('S3 upload unavailable, falling back to local storage:', s3Err.message);
+    }
+
+    // Fallback to local storage if S3 fails or is not configured
+    if (!fileUrl) {
+      const uploadsDir = path.join(__dirname, '../../../../uploads/chat');
+      if (!fs.existsSync(uploadsDir)) {
+        fs.mkdirSync(uploadsDir, { recursive: true });
+      }
+      const localFilePath = path.join(uploadsDir, uniqueKey);
+      fs.writeFileSync(localFilePath, file.buffer);
+      fileUrl = `/uploads/chat/${uniqueKey}`;
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        url: fileUrl,
+        name: file.originalname,
+        type: isPdf ? 'pdf' : 'image',
+        size: file.size,
+        mimeType: file.mimetype,
+      },
+    });
+  } catch (err) {
+    console.error('Chat attachment upload error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to upload attachment: ' + err.message,
+    });
+  }
+};
 
 const create = async (req, res) => {
   try {
@@ -26,11 +146,28 @@ const create = async (req, res) => {
 const createChat = async (chatDetails, user_id) => {
   try {
     const currentUserId = user_id || chatDetails.sender_id;
+    const detectedType = detectMessageType(chatDetails);
+    const attachments = Array.isArray(chatDetails.attachments)
+      ? chatDetails.attachments
+      : chatDetails.attachment_url
+      ? [
+          {
+            url: chatDetails.attachment_url,
+            name: chatDetails.attachment_name || 'attachment',
+            type: chatDetails.attachment_type || 'image',
+            size: chatDetails.attachment_size || 0,
+            mimeType: chatDetails.attachment_mime || '',
+          },
+        ]
+      : [];
+
     const payload = {
       sender_id: chatDetails.sender_id,
       receiver_id: chatDetails.receiver_id,
       shop_id: chatDetails.shop_id,
-      message: chatDetails.message,
+      message: chatDetails.message || '',
+      message_type: detectedType,
+      attachments: attachments,
       is_read: false,
     };
 
@@ -62,7 +199,9 @@ const createChat = async (chatDetails, user_id) => {
       receiver_id: fullChat.receiver_id,
       username: otherUser?.username || 'User',
       displayName: displayName,
-      message: fullChat.message,
+      message: fullChat.message || '',
+      message_type: fullChat.message_type || detectedType,
+      attachments: fullChat.attachments || [],
       shop_id: fullChat.shop_id,
       shop_name: shopName,
       is_shop_owner: isCounterpartOwner,
@@ -157,13 +296,17 @@ const formatChat = async (allChats, user_id) => {
       totalUnread++;
     }
 
+    const msgType = detectMessageType(chat);
+
     formattedChats[otherUserId].push({
       id: chat.id,
       sender_id: chat.sender_id,
       receiver_id: chat.receiver_id,
       username: otherUser?.username || 'User',
       displayName: displayName,
-      message: chat.message,
+      message: chat.message || '',
+      message_type: chat.message_type && chat.message_type !== 'text' ? chat.message_type : msgType,
+      attachments: chat.attachments || [],
       shop_id: chat.shop_id,
       shop_name: shopName,
       is_shop_owner: isCounterpartOwner,
@@ -174,7 +317,6 @@ const formatChat = async (allChats, user_id) => {
     });
   });
 
-  return { formattedChats, userChatStatus };
   return { formattedChats, userChatStatus, totalUnread };
 };
 
@@ -398,4 +540,5 @@ module.exports = {
   getAllShops,
   deleteChat,
   getUnreadCount,
+  uploadChatAttachment,
 };

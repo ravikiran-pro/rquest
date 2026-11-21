@@ -33,7 +33,16 @@ module.exports = (sequelize) => {
     },
     message: {
       type: DataTypes.TEXT,
-      allowNull: false,
+      allowNull: true,
+      defaultValue: '',
+    },
+    message_type: {
+      type: DataTypes.STRING(50),
+      defaultValue: 'text',
+    },
+    attachments: {
+      type: DataTypes.JSONB,
+      defaultValue: [],
     },
     is_read: {
       type: DataTypes.BOOLEAN,

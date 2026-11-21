@@ -19,3 +19,4 @@ tests/ui/*.local.js
 tests/ui/output/
 .playwright-mcp/
 tests/ui/*
+uploads/

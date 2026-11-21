@@ -1,5 +1,6 @@
 require('dotenv').config();
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const router = require('./api/routes');
@@ -32,6 +33,17 @@ app.use(bodyParser.json());
 
 // Middleware that parses json and looks at requests where the Content-Type header matches the type option.
 app.use(express.json());
+
+// Serve static uploaded media files
+const uploadsDir = path.join(__dirname, '../uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+const chatUploadsDir = path.join(uploadsDir, 'chat');
+if (!fs.existsSync(chatUploadsDir)) {
+  fs.mkdirSync(chatUploadsDir, { recursive: true });
+}
+app.use('/uploads', express.static(uploadsDir));
 
 // Serve API requests from the router
 app.use('/api/v1', router);
@@ -74,6 +86,9 @@ server.listen(PORT, async () => {
       await db.sequelize.query('ALTER TABLE "shops" ADD COLUMN IF NOT EXISTS "form_schema" JSONB DEFAULT \'[]\'::jsonb;');
       await db.sequelize.query('ALTER TABLE "shops" ADD COLUMN IF NOT EXISTS "allow_multi_category" BOOLEAN DEFAULT false;');
       await db.sequelize.query('ALTER TABLE "categories" ADD COLUMN IF NOT EXISTS "form_schema" JSONB DEFAULT \'[]\'::jsonb;');
+      await db.sequelize.query('ALTER TABLE "chats" ADD COLUMN IF NOT EXISTS "attachments" JSONB DEFAULT \'[]\'::jsonb;');
+      await db.sequelize.query('ALTER TABLE "chats" ADD COLUMN IF NOT EXISTS "message_type" VARCHAR(50) DEFAULT \'text\';');
+      await db.sequelize.query('ALTER TABLE "chats" ALTER COLUMN "message" DROP NOT NULL;');
       if (db.push_subscriptions) await db.push_subscriptions.sync();
       if (db.notifications) await db.notifications.sync();
       if (db.otp_codes) await db.otp_codes.sync();
@@ -82,3 +97,5 @@ server.listen(PORT, async () => {
     console.warn('DB self-heal check:', dbErr.message);
   }
 });
+
+module.exports = { app, server };

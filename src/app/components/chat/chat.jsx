@@ -3,8 +3,6 @@ import './styles.css';
 import {
   CloseOutlined,
   ShopOutlined,
-  CheckOutlined,
-  LoadingOutlined,
   DeleteOutlined,
   InboxOutlined,
   MoreOutlined,
@@ -12,16 +10,17 @@ import {
   SearchOutlined,
   SendOutlined,
   FilterOutlined,
+  PaperClipOutlined,
+  PlusOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
-import { Dropdown, Popconfirm, Select, Input } from 'antd';
+import { Dropdown, Select, Input, message, Tooltip } from 'antd';
 import {
   MainContainer,
   Sidebar,
   ConversationList,
   Conversation,
   ConversationHeader,
-  ChatContainer,
   MessageList,
   Message,
   TypingIndicator,
@@ -33,7 +32,11 @@ import { format, isToday, isYesterday } from 'date-fns';
 import { useLocation } from 'react-router-dom';
 import { useChatStore, useGlobalStore, chatSocket } from '../../services';
 import { apiConfig, netWorkCall } from '../../utils';
+import { config } from '../../utils/config';
 import { colors } from '../../styles';
+import ChatAttachmentPreview from './ChatAttachmentPreview';
+import ChatMessageItem from './ChatMessageItem';
+import NewChatModal from './NewChatModal';
 
 const AVATAR_PALETTE = [
   colors.primary, // Maritime Navy (#0B2D6B)
@@ -61,12 +64,13 @@ function formatMessageTime(dateTimeString) {
   const date = new Date(dateTimeString);
   if (isNaN(date.getTime())) return '';
 
+  const timeStr = `${format(date, 'h:mm')}\u00A0${format(date, 'a')}`;
   if (isToday(date)) {
-    return format(date, 'h:mm a');
+    return timeStr;
   } else if (isYesterday(date)) {
-    return `Yesterday ${format(date, 'h:mm a')}`;
+    return `Yesterday ${timeStr}`;
   }
-  return format(date, 'MMM d, h:mm a');
+  return `${format(date, 'MMM d')}, ${timeStr}`;
 }
 
 function formatConversationTime(dateTimeString) {
@@ -130,10 +134,191 @@ function ChatApp() {
   );
   const [browsingShop, setBrowsingShop] = useState(null);
 
+  const [pendingAttachments, setPendingAttachments] = useState([]);
+  const [showNewChatModal, setShowNewChatModal] = useState(false);
+
   const isMountedRef = useRef(true);
   const typingTimeoutRef = useRef(null);
   const receiverTypingResetRef = useRef(null);
   const composerInputRef = useRef(null);
+  const fileInputRef = useRef(null);
+  const messageListRef = useRef(null);
+  const isUserNearBottomRef = useRef(true);
+
+  // Smooth / instant auto-scroll to latest message
+  const scrollToBottom = (behavior = 'smooth') => {
+    if (messageListRef.current?.scrollToBottom) {
+      try {
+        messageListRef.current.scrollToBottom(behavior);
+      } catch {
+        // Fallback to DOM scroll if library method throws
+      }
+    }
+    const scrollWrapper = document.querySelector('.cs-message-list__scroll-wrapper');
+    if (scrollWrapper) {
+      if (behavior === 'smooth') {
+        scrollWrapper.scrollTo({ top: scrollWrapper.scrollHeight, behavior: 'smooth' });
+      } else {
+        scrollWrapper.scrollTop = scrollWrapper.scrollHeight;
+      }
+    }
+  };
+
+  // Track user scroll position in message list to avoid interrupting older message reads
+  useEffect(() => {
+    const scrollWrapper = document.querySelector('.cs-message-list__scroll-wrapper');
+    if (!scrollWrapper) return;
+
+    const handleScroll = () => {
+      const threshold = 140;
+      const isAtBottom =
+        scrollWrapper.scrollHeight - scrollWrapper.scrollTop - scrollWrapper.clientHeight <= threshold;
+      isUserNearBottomRef.current = isAtBottom;
+    };
+
+    scrollWrapper.addEventListener('scroll', handleScroll, { passive: true });
+    return () => scrollWrapper.removeEventListener('scroll', handleScroll);
+  }, [selectedChat]);
+
+  // Initial conversation load / switch: snap to bottom instantly
+  useEffect(() => {
+    if (selectedChat) {
+      isUserNearBottomRef.current = true;
+      const timer = setTimeout(() => {
+        scrollToBottom('auto');
+      }, 70);
+      return () => clearTimeout(timer);
+    }
+  }, [selectedChat]);
+
+  // Handle async image attachment load inside messages
+  const handleImageLoad = () => {
+    if (isUserNearBottomRef.current) {
+      scrollToBottom('smooth');
+    }
+  };
+
+  // Upload attachment item to backend
+  const uploadAttachmentItem = async (item) => {
+    const formData = new FormData();
+    formData.append('file', item.file);
+
+    try {
+      const token =
+        sessionStorage.getItem('auth_token') ||
+        localStorage.getItem('auth_token');
+      const headers = {};
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const response = await fetch(
+        `${config.api_url}/api/v1/${apiConfig.chat_upload}`,
+        {
+          method: 'POST',
+          headers,
+          body: formData,
+        }
+      );
+      const json = await response.json();
+      if (!isMountedRef.current) return;
+
+      if (json && json.success && json.data) {
+        setPendingAttachments((prev) =>
+          prev.map((a) =>
+            a.id === item.id
+              ? {
+                  ...a,
+                  status: 'ready',
+                  uploadedUrl: json.data.url,
+                  type: json.data.type || a.type,
+                  name: json.data.name || a.name,
+                  size: json.data.size || a.size,
+                }
+              : a
+          )
+        );
+      } else {
+        throw new Error(json?.message || 'Upload failed');
+      }
+    } catch (err) {
+      if (!isMountedRef.current) return;
+      console.error('Failed to upload file:', err);
+      setPendingAttachments((prev) =>
+        prev.map((a) =>
+          a.id === item.id
+            ? { ...a, status: 'error', error: err.message || 'Upload failed' }
+            : a
+        )
+      );
+    }
+  };
+
+  const handleFileSelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+    e.target.value = '';
+
+    const MAX_SIZE = 15 * 1024 * 1024; // 15MB
+    const allowedTypes = [
+      'image/jpeg',
+      'image/png',
+      'image/webp',
+      'image/gif',
+      'image/svg+xml',
+      'application/pdf',
+    ];
+
+    const newPending = [];
+    for (const file of files) {
+      if (!allowedTypes.includes(file.type)) {
+        message.error(`${file.name}: Only images (PNG, JPG, WebP, GIF) and PDF files are allowed.`);
+        continue;
+      }
+      if (file.size > MAX_SIZE) {
+        message.error(`${file.name}: Exceeds maximum size limit of 15MB.`);
+        continue;
+      }
+
+      const id = `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+      const isPdf = file.type === 'application/pdf';
+      const previewUrl = !isPdf ? URL.createObjectURL(file) : null;
+
+      const item = {
+        id,
+        file,
+        name: file.name,
+        size: file.size,
+        type: isPdf ? 'pdf' : 'image',
+        mimeType: file.type,
+        previewUrl,
+        status: 'uploading',
+      };
+      newPending.push(item);
+      uploadAttachmentItem(item);
+    }
+
+    if (newPending.length > 0) {
+      setPendingAttachments((prev) => [...prev, ...newPending]);
+    }
+  };
+
+  const handleRemoveAttachment = (id) => {
+    setPendingAttachments((prev) => {
+      const removed = prev.find((a) => a.id === id);
+      if (removed?.previewUrl && removed.previewUrl.startsWith('blob:')) {
+        URL.revokeObjectURL(removed.previewUrl);
+      }
+      return prev.filter((a) => a.id !== id);
+    });
+  };
+
+  const handleRetryAttachment = (item) => {
+    setPendingAttachments((prev) =>
+      prev.map((a) =>
+        a.id === item.id ? { ...a, status: 'uploading', error: null } : a
+      )
+    );
+    uploadAttachmentItem(item);
+  };
 
   // Track mounted status to prevent React state update on unmounted component
   useEffect(() => {
@@ -155,26 +340,6 @@ function ChatApp() {
     }
   }, [selectedChat]);
 
-  // Direct typing: Type-anywhere handler to instantly capture keystrokes into chat composer
-  useEffect(() => {
-    const handleDirectTypingKey = (e) => {
-      if (!selectedChat) return;
-      const activeEl = document.activeElement;
-      const isInputActive =
-        activeEl &&
-        (activeEl.tagName === 'INPUT' ||
-          activeEl.tagName === 'TEXTAREA' ||
-          activeEl.isContentEditable);
-      if (isInputActive) return;
-
-      if (e.ctrlKey || e.altKey || e.metaKey || e.key.length !== 1) return;
-
-      composerInputRef.current?.focus();
-    };
-
-    window.addEventListener('keydown', handleDirectTypingKey);
-    return () => window.removeEventListener('keydown', handleDirectTypingKey);
-  }, [selectedChat]);
 
   // Sync archivedChats to localStorage
   useEffect(() => {
@@ -435,10 +600,21 @@ function ChatApp() {
     }
   };
 
-  // Send message with single delivery pipeline (NO DOUBLE EMIT)
-  const handleSendMessage = async (text) => {
-    const trimmed = text.trim();
-    if (!trimmed || !selectedChat || selectedChat === user_data?.user_id) return;
+  // Send message with custom text and attachments support
+  const handleSendMessage = async (customText = null) => {
+    const rawText = typeof customText === 'string' ? customText : inputText;
+    const trimmed = rawText.trim();
+
+    const readyAttachments = pendingAttachments.filter((a) => a.status === 'ready');
+    const hasUploading = pendingAttachments.some((a) => a.status === 'uploading');
+
+    if (hasUploading) {
+      message.warning('Please wait for attachments to finish uploading.');
+      return;
+    }
+
+    if (!trimmed && readyAttachments.length === 0) return;
+    if (!selectedChat || selectedChat === user_data?.user_id) return;
 
     // Detect shop context
     const thread = userMenu[selectedChat] || [];
@@ -451,6 +627,14 @@ function ChatApp() {
       allShops[0]?.shop_id ||
       null;
 
+    const formattedAttachments = readyAttachments.map((a) => ({
+      url: a.uploadedUrl,
+      name: a.name,
+      type: a.type,
+      size: a.size,
+      mimeType: a.mimeType,
+    }));
+
     const tempId = `temp-${Date.now()}`;
     const optimisticMessage = {
       id: tempId,
@@ -458,6 +642,8 @@ function ChatApp() {
       receiver_id: selectedChat,
       username: user_data?.username || 'Me',
       message: trimmed,
+      message_type: 'custom',
+      attachments: formattedAttachments,
       shop_id: currentShopId,
       is_read: false,
       is_deleted: false,
@@ -471,6 +657,18 @@ function ChatApp() {
       [selectedChat]: [...(prev[selectedChat] || []), optimisticMessage],
     }));
 
+    // Reset input and clear attachments
+    setInputText('');
+    setPendingAttachments([]);
+    if (composerInputRef.current) {
+      composerInputRef.current.style.height = '40px';
+      composerInputRef.current.style.overflowY = 'hidden';
+    }
+
+    // Auto-scroll to bottom on user send
+    isUserNearBottomRef.current = true;
+    setTimeout(() => scrollToBottom('smooth'), 50);
+
     // Stop typing indicator immediately
     chatSocket.stopTyping({
       receiver_id: selectedChat,
@@ -483,6 +681,8 @@ function ChatApp() {
         receiver_id: selectedChat,
         shop_id: currentShopId,
         message: trimmed,
+        message_type: 'custom',
+        attachments: formattedAttachments,
         temp_id: tempId,
         username: user_data?.username,
       };
@@ -545,6 +745,9 @@ function ChatApp() {
 
         if (isCurrentlyActive) {
           markMessagesAsRead([newMsg.id], partnerId);
+          if (isUserNearBottomRef.current) {
+            setTimeout(() => scrollToBottom('smooth'), 60);
+          }
         } else {
           setUnreadTotal((count) => count + 1);
         }
@@ -925,17 +1128,29 @@ function ChatApp() {
                   </div>
                   <span className="rquest-sidebar-title">Messages</span>
                 </div>
-                {/* Close Button on Sidebar for mobile view */}
-                {isMobileView && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                   <button
                     type="button"
-                    className="rquest-header-btn rquest-header-close-btn"
-                    onClick={handleChatClose}
-                    title="Close Chat"
+                    className="rquest-sidebar-compose-btn"
+                    onClick={() => setShowNewChatModal(true)}
+                    title="Start new conversation"
+                    aria-label="Start new conversation"
                   >
-                    <CloseOutlined />
+                    <PlusOutlined style={{ fontSize: 11 }} />
+                    <span>New</span>
                   </button>
-                )}
+                  {/* Close Button on Sidebar for mobile view */}
+                  {isMobileView && (
+                    <button
+                      type="button"
+                      className="rquest-header-btn rquest-header-close-btn"
+                      onClick={handleChatClose}
+                      title="Close Chat"
+                    >
+                      <CloseOutlined />
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Segmented Filter Pills */}
@@ -1178,7 +1393,7 @@ function ChatApp() {
             }`}
           >
             {selectedChat && activePartnerInfo ? (
-              <ChatContainer>
+              <div className="cs-chat-container">
                 <ConversationHeader>
                   {isMobileView && (
                     <ConversationHeader.Back
@@ -1202,55 +1417,37 @@ function ChatApp() {
                     </span>
                     {activePartnerInfo.isOnline && <Status status="available" />}
                   </Avatar>
-                  <ConversationHeader.Content
-                    userName={
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <span
-                          style={{
-                            fontFamily: "var(--font-headline, 'Plus Jakarta Sans', sans-serif)",
-                            fontWeight: 700,
-                            fontSize: 15,
-                            color: 'var(--text-main, #1c1c19)',
-                            letterSpacing: '-0.01em',
-                          }}
-                        >
-                          {activePartnerInfo.name}
+                  <ConversationHeader.Content>
+                    <div className="rquest-header-name-container">
+                      <span className="rquest-header-title-text" title={activePartnerInfo.name}>
+                        {activePartnerInfo.name}
+                      </span>
+                      {activePartnerInfo.shopName && (
+                        <span className="rquest-header-store-badge" title={activePartnerInfo.shopName}>
+                          <ShopOutlined /> <span>{activePartnerInfo.shopName}</span>
                         </span>
-                        {activePartnerInfo.shopName && (
-                          <span className="rquest-header-store-badge">
-                            <ShopOutlined /> {activePartnerInfo.shopName}
-                          </span>
-                        )}
+                      )}
+                    </div>
+                    {isTyping ? (
+                      <div className="rquest-header-typing-status animate-fade-in">
+                        <span className="rquest-typing-dots-bubble">
+                          <span className="dot dot-1" />
+                          <span className="dot dot-2" />
+                          <span className="dot dot-3" />
+                        </span>
+                        <span style={{ color: colors.primary, fontWeight: 600 }}>typing...</span>
                       </div>
-                    }
-                    info={
-                      isTyping ? (
-                        <div className="rquest-header-typing-status animate-fade-in" style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
-                          <span className="rquest-typing-dots-bubble">
-                            <span className="dot dot-1" />
-                            <span className="dot dot-2" />
-                            <span className="dot dot-3" />
-                          </span>
-                          <span style={{ color: colors.primary, fontWeight: 600 }}>typing...</span>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, marginTop: 2 }}>
-                          <span
-                            style={{
-                              display: 'inline-block',
-                              width: 7,
-                              height: 7,
-                              borderRadius: '50%',
-                              backgroundColor: activePartnerInfo.isOnline ? 'var(--success, #059669)' : 'var(--text-light, #747781)',
-                            }}
-                          />
-                          <span style={{ color: activePartnerInfo.isOnline ? 'var(--success, #059669)' : 'var(--text-light, #747781)', fontWeight: 500 }}>
-                            {activePartnerInfo.isOnline ? 'Active now' : 'Offline'}
-                          </span>
-                        </div>
-                      )
-                    }
-                  />
+                    ) : (
+                      <div className="rquest-header-presence-status">
+                        <span
+                          className={`rquest-presence-dot ${activePartnerInfo.isOnline ? 'online' : 'offline'}`}
+                        />
+                        <span className={`rquest-presence-label ${activePartnerInfo.isOnline ? 'online' : 'offline'}`}>
+                          {activePartnerInfo.isOnline ? 'Active now' : 'Offline'}
+                        </span>
+                      </div>
+                    )}
+                  </ConversationHeader.Content>
                   <ConversationHeader.Actions>
                     <div className="rquest-header-action-group">
                       <Dropdown
@@ -1296,6 +1493,10 @@ function ChatApp() {
                 </ConversationHeader>
 
                 <MessageList
+                  ref={messageListRef}
+                  autoScrollToBottom={true}
+                  autoScrollToBottomOnMount={true}
+                  scrollBehavior="smooth"
                   typingIndicator={
                     isTyping ? (
                       <TypingIndicator
@@ -1318,7 +1519,6 @@ function ChatApp() {
                     activeMessages.map((msg, index) => {
                       const isOutgoing = msg.sender_id === user_data?.user_id;
                       const timeStr = formatMessageTime(msg.createdAt);
-                      const isDeleted = Boolean(msg.is_deleted);
 
                       const prevMsg = activeMessages[index - 1];
                       const showDateSeparator =
@@ -1341,63 +1541,21 @@ function ChatApp() {
                           )}
                           <Message
                             model={{
-                              message: isDeleted ? 'This message was deleted' : msg.message,
                               sentTime: timeStr,
                               sender: isOutgoing ? 'You' : activePartnerInfo.name,
                               direction: isOutgoing ? 'outgoing' : 'incoming',
                               position: 'single',
                             }}
                           >
-                            <Message.Footer>
-                              <div
-                                className={`rquest-msg-meta ${
-                                  isOutgoing ? 'outgoing' : 'incoming'
-                                }`}
-                              >
-                                <span>{timeStr}</span>
-                                {isOutgoing && !isDeleted && (
-                                  <span>
-                                    {msg.status === 'pending' ? (
-                                      <LoadingOutlined
-                                        style={{ fontSize: 10, color: 'var(--text-light, #747781)' }}
-                                        title="Sending..."
-                                      />
-                                    ) : msg.is_read ? (
-                                      <span className="read-ticks" title="Read (Seen)">
-                                        <CheckOutlined style={{ fontSize: 10 }} />
-                                        <CheckOutlined
-                                          style={{ fontSize: 10, marginLeft: -5 }}
-                                        />
-                                      </span>
-                                    ) : (
-                                      <span className="sent-tick" title="Delivered">
-                                        <CheckOutlined style={{ fontSize: 10 }} />
-                                      </span>
-                                    )}
-                                  </span>
-                                )}
-
-                                {/* Delete Message Action (for sender's outgoing message) */}
-                                {isOutgoing && !isDeleted && msg.status !== 'pending' && (
-                                  <Popconfirm
-                                    title="Delete message"
-                                    description="Delete this message for everyone?"
-                                    okText="Delete"
-                                    cancelText="Cancel"
-                                    okButtonProps={{ danger: true }}
-                                    onConfirm={() => handleDeleteMessage(msg)}
-                                  >
-                                    <button
-                                      type="button"
-                                      className="rquest-msg-delete-btn"
-                                      title="Delete message"
-                                    >
-                                      <DeleteOutlined />
-                                    </button>
-                                  </Popconfirm>
-                                )}
-                              </div>
-                            </Message.Footer>
+                            <Message.CustomContent>
+                              <ChatMessageItem
+                                msg={msg}
+                                isOutgoing={isOutgoing}
+                                timeStr={timeStr}
+                                onDeleteMessage={handleDeleteMessage}
+                                onImageLoad={handleImageLoad}
+                              />
+                            </Message.CustomContent>
                           </Message>
                         </React.Fragment>
                       );
@@ -1405,74 +1563,82 @@ function ChatApp() {
                   )}
                 </MessageList>
 
-                {/* 1-Click Direct Typing Quick Replies */}
-                <div className="rquest-chat-quick-replies">
-                  {(user_data?.role === 'customer'
-                    ? [
-                        'Hi, is this item available?',
-                        'What are your store hours?',
-                        'Do you deliver to my location?',
-                        'Can I pick this up today?',
-                      ]
-                    : [
-                        'Yes, this is currently in stock.',
-                        'Preparing your order now.',
-                        'Order is out for delivery.',
-                        'Thank you for reaching out!',
-                      ]
-                  ).map((quickText, qIdx) => (
-                    <button
-                      key={qIdx}
-                      type="button"
-                      className="rquest-quick-pill"
-                      onClick={() => {
-                        handleSendMessage(quickText);
-                        composerInputRef.current?.focus();
-                      }}
-                    >
-                      {quickText}
-                    </button>
-                  ))}
-                </div>
+                {/* Pre-send Attachment Preview Bar */}
+                <ChatAttachmentPreview
+                  attachments={pendingAttachments}
+                  onRemove={handleRemoveAttachment}
+                  onRetry={handleRetryAttachment}
+                />
 
-                {/* Modern Chat Message Composer with Direct Typing */}
+                {/* Chat Message Composer with Attachment & Multiline Input */}
                 <div className="rquest-chat-composer">
+                  {/* Hidden file input for images & PDFs */}
                   <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp,image/gif,image/svg+xml,application/pdf"
+                    multiple
+                    style={{ display: 'none' }}
+                    onChange={handleFileSelect}
+                  />
+
+                  {/* Attachment button */}
+                  <Tooltip title="Attach Image or PDF">
+                    <button
+                      type="button"
+                      className="rquest-chat-attach-btn"
+                      onClick={() => fileInputRef.current?.click()}
+                      aria-label="Add attachment"
+                    >
+                      <PaperClipOutlined />
+                    </button>
+                  </Tooltip>
+
+                  {/* Multiline auto-resizing textarea (Enter to send, Shift + Enter for newline) */}
+                  <textarea
                     ref={composerInputRef}
-                    type="text"
-                    className="rquest-chat-input-field"
-                    placeholder="Type a message... (Press Enter to send)"
+                    rows={1}
+                    className="rquest-chat-textarea"
+                    placeholder="Type a message..."
                     value={inputText}
                     onChange={(e) => {
-                      setInputText(e.target.value);
-                      handleInputChange(e.target.value);
+                      const val = e.target.value;
+                      setInputText(val);
+                      handleInputChange(val);
+                      e.target.style.height = 'auto';
+                      const nextHeight = Math.min(e.target.scrollHeight, 120);
+                      e.target.style.height = `${Math.max(nextHeight, 40)}px`;
+                      e.target.style.overflowY = e.target.scrollHeight > 120 ? 'auto' : 'hidden';
                     }}
                     onKeyDown={(e) => {
                       if (e.key === 'Enter' && !e.shiftKey) {
                         e.preventDefault();
-                        if (inputText.trim()) {
-                          handleSendMessage(inputText);
-                          setInputText('');
-                        }
+                        handleSendMessage();
                       }
                     }}
                   />
+
+                  {/* Send Button */}
                   <button
                     type="button"
-                    className={`rquest-chat-send-btn ${inputText.trim() ? 'active' : ''}`}
-                    disabled={!inputText.trim()}
-                    onClick={() => {
-                      if (inputText.trim()) {
-                        handleSendMessage(inputText);
-                        setInputText('');
-                      }
-                    }}
+                    className={`rquest-chat-send-btn ${
+                      (inputText.trim() || pendingAttachments.some((a) => a.status === 'ready')) &&
+                      !pendingAttachments.some((a) => a.status === 'uploading')
+                        ? 'active'
+                        : ''
+                    }`}
+                    disabled={
+                      (!inputText.trim() && !pendingAttachments.some((a) => a.status === 'ready')) ||
+                      pendingAttachments.some((a) => a.status === 'uploading')
+                    }
+                    onClick={() => handleSendMessage()}
                     title="Send Message"
+                    aria-label="Send Message"
                   >
                     <SendOutlined />
                   </button>
                 </div>
-              </ChatContainer>
+              </div>
             ) : (
               <div className="rquest-chat-welcome-pane">
                 {/* Standalone Close Button for Welcome Screen */}
@@ -1481,6 +1647,7 @@ function ChatApp() {
                   className="rquest-standalone-close-btn"
                   onClick={handleChatClose}
                   title="Close Chat"
+                  aria-label="Close Chat"
                 >
                   <CloseOutlined />
                 </button>
@@ -1509,8 +1676,17 @@ function ChatApp() {
                     lineHeight: 1.5,
                   }}
                 >
-                  Select an active conversation on the left, or chat directly with stores on Rquest.
+                  Select an active conversation on the left, or start a new chat with any store on Rquest.
                 </div>
+
+                <button
+                  type="button"
+                  className="rquest-chat-start-btn"
+                  style={{ marginTop: 16, maxWidth: 260 }}
+                  onClick={() => setShowNewChatModal(true)}
+                >
+                  <PlusOutlined /> Start a New Conversation
+                </button>
 
                 {browsingShop && (
                   <div className="rquest-chat-current-store-card">
@@ -1533,6 +1709,35 @@ function ChatApp() {
           </div>
         </MainContainer>
       </div>
+
+      {/* Start New Conversation Modal */}
+      <NewChatModal
+        visible={showNewChatModal}
+        onClose={() => setShowNewChatModal(false)}
+        onStartChat={(partnerId, shopId, metadata) => {
+          setSelectedChat(partnerId);
+          setUserMenu((prev) => ({
+            ...prev,
+            [partnerId]: prev[partnerId] || [],
+          }));
+          if (metadata?.shop_name) {
+            setBrowsingShop((prev) => prev || { id: shopId, shop_name: metadata.shop_name, owner_id: partnerId });
+          }
+        }}
+        shops={allShops}
+        recentUsers={Object.keys(userMenu).map((uid) => {
+          const thread = userMenu[uid] || [];
+          const last = thread[thread.length - 1];
+          return {
+            id: uid,
+            displayName: last?.displayName || last?.username || 'User',
+            username: last?.username,
+            shop_id: last?.shop_id,
+            shop_name: last?.shop_name,
+          };
+        })}
+        userRole={user_data?.role || 'customer'}
+      />
     </div>
   );
 }

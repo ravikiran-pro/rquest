@@ -50,6 +50,10 @@ export default defineConfig({
         target: 'https://rquest.onrender.com',
         changeOrigin: true,
       },
+      '/uploads': {
+        target: `http://localhost:${PORT}`,
+        changeOrigin: true,
+      },
     },
   },
   build: {

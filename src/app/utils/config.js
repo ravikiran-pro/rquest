@@ -32,6 +32,7 @@ export const apiConfig = {
   chat_shops: 'chat/getAllShops',
   user_chats: 'chat/getAll',
   chat_create: 'chat/create',
+  chat_upload: 'chat/upload',
   chat_update_read: 'chat/markAll',
   chat_delete: 'chat/delete',
   chat_unread_count: 'chat/unreadCount',
