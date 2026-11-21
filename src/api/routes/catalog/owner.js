@@ -293,7 +293,7 @@ router.get(
       if (!subIds.length) return res.json({ success: true, data: [], count: 0, sub_category: null });
       replacements.sub_ids = subIds;
       where.push(
-        'EXISTS (SELECT 1 FROM catalog_item_sub_categories l WHERE l.catalog_item_id = i.id AND l.sub_category_id IN (:sub_ids))'
+        "EXISTS (SELECT 1 FROM catalog_item_sub_categories l WHERE l.catalog_item_id = i.id AND l.sub_category_id IN (:sub_ids) AND l.source <> 'excluded')"
       );
     }
     if (kind) {

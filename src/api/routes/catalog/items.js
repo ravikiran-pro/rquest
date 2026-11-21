@@ -60,6 +60,32 @@ async function enrichedByIds(ids, options = {}) {
     options
   );
   const byId = new Map(rows.map((r) => [r.id, shapeItem(r)]));
+  // Sub-categories each item is linked to (rule and manual links; excluded ones are hidden)
+  const links = await select(
+    `SELECT l.catalog_item_id, s.id, s.key, s.name, c.id AS category_id, c.name AS category_name
+       FROM catalog_item_sub_categories l
+       JOIN sub_categories s ON s.id = l.sub_category_id
+       JOIN categories c ON c.id = s.category_id
+      WHERE l.catalog_item_id IN (:ids) AND l.source <> 'excluded'
+      ORDER BY c.sort_order, s.sort_order, s.id`,
+    { ids },
+    options
+  );
+  for (const link of links) {
+    const row = byId.get(link.catalog_item_id);
+    if (!row) continue;
+    if (!row.sub_categories) row.sub_categories = [];
+    row.sub_categories.push({
+      id: link.id,
+      key: link.key,
+      name: link.name,
+      category_id: link.category_id,
+      category_name: link.category_name,
+    });
+  }
+  byId.forEach((row) => {
+    if (!row.sub_categories) row.sub_categories = [];
+  });
   return ids.map((id) => byId.get(id)).filter(Boolean);
 }
 
@@ -158,9 +184,25 @@ function subCategoryCondition(subCategory, replacements, prefix = 'sc') {
     (n) => typeof n === 'string' && n.includes(':')
   );
   const key = typeof subCategory?.key === 'string' && subCategory.key ? subCategory.key : null;
-  if (!nodes.length && !key) return 'FALSE';
+  const subId = Number.parseInt(subCategory?.id, 10);
+  const hasId = Number.isInteger(subId) && subId > 0;
+  if (!nodes.length && !key && !hasId) return 'FALSE';
+  // Manual links (admin picks) always count; a rule match is dropped when an admin excluded it
+  const manual = hasId
+    ? `EXISTS (SELECT 1 FROM catalog_item_sub_categories l WHERE l.catalog_item_id = i.id AND l.sub_category_id = ${subId} AND l.source = 'manual')`
+    : 'FALSE';
+  const excluded = hasId
+    ? `EXISTS (SELECT 1 FROM catalog_item_sub_categories x WHERE x.catalog_item_id = i.id AND x.sub_category_id = ${subId} AND x.source = 'excluded')`
+    : 'FALSE';
+  if (!nodes.length && !key) return `(${manual})`;
   replacements[`${prefix}_nodes`] = nodes.length ? nodes : ['-'];
   replacements[`${prefix}_key`] = key || '-';
+  const rule = ruleCondition(prefix);
+  return `(${manual} OR (${rule} AND NOT ${excluded}))`;
+}
+
+/** The catalogue rule (same as catalog/search): taxonomy descendants or the shop_type key. */
+function ruleCondition(prefix) {
   // COALESCE: an item with no node and no shop_type would otherwise be NULL, which sorts
   // before true in "linked DESC"
   return `COALESCE(i.taxonomy_node_id IN (

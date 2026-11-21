@@ -65,6 +65,7 @@ export const apiConfig = {
   catalog_meta: 'catalog/meta',
   catalog_items: 'catalog/items',
   catalog_taxonomy: 'catalog/taxonomy',
+  catalog_sub_category_options: 'catalog/sub-category-options',
   catalog_brands: 'catalog/brands',
   catalog_hsn: 'catalog/hsn',
   catalog_sub_category_coverage: 'catalog/sub-category-coverage',

@@ -324,6 +324,23 @@ const ItemModal = ({ open, item, onClose, onSaved, isPhone }) => {
   const [details, setDetails] = useState(null);
   const isEdit = Boolean(item && item.id);
   const imageUrl = Form.useWatch('image_url', form);
+  const [subOptions, setSubOptions] = useState([]);
+
+  // The app's sub-categories (8 categories, 118 sub-categories) for the picker
+  useEffect(() => {
+    if (!open) return undefined;
+    let cancelled = false;
+    getJson(apiConfig.catalog_sub_category_options)
+      .then((res) => {
+        if (!cancelled) setSubOptions(res?.data || []);
+      })
+      .catch(() => {
+        if (!cancelled) setSubOptions([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -339,6 +356,7 @@ const ItemModal = ({ open, item, onClose, onSaved, isPhone }) => {
         unit: item.unit,
         quantity_text: item.quantity_text,
         taxonomy_node_id: item.taxonomy_node_id,
+        sub_category_ids: (item.sub_categories || []).map((s) => s.id),
         hsn_code: item.hsn_code,
         country_of_origin: item.country_of_origin,
         manufacturer: item.manufacturer,
@@ -502,6 +520,21 @@ const ItemModal = ({ open, item, onClose, onSaved, isPhone }) => {
             <Input placeholder="e.g. 2 x 200 ml" />
           </Form.Item>
         </Flex>
+        <Form.Item
+          name="sub_category_ids"
+          label="Shop sub-categories"
+          tooltip="Shops in these sub-categories can offer this item. Pick one or more."
+        >
+          <Select
+            mode="multiple"
+            allowClear
+            showSearch
+            optionFilterProp="label"
+            placeholder="Choose the sub-categories this item belongs to"
+            maxTagCount="responsive"
+            options={subOptions.map((s) => ({ value: s.id, label: `${s.category_name} › ${s.name}` }))}
+          />
+        </Form.Item>
         <Form.Item name="taxonomy_node_id" label="Category">
           <RemoteSelect
             endpoint={apiConfig.catalog_taxonomy}
@@ -635,6 +668,7 @@ ItemModal.propTypes = {
     unit: PropTypes.string,
     quantity_text: PropTypes.string,
     taxonomy_node_id: PropTypes.string,
+    sub_categories: PropTypes.arrayOf(PropTypes.object),
     category_path: PropTypes.string,
     hsn_code: PropTypes.string,
     country_of_origin: PropTypes.string,
@@ -839,6 +873,24 @@ const CatalogItems = () => {
           </div>
         </Flex>
       ),
+    },
+    {
+      title: 'Shop sub-categories',
+      dataIndex: 'sub_categories',
+      render: (v) => {
+        const subs = Array.isArray(v) ? v : [];
+        if (!subs.length) return <Text type="secondary">Not linked</Text>;
+        return (
+          <Flex gap={4} wrap="wrap" style={{ maxWidth: 240 }}>
+            {subs.slice(0, 2).map((s) => (
+              <Tag key={s.id} style={{ margin: 0 }}>
+                {s.name}
+              </Tag>
+            ))}
+            {subs.length > 2 && <Tag style={{ margin: 0 }}>+{subs.length - 2}</Tag>}
+          </Flex>
+        );
+      },
     },
     {
       title: 'Category',

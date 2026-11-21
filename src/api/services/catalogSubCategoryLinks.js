@@ -32,7 +32,7 @@ async function rebuildCatalogSubCategoryLinks(sequelize, { transaction } = {}) {
      SELECT DISTINCT i.id, s.id, 'rule' FROM sub_categories s
        JOIN catalog.items i ON i.attributes->>'shop_type' = s.key
       WHERE s.key IS NOT NULL
-     ON CONFLICT (catalog_item_id, sub_category_id) DO UPDATE SET source = 'rule', updated_at = now()`,
+     ON CONFLICT (catalog_item_id, sub_category_id) DO NOTHING`,
     { transaction }
   );
   const [row] = await sequelize.query('SELECT count(*)::int AS n FROM catalog_item_sub_categories', {
