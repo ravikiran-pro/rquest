@@ -7,10 +7,17 @@
  */
 const express = require('express');
 const { handle, requireCatalog, select } = require('./db');
-const { enrichedByIds, searchConditions, searchOrder, categoryCondition } = require('./items');
+const {
+  enrichedByIds,
+  searchConditions,
+  searchOrder,
+  categoryCondition,
+  subCategoryCondition,
+} = require('./items');
 const { UUID_PATTERN, displayGtin, intParam, numberField, quantityLabel } = require('./validate');
-const { shops, categories, shop_listings } = require('../../models');
-const { resolveSchema, validateMetadata } = require('../../services/formSchema');
+const { shops, categories, sub_categories, shop_listings } = require('../../models');
+const { validateMetadata } = require('../../services/formSchema');
+const { loadListingContext, listingTypeFor } = require('../../services/listingForm');
 
 const router = express.Router();
 
@@ -19,7 +26,7 @@ const fail = (res, status, error) => res.status(status).json({ success: false, e
 const textParam = (value, max = 200) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 
 /** The shape merchants see. Enriched fields only; no internal ids beyond the item id. */
-const searchResult = (row) => ({
+const searchResult = (row, inScope) => ({
   id: row.id,
   name: row.name,
   brand: row.brand_name || null,
@@ -30,11 +37,33 @@ const searchResult = (row) => ({
   hsn_code: row.effective_hsn || null,
   gst_rate: row.gst_rate,
   gtin: displayGtin(row.gtin),
+  ...(inScope === undefined ? {} : { for_your_shop: Boolean(inScope) }),
 });
 
+const SUB_ATTRS = ['id', 'key', 'name', 'catalog_nodes'];
+
+/** The sub-category a search is about: ?sub_category_id=, else the shop's (?shop_id=). */
+async function scopeSubCategory(query) {
+  const subId = Number.parseInt(query.sub_category_id, 10);
+  if (Number.isInteger(subId) && subId >= 0) {
+    return sub_categories.findByPk(subId, { attributes: SUB_ATTRS });
+  }
+  const shopId = textParam(query.shop_id, 64);
+  if (shopId && UUID_PATTERN.test(shopId)) {
+    const shop = await shops.findByPk(shopId, { attributes: ['id', 'sub_category_id'] });
+    if (shop && shop.sub_category_id !== null) {
+      return sub_categories.findByPk(shop.sub_category_id, { attributes: SUB_ATTRS });
+    }
+  }
+  return null;
+}
+
 // ---------------------------------------------------------------------------------------
-// GET /catalog/search?q=&category=&limit=  (max 50, default 20)
-// Active, not rejected items. Empty q and category return no rows (no catalog dump).
+// GET /catalog/search?q=&category=&shop_id=&sub_category_id=&only_linked=&limit=
+//   (max 50, default 20). Active, not rejected items.
+// With a shop or sub-category, items linked to that sub-category rank first and each row
+// says whether it is `for_your_shop`; only_linked=1 returns linked items only, and then an
+// empty q browses them. Otherwise empty q and category return no rows (no catalog dump).
 // ---------------------------------------------------------------------------------------
 router.get(
   '/search',
@@ -44,10 +73,14 @@ router.get(
     if (limit.error) return fail(res, 400, limit.error);
     const q = textParam(req.query.q, 200);
     const category = textParam(req.query.category, 200);
-    if (!q && !category) return res.json({ success: true, data: [] });
+    const onlyLinked = ['1', 'true'].includes(String(req.query.only_linked || ''));
+    const scope = await scopeSubCategory(req.query);
+    if (!q && !category && !(scope && onlyLinked)) return res.json({ success: true, data: [] });
 
     const replacements = { limit: limit.value };
     const where = ['i.is_active', "i.status <> 'rejected'"];
+    const linked = scope ? subCategoryCondition(scope, replacements) : null;
+    if (linked && onlyLinked) where.push(linked);
     if (q) {
       const condition = searchConditions(q, replacements, { matchId: true });
       if (condition) where.push(condition);
@@ -56,18 +89,28 @@ router.get(
       const condition = categoryCondition(category, replacements);
       if (condition) where.push(condition);
     }
-    const order = [...(q ? searchOrder(req.catalog.trgmSchema) : []), 'i.name', 'i.id'];
+    const order = [
+      ...(linked && !onlyLinked ? ['linked DESC'] : []),
+      ...(q ? searchOrder(req.catalog.trgmSchema) : []),
+      'i.name',
+      'i.id',
+    ];
 
     const page = await select(
-      `SELECT i.id
+      `SELECT i.id, ${linked || 'NULL'} AS linked
          FROM catalog.items i LEFT JOIN catalog.brands b ON b.brand_key = i.brand_key
         WHERE ${where.join(' AND ')}
         ORDER BY ${order.join(', ')}
         LIMIT :limit`,
       replacements
     );
+    const linkedById = new Map(page.map((r) => [r.id, r.linked]));
     const rows = await enrichedByIds(page.map((r) => r.id));
-    res.json({ success: true, data: rows.map(searchResult) });
+    res.json({
+      success: true,
+      data: rows.map((row) => searchResult(row, scope ? linkedById.get(row.id) : undefined)),
+      ...(scope ? { sub_category: { id: scope.id, key: scope.key, name: scope.name } } : {}),
+    });
   })
 );
 
@@ -75,22 +118,6 @@ router.get(
 // Import helpers (mirror POST /api/v1/listings in src/api/routes/listings/index.js)
 // ---------------------------------------------------------------------------------------
 
-/** The shop's own form if it has one, otherwise the form of its category. */
-async function listingSchema(shop) {
-  if (Array.isArray(shop.form_schema) && shop.form_schema.length > 0) return shop.form_schema;
-  if (!shop.category_id) return [];
-  const category = await categories.findByPk(shop.category_id, { attributes: ['id', 'form_schema'] });
-  return resolveSchema(null, category);
-}
-
-/** Same keyword rules as the listings route, so a catalog import is typed like a manual one. */
-function listingTypeFor(shop) {
-  const typeStr = ((shop.shop_type || '') + ' ' + (shop.shopCategory?.name || '')).toLowerCase();
-  if (['restaurant', 'food', 'bakery', 'cafe', 'biri'].some((w) => typeStr.includes(w))) return 'food';
-  if (typeStr.includes('rental') || typeStr.includes('bike')) return 'rental';
-  if (['electric', 'plumb', 'service', 'salon', 'spa'].some((w) => typeStr.includes(w))) return 'service';
-  return 'product';
-}
 
 /** Whole number 0..1e9 or null; anything else is an error. */
 const stockField = (raw) => {
@@ -148,14 +175,18 @@ router.post(
     );
     if (existing) return fail(res, 409, 'This item is already in your shop');
 
-    const schema = await listingSchema(shop);
+    // Same form and listing type as a manual listing (services/listingForm)
+    const { schema, subCategory } = await loadListingContext(shop, {});
     const { metadata: cleanMetadata, errors } = validateMetadata(schema, {}, { enforceRequired: false });
     if (errors.length) return fail(res, 400, errors.map((e) => e.message).join('. '));
+
+    // A catalog service item is a service, whatever the shop mostly sells
+    const listingType = item.kind === 'service' ? 'service' : listingTypeFor(shop, subCategory);
 
     const listing = await shop_listings.create({
       shop_id: shop.id,
       master_product_id: null,
-      listing_type: listingTypeFor(shop),
+      listing_type: listingType,
       name: item.name,
       description,
       price: price.value,

@@ -1,3 +1,4 @@
+import { subCategoryArchetype } from './form_schema';
 /**
  * Category-Aware CSV Helper Utilities for Catalog Bulk Import / Export
  */
@@ -398,6 +399,9 @@ export const CATEGORY_PRESETS = {
  * Determine the shop or category domain archetype
  */
 export const getShopArchetype = (shop, category) => {
+  // The shop's sub-category says what it sells; the text guess below is for shops without one
+  const fromSubCategory = subCategoryArchetype(shop, { grocery: true, wellness: false });
+  if (fromSubCategory) return fromSubCategory;
   const typeStr = (
     (shop?.shop_type || '') +
     ' ' +

@@ -48,9 +48,15 @@ const formatDate = (value) => {
 };
 
 const customFieldCount = (shop) => (Array.isArray(shop?.form_schema) ? shop.form_schema.length : 0);
-const categoryFieldCount = (shop) =>
-  Array.isArray(shop?.shopCategory?.form_schema) ? shop.shopCategory.form_schema.length : 0;
-const categoryName = (shop) => shop?.shopCategory?.name || shop?.shop_type || 'No category';
+// The standard form: the sub-category's, else the category's (mirrors the server)
+const standardSchema = (shop) => {
+  const sub = shop?.shopSubCategory?.form_schema;
+  if (Array.isArray(sub) && sub.length > 0) return sub;
+  return Array.isArray(shop?.shopCategory?.form_schema) ? shop.shopCategory.form_schema : [];
+};
+const categoryFieldCount = (shop) => standardSchema(shop).length;
+const categoryName = (shop) =>
+  shop?.shopSubCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'No category';
 const shopPhone = (shop) => shop?.mobile_number || shop?.owner?.mobile || '';
 const shopLocation = (shop) => shop?.area || shop?.address || '';
 

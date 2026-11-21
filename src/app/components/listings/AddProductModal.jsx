@@ -29,6 +29,7 @@ import {
   SearchOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
+import { subCategoryArchetype } from '../../utils/form_schema';
 import { colors, radii, typography, shadows } from '../../styles/theme';
 
 const { Text } = Typography;
@@ -38,6 +39,9 @@ const { Option } = Select;
  * Determine the shop's domain archetype based on its category or shop type
  */
 export const getShopArchetype = (shop) => {
+  // The shop's sub-category says what it sells; the text guess below is for shops without one
+  const fromSubCategory = subCategoryArchetype(shop);
+  if (fromSubCategory) return fromSubCategory;
   const typeStr = (
     (shop?.shop_type || '') +
     ' ' +
@@ -173,17 +177,19 @@ const AddProductModal = ({
   const [autofillHidden, setAutofillHidden] = useState(false);
   const autofillSeq = useRef(0);
   const [categoriesList, setCategoriesList] = useState([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState(null);
+  // The sub-category this item follows: the shop's, or (multi-category shops) one picked per item
+  const [selectedSubId, setSelectedSubId] = useState(null);
 
 
   // Derive default shop archetype and category
   const storeArchetype = getShopArchetype(shop);
-  const defaultListingType = getListingTypeFromArchetype(storeArchetype);
+  const defaultListingType =
+    shop?.shopSubCategory?.listing_type || getListingTypeFromArchetype(storeArchetype);
 
   // Current active listing type
   const [currentType, setCurrentType] = useState(defaultListingType);
 
-  // Fetch all categories with form_schema if multi-category is allowed
+  // The category tree, with every sub-category's form
   useEffect(() => {
     if (open) {
       netWorkCall(apiConfig.my_categories, 'GET', null, false)
@@ -196,31 +202,43 @@ const AddProductModal = ({
     }
   }, [open]);
 
-  // Determine active category record
-  const activeCategory = useMemo(() => {
-    if (selectedCategoryId) {
-      const found = categoriesList.find((c) => c.id === selectedCategoryId);
-      if (found) return found;
-    }
-    if (shop?.shopCategory) {
-      // Find full category with schema if present in categoriesList
-      const matchInList = categoriesList.find((c) => c.id === shop.shopCategory.id);
-      return matchInList || shop.shopCategory;
-    }
-    return null;
-  }, [selectedCategoryId, shop, categoriesList]);
+  const allSubCategories = useMemo(
+    () => categoriesList.flatMap((c) => (c.sub_categories || []).map((sc) => ({ ...sc, categoryName: c.name }))),
+    [categoriesList]
+  );
 
-  // Form schema: prioritize specific shop override, then fall back to standard category schema
+  // The sub-category and category this item follows
+  const activeSub = useMemo(() => {
+    const id = selectedSubId ?? shop?.sub_category_id ?? null;
+    if (id === null || id === undefined) return null;
+    return allSubCategories.find((sc) => sc.id === id) || (shop?.shopSubCategory?.id === id ? shop.shopSubCategory : null);
+  }, [selectedSubId, shop, allSubCategories]);
+
+  const activeCategory = useMemo(() => {
+    const id = activeSub?.category_id ?? shop?.category_id ?? null;
+    return categoriesList.find((c) => c.id === id) || shop?.shopCategory || null;
+  }, [activeSub, shop, categoriesList]);
+
+  // Form, most specific first: the shop's own form, its sub-category's, then its category's
   const isCustomShopForm = Boolean(shop?.form_schema && Array.isArray(shop.form_schema) && shop.form_schema.length > 0);
   const dynamicFields = useMemo(() => {
-    if (isCustomShopForm) {
-      return shop.form_schema;
-    }
-    if (activeCategory?.form_schema && Array.isArray(activeCategory.form_schema)) {
-      return activeCategory.form_schema;
-    }
+    if (isCustomShopForm) return shop.form_schema;
+    if (Array.isArray(activeSub?.form_schema) && activeSub.form_schema.length > 0) return activeSub.form_schema;
+    if (Array.isArray(activeCategory?.form_schema)) return activeCategory.form_schema;
     return [];
-  }, [shop, activeCategory, isCustomShopForm]);
+  }, [shop, activeSub, activeCategory, isCustomShopForm]);
+
+  // Multi-category shops pick a sub-category per item
+  const subCategoryOptions = useMemo(
+    () =>
+      categoriesList
+        .filter((c) => (c.sub_categories || []).length > 0)
+        .map((c) => ({
+          label: c.name,
+          options: c.sub_categories.map((sc) => ({ value: sc.id, label: sc.name })),
+        })),
+    [categoriesList]
+  );
 
   // Debounce the autofill search box
   useEffect(() => {
@@ -238,7 +256,14 @@ const AddProductModal = ({
     }
     const seq = ++autofillSeq.current;
     netWorkCall(
-      `${apiConfig.catalog_search}?q=${encodeURIComponent(autofillDebounced)}&limit=8`,
+      // With a shop, catalog items linked to its sub-category come first
+      `${apiConfig.catalog_search}?q=${encodeURIComponent(autofillDebounced)}&limit=8${
+        activeSub?.id !== undefined && activeSub?.id !== null
+          ? `&sub_category_id=${activeSub.id}`
+          : shop?.id
+          ? `&shop_id=${encodeURIComponent(shop.id)}`
+          : ''
+      }`,
       'GET',
       null,
       true
@@ -259,6 +284,11 @@ const AddProductModal = ({
               <div style={{ minWidth: 0 }}>
                 <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {item.name}
+                  {item.for_your_shop && (
+                    <Tag color="green" style={{ marginInlineStart: 6, fontSize: 11 }}>
+                      For your shop
+                    </Tag>
+                  )}
                 </div>
                 <div style={{ fontSize: 12, color: colors.textMuted }}>
                   {[item.brand, item.quantity_label, item.category].filter(Boolean).join(' · ')}
@@ -273,7 +303,7 @@ const AddProductModal = ({
         setAutofillHidden(true);
         setAutofillOptions([]);
       });
-  }, [open, editingItem, autofillDebounced]);
+  }, [open, editingItem, autofillDebounced, activeSub, shop]);
 
   // Prefill the fields this form has from a catalog item
   const applyCatalogItem = (item) => {
@@ -298,7 +328,8 @@ const AddProductModal = ({
       if (editingItem) {
         const itemType = editingItem.listing_type || defaultListingType;
         setCurrentType(itemType);
-        setSelectedCategoryId(editingItem.metadata?.category_id || shop?.category_id || null);
+        const itemSub = Number.parseInt(editingItem.metadata?.sub_category_id, 10);
+        setSelectedSubId(Number.isInteger(itemSub) ? itemSub : shop?.sub_category_id ?? null);
 
         form.setFieldsValue({
           ...editingItem,
@@ -307,7 +338,7 @@ const AddProductModal = ({
       } else {
         form.resetFields();
         setCurrentType(defaultListingType);
-        setSelectedCategoryId(shop?.category_id || null);
+        setSelectedSubId(shop?.sub_category_id ?? null);
 
         const config = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
         form.setFieldsValue({
@@ -359,8 +390,11 @@ const AddProductModal = ({
         metadata: {
           ...(editingItem?.metadata || {}),
           ...(values.metadata || {}),
-          category_id: selectedCategoryId || shop?.category_id || null,
-          category_name: activeCategory?.name || shop?.shopCategory?.name || null,
+          // A per-item sub-category only for multi-category shops; otherwise the item
+          // follows the shop's sub-category (the server fills in its ids and name)
+          ...(shop?.allow_multi_category && activeSub
+            ? { sub_category_id: activeSub.id, category_id: activeSub.category_id }
+            : {}),
         },
       };
 
@@ -406,7 +440,8 @@ const AddProductModal = ({
     ? `Edit ${editingItem.name || 'Listing'}`
     : `Add Item — ${shop?.shop_name || 'Store'}`;
 
-  const categoryDisplayName = activeCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'General Store';
+  const categoryDisplayName =
+    activeSub?.name || activeCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'General Store';
 
   return (
     <Modal
@@ -451,8 +486,9 @@ const AddProductModal = ({
               value={autofillText}
               options={autofillOptions}
               onChange={(v, option) => {
-                // A selection also fires onChange with the option; applyCatalogItem clears the box
-                if (!option) setAutofillText(typeof v === 'string' ? v : '');
+                // A selection also fires onChange with the option; applyCatalogItem clears the box.
+                // Typed text comes with an empty option object ({}), not undefined.
+                if (!option?.item) setAutofillText(typeof v === 'string' ? v : '');
               }}
               onSelect={(_, option) => applyCatalogItem(option.item)}
               style={{ width: '100%' }}
@@ -545,6 +581,23 @@ const AddProductModal = ({
               </Button>
             )}
           </Flex>
+          {shop?.allow_multi_category && subCategoryOptions.length > 0 && (
+            <div style={{ marginTop: 10 }}>
+              <Text style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
+                This item belongs to
+              </Text>
+              <Select
+                showSearch
+                optionFilterProp="label"
+                value={activeSub?.id}
+                options={subCategoryOptions}
+                onChange={(id) => setSelectedSubId(id)}
+                placeholder="Choose a business type for this item"
+                style={{ width: '100%', marginTop: 4 }}
+                aria-label="Business type for this item"
+              />
+            </div>
+          )}
         </div>
 
         {/* Hidden field for form binding */}

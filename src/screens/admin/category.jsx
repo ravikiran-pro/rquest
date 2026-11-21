@@ -1,9 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Button, message } from 'antd';
-import { SettingOutlined } from '@ant-design/icons';
+import { Button, Typography, message } from 'antd';
+import { ArrowLeftOutlined, AppstoreOutlined, SettingOutlined } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import MasterRecords from './master_records';
 import FormSchemaBuilderModal from './form_schema_builder';
+import SubCategory from './subcategory';
 
 const PAGE_SIZE = 10;
 
@@ -15,6 +16,8 @@ const Category = () => {
   const [error, setError] = useState(null);
   const [selectedCategoryForSchema, setSelectedCategoryForSchema] = useState(null);
   const [isSchemaModalOpen, setIsSchemaModalOpen] = useState(false);
+  // The category whose sub-categories are open (null: the category list)
+  const [openCategory, setOpenCategory] = useState(null);
   const requestId = useRef(0);
 
   const fetchInitData = async (current = 1) => {
@@ -144,9 +147,27 @@ const Category = () => {
     fetchInitData();
   }, []);
 
+  // Sub-categories carry the listing forms shops use; open them per category
+  const subCategoriesColumn = {
+    key: 'sub_categories',
+    title: 'Sub-categories',
+    render: (record, { block } = {}) => (
+      <Button
+        type="primary"
+        ghost
+        size={block ? 'middle' : 'small'}
+        block={block}
+        icon={<AppstoreOutlined />}
+        onClick={() => setOpenCategory(record)}
+      >
+        Open sub-categories
+      </Button>
+    ),
+  };
+
   const formColumn = {
     key: 'form_schema',
-    title: 'Product form',
+    title: 'Fallback form',
     render: (record, { block } = {}) => {
       const fieldCount = Array.isArray(record.form_schema) ? record.form_schema.length : 0;
       return (
@@ -166,6 +187,25 @@ const Category = () => {
     },
   };
 
+  if (openCategory) {
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
+          <Button icon={<ArrowLeftOutlined />} onClick={() => setOpenCategory(null)}>
+            All categories
+          </Button>
+          <Typography.Title level={4} style={{ margin: 0 }}>
+            {openCategory.name}
+          </Typography.Title>
+          <Typography.Text type="secondary">
+            Each sub-category has its own listing form, used by every shop in it.
+          </Typography.Text>
+        </div>
+        <SubCategory category_id={openCategory.id} />
+      </>
+    );
+  }
+
   return (
     <>
       <MasterRecords
@@ -184,7 +224,7 @@ const Category = () => {
         onToggleActive={handleStatusChange}
         onDelete={handleDelete}
         deleteWarning="Its subcategories and products are deleted too. This cannot be undone."
-        extraColumns={[formColumn]}
+        extraColumns={[subCategoriesColumn, formColumn]}
       />
 
       <FormSchemaBuilderModal

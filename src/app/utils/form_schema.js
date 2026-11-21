@@ -8,13 +8,39 @@ export const CHOICE_FIELD_TYPES = ['select', 'radio'];
 // Only fields with a fixed set of values can be offered as search filters.
 export const FILTERABLE_FIELD_TYPES = ['select', 'radio', 'boolean'];
 
-/** The form a shop's listings follow: the shop's own, otherwise its category's. */
-export const resolveShopSchema = (shop, category) => {
-  if (Array.isArray(shop?.form_schema) && shop.form_schema.length > 0) {
-    return shop.form_schema;
-  }
+const hasFields = (schema) => Array.isArray(schema) && schema.length > 0;
+
+/**
+ * The form a shop's listings follow, most specific first: the shop's own form, its
+ * sub-category's, then its category's. Mirrors resolveSchema on the server.
+ */
+export const resolveShopSchema = (shop, category, subCategory) => {
+  if (hasFields(shop?.form_schema)) return shop.form_schema;
+  const subSchema = subCategory?.form_schema || shop?.shopSubCategory?.form_schema;
+  if (hasFields(subSchema)) return subSchema;
   const categorySchema = category?.form_schema || shop?.shopCategory?.form_schema;
   return Array.isArray(categorySchema) ? categorySchema : [];
+};
+
+/**
+ * The kind of store a shop is, from its sub-category (listing type and form template), for
+ * screens that adapt labels and presets: 'medical' | 'food' | 'wellness' | 'service' |
+ * 'rental' | 'grocery' | 'product'. Returns null when the shop has no sub-category, so
+ * callers can fall back to guessing from the shop type text.
+ *   grocery:  return 'grocery' for grocery / produce / meat shops (else 'product')
+ *   wellness: return 'wellness' for salons and gyms (else 'service')
+ */
+export const subCategoryArchetype = (shop, { grocery = false, wellness = true } = {}) => {
+  const sub = shop?.shopSubCategory;
+  if (!sub || !sub.listing_type) return null;
+  const template = sub.template_key || '';
+  if (template === 'pharmacy') return 'medical';
+  if (sub.listing_type === 'food') return 'food';
+  if (['salon', 'fitness'].includes(template)) return wellness ? 'wellness' : 'service';
+  if (sub.listing_type === 'service') return 'service';
+  if (sub.listing_type === 'rental') return 'rental';
+  if (grocery && ['grocery', 'produce', 'meat_fish'].includes(template)) return 'grocery';
+  return 'product';
 };
 
 export const getFilterableFields = (schema) =>

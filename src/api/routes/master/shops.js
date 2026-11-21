@@ -1,5 +1,5 @@
 const { Op } = require('sequelize');
-const { shops, categories, users, shop_listings } = require('../../models');
+const { shops, categories, sub_categories, users, shop_listings } = require('../../models');
 const { normalizeSchema } = require('../../services/formSchema');
 
 const getAllMasterShops = async (req, res) => {
@@ -20,6 +20,10 @@ const getAllMasterShops = async (req, res) => {
     if (category_id !== undefined && category_id !== null && category_id !== 'all') {
       where.category_id = parseInt(category_id);
     }
+    const { sub_category_id } = req.body;
+    if (sub_category_id !== undefined && sub_category_id !== null && sub_category_id !== 'all') {
+      where.sub_category_id = parseInt(sub_category_id);
+    }
 
     const { count, rows } = await shops.findAndCountAll({
       where,
@@ -27,6 +31,12 @@ const getAllMasterShops = async (req, res) => {
       offset: parseInt(offset),
       order: [['createdAt', 'DESC']],
       include: [
+        {
+          model: sub_categories,
+          as: 'shopSubCategory',
+          attributes: ['id', 'key', 'name', 'category_id', 'listing_type', 'template_key', 'form_schema'],
+          required: false,
+        },
         {
           model: categories,
           as: 'shopCategory',
@@ -95,6 +105,12 @@ const updateShopFormSchema = async (req, res) => {
 
     const updatedShop = await shops.findByPk(shop_id, {
       include: [
+        {
+          model: sub_categories,
+          as: 'shopSubCategory',
+          attributes: ['id', 'key', 'name', 'category_id', 'listing_type', 'template_key', 'form_schema'],
+          required: false,
+        },
         {
           model: categories,
           as: 'shopCategory',

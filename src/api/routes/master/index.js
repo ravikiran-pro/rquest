@@ -1,6 +1,12 @@
 const express = require('express');
 const { getFormTemplates, getAllCategories, updateCategoryStatus, editCategory, updateCategoryFormSchema, deleteCategory } = require('./category');
-const { getAllSubCategories, updateSubCategoryStatus, editSubCategory, deleteSubCategory } = require('./subcategory');
+const {
+  getAllSubCategories,
+  updateSubCategoryStatus,
+  editSubCategory,
+  updateSubCategoryFormSchema,
+  deleteSubCategory,
+} = require('./subcategory');
 const { getAllMasterShops, updateShopFormSchema } = require('./shops');
 const uploadFiles = require('./aws');
 const { authMiddleware, requireAdmin } = require('../../auth');
@@ -46,6 +52,7 @@ router.delete('/categories', requireAdmin, deleteCategory)
 router.post('/sub_categories', getAllSubCategories);
 router.put('/sub_categories/status', requireAdmin, updateSubCategoryStatus);
 router.post('/sub_categories/create', requireAdmin, editSubCategory);
+router.put('/sub_categories/form_schema', requireAdmin, updateSubCategoryFormSchema);
 router.delete('/sub_categories', requireAdmin, deleteSubCategory)
 
 

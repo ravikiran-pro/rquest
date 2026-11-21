@@ -65,6 +65,7 @@ import {
 } from '@ant-design/icons';
 import ChatIcon from '../../app/components/common/ChatIcon';
 import { netWorkCall, apiConfig } from '../../app/utils';
+import { subCategoryArchetype } from '../../app/utils/form_schema';
 import { useHistory } from 'react-router-dom';
 import {
   AddProductModal,
@@ -301,6 +302,9 @@ const QUOTE_STATUS = {
 /* ------------------------------------------------------------------ */
 
 const getStoreArchetype = (shop) => {
+  // The shop's sub-category says what it sells; the text guess below is for shops without one
+  const fromSubCategory = subCategoryArchetype(shop);
+  if (fromSubCategory) return fromSubCategory === 'medical' ? 'product' : fromSubCategory;
   const typeStr = ((shop?.shop_type || '') + ' ' + (shop?.shopCategory?.name || '')).toLowerCase();
   const has = (...words) => words.some((w) => typeStr.includes(w));
   if (has('restaurant', 'food', 'bakery', 'cafe', 'biri', 'tiffin')) return 'food';
@@ -1980,7 +1984,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               </div>
               <div className="ms-preview-name">{shopSettings.shop_name || 'Your store name'}</div>
               <div className="ms-muted">
-                {[shopSettings.area, currentShop.shopCategory?.name || currentShop.shop_type].filter(Boolean).join(' • ')}
+                {[shopSettings.area, currentShop.shopSubCategory?.name || currentShop.shopCategory?.name || currentShop.shop_type].filter(Boolean).join(' • ')}
               </div>
               {bannerFailed && <div className="ms-field-error">This image link doesn&apos;t load. Check the URL.</div>}
             </div>
@@ -2163,7 +2167,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               </Title>
               <div className="manage-store-meta">
                 <Text className="manage-store-meta-text">
-                  {[currentShop.area, currentShop.shopCategory?.name || currentShop.shop_type || 'Store']
+                  {[currentShop.area, currentShop.shopSubCategory?.name || currentShop.shopCategory?.name || currentShop.shop_type || 'Store']
                     .filter(Boolean)
                     .join(' • ')}
                 </Text>

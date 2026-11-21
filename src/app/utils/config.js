@@ -52,6 +52,7 @@ export const apiConfig = {
   master_sub_categories_stauts: 'master/sub_categories/status',
   master_sub_categories_create: 'master/sub_categories/create',
   master_sub_categories_delete: 'master/sub_categories',
+  master_sub_categories_schema: 'master/sub_categories/form_schema',
 
 
   master_products : 'master/products',
@@ -65,6 +66,7 @@ export const apiConfig = {
   catalog_taxonomy: 'catalog/taxonomy',
   catalog_brands: 'catalog/brands',
   catalog_hsn: 'catalog/hsn',
+  catalog_sub_category_coverage: 'catalog/sub-category-coverage',
   // Owner-facing master catalog: search the shared catalog and add an item to a shop
   catalog_search: 'catalog/search',
   catalog_import: 'catalog/import',

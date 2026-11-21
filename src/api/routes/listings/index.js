@@ -4,27 +4,20 @@ const { Op, literal } = require('sequelize');
 const { authMiddleware, isAdminReq } = require('../../auth');
 const {
   validateMetadata,
-  resolveSchema,
   mergeFilterFields,
   buildMetadataFilter,
 } = require('../../services/formSchema');
+const {
+  loadListingContext,
+  listingTypeFor,
+  categoryMetadata,
+  subCategoryIdFor,
+  categoryIdFor,
+} = require('../../services/listingForm');
 
 const router = express.Router();
 
-// The form a listing has to follow: the shop's own form if it has one, otherwise
-// the form of the listing's category (multi-category shops), otherwise the form
-// of the shop's category.
-const loadListingSchema = async (shop, metadata) => {
-  if (Array.isArray(shop.form_schema) && shop.form_schema.length > 0) {
-    return shop.form_schema;
-  }
-  const categoryId = Number.parseInt(metadata?.category_id, 10) || shop.category_id;
-  if (!categoryId) return [];
-  const category = await categories.findByPk(categoryId, {
-    attributes: ['id', 'form_schema'],
-  });
-  return resolveSchema(null, category);
-};
+const hasFields = (schema) => Array.isArray(schema) && schema.length > 0;
 
 // The custom-field filters that apply to a set of search results: the
 // filterable fields of every form those listings follow, merged by key.
@@ -33,29 +26,40 @@ const loadFilterFields = async (items) => {
   if (shopIds.length === 0) return [];
 
   const shopRows = await shops.findAll({
-    attributes: ['id', 'category_id', 'form_schema'],
+    attributes: ['id', 'category_id', 'sub_category_id', 'form_schema'],
     where: { id: shopIds },
   });
   const shopById = new Map(shopRows.map((shop) => [shop.id, shop]));
 
-  // Each listing follows its shop's own form, else its category's form
+  // Each listing follows its shop's own form, else its sub-category's, else its category's
   const shopSchemas = [];
+  const subIds = new Set();
   const categoryIds = new Set();
   const seenShops = new Set();
   items.forEach((item) => {
     const shop = shopById.get(item.shop_id);
     if (!shop) return;
-    if (Array.isArray(shop.form_schema) && shop.form_schema.length > 0) {
+    if (hasFields(shop.form_schema)) {
       if (!seenShops.has(shop.id)) {
         seenShops.add(shop.id);
         shopSchemas.push(shop.form_schema);
       }
       return;
     }
-    const categoryId = Number.parseInt(item.metadata?.category_id, 10) || shop.category_id;
-    if (categoryId) categoryIds.add(categoryId);
+    const subId = subCategoryIdFor(shop, item.metadata);
+    if (subId !== null) subIds.add(subId);
+    else if (categoryIdFor(shop, item.metadata) !== null) categoryIds.add(categoryIdFor(shop, item.metadata));
   });
 
+  const subRows = subIds.size
+    ? await sub_categories.findAll({
+        attributes: ['id', 'category_id', 'form_schema'],
+        where: { id: [...subIds] },
+        order: [['sort_order', 'ASC'], ['id', 'ASC']],
+      })
+    : [];
+  // A sub-category without fields falls back to its category's form
+  subRows.filter((sub) => !hasFields(sub.form_schema)).forEach((sub) => categoryIds.add(sub.category_id));
   const categoryRows = categoryIds.size
     ? await categories.findAll({
         attributes: ['id', 'form_schema'],
@@ -64,7 +68,37 @@ const loadFilterFields = async (items) => {
       })
     : [];
 
-  return mergeFilterFields([...categoryRows.map((c) => c.form_schema), ...shopSchemas]);
+  return mergeFilterFields([
+    ...subRows.filter((sub) => hasFields(sub.form_schema)).map((sub) => sub.form_schema),
+    ...categoryRows.map((c) => c.form_schema),
+    ...shopSchemas,
+  ]);
+};
+
+/**
+ * Check a listing's sub-category / category choice (multi-category shops pick one per
+ * listing) and record its ids and name the way the server knows them.
+ * Returns { metadata } or { error }.
+ */
+const normalizeCategoryChoice = async (metadata) => {
+  const meta = metadata && typeof metadata === 'object' && !Array.isArray(metadata) ? { ...metadata } : {};
+  delete meta.category_name;
+  if (meta.sub_category_id === undefined || meta.sub_category_id === null || meta.sub_category_id === '') {
+    delete meta.sub_category_id;
+    delete meta.sub_category_name;
+    if (meta.category_id === undefined || meta.category_id === null || meta.category_id === '') {
+      delete meta.category_id;
+      return { metadata: meta };
+    }
+    const category = await categories.findByPk(Number.parseInt(meta.category_id, 10) || -1, { attributes: ['id'] });
+    if (!category) return { error: 'Category not found' };
+    return { metadata: { ...meta, category_id: category.id } };
+  }
+  const sub = await sub_categories.findByPk(Number.parseInt(meta.sub_category_id, 10) || -1, {
+    attributes: ['id', 'name', 'category_id'],
+  });
+  if (!sub) return { error: 'Sub-category not found' };
+  return { metadata: { ...meta, ...categoryMetadata(sub, null) } };
 };
 
 const fieldErrorResponse = (res, errors) =>
@@ -126,7 +160,7 @@ router.get('/shop/:shop_id', async (req, res) => {
 // 2. Search listings by item name or category near coordinates (Public)
 router.post('/search', async (req, res) => {
   try {
-    const { search, lat, lon, listing_type, category_id, filters, limit = 200 } = req.body;
+    const { search, lat, lon, listing_type, category_id, sub_category_id, filters, limit = 200 } = req.body;
     const searchLat = parseFloat(lat) || 12.9631025;
     const searchLon = parseFloat(lon) || 80.25476;
     const queryText = typeof search === 'string' ? search.trim() : '';
@@ -146,13 +180,24 @@ router.post('/search', async (req, res) => {
       });
     }
 
-    // Narrow to one category: the listing's own category, or its shop's
+    // Narrow to one sub-category or category: the listing's own choice, or its shop's
+    let filterSchema = null;
+    const subCategoryId = Number.parseInt(sub_category_id, 10);
     const categoryId = Number.parseInt(category_id, 10);
-    let category = null;
-    if (!Number.isNaN(categoryId)) {
-      category = await categories.findByPk(categoryId, {
-        attributes: ['id', 'form_schema'],
+    if (!Number.isNaN(subCategoryId)) {
+      const sub = await sub_categories.findByPk(subCategoryId, { attributes: ['id', 'category_id', 'form_schema'] });
+      if (!sub) {
+        return res.status(404).json({ success: false, error: 'Sub-category not found' });
+      }
+      conditions.push({
+        [Op.or]: [
+          { metadata: { [Op.contains]: { sub_category_id: subCategoryId } } },
+          { '$shop.sub_category_id$': subCategoryId },
+        ],
       });
+      filterSchema = sub.form_schema;
+    } else if (!Number.isNaN(categoryId)) {
+      const category = await categories.findByPk(categoryId, { attributes: ['id', 'form_schema'] });
       if (!category) {
         return res.status(404).json({ success: false, error: 'Category not found' });
       }
@@ -162,13 +207,13 @@ router.post('/search', async (req, res) => {
           { '$shop.category_id$': categoryId },
         ],
       });
+      // Any filterable field of the category's sub-category forms can be used
+      const subs = await sub_categories.findAll({ attributes: ['form_schema'], where: { category_id: categoryId } });
+      filterSchema = mergeFilterFields([category.form_schema, ...subs.map((sub) => sub.form_schema)]);
     }
 
-    // Filter on the category's custom fields, e.g. { food_type: 'veg' }
-    const { filter: metadataFilter, errors: filterErrors } = buildMetadataFilter(
-      filters,
-      category ? category.form_schema : null
-    );
+    // Filter on the form's custom fields, e.g. { food_type: 'veg' }
+    const { filter: metadataFilter, errors: filterErrors } = buildMetadataFilter(filters, filterSchema);
     if (filterErrors.length) return fieldErrorResponse(res, filterErrors);
     if (Object.keys(metadataFilter).length) {
       conditions.push({ metadata: { [Op.contains]: metadataFilter } });
@@ -208,12 +253,12 @@ router.post('/search', async (req, res) => {
             {
               model: categories,
               as: 'shopCategory',
-              attributes: ['id', 'name'],
+              attributes: ['id', 'key', 'name'],
             },
             {
               model: sub_categories,
               as: 'shopSubCategory',
-              attributes: ['id', 'name'],
+              attributes: ['id', 'key', 'name'],
             },
           ],
         },
@@ -272,43 +317,18 @@ router.post('/', async (req, res) => {
       return res.status(403).json(FORBIDDEN_SHOP_BODY);
     }
 
-    // Check the category's custom fields. Starter items seeded at shop sign-up
+    const choice = await normalizeCategoryChoice(metadata);
+    if (choice.error) return res.status(400).json({ success: false, error: choice.error });
+
+    // Check the sub-category form's fields. Starter items seeded at shop sign-up
     // may leave required fields empty for the owner to complete later.
-    const schema = await loadListingSchema(shopRecord, metadata);
-    const { metadata: cleanMetadata, errors: fieldErrors } = validateMetadata(schema, metadata, {
+    const { schema, subCategory } = await loadListingContext(shopRecord, choice.metadata);
+    const { metadata: cleanMetadata, errors: fieldErrors } = validateMetadata(schema, choice.metadata, {
       enforceRequired: !is_starter,
     });
     if (fieldErrors.length) return fieldErrorResponse(res, fieldErrors);
 
-    let resolvedType = listing_type;
-    if (!resolvedType) {
-      const typeStr = (
-        (shopRecord?.shop_type || '') +
-        ' ' +
-        (shopRecord?.shopCategory?.name || '')
-      ).toLowerCase();
-      if (
-        typeStr.includes('restaurant') ||
-        typeStr.includes('food') ||
-        typeStr.includes('bakery') ||
-        typeStr.includes('cafe') ||
-        typeStr.includes('biri')
-      ) {
-        resolvedType = 'food';
-      } else if (typeStr.includes('rental') || typeStr.includes('bike')) {
-        resolvedType = 'rental';
-      } else if (
-        typeStr.includes('electric') ||
-        typeStr.includes('plumb') ||
-        typeStr.includes('service') ||
-        typeStr.includes('salon') ||
-        typeStr.includes('spa')
-      ) {
-        resolvedType = 'service';
-      } else {
-        resolvedType = 'product';
-      }
-    }
+    const resolvedType = listing_type || listingTypeFor(shopRecord, subCategory);
 
     const newListing = await shop_listings.create({
       shop_id,
@@ -359,41 +379,15 @@ router.post('/bulk', async (req, res) => {
       return res.status(403).json(FORBIDDEN_SHOP_BODY);
     }
 
-    const typeStr = (
-      (shopRecord?.shop_type || '') +
-      ' ' +
-      (shopRecord?.shopCategory?.name || '')
-    ).toLowerCase();
-
-    let defaultType = 'product';
-    if (
-      typeStr.includes('restaurant') ||
-      typeStr.includes('food') ||
-      typeStr.includes('bakery') ||
-      typeStr.includes('cafe') ||
-      typeStr.includes('biri')
-    ) {
-      defaultType = 'food';
-    } else if (typeStr.includes('rental') || typeStr.includes('bike')) {
-      defaultType = 'rental';
-    } else if (
-      typeStr.includes('electric') ||
-      typeStr.includes('plumb') ||
-      typeStr.includes('service') ||
-      typeStr.includes('salon') ||
-      typeStr.includes('spa')
-    ) {
-      defaultType = 'service';
-    }
-
-    // Rows that break the category's form are skipped and reported back
-    const schemaCache = new Map();
-    const schemaFor = async (meta) => {
-      const cacheKey = String(meta?.category_id ?? '');
-      if (!schemaCache.has(cacheKey)) {
-        schemaCache.set(cacheKey, await loadListingSchema(shopRecord, meta));
+    // Rows that break their form are skipped and reported back. One lookup per
+    // sub-category / category choice.
+    const contextCache = new Map();
+    const contextFor = async (meta) => {
+      const cacheKey = `${meta?.sub_category_id ?? ''}:${meta?.category_id ?? ''}`;
+      if (!contextCache.has(cacheKey)) {
+        contextCache.set(cacheKey, await loadListingContext(shopRecord, meta));
       }
-      return schemaCache.get(cacheKey);
+      return contextCache.get(cacheKey);
     };
     const skipped = [];
 
@@ -432,10 +426,13 @@ router.post('/bulk', async (req, res) => {
         }
       }
 
-      const { metadata: cleanMeta, errors: fieldErrors } = validateMetadata(
-        await schemaFor(meta),
-        meta
-      );
+      const choice = await normalizeCategoryChoice(meta);
+      if (choice.error) {
+        skipped.push({ row: rowIndex + 1, name: item.name.toString().trim(), errors: [{ key: 'sub_category_id', message: choice.error }] });
+        continue;
+      }
+      const context = await contextFor(choice.metadata);
+      const { metadata: cleanMeta, errors: fieldErrors } = validateMetadata(context.schema, choice.metadata);
       if (fieldErrors.length) {
         skipped.push({
           row: rowIndex + 1,
@@ -448,7 +445,7 @@ router.post('/bulk', async (req, res) => {
       validItems.push({
         shop_id,
         master_product_id: item.master_product_id || null,
-        listing_type: item.listing_type || defaultType,
+        listing_type: item.listing_type || listingTypeFor(shopRecord, context.subCategory),
         name: item.name.toString().trim(),
         description: item.description ? item.description.toString().trim() : '',
         price: priceVal,
@@ -517,9 +514,11 @@ router.put('/:id', async (req, res) => {
     if (unit !== undefined) listing.unit = unit;
     if (is_available !== undefined) listing.is_available = is_available;
     if (metadata !== undefined) {
+      const choice = await normalizeCategoryChoice(metadata);
+      if (choice.error) return res.status(400).json({ success: false, error: choice.error });
       const shopRecord = await shops.findByPk(listing.shop_id);
-      const schema = shopRecord ? await loadListingSchema(shopRecord, metadata) : [];
-      const { metadata: cleanMetadata, errors: fieldErrors } = validateMetadata(schema, metadata);
+      const schema = shopRecord ? (await loadListingContext(shopRecord, choice.metadata)).schema : [];
+      const { metadata: cleanMetadata, errors: fieldErrors } = validateMetadata(schema, choice.metadata);
       if (fieldErrors.length) return fieldErrorResponse(res, fieldErrors);
       listing.metadata = cleanMetadata;
     }
@@ -582,7 +581,7 @@ router.post('/import-master', async (req, res) => {
       return res.status(403).json(FORBIDDEN_SHOP_BODY);
     }
     // Fill the form's default values; the owner completes required fields on edit
-    const schema = await loadListingSchema(shopRecord, {});
+    const { schema, subCategory } = await loadListingContext(shopRecord, {});
     const { metadata: importedMetadata } = validateMetadata(
       schema,
       { imported_from_master: true },
@@ -592,7 +591,7 @@ router.post('/import-master', async (req, res) => {
     const newListing = await shop_listings.create({
       shop_id,
       master_product_id: master.id,
-      listing_type: 'product',
+      listing_type: listingTypeFor(shopRecord, subCategory),
       name: master.name,
       description: master.description,
       price: parseFloat(price) || 0,
