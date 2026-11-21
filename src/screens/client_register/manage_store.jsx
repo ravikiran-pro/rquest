@@ -407,7 +407,7 @@ const ListingMetaTags = ({ item, defaultType }) => {
       </span>
     );
   }
-  if (item.master_product_id) {
+  if (item.metadata?.catalog_item_id) {
     tags.push(
       <span key="master" className="ms-mini-tag ms-mini-tag--master">
         Catalog

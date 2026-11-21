@@ -107,10 +107,6 @@
   padding: 8px 0;
 }
 
-.admin-subview-switch {
-  margin-bottom: 16px;
-}
-
 /* ---------- Shared toolbar: search, filters, actions ---------- */
 .admin-toolbar {
   display: flex;
