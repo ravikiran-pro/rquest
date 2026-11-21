@@ -1,6 +1,6 @@
 import React, { Suspense, lazy, useMemo } from 'react';
 import { useHistory, useLocation } from 'react-router-dom';
-import { Tabs, Card, Typography, Tag, Grid, Segmented, Select, Skeleton, Result, Button } from 'antd';
+import { Tabs, Card, Typography, Tag, Grid, Select, Skeleton, Result, Button } from 'antd';
 import {
   AppstoreOutlined,
   ShopOutlined,
@@ -19,7 +19,6 @@ const Category = lazy(() => import('./category'));
 const ShopsManager = lazy(() => import('./shops_manager'));
 const AdminOrdersAccounts = lazy(() => import('./orders_accounts'));
 const CatalogItems = lazy(() => import('./catalog_items'));
-const Products = lazy(() => import('./products'));
 const PlatformSettings = lazy(() => import('./platform_settings'));
 
 const { Title, Text } = Typography;
@@ -65,10 +64,6 @@ const SECTIONS = [
 const DEFAULT_SECTION = SECTIONS[0].key;
 // Links made before the sections had names used the tab index
 const LEGACY_TAB_KEYS = { 1: 'categories', 2: 'stores', 3: 'orders', 4: 'catalog' };
-const CATALOG_VIEWS = [
-  { value: 'catalog', label: 'Master catalog' },
-  { value: 'legacy', label: 'Legacy products' },
-];
 
 const resolveSection = (raw) => {
   const key = LEGACY_TAB_KEYS[raw] || raw;
@@ -94,14 +89,12 @@ const Admin = () => {
 
   const query = useMemo(() => new URLSearchParams(location.search), [location.search]);
   const activeKey = resolveSection(query.get('tab'));
-  const catalogView = query.get('view') === 'legacy' ? 'legacy' : 'catalog';
   const activeSection = SECTIONS.find((s) => s.key === activeKey);
 
   // Every switch is a history entry, so deep links and the back button work
-  const navigate = (tab, view) => {
+  const navigate = (tab) => {
     const next = new URLSearchParams();
     next.set('tab', tab);
-    if (tab === 'catalog' && view === 'legacy') next.set('view', 'legacy');
     const search = `?${next.toString()}`;
     if (search !== location.search) history.push({ pathname: location.pathname, search });
   };
@@ -134,18 +127,7 @@ const Admin = () => {
       case 'orders':
         return <AdminOrdersAccounts />;
       case 'catalog':
-        return (
-          <>
-            <Segmented
-              className="admin-subview-switch"
-              block={isPhone}
-              value={catalogView}
-              onChange={(view) => navigate('catalog', view)}
-              options={CATALOG_VIEWS}
-            />
-            {catalogView === 'catalog' ? <CatalogItems /> : <Products />}
-          </>
-        );
+        return <CatalogItems />;
       case 'platform':
         return <PlatformSettings />;
       default:
