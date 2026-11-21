@@ -14,6 +14,7 @@ import { netWorkCall, storageKeys, checkUserRole } from '../../app/utils/helper'
 import { useHistory, Link } from 'react-router-dom';
 import { useGlobalStore, subscribeToPushNotifications } from '../../app/services';
 import Routes from '../../app/routes/routes';
+import { ROLE_HOME } from '../../app/components/navbar/navConfig';
 import { apiConfig, SOCKET } from '../../app/utils';
 import { AppIcon } from '../../app/components/assets';
 import { takeReturnPath } from '../../app/utils/returnTo';
@@ -108,16 +109,13 @@ const LoginScreen = () => {
 
     // Came from a guarded action (e.g. cart checkout): go back to that page
     const returnPath = takeReturnPath();
-    const { isAdmin, isMerchant } = checkUserRole(res.user_data);
+    const { role } = checkUserRole(res.user_data);
     if (returnPath) {
       // replace: Back from the returned page must not land on /login (which bounces to /search)
       history.replace(returnPath);
-    } else if (isAdmin) {
-      history.push(Routes.admin);
-    } else if (isMerchant) {
-      history.push(Routes.client);
     } else {
-      history.push(Routes.app);
+      // Single source of truth for role landings (logo and denied-route redirects use it too)
+      history.push(ROLE_HOME[role] || Routes.app);
     }
   };
 
