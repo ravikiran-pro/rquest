@@ -45,6 +45,7 @@ export const apiConfig = {
   master_categories_delete: 'master/categories',
   master_shops: 'master/shops',
   master_shops_schema: 'master/shops/form_schema',
+  master_shops_max_sub_categories: 'master/shops/max_sub_categories',
   shop_update: 'shops',
   shop_delete: 'shops',
 
@@ -70,6 +71,9 @@ export const apiConfig = {
   // Owner-facing master catalog: search the shared catalog and add an item to a shop
   catalog_search: 'catalog/search',
   catalog_import: 'catalog/import',
+  // Browse the master catalog for one shop (paged; already_added = the shop's listing id) and bulk import
+  catalog_browse: 'catalog/browse',
+  catalog_import_bulk: 'catalog/import-bulk',
 
   // Platform configuration (GET is public, PUT is platform admin only)
   platform_settings: 'platform/settings',

@@ -1,20 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Form,
-  Input,
-  Button,
-  Typography,
-  Row,
-  Col,
-  Tag,
-  Checkbox,
-  message,
-  Flex,
-  Spin,
-  Modal,
-  Alert,
-  Select,
-} from 'antd';
+import { Form, Input, Button, Typography, Row, Col, Tag, message, Flex, Spin, Modal, Alert } from 'antd';
 import {
   EnvironmentOutlined,
   PhoneOutlined,
@@ -22,19 +7,13 @@ import {
   ArrowRightOutlined,
   EditOutlined,
   AimOutlined,
-  ShoppingOutlined,
-  MedicineBoxOutlined,
-  SkinOutlined,
-  MobileOutlined,
-  HomeOutlined,
-  CarOutlined,
-  GiftOutlined,
-  BankOutlined,
   ShopOutlined,
   CheckOutlined,
+  CloseOutlined,
   EyeOutlined,
   ShareAltOutlined,
   PlusOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { MapContainer, TileLayer, CircleMarker } from 'react-leaflet';
 import { apiConfig, netWorkCall, getPreciseUserLocation, getLocationName, USER_ROLES } from '../../app/utils';
@@ -48,9 +27,7 @@ import './onboarding.css';
 
 const { Title, Text, Paragraph } = Typography;
 
-// The 8 categories (keys match src/api/data/taxonomy.js). Ids, names and sub-categories
-// come from GET /shops/my_categories; this only adds the onboarding picture, icon and the
-// sub-category picked by default.
+// Pictures. The category names, ids and sub-categories come from GET /shops/my_categories.
 const IMG = {
   grocery: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
   restaurant: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
@@ -60,16 +37,17 @@ const IMG = {
   retail: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
 };
 
-const STORE_CATEGORIES = [
-  { key: 'food_groceries', title: 'Food & Groceries', icon: <ShoppingOutlined />, defaultSub: 'kirana', defaultImage: IMG.grocery },
-  { key: 'health_wellness', title: 'Health & Wellness', icon: <MedicineBoxOutlined />, defaultSub: 'pharmacy', defaultImage: IMG.pharmacy },
-  { key: 'fashion_beauty', title: 'Fashion & Beauty', icon: <SkinOutlined />, defaultSub: 'clothing', defaultImage: IMG.salon },
-  { key: 'electronics_appliances', title: 'Electronics & Appliances', icon: <MobileOutlined />, defaultSub: 'mobile_phones', defaultImage: IMG.retail },
-  { key: 'home_property', title: 'Home & Property', icon: <HomeOutlined />, defaultSub: 'hardware_store', defaultImage: IMG.repairs },
-  { key: 'vehicles_travel', title: 'Vehicles & Travel', icon: <CarOutlined />, defaultSub: 'vehicle_repair', defaultImage: IMG.repairs },
-  { key: 'lifestyle_events', title: 'Lifestyle & Events', icon: <GiftOutlined />, defaultSub: 'gifts', defaultImage: IMG.retail },
-  { key: 'business_professional', title: 'Business & Professional', icon: <BankOutlined />, defaultSub: 'printing', defaultImage: IMG.retail },
-];
+// Cover picture per category (keys match src/api/data/taxonomy.js), used until the owner picks one
+const CATEGORY_IMAGES = {
+  food_groceries: IMG.grocery,
+  health_wellness: IMG.pharmacy,
+  fashion_beauty: IMG.salon,
+  electronics_appliances: IMG.retail,
+  home_property: IMG.repairs,
+  vehicles_travel: IMG.repairs,
+  lifestyle_events: IMG.retail,
+  business_professional: IMG.retail,
+};
 
 // Pictures for sub-categories that have a better one than their category's
 const SUB_IMAGES = {
@@ -85,51 +63,8 @@ const SUB_IMAGES = {
   electronics_repair: IMG.repairs,
 };
 
-// Sample items a new shop can start with, by sub-category. Types match the sub-category.
-const STARTERS = {
-  kirana: [
-    { name: 'Chakki Atta Flour (5kg)', price: 235, mrp: 260, unit: 'pack', listing_type: 'product' },
-    { name: 'Refined Sunflower Oil (1L)', price: 130, mrp: 150, unit: 'pouch', listing_type: 'product' },
-    { name: 'Basmati Rice (1kg)', price: 95, mrp: 110, unit: 'pack', listing_type: 'product' },
-  ],
-  supermarket: 'kirana',
-  restaurant: [
-    { name: 'Chicken Dum Biryani (Full)', price: 220, unit: 'plate', listing_type: 'food' },
-    { name: 'Paneer Butter Masala', price: 180, unit: 'portion', listing_type: 'food' },
-    { name: 'Fresh Mint Lime Juice', price: 50, unit: 'glass', listing_type: 'food' },
-  ],
-  fast_food: 'restaurant',
-  pharmacy: [
-    { name: 'Paracetamol 500mg (Strip of 10)', price: 30, mrp: 35, unit: 'strip', listing_type: 'product' },
-    { name: 'Digital Thermometer', price: 450, mrp: 600, unit: 'piece', listing_type: 'product' },
-    { name: 'First Aid Antiseptic Liquid (100ml)', price: 65, mrp: 72, unit: 'bottle', listing_type: 'product' },
-  ],
-  home_repair: [
-    { name: 'Doorstep Inspection & Safety Check', price: 199, unit: 'visit', listing_type: 'service' },
-    { name: 'Tap / Pipe Leak Repair', price: 299, unit: 'visit', listing_type: 'service' },
-  ],
-  electronics_repair: [
-    { name: 'Doorstep Inspection & Diagnosis', price: 199, unit: 'visit', listing_type: 'service' },
-    { name: 'AC Filter Cleaning & Gas Check', price: 499, unit: 'service', listing_type: 'service' },
-  ],
-  salon: [
-    { name: 'Men’s Haircut & Styling', price: 150, unit: 'session', listing_type: 'service' },
-    { name: 'Beard Trim & Shave', price: 80, unit: 'session', listing_type: 'service' },
-  ],
-  beauty_parlour: [
-    { name: 'Herbal Glow Facial (45 min)', price: 699, unit: 'session', listing_type: 'service' },
-    { name: 'Eyebrow Threading', price: 50, unit: 'session', listing_type: 'service' },
-  ],
-  clothing: [
-    { name: 'Cotton Round-Neck T-Shirt', price: 399, mrp: 599, unit: 'piece', listing_type: 'product' },
-    { name: 'Classic Leather Wallet', price: 450, mrp: 699, unit: 'piece', listing_type: 'product' },
-  ],
-};
-const startersFor = (subKey) => {
-  const entry = STARTERS[subKey];
-  return (typeof entry === 'string' ? STARTERS[entry] : entry) || [];
-};
-
+// Used only if the server does not send limits.max_sub_categories
+const DEFAULT_MAX_SUB_CATEGORIES = 5;
 
 const DEFAULT_CENTER = [12.9716, 77.5946];
 const MERCHANT_ROLE_ID = USER_ROLES.MERCHANT;
@@ -182,11 +117,13 @@ const ClientRegister = () => {
 
   // Guided Onboarding Wizard State
   const [currentStep, setCurrentStep] = useState(0);
-  const [selectedCategory, setSelectedCategory] = useState(STORE_CATEGORIES[0].key);
-  const [selectedSubKey, setSelectedSubKey] = useState(STORE_CATEGORIES[0].defaultSub);
+  // Sub-category ids the owner picked, in pick order
+  const [selectedSubIds, setSelectedSubIds] = useState([]);
+  const [subSearch, setSubSearch] = useState('');
   // The category tree from the server: [{ id, key, name, sub_categories: [...] }]
   const [categoryTree, setCategoryTree] = useState([]);
   const [categoryTreeError, setCategoryTreeError] = useState(false);
+  const [maxSubCategories, setMaxSubCategories] = useState(DEFAULT_MAX_SUB_CATEGORIES);
   const [isMapModalVisible, setIsMapModalVisible] = useState(false);
   const [position, setPosition] = useState(DEFAULT_CENTER);
   const [pinSet, setPinSet] = useState(false);
@@ -200,10 +137,9 @@ const ClientRegister = () => {
     mobile_number: user_data?.mobile || '',
     website: '',
     directions: '',
-    img_url: STORE_CATEGORIES[0].defaultImage,
+    img_url: IMG.grocery,
     fulfillment_modes: ['pickup', 'delivery'],
     payment_modes: ['direct_upi', 'cod'],
-    populate_starters: true,
   });
 
   useEffect(() => {
@@ -211,8 +147,13 @@ const ClientRegister = () => {
     netWorkCall(apiConfig.my_categories, 'GET', null, false)
       .then((res) => {
         if (cancelled) return;
-        if (res?.success && Array.isArray(res.data)) setCategoryTree(res.data);
-        else setCategoryTreeError(true);
+        if (res?.success && Array.isArray(res.data)) {
+          setCategoryTree(res.data);
+          const limit = Number(res.limits?.max_sub_categories);
+          if (limit > 0) setMaxSubCategories(limit);
+        } else {
+          setCategoryTreeError(true);
+        }
       })
       .catch(() => !cancelled && setCategoryTreeError(true));
     return () => {
@@ -298,20 +239,32 @@ const ClientRegister = () => {
     }
   };
 
-  const imageFor = (catKey, subKey) =>
-    SUB_IMAGES[subKey] || STORE_CATEGORIES.find((c) => c.key === catKey)?.defaultImage || IMG.retail;
+  const imageFor = (catKey, subKey) => SUB_IMAGES[subKey] || CATEGORY_IMAGES[catKey] || IMG.retail;
 
-  const handleSelectCategory = (catKey) => {
-    const cat = STORE_CATEGORIES.find((c) => c.key === catKey);
-    if (!cat) return;
-    setSelectedCategory(catKey);
-    setSelectedSubKey(cat.defaultSub);
-    setOnboardingData((prev) => ({ ...prev, img_url: imageFor(catKey, cat.defaultSub) }));
+  // Finds a server sub-category by id, with its category
+  const findSub = (id) => {
+    for (const cat of categoryTree) {
+      const sub = cat.sub_categories?.find((sc) => sc.id === id);
+      if (sub) return { cat, sub };
+    }
+    return null;
   };
 
-  const handleSelectSubCategory = (subKey) => {
-    setSelectedSubKey(subKey);
-    setOnboardingData((prev) => ({ ...prev, img_url: imageFor(selectedCategory, subKey) }));
+  // The cover picture follows the first pick, as it did with the single pick before
+  const updateSelection = (nextIds) => {
+    setSelectedSubIds(nextIds);
+    const first = nextIds.length ? findSub(nextIds[0]) : null;
+    if (first) {
+      setOnboardingData((prev) => ({ ...prev, img_url: imageFor(first.cat.key, first.sub.key) }));
+    }
+  };
+
+  const toggleSubCategory = (id) => {
+    if (selectedSubIds.includes(id)) {
+      updateSelection(selectedSubIds.filter((x) => x !== id));
+    } else if (selectedSubIds.length < maxSubCategories) {
+      updateSelection([...selectedSubIds, id]);
+    }
   };
 
   const handleAutoDetectGps = async () => {
@@ -364,8 +317,8 @@ const ClientRegister = () => {
         message.error('Please enter your store or business name');
         return;
       }
-      if (!activeSub) {
-        message.error('Please choose what kind of business it is');
+      if (selectedSubIds.length === 0) {
+        message.error('Please choose at least one business type');
         return;
       }
       if (!onboardingData.mobile_number.trim()) {
@@ -389,22 +342,20 @@ const ClientRegister = () => {
   const handleFinishOnboarding = async () => {
     setSubmitting(true);
     try {
-      const activeCat = STORE_CATEGORIES.find((c) => c.key === selectedCategory);
-      const serverCategory = categoryTree.find((c) => c.key === selectedCategory);
-      const serverSub = serverCategory?.sub_categories?.find((sc) => sc.key === selectedSubKey);
+      const picks = selectedSubIds.map(findSub).filter(Boolean);
       const payload = {
         owner_id: user_data?.user_id,
         shop_name: onboardingData.shop_name.trim(),
-        shop_type: serverSub?.name || serverCategory?.name || activeCat?.title || 'Local business',
+        shop_type: picks.map((p) => p.sub.name).join(', ').slice(0, 255) || 'Local business',
         address: onboardingData.address.trim(),
         area: onboardingData.area.trim(),
         mobile_number: onboardingData.mobile_number.trim(),
         website: onboardingData.website ? onboardingData.website.trim() : '',
         directions: onboardingData.directions || `https://www.google.com/maps/@${position[0]},${position[1]}`,
-        img_url: onboardingData.img_url || activeCat?.defaultImage,
-        category_id: serverCategory ? serverCategory.id : null,
-        sub_category_id: serverSub ? serverSub.id : null,
-        allow_multi_category: false,
+        img_url: onboardingData.img_url || IMG.grocery,
+        sub_category_ids: selectedSubIds,
+        // Several business types let the product form pick a sub-category per listing
+        allow_multi_category: selectedSubIds.length > 1,
         latitude: position[0],
         longitude: position[1],
         rating: 5.0,
@@ -424,29 +375,6 @@ const ClientRegister = () => {
             role: 'client',
             role_name: 'client',
           });
-        }
-
-        // Seed starter listings if opted in
-        if (onboardingData.populate_starters && starters.length) {
-          for (const starter of starters) {
-            await netWorkCall(
-              apiConfig.listings_create,
-              'POST',
-              JSON.stringify({
-                shop_id: newShop.id,
-                name: starter.name,
-                price: starter.price,
-                mrp: starter.mrp || null,
-                unit: starter.unit,
-                listing_type: starter.listing_type,
-                metadata: {},
-                is_available: true,
-                // Starter items may skip the category form's required fields
-                is_starter: true,
-              }),
-              true
-            ).catch(() => {});
-          }
         }
 
         await fetchAllShops();
@@ -486,16 +414,8 @@ const ClientRegister = () => {
     );
   }
 
-  const activeServerCategory = categoryTree.find((c) => c.key === selectedCategory);
-  const subOptions = (activeServerCategory?.sub_categories || []).map((sc) => ({
-    value: sc.key,
-    label: sc.name,
-    search: `${sc.name} ${(sc.keywords || []).join(' ')} ${sc.description || ''}`.toLowerCase(),
-    description: sc.description,
-  }));
-  const activeSub = activeServerCategory?.sub_categories?.find((sc) => sc.key === selectedSubKey);
-  const categoryTitle = [activeServerCategory?.name, activeSub?.name].filter(Boolean).join(' · ');
-  const starters = startersFor(selectedSubKey);
+  const selectedPicks = selectedSubIds.map(findSub).filter(Boolean);
+  const atSubLimit = selectedSubIds.length >= maxSubCategories;
   const areaLine = [onboardingData.address || 'Address', onboardingData.area || 'Neighborhood'].join(', ');
 
   const registrationAlert = registrationNotice && (
@@ -508,30 +428,131 @@ const ClientRegister = () => {
     />
   );
 
-  const renderCategoryGrid = () => (
-    <div className="store-category-grid">
-      {STORE_CATEGORIES.map((cat) => {
-        const isSelected = selectedCategory === cat.key;
-        const serverCat = categoryTree.find((c) => c.key === cat.key);
-        return (
-          <button
-            key={cat.key}
-            type="button"
-            aria-pressed={isSelected}
-            onClick={() => handleSelectCategory(cat.key)}
-            className={`store-category-card ${isSelected ? 'selected' : ''}`}
-          >
-            <div className="store-category-icon">{cat.icon}</div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="store-category-title">{serverCat?.name || cat.title}</div>
-              <div className="store-category-desc">{serverCat?.description || ''}</div>
+  // Groups sub-categories under their category headings; the search matches names, keywords and descriptions
+  const pickerQuery = subSearch.trim().toLowerCase();
+  const pickerGroups = categoryTree
+    .map((cat) => ({
+      cat,
+      subs: (cat.sub_categories || []).filter(
+        (sc) =>
+          !pickerQuery ||
+          `${cat.name} ${sc.name} ${(sc.keywords || []).join(' ')} ${sc.description || ''}`.toLowerCase().includes(pickerQuery)
+      ),
+    }))
+    .filter((group) => group.subs.length > 0);
+
+  const jumpToGroup = (catKey) => {
+    document.getElementById(`onb-group-${catKey}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const renderSubCategoryPicker = () => {
+    if (categoryTreeError) {
+      return (
+        <Alert
+          className="onb-submit-alert"
+          type="error"
+          showIcon
+          message="Could not load business types. Check your connection and reload."
+        />
+      );
+    }
+    if (!categoryTree.length) {
+      return (
+        <Flex justify="center" align="center" style={{ minHeight: '20vh' }}>
+          <Spin aria-label="Loading business types" />
+        </Flex>
+      );
+    }
+
+    return (
+      <div className="onb-picker">
+        <Input
+          size="large"
+          allowClear
+          prefix={<SearchOutlined style={{ color: colors.textLight }} />}
+          placeholder='Search, e.g. "tiffin", "xerox", "AC repair"'
+          value={subSearch}
+          onChange={(e) => setSubSearch(e.target.value)}
+          aria-label="Search business types"
+          className="onb-picker-search"
+        />
+
+        {/* Phones: category headings become horizontal tabs that jump to their group */}
+        {pickerGroups.length > 0 && (
+          <nav className="onb-group-tabs" aria-label="Jump to category">
+            {pickerGroups.map(({ cat }) => (
+              <button key={cat.key} type="button" className="onb-group-tab" onClick={() => jumpToGroup(cat.key)}>
+                {cat.name}
+              </button>
+            ))}
+          </nav>
+        )}
+
+        {pickerGroups.length === 0 && (
+          <div className="onb-picker-empty">No business types match “{subSearch.trim()}”. Try a shorter word.</div>
+        )}
+
+        {pickerGroups.map(({ cat, subs }) => (
+          <section key={cat.key} id={`onb-group-${cat.key}`} className="onb-group" aria-label={cat.name}>
+            <h3 className="onb-group-title">{cat.name}</h3>
+            <div className="onb-chip-grid">
+              {subs.map((sc) => {
+                const isOn = selectedSubIds.includes(sc.id);
+                const isDisabled = !isOn && atSubLimit;
+                return (
+                  <button
+                    key={sc.id}
+                    type="button"
+                    aria-pressed={isOn}
+                    disabled={isDisabled}
+                    title={sc.description || sc.name}
+                    onClick={() => toggleSubCategory(sc.id)}
+                    className={`onb-chip ${isOn ? 'is-selected' : ''}`}
+                  >
+                    {isOn && <CheckOutlined aria-hidden="true" />}
+                    <span>{sc.name}</span>
+                  </button>
+                );
+              })}
             </div>
-            {isSelected && <CheckOutlined className="onb-check" />}
-          </button>
-        );
-      })}
-    </div>
-  );
+          </section>
+        ))}
+
+        {/* Sticky footer for the picker: count, removable picks and the cap notice */}
+        <div className="onb-pick-tray" role="region" aria-label="Selected business types">
+          <div className="onb-pick-count">
+            <strong>
+              {selectedSubIds.length} of {maxSubCategories}
+            </strong>
+            <span>selected</span>
+          </div>
+          {selectedPicks.length > 0 ? (
+            <div className="onb-pick-tags">
+              {selectedPicks.map(({ sub }) => (
+                <button
+                  key={sub.id}
+                  type="button"
+                  className="onb-pick-tag"
+                  onClick={() => toggleSubCategory(sub.id)}
+                  aria-label={`Remove ${sub.name}`}
+                >
+                  <span>{sub.name}</span>
+                  <CloseOutlined aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          ) : (
+            <div className="onb-pick-empty">Pick at least one business type to continue.</div>
+          )}
+          {atSubLimit && (
+            <div className="onb-pick-limit" role="status">
+              You can add up to {maxSubCategories} categories. Remove one to add another.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderReviewRow = (label, value, stepIdx) => (
     <div className="onb-review-row">
@@ -611,7 +632,7 @@ const ClientRegister = () => {
                   <article key={shop.id} className="onb-store-card">
                     <div className="onb-store-top">
                       <div className="onb-thumb">
-                        <img src={shop.img_url || STORE_CATEGORIES[0].defaultImage} alt="" />
+                        <img src={shop.img_url || IMG.grocery} alt="" />
                       </div>
                       <div className="onb-store-info">
                         <h3 className="onb-store-name" title={shop.shop_name}>
@@ -704,38 +725,14 @@ const ClientRegister = () => {
               {/* STEP 0: Business Category & Identity */}
               {currentStep === 0 && (
                 <div>
-                  <div className="onb-section-title">1. Choose your business category</div>
-                  <span className="onb-section-hint">Select the category that best describes what you sell.</span>
+                  <div className="onb-section-title">1. Choose your business types</div>
+                  <span className="onb-section-hint">
+                    Pick up to {maxSubCategories} that describe what you sell. Customers find you under each one.
+                  </span>
 
-                  {renderCategoryGrid()}
+                  {renderSubCategoryPicker()}
 
-                  {/* antd drops the item's bottom margin when it shows help text */}
-                  <Form layout="vertical" style={{ marginBottom: 20 }}>
-                    <Form.Item
-                      label="What kind of business is it?"
-                      required
-                      help={
-                        categoryTreeError
-                          ? 'Could not load business types. Check your connection and reload.'
-                          : activeSub?.description || 'Type to search, e.g. "tiffin", "xerox", "AC repair"'
-                      }
-                      validateStatus={categoryTreeError ? 'error' : undefined}
-                    >
-                      <Select
-                        size="large"
-                        showSearch
-                        value={activeSub ? selectedSubKey : undefined}
-                        placeholder="Choose your business type"
-                        loading={!categoryTree.length && !categoryTreeError}
-                        options={subOptions}
-                        onChange={handleSelectSubCategory}
-                        filterOption={(input, option) => option.search.includes(input.trim().toLowerCase())}
-                        aria-label="Business type"
-                      />
-                    </Form.Item>
-                  </Form>
-
-                  <Form layout="vertical">
+                  <Form layout="vertical" style={{ marginTop: 20 }}>
                     <Row gutter={[16, 0]}>
                       <Col xs={24} md={12}>
                         <Form.Item label="Store / outlet name" required>
@@ -944,7 +941,9 @@ const ClientRegister = () => {
                       <div className="onb-store-info">
                         <h3 className="onb-store-name">{onboardingData.shop_name || 'My local store'}</h3>
                         <div className="onb-store-meta">
-                          <Tag>{categoryTitle}</Tag>
+                          {selectedPicks.map(({ sub }) => (
+                            <Tag key={sub.id}>{sub.name}</Tag>
+                          ))}
                         </div>
                         <div className="onb-store-meta">
                           <span className="onb-store-area">
@@ -961,7 +960,21 @@ const ClientRegister = () => {
 
                   <dl className="onb-review-list">
                     {renderReviewRow('Store name', onboardingData.shop_name || '-', 0)}
-                    {renderReviewRow('Category', categoryTitle || '-', 0)}
+                    {renderReviewRow(
+                      'Business types',
+                      selectedPicks.length ? (
+                        <span className="onb-review-tags">
+                          {selectedPicks.map(({ sub }) => (
+                            <span key={sub.id} className="onb-review-tag">
+                              {sub.name}
+                            </span>
+                          ))}
+                        </span>
+                      ) : (
+                        '-'
+                      ),
+                      0
+                    )}
                     {renderReviewRow('Phone', onboardingData.mobile_number || '-', 0)}
                     {renderReviewRow('Address', areaLine, 1)}
                     {renderReviewRow(
@@ -977,22 +990,6 @@ const ClientRegister = () => {
                       2
                     )}
                   </dl>
-
-                  {starters.length > 0 && (
-                    <div className="onb-starter-box">
-                      <Checkbox
-                        checked={onboardingData.populate_starters}
-                        onChange={(e) => setOnboardingData({ ...onboardingData, populate_starters: e.target.checked })}
-                      >
-                        <span style={{ fontWeight: 600, color: colors.textMain, fontSize: 13 }}>
-                          Pre-load starter sample catalog ({starters.length} items)
-                        </span>
-                      </Checkbox>
-                      <div className="onb-starter-hint">
-                        Your store launches with sample catalog items that you can edit anytime.
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 

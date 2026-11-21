@@ -1,0 +1,6 @@
+/* Phone: the sub-category multi-select is a touch target, so its box is at least 44px tall */
+@media (max-width: 767px) {
+  .filter-sidebar-subcategory .ant-select-selector {
+    min-height: 44px;
+  }
+}

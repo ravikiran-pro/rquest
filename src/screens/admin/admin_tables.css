@@ -1,0 +1,38 @@
+/* globals.css sets overflow-x: hidden on body, which makes body a scroll container and stops the
+   sticky table header from following the page. Lift it while a records table is on screen; the
+   route shell still clips horizontal overflow, and the table scrolls sideways inside its own wrapper. */
+body:has(.admin-table-wrap) {
+  overflow: visible;
+}
+
+/* Phone record cards: controls meet the 44px touch target. Scoped to pages that render cards. */
+@media (max-width: 767px) {
+  body:has(.admin-record-card) .ant-btn,
+  body:has(.admin-record-card) .ant-tabs-tab,
+  body:has(.admin-record-card) .ant-select-selector,
+  body:has(.admin-record-card) .ant-input-affix-wrapper {
+    min-height: 44px;
+  }
+
+  body:has(.admin-record-card) .ant-btn-icon-only {
+    min-width: 44px;
+  }
+
+  /* The switch keeps its track and handle; an invisible ::after widens the tap area to 44px */
+  body:has(.admin-record-card) .admin-record-card .ant-switch::after {
+    content: '';
+    position: absolute;
+    inset: -14px -8px;
+  }
+}
+
+/* Per-store cap control (stores tab) on phones */
+@media (max-width: 767px) {
+  .admin-touch.ant-input-number,
+  .admin-touch.ant-btn {
+    min-height: 44px;
+  }
+  .admin-touch.ant-input-number .ant-input-number-input {
+    height: 42px;
+  }
+}

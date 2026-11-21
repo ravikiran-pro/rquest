@@ -15,6 +15,8 @@ const Routes = {
   profile: '/profile',
   deliveryPortal: '/delivery-portal',
   analytics: '/analytics',
+  // Owner: full-page master catalogue table (?shop_id=)
+  storeCatalogue: '/store-catalogue',
   admin: '/admin',
 };
 

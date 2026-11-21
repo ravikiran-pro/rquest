@@ -64,6 +64,7 @@ import {
   RollbackOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../../app/components/common/ChatIcon';
+import { shopSubCategories } from '../../app/utils/shopSubCategories';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { subCategoryArchetype } from '../../app/utils/form_schema';
 import { useHistory } from 'react-router-dom';
@@ -1172,7 +1173,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       {!isServiceStore && (
         <Button
           icon={<AppstoreAddOutlined />}
-          onClick={() => setIsCatalogPickerOpen(true)}
+          onClick={() => history.push(`/store-catalogue?shop_id=${shopId}`)}
           className="ms-toolbar-secondary"
           title="Add from master catalog"
         >
@@ -1222,7 +1223,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               {addItemButtonLabel}
             </Button>
             {!isServiceStore && (
-              <Button icon={<AppstoreAddOutlined />} onClick={() => setIsCatalogPickerOpen(true)}>
+              <Button icon={<AppstoreAddOutlined />} onClick={() => history.push(`/store-catalogue?shop_id=${shopId}`)}>
                 Add from master catalog
               </Button>
             )}
@@ -1984,7 +1985,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               </div>
               <div className="ms-preview-name">{shopSettings.shop_name || 'Your store name'}</div>
               <div className="ms-muted">
-                {[shopSettings.area, currentShop.shopSubCategory?.name || currentShop.shopCategory?.name || currentShop.shop_type].filter(Boolean).join(' • ')}
+                {[shopSettings.area, shopSubCategories(currentShop).map((s) => s.name).join(', ') || currentShop.shopCategory?.name || currentShop.shop_type].filter(Boolean).join(' • ')}
               </div>
               {bannerFailed && <div className="ms-field-error">This image link doesn&apos;t load. Check the URL.</div>}
             </div>
@@ -2167,7 +2168,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               </Title>
               <div className="manage-store-meta">
                 <Text className="manage-store-meta-text">
-                  {[currentShop.area, currentShop.shopSubCategory?.name || currentShop.shopCategory?.name || currentShop.shop_type || 'Store']
+                  {[currentShop.area, shopSubCategories(currentShop).map((s) => s.name).join(', ') || currentShop.shopCategory?.name || currentShop.shop_type || 'Store']
                     .filter(Boolean)
                     .join(' • ')}
                 </Text>

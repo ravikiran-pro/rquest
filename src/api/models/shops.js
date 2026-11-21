@@ -67,6 +67,12 @@ module.exports = (sequelize) => {
         type: DataTypes.JSONB,
         defaultValue: [],
       },
+      // How many sub-categories this shop may have (set per shop by an admin)
+      max_sub_categories: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 5,
+      },
     },
     {
       timestamps: true,
@@ -87,6 +93,7 @@ module.exports = (sequelize) => {
       foreignKey: 'sub_category_id',
       as: 'shopSubCategory',
     });
+    Shop.hasMany(models.shop_sub_categories, { foreignKey: 'shop_id', as: 'subCategoryLinks' });
     if (models.shop_listings) {
       Shop.hasMany(models.shop_listings, { foreignKey: 'shop_id', as: 'listings' });
     }

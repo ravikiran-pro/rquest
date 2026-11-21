@@ -4,6 +4,7 @@ import {
   Table,
   Button,
   Input,
+  InputNumber,
   Tag,
   Select,
   Flex,
@@ -32,6 +33,7 @@ import {
 } from '@ant-design/icons';
 import { apiConfig, netWorkCall } from '../../app/utils';
 import { colors, radii, typography } from '../../app/styles/theme';
+import './admin_tables.css';
 import FormSchemaBuilderModal from './form_schema_builder';
 
 const headFont = typography.fontFamily.headline;
@@ -57,6 +59,15 @@ const standardSchema = (shop) => {
 const categoryFieldCount = (shop) => standardSchema(shop).length;
 const categoryName = (shop) =>
   shop?.shopSubCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'No category';
+// Sub-categories a shop is in (the primary one is first); falls back to the single primary
+const subCategoryCount = (shop) => {
+  if (Array.isArray(shop?.sub_category_ids)) return shop.sub_category_ids.length;
+  return shop?.sub_category_id ? 1 : 0;
+};
+const MAX_SUB_CATEGORIES_LIMIT = 20;
+const MAX_SETTING_HINT =
+  'Per-store setting: how many sub-categories this store may list. It may later be tied to a subscription plan.';
+const DEFAULT_MAX_SUB_CATEGORIES = 5;
 const shopPhone = (shop) => shop?.mobile_number || shop?.owner?.mobile || '';
 const shopLocation = (shop) => shop?.area || shop?.address || '';
 
@@ -190,6 +201,81 @@ const ShopAvatar = ({ shop, size }) => (
 );
 ShopAvatar.propTypes = { shop: PropTypes.object.isRequired, size: PropTypes.number };
 
+const SubCategoryCountTag = ({ shop }) => {
+  const count = subCategoryCount(shop);
+  return (
+    <Tag style={{ margin: 0, borderRadius: radii.full, fontSize: 12, fontFamily: bodyFont, whiteSpace: 'nowrap' }}>
+      {count} sub-categor{count === 1 ? 'y' : 'ies'}
+    </Tag>
+  );
+};
+SubCategoryCountTag.propTypes = { shop: PropTypes.object };
+
+/**
+ * Per-store cap on sub-categories. Saved on its own button so a half-typed number
+ * is never sent. Kept per store; it may later be tied to a subscription plan.
+ */
+const MaxSubCategoriesControl = ({ shop, onSaved, block = false }) => {
+  const saved = Number(shop?.max_sub_categories) || DEFAULT_MAX_SUB_CATEGORIES;
+  const [value, setValue] = useState(saved);
+  const [saving, setSaving] = useState(false);
+  useEffect(() => {
+    setValue(saved);
+  }, [saved, shop?.id]);
+
+  const canSave = Number.isInteger(value) && value >= 1 && value <= MAX_SUB_CATEGORIES_LIMIT && value !== saved;
+  const storeName = shop?.shop_name || 'store';
+
+  const save = async () => {
+    setSaving(true);
+    try {
+      const res = await netWorkCall(
+        apiConfig.master_shops_max_sub_categories,
+        'PUT',
+        JSON.stringify({ shop_id: shop.id, max_sub_categories: value }),
+        true
+      );
+      if (res?.success) {
+        message.success(`${storeName} can now have up to ${value} sub-categories`);
+        onSaved?.(shop.id, value);
+      } else {
+        message.error(res?.error || 'Could not update the sub-category limit');
+      }
+    } catch (err) {
+      console.error(err);
+      message.error('Could not update the sub-category limit');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Flex gap={8} align="center" wrap="wrap" style={block ? { width: '100%' } : undefined}>
+      <InputNumber
+        className="admin-touch"
+        aria-label={`Max sub-categories for ${storeName}`}
+        min={1}
+        max={MAX_SUB_CATEGORIES_LIMIT}
+        precision={0}
+        value={value}
+        onChange={(v) => setValue(v)}
+        onPressEnter={() => canSave && save()}
+        style={{ width: 84, borderRadius: radii.md }}
+      />
+      {canSave && (
+        <Button type="primary" size="small" loading={saving} onClick={save} className="admin-touch" style={{ borderRadius: radii.md }}>
+          Save
+        </Button>
+      )}
+    </Flex>
+  );
+};
+MaxSubCategoriesControl.propTypes = {
+  shop: PropTypes.object.isRequired,
+  onSaved: PropTypes.func,
+  block: PropTypes.bool,
+};
+
 const ellipsis = { overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' };
 
 /* ---------------- screen ---------------- */
@@ -311,6 +397,10 @@ const ShopsManager = () => {
     setSearchInput('');
     setParams((prev) => ({ ...prev, search: '', category: 'all', page: 1 }));
   };
+
+  const handleMaxSaved = useCallback((shopId, max) => {
+    setShopsList((prev) => prev.map((s) => (s.id === shopId ? { ...s, max_sub_categories: max } : s)));
+  }, []);
 
   const handleOpenFormBuilder = (shopRecord) => {
     setSelectedShopForSchema(shopRecord);
@@ -441,6 +531,24 @@ const ShopsManager = () => {
       render: (_, record) => <CategoryTag shop={record} />,
     },
     {
+      title: colTitle('Sub-categories'),
+      key: 'sub_categories',
+      width: 230,
+      render: (_, record) => (
+        <Flex vertical gap={6} align="flex-start">
+          <SubCategoryCountTag shop={record} />
+          <Flex align="center" gap={6}>
+            <Tooltip title={MAX_SETTING_HINT}>
+              <span style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', cursor: 'help' }}>
+                Per-store max
+              </span>
+            </Tooltip>
+            <MaxSubCategoriesControl shop={record} onSaved={handleMaxSaved} />
+          </Flex>
+        </Flex>
+      ),
+    },
+    {
       title: colTitle('Owner & contact'),
       key: 'owner',
       width: 180,
@@ -546,6 +654,13 @@ const ShopsManager = () => {
         </div>
       </div>
 
+      <Flex wrap="wrap" gap={8} align="center" justify="space-between" style={{ marginTop: 12 }}>
+        <SubCategoryCountTag shop={shop} />
+        <Tooltip title={MAX_SETTING_HINT}>
+          <span style={{ fontSize: 12, color: colors.textMuted }}>Per-store max sub-categories</span>
+        </Tooltip>
+        <MaxSubCategoriesControl shop={shop} onSaved={handleMaxSaved} block />
+      </Flex>
       <div style={{ marginTop: 12 }}>{renderActions(shop, { block: true })}</div>
     </div>
   );
@@ -687,14 +802,15 @@ const ShopsManager = () => {
       ) : (
         <div
           className="admin-table-wrap"
-          style={{ border: `1px solid ${colors.border}`, borderRadius: radii.lg, overflow: 'hidden', background: colors.surface }}
+          style={{ border: `1px solid ${colors.border}`, borderRadius: radii.lg, overflow: 'clip', background: colors.surface }}
         >
           <Table
             rowKey="id"
             columns={columns}
             dataSource={shopsList}
             loading={loading}
-            scroll={{ x: 1140 }}
+            sticky={{ offsetHeader: 64 }}
+            scroll={{ x: 1370 }}
             locale={{ emptyText: loading ? ' ' : loadError && !hasLoaded ? 'Stores could not be loaded' : emptyState }}
             pagination={{
               current: page,

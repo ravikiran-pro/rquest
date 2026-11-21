@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Checkbox, Flex } from 'antd';
+import { Checkbox, Flex, Select } from 'antd';
 import {
   FilterOutlined,
   StarFilled,
 } from '@ant-design/icons';
 import { FILTER_CATEGORIES, countActiveFilters } from './filterUtils';
 import { colors, radii } from '../../styles';
+import './FilterSidebar.css';
 
 // Custom-field filter groups shown before "more details" is opened
 const MAX_FIELD_GROUPS = 3;
@@ -18,6 +19,7 @@ const FilterSidebar = ({
   searchMode = 'items',
   categoryCounts = {},
   fieldFilters = [],
+  subCategoryOptions = [],
   style = {},
 }) => {
   const activeCount = countActiveFilters(filters, searchMode);
@@ -263,6 +265,38 @@ const FilterSidebar = ({
         )}
       </div>
 
+      {/* SUB-CATEGORIES (shops): a shop matches when it is in any selected one */}
+      {searchMode === 'shops' && subCategoryOptions.length > 0 && (
+        <div style={{ marginBottom: 18 }} data-testid="sub-category-filter">
+          <div
+            style={{
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: '0.6px',
+              textTransform: 'uppercase',
+              color: colors.textMuted,
+              marginBottom: 10,
+            }}
+          >
+            Sub-categories
+          </div>
+          <Select
+            className="filter-sidebar-subcategory"
+            mode="multiple"
+            allowClear
+            showSearch
+            aria-label="Filter stores by sub-category"
+            placeholder="Any sub-category"
+            value={(filters.subCategoryIds || []).map(String)}
+            onChange={(values) => updateFilter('subCategoryIds', values)}
+            options={subCategoryOptions}
+            optionFilterProp="label"
+            maxTagCount="responsive"
+            style={{ width: '100%' }}
+          />
+        </div>
+      )}
+
       {/* CATEGORY CUSTOM-FIELD FILTERS (only when the results have them) */}
       {showFieldFilters && (
         <div style={{ marginBottom: 18 }} data-testid="field-filters">
@@ -500,6 +534,9 @@ FilterSidebar.propTypes = {
   onResetFilters: PropTypes.func.isRequired,
   searchMode: PropTypes.string,
   categoryCounts: PropTypes.object,
+  subCategoryOptions: PropTypes.arrayOf(
+    PropTypes.shape({ value: PropTypes.string.isRequired, label: PropTypes.string })
+  ),
   fieldFilters: PropTypes.arrayOf(
     PropTypes.shape({
       key: PropTypes.string.isRequired,

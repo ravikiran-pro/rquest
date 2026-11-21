@@ -38,6 +38,7 @@ import {
   CarOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../../app/components/common/ChatIcon';
+import SubCategoryChips from '../../app/components/common/SubCategoryChips';
 import {
   netWorkCall,
   apiConfig,
@@ -631,7 +632,7 @@ const StorefrontScreen = () => {
             /* Mobile Layout */
             <div>
               {/* Avatar + Title Row */}
-              <Flex gap={12} align="end" style={{ marginTop: -38, marginBottom: 12 }}>
+              <Flex gap={12} align="start" style={{ marginTop: -38, marginBottom: 12 }}>
                 <div
                   style={{
                     width: 76,
@@ -657,7 +658,7 @@ const StorefrontScreen = () => {
                   />
                 </div>
 
-                <div style={{ flex: 1, minWidth: 0, paddingBottom: 2 }}>
+                <div style={{ flex: 1, minWidth: 0, paddingTop: 42, paddingBottom: 2 }}>
                   <Flex align="center" gap={6} wrap="wrap">
                     <Title
                       level={3}
@@ -686,19 +687,7 @@ const StorefrontScreen = () => {
                     )}
                   </Flex>
                   <Flex gap={6} align="center" wrap="wrap" style={{ marginTop: 4 }}>
-                    <Tag
-                      style={{
-                        fontWeight: 700,
-                        margin: 0,
-                        borderRadius: 6,
-                        fontSize: 11,
-                        background: colors.primaryLight,
-                        color: colors.primary,
-                        borderColor: 'rgba(11, 45, 107, 0.2)',
-                      }}
-                    >
-                      {shop.shopSubCategory?.name || shop.shopCategory?.name || shop.shop_type || 'Store'}
-                    </Tag>
+                    <SubCategoryChips shop={shop} fallback="Store" size="sm" />
                     <Flex
                       align="center"
                       gap={3}
@@ -758,13 +747,13 @@ const StorefrontScreen = () => {
               </div>
 
               {/* Mobile Action Buttons */}
-              <Flex gap={8} align="center" style={{ width: '100%', marginTop: 14 }}>
+              <Flex gap={8} align="center" wrap="wrap" style={{ width: '100%', marginTop: 14 }}>
                 {shop.mobile_number && (
                   <Button
                     icon={<PhoneOutlined />}
                     href={`tel:${shop.mobile_number}`}
                     style={{
-                      flex: 1,
+                      flex: '1 1 auto',
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
@@ -781,7 +770,7 @@ const StorefrontScreen = () => {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      flex: 1,
+                      flex: '1 1 auto',
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
@@ -797,7 +786,7 @@ const StorefrontScreen = () => {
                     icon={<EditOutlined />}
                     onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
                     style={{
-                      flex: 2,
+                      flex: '2 1 auto',
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
@@ -821,7 +810,7 @@ const StorefrontScreen = () => {
                       }
                     }}
                     style={{
-                      flex: 2,
+                      flex: '2 1 auto',
                       height: 42,
                       borderRadius: radii.md,
                       fontWeight: 700,
@@ -905,20 +894,7 @@ const StorefrontScreen = () => {
 
                   {/* Badges: Category, Area, Rating */}
                   <Flex gap={8} align="center" wrap="wrap">
-                    <Tag
-                      style={{
-                        fontWeight: 700,
-                        margin: 0,
-                        borderRadius: 6,
-                        fontSize: 12,
-                        padding: '1px 8px',
-                        background: colors.primaryLight,
-                        color: colors.primary,
-                        borderColor: 'rgba(11, 45, 107, 0.2)',
-                      }}
-                    >
-                      {shop.shopSubCategory?.name || shop.shopCategory?.name || shop.shop_type || 'Store'}
-                    </Tag>
+                    <SubCategoryChips shop={shop} fallback="Store" size="md" />
 
                     {shop.area && (
                       <Tag

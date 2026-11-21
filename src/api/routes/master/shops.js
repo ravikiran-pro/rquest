@@ -1,6 +1,11 @@
 const { Op } = require('sequelize');
-const { shops, categories, sub_categories, users, shop_listings } = require('../../models');
+const { shops, categories, sub_categories, users, shop_listings, shop_sub_categories } = require('../../models');
 const { normalizeSchema } = require('../../services/formSchema');
+const {
+  MAX_SUB_CATEGORIES_LIMIT,
+  serializeShops,
+  subCategoryFilter,
+} = require('../../services/shopSubCategories');
 
 const getAllMasterShops = async (req, res) => {
   try {
@@ -20,9 +25,10 @@ const getAllMasterShops = async (req, res) => {
     if (category_id !== undefined && category_id !== null && category_id !== 'all') {
       where.category_id = parseInt(category_id);
     }
+    // Any of the shop's sub-categories, not only the primary one
     const { sub_category_id } = req.body;
     if (sub_category_id !== undefined && sub_category_id !== null && sub_category_id !== 'all') {
-      where.sub_category_id = parseInt(sub_category_id);
+      where[Op.and] = [subCategoryFilter(parseInt(sub_category_id, 10))];
     }
 
     const { count, rows } = await shops.findAndCountAll({
@@ -55,7 +61,7 @@ const getAllMasterShops = async (req, res) => {
     return res.status(200).json({
       success: true,
       count,
-      data: rows,
+      data: await serializeShops(rows),
     });
   } catch (error) {
     console.error('Error fetching master shops:', error);
@@ -139,8 +145,58 @@ const updateShopFormSchema = async (req, res) => {
   }
 };
 
+/**
+ * PUT /master/shops/max_sub_categories  { shop_id, max_sub_categories }  (platform admin)
+ * Sets how many sub-categories the shop may have (1..20). Refused while the shop already has
+ * more than the new cap: the owner removes some first.
+ */
+const updateShopMaxSubCategories = async (req, res) => {
+  try {
+    const { shop_id, max_sub_categories } = req.body || {};
+    if (!shop_id) {
+      return res.status(400).json({ success: false, error: 'shop_id is required' });
+    }
+    const max =
+      typeof max_sub_categories === 'number'
+        ? max_sub_categories
+        : typeof max_sub_categories === 'string' && /^\d+$/.test(max_sub_categories.trim())
+          ? Number.parseInt(max_sub_categories, 10)
+          : NaN;
+    if (!Number.isInteger(max) || max < 1 || max > MAX_SUB_CATEGORIES_LIMIT) {
+      return res.status(400).json({
+        success: false,
+        error: `max_sub_categories must be a whole number from 1 to ${MAX_SUB_CATEGORIES_LIMIT}`,
+      });
+    }
+
+    const shop = await shops.findByPk(shop_id);
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+
+    const chosen = await shop_sub_categories.count({ where: { shop_id } });
+    if (chosen > max) {
+      return res.status(409).json({
+        success: false,
+        error: `This shop has ${chosen} sub-categories; the cap cannot go below that`,
+      });
+    }
+
+    await shop.update({ max_sub_categories: max });
+    return res.status(200).json({
+      success: true,
+      message: 'Sub-category limit updated',
+      data: await serializeShops(shop),
+    });
+  } catch (error) {
+    console.error('Error updating shop sub-category limit:', error);
+    return res.status(500).json({ success: false, error: 'Failed to update the sub-category limit' });
+  }
+};
+
 module.exports = {
   getAllMasterShops,
   updateShopFormSchema,
+  updateShopMaxSubCategories,
 };
 
