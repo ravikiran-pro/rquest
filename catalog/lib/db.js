@@ -15,8 +15,7 @@ async function connect(databaseUrl = config().databaseUrl) {
     const missing = config().databaseMissing;
     throw new Error(
       `No database configured${missing ? ` (missing ${missing.join(', ')})` : ''}. ` +
-        "Set the app's DB_* variables in the root .env (the catalog then uses the app's own " +
-        'database), or set CATALOG_DATABASE_URL in catalog/.env.catalog to use another one.'
+        "Set the app's DB_* variables in the root .env (the catalog uses the app's existing database)."
     );
   }
   const client = new Client({

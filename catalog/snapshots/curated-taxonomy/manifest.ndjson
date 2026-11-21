@@ -1,6 +1,6 @@
-{"attribution":null,"input_sha256":"035cc18de437b764c428e49a592ca44e5c29e0b9ff19a541f713348ba551eb56","license":"Internal","source":"curated-taxonomy","source_version":"seed+t1","title":"Curated taxonomy seeds (shop types, cross-scheme mappings, default HSN)"}
-{"file":"taxonomy_nodes.ndjson.gz","rows":69,"sha256":"00e68dbe903e98eaa9f2b891f211f65cc40b2a4c5de90c53790d4e5565e4ce9c"}
-{"file":"taxonomy_mappings.ndjson.gz","rows":62,"sha256":"ac7f0c908c25028c456b57a325196c168f238f21ab119293c708467558276b38"}
+{"attribution":null,"input_sha256":"06a428e1f7e06267a147a40c7af2d3545bf8c47c71a86a902d652b756ad7b6c2","license":"Internal","source":"curated-taxonomy","source_version":"seed+t1","title":"Curated taxonomy seeds (shop types, cross-scheme mappings, default HSN)"}
+{"file":"taxonomy_nodes.ndjson.gz","rows":126,"sha256":"2501b3f2943570a36c9f5625184f877b40a5cb82954f015c2f577943f3883643"}
+{"file":"taxonomy_mappings.ndjson.gz","rows":84,"sha256":"c0112d311c8bac921abc75dec2fa0cea6f5ddb8a6ec1ebdac534384fcc7643b6"}
 {"file":"taxonomy_hsn_defaults.ndjson.gz","rows":50,"sha256":"337a3a6df0ae6092a0fab8df30cc51971c62cb6fea737a57f6c4998ffd066674"}
 {"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
 {"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

@@ -8,7 +8,7 @@ Postgres schema**. It is fully isolated from the app:
 | No app code touched | Own `package.json` / `node_modules`; nothing imports from `src/`, and `src/` never imports this. Not included in `npm run build`. |
 | No app tables touched | Writes only `catalog.*` (schema-qualified everywhere). Linking catalog rows to `public.products` is a separate, explicit step that is **not** part of this folder. |
 | Dev server not disturbed | Raw downloads go to `~/.cache/rquest-catalog` (outside the repo); snapshots are `.ndjson.gz`, which nodemon ignores. (Editing pipeline `.js` files still restarts `npm run dev`, like any `.js` in the repo.) |
-| Database | By default uses the **app's own database** (the `DB_*` / `NODE_ENV` settings in the root `.env`, the same connection the API uses), so `catalog` sits next to `public`. Set `CATALOG_DATABASE_URL` in `catalog/.env.catalog` to use a different database. |
+| Database | Uses the **app's own database** (the `DB_*` / `NODE_ENV` settings in the root `.env`, the same connection the API uses), so `catalog` sits next to `public` in the existing database. |
 
 ## Quick start
 
@@ -22,9 +22,6 @@ cd catalog && node cli.js run-all --dry-run   # every source inside transactions
 npm run catalog:load                   # real load of every source, then the duplicate finder
 npm run catalog:status                 # last runs, catalog health, open review items
 ```
-
-To load into another database instead, copy `catalog/.env.catalog.example` to
-`catalog/.env.catalog` and set `CATALOG_DATABASE_URL`; it overrides the app's settings.
 
 Until `catalog:migrate` has run, the admin catalog and owner search endpoints answer 503.
 

@@ -6,15 +6,13 @@ const path = require('path');
 const util = require('util');
 
 const ROOT = path.resolve(__dirname, '..');
-const ENV_FILE = path.join(ROOT, '.env.catalog');
-// The app's env file (read by `require('dotenv').config()` when the app starts from the
-// repo root). Only its DB_* / NODE_ENV values are used, and only when
-// CATALOG_DATABASE_URL is not set.
+// The app's root env file (read by require('dotenv').config() when the app starts).
+// Catalog sits directly alongside the app in the existing database as schema `catalog`.
 const APP_ENV_FILE = path.join(ROOT, '..', '.env');
 
 /**
  * Per-environment defaults of the app's Sequelize connection. Mirrors
- * src/api/config/config.js (the pipeline never imports app code) — keep them in sync.
+ * src/api/config/config.js (the pipeline never imports app code) - keep them in sync.
  */
 const APP_DB_DEFAULTS = {
   local: { user: 'postgres', password: 'postgres', database: 'rquest', host: 'localhost', port: '5432' },
@@ -35,17 +33,38 @@ let loaded = false;
 function loadEnv() {
   if (loaded) return;
   loaded = true;
-  // The pipeline's own env file. Values already in the environment win.
-  if (fs.existsSync(ENV_FILE) && typeof process.loadEnvFile === 'function') {
-    process.loadEnvFile(ENV_FILE);
+  // Load the app's root .env into process.env if available
+  if (fs.existsSync(APP_ENV_FILE) && typeof process.loadEnvFile === 'function') {
+    try {
+      process.loadEnvFile(APP_ENV_FILE);
+    } catch {
+      // ignore
+    }
   }
 }
 
 /** The app's .env as a plain object (process.env is left untouched). */
 function readAppEnvFile() {
-  if (!fs.existsSync(APP_ENV_FILE) || typeof util.parseEnv !== 'function') return {};
+  if (!fs.existsSync(APP_ENV_FILE)) return {};
   try {
-    return util.parseEnv(fs.readFileSync(APP_ENV_FILE, 'utf8'));
+    const content = fs.readFileSync(APP_ENV_FILE, 'utf8');
+    if (typeof util.parseEnv === 'function') {
+      return util.parseEnv(content);
+    }
+    const result = {};
+    for (const line of content.split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith('#')) continue;
+      const eq = trimmed.indexOf('=');
+      if (eq === -1) continue;
+      const key = trimmed.slice(0, eq).trim();
+      let val = trimmed.slice(eq + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      result[key] = val;
+    }
+    return result;
   } catch (err) {
     return {};
   }
@@ -58,12 +77,21 @@ function readAppEnvFile() {
  * over the root .env (like dotenv). Returns { url, env } or { url: null, env, missing }.
  */
 function appDatabase() {
+  loadEnv();
   const file = readAppEnvFile();
   const get = (key) => {
     const value = process.env[key] !== undefined ? process.env[key] : file[key];
     return value === undefined || value === '' ? undefined : String(value);
   };
+
   const env = get('NODE_ENV') || 'development';
+
+  // Support direct DATABASE_URL / DB_URL from the existing app configuration if set
+  const directUrl = get('DATABASE_URL') || get('DB_URL');
+  if (directUrl) {
+    return { url: directUrl, env };
+  }
+
   const defaults = APP_DB_DEFAULTS[env];
   if (!defaults) return { url: null, env, missing: [`settings for NODE_ENV=${env}`] };
 
@@ -88,7 +116,7 @@ function appDatabase() {
   else if (host.includes(':') && !host.startsWith('[')) host = `[${host}]`;
   const port = settings.port ? `:${settings.port}` : '';
   // sslmode=no-verify = the app's { ssl: { require: true, rejectUnauthorized: false } }.
-  const query = defaults.ssl ? '?sslmode=no-verify' : '';
+  const query = defaults.ssl || get('DB_SSL') === 'true' ? '?sslmode=no-verify' : '';
   return {
     url: `postgres://${auth}@${host}${port}/${encodeURIComponent(settings.database)}${query}`,
     env,
@@ -101,15 +129,12 @@ function redactUrl(url) {
 }
 
 function config() {
-  loadEnv();
-  const override = process.env.CATALOG_DATABASE_URL || null;
-  const app = override ? null : appDatabase();
+  const app = appDatabase();
   return {
     root: ROOT,
-    // CATALOG_DATABASE_URL (catalog/.env.catalog or the environment) overrides; otherwise
-    // the app's own database, so `catalog` sits next to `public` in the same DB.
-    databaseUrl: override || app.url,
-    databaseSource: override ? 'CATALOG_DATABASE_URL' : `app DB_* settings (NODE_ENV=${app.env})`,
+    // Catalog uses the app's existing database, so `catalog` sits next to `public` in the same DB.
+    databaseUrl: app.url,
+    databaseSource: `app DB_* settings (NODE_ENV=${app.env})`,
     databaseMissing: app && !app.url ? app.missing : null,
     // Raw downloads stay outside the repo so nodemon/Vite never see them.
     cacheDir:
