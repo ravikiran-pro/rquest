@@ -33,6 +33,7 @@ import {
   spaLink,
   ADMIN_TABS,
   adminTabPath,
+  ROLE_HOME,
 } from './navConfig';
 
 const ADMIN_TAB_ICONS = {
@@ -136,7 +137,7 @@ const Navbar = ({ open, handleOpen }) => {
     else if (item.type === 'order_status_change' || item.type === 'order_placed') history.push(Routes.orders);
   };
 
-  const logoDestination = isAdmin ? Routes.admin : isOwner ? Routes.client : Routes.home;
+  const logoDestination = ROLE_HOME[navRole] || Routes.home;
 
   // ---------------------------------------------------------------------------
   // Account menu (capsule dropdown, >= 768px)
@@ -158,6 +159,12 @@ const Navbar = ({ open, handleOpen }) => {
   const activeMenuKeys = [];
   if (isAdmin) {
     roleMenuItems = [
+      {
+        key: 'analytics',
+        icon: <DatabaseOutlined />,
+        label: <span style={{ fontWeight: 700 }}>Analytics</span>,
+        onClick: go(Routes.analytics),
+      },
       {
         key: 'admin',
         icon: <SafetyCertificateOutlined />,
@@ -184,9 +191,16 @@ const Navbar = ({ open, handleOpen }) => {
       chatMenuItem('Messages'),
       { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
     ];
+    if (navMatch.analytics(location)) activeMenuKeys.push('analytics');
     if (navMatch.search(location)) activeMenuKeys.push('search');
   } else if (isOwner) {
     roleMenuItems = [
+      {
+        key: 'analytics',
+        icon: <DatabaseOutlined />,
+        label: <span style={{ fontWeight: 700 }}>Analytics</span>,
+        onClick: go(Routes.analytics),
+      },
       {
         key: 'my-stores',
         icon: <ShopOutlined />,
@@ -198,6 +212,7 @@ const Navbar = ({ open, handleOpen }) => {
       { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
     ];
     if (navMatch.myStores(location)) activeMenuKeys.push('my-stores');
+    if (navMatch.analytics(location)) activeMenuKeys.push('analytics');
   } else {
     roleMenuItems = [
       { key: 'explore', icon: <CompassOutlined />, label: 'Explore Marketplace', onClick: go(Routes.app) },
@@ -256,10 +271,12 @@ const Navbar = ({ open, handleOpen }) => {
       { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'My Orders', active: navMatch.orders(location) },
     ],
     owner: [
+      { key: 'analytics', to: Routes.analytics, Icon: DatabaseOutlined, label: 'Analytics', active: navMatch.analytics(location) },
       { key: 'my-stores', to: Routes.client, Icon: ShopOutlined, label: 'My stores', active: navMatch.myStores(location) },
       { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'Orders & quotes', active: navMatch.orders(location) },
     ],
     admin: [
+      { key: 'analytics', to: Routes.analytics, Icon: DatabaseOutlined, label: 'Analytics', active: navMatch.analytics(location) },
       { key: 'admin', to: Routes.admin, Icon: SafetyCertificateOutlined, label: 'Admin console', active: navMatch.admin(location) },
       { key: 'search', to: Routes.search, Icon: SearchOutlined, label: 'Search', active: navMatch.search(location) },
     ],

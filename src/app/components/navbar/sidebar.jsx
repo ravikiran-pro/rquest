@@ -25,8 +25,7 @@ import {
   DatabaseOutlined,
   ShoppingOutlined,
   ControlOutlined,
-} from '@ant-design/icons';
-import ChatIcon from '../common/ChatIcon';
+} from '@ant-design/icons';import ChatIcon from '../common/ChatIcon';
 import { useNavSession, useSignOut, navMatch, ADMIN_TABS, adminTabPath } from './navConfig';
 
 const { Text } = Typography;
@@ -121,6 +120,15 @@ const SideBar = ({ open, handleClose }) => {
     case 'admin':
       items = [
         {
+          key: 'analytics',
+          Icon: DatabaseOutlined,
+          label: 'Analytics',
+          tone: 'brand',
+          active: navMatch.analytics(location),
+          onClick: go(Routes.analytics),
+          trailing: <span className="drawer-nav-pill">Dashboard</span>,
+        },
+        {
           key: 'admin',
           Icon: SafetyCertificateOutlined,
           label: 'Admin console',
@@ -158,6 +166,15 @@ const SideBar = ({ open, handleClose }) => {
       break;
     case 'owner':
       items = [
+        {
+          key: 'analytics',
+          Icon: DatabaseOutlined,
+          label: 'Analytics',
+          tone: 'brand',
+          active: navMatch.analytics(location),
+          onClick: go(Routes.analytics),
+          trailing: <span className="drawer-nav-pill">Dashboard</span>,
+        },
         {
           key: 'my-stores',
           Icon: ShopOutlined,

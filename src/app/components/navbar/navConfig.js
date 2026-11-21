@@ -29,10 +29,11 @@ export const ADMIN_DEFAULT_TAB = ADMIN_TABS[0].key;
 const ADMIN_LEGACY_TABS = { 1: 'categories', 2: 'stores', 3: 'orders', 4: 'catalog' };
 export const adminTabPath = (key) => `${Routes.admin}?tab=${encodeURIComponent(key)}`;
 
-// Where a signed-in role lands by default (logo, login bounce, denied routes)
+// Where a signed-in role lands by default (logo, login bounce, denied routes).
+// Analytics is the dashboard for owners and admins; shoppers keep the marketplace.
 export const ROLE_HOME = {
-  admin: Routes.admin,
-  owner: Routes.client,
+  admin: Routes.analytics,
+  owner: Routes.analytics,
   user: Routes.search,
   guest: Routes.search,
 };
@@ -123,6 +124,7 @@ export const navMatch = {
     return isUnder(p, Routes.client) || isUnder(p, Routes.clientShop);
   },
   orders: (loc) => isUnder(cleanPath(loc.pathname), Routes.orders),
+  analytics: (loc) => isUnder(cleanPath(loc.pathname), Routes.analytics),
   profile: (loc) => isUnder(cleanPath(loc.pathname), Routes.profile),
   delivery: (loc) => isUnder(cleanPath(loc.pathname), Routes.deliveryPortal),
   cart: (loc) => isUnder(cleanPath(loc.pathname), Routes.cart),

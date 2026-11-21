@@ -14,6 +14,7 @@ const Routes = {
   orders: '/orders',
   profile: '/profile',
   deliveryPortal: '/delivery-portal',
+  analytics: '/analytics',
   admin: '/admin',
 };
 

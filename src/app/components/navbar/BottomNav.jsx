@@ -9,6 +9,7 @@ import {
   UserOutlined,
   SearchOutlined,
   SafetyCertificateOutlined,
+  DatabaseOutlined,
 } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import { useChatStore, useCartStore } from '../../services';
@@ -20,8 +21,8 @@ import './index.css';
  * Fixed bottom navigation for phones and tablets (<= 991px). Items per role:
  *   guest    Explore, Stores, Cart, Sign In
  *   customer Explore, Stores, Chat, Orders, Account
- *   owner    My stores, Orders, Chat, Account
- *   admin    Console, Search, Chat, Account
+ *   owner    Analytics, Orders, Chat, Account (My stores via the account drawer)
+ *   admin    Analytics, Console, Chat, Account
  * The rest of each role's menu (admin sections, delivery portal, sign out) is in the account
  * drawer opened from the header avatar.
  */
@@ -79,6 +80,14 @@ const BottomNav = () => {
     case 'admin':
       items = [
         {
+          key: 'analytics',
+          label: 'Analytics',
+          Icon: DatabaseOutlined,
+          ariaLabel: 'Analytics dashboard',
+          active: navMatch.analytics(location),
+          onClick: go(Routes.analytics),
+        },
+        {
           key: 'console',
           label: 'Console',
           Icon: SafetyCertificateOutlined,
@@ -98,13 +107,15 @@ const BottomNav = () => {
       ];
       break;
     case 'owner':
+      // Analytics is the owner's landing item; My stores stays reachable via the account drawer
       items = [
         {
-          key: 'my-stores',
-          label: 'My stores',
-          Icon: ShopOutlined,
-          active: navMatch.myStores(location),
-          onClick: go(Routes.client),
+          key: 'analytics',
+          label: 'Analytics',
+          Icon: DatabaseOutlined,
+          ariaLabel: 'Analytics dashboard',
+          active: navMatch.analytics(location),
+          onClick: go(Routes.analytics),
         },
         {
           key: 'orders',
