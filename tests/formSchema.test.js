@@ -29,7 +29,8 @@ test('suggestTemplate matches a category name and falls back to general', () => 
   assert.equal(suggestTemplate('Bike Rental').key, 'rentals');
   assert.equal(suggestTemplate('Electronics').key, 'electronics');
   assert.equal(suggestTemplate('Electrical Hardware').key, 'hardware');
-  assert.equal(suggestTemplate('Pet Supplies').key, 'general');
+  assert.equal(suggestTemplate('Pet Supplies').key, 'pets');
+  assert.equal(suggestTemplate('Antiques & Collectibles').key, 'general');
   assert.equal(suggestTemplate('').key, 'general');
   assert.equal(suggestTemplate(undefined).key, 'general');
 });
