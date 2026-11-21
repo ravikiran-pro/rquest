@@ -158,14 +158,26 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           Modal.warning({
             title: res.message,
             content: (
-              <div style={{ maxHeight: 260, overflowY: 'auto' }}>
-                {skipped.slice(0, 20).map((row) => (
-                  <div key={row.row} style={{ marginBottom: 6 }}>
-                    <strong>Row {row.row} ({row.name}):</strong>{' '}
-                    {row.errors.map((e) => e.message).join('. ')}
-                  </div>
-                ))}
-                {skipped.length > 20 && <div>…and {skipped.length - 20} more rows.</div>}
+              <div>
+                <Table
+                  size="small"
+                  pagination={false}
+                  rowKey="row"
+                  scroll={{ x: 420, y: 260 }}
+                  dataSource={skipped.slice(0, 50)}
+                  columns={[
+                    { title: 'Row', dataIndex: 'row', width: 70 },
+                    { title: 'Name', dataIndex: 'name', width: 160, ellipsis: true, render: (v) => v || '-' },
+                    {
+                      title: 'Problem',
+                      key: 'problem',
+                      render: (_, r) => (Array.isArray(r.errors) ? r.errors.map((e) => e.message).join('. ') : ''),
+                    },
+                  ]}
+                />
+                {skipped.length > 50 && (
+                  <div style={{ marginTop: 8, fontSize: 12 }}>…and {skipped.length - 50} more rows.</div>
+                )}
               </div>
             ),
           });
@@ -508,8 +520,9 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
           Confirm & Import ({parsedItems.length})
         </Button>,
       ]}
-      width={840}
-      style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
+      width="min(840px, calc(100vw - 32px))"
+      style={{ maxWidth: 'calc(100vw - 32px)', top: 16 }}
+      styles={{ body: { maxHeight: 'max(300px, calc(100vh - 170px))', overflowY: 'auto', paddingRight: 4 } }}
       destroyOnHidden
     >
       {/* Category Type Context Banner */}
@@ -558,8 +571,8 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
                 setSelectedArchetypeOverride(val);
                 setParsedItems([]);
               }}
-              size="small"
-              style={{ width: 190 }}
+              size="middle"
+              style={{ width: 220, maxWidth: '100%' }}
             >
               <Option value="medical">Pharmacy & Medical</Option>
               <Option value="food">Food & Restaurant</Option>
@@ -572,10 +585,42 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         </Flex>
       </div>
 
-      {/* Dynamic Headers Explanation */}
+      {/* How it works */}
       <div style={{ marginBottom: 16, fontFamily: typography.fontFamily.body }}>
-        <Paragraph style={{ marginBottom: 6, fontSize: 13, color: colors.textMuted }}>
-          Upload a CSV file structured specifically for <strong style={{ color: colors.textMain }}>{csvConfig.label}</strong> with these column headers:
+        <Text strong style={{ display: 'block', fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginBottom: 8 }}>
+          How it works
+        </Text>
+        <Flex vertical gap={8}>
+          {[
+            `Pick the template that matches what you sell`,
+            `Download the sample CSV and add one row per item`,
+            `Upload your CSV file here`,
+            `Check the preview, then confirm the import`,
+          ].map((step, i) => (
+            <Flex key={step} gap={10} align="flex-start">
+              <span
+                style={{
+                  width: 24,
+                  height: 24,
+                  flexShrink: 0,
+                  borderRadius: '50%',
+                  background: colors.primary,
+                  color: colors.surface,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 12,
+                  fontWeight: 700,
+                }}
+              >
+                {i + 1}
+              </span>
+              <Text style={{ fontSize: 13, color: colors.textMain, lineHeight: '24px' }}>{step}</Text>
+            </Flex>
+          ))}
+        </Flex>
+        <Paragraph style={{ marginTop: 12, marginBottom: 6, fontSize: 13, color: colors.textMuted }}>
+          Your file for <strong style={{ color: colors.textMain }}>{csvConfig.label}</strong> needs these column headers:
         </Paragraph>
         <div
           style={{
@@ -603,6 +648,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
         >
           <Button
             icon={<UploadOutlined />}
+            size="large"
             style={{
               fontWeight: 600,
               borderRadius: radii.md,
@@ -617,6 +663,7 @@ const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
 
         <Button
           icon={<DownloadOutlined />}
+          size="large"
           onClick={handleDownloadSample}
           style={{
             color: colors.primary,

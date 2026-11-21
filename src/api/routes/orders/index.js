@@ -1,6 +1,12 @@
 const express = require('express');
-const { orders, order_items, shops, users, shop_listings, chats } = require('../../models');
-const { authMiddleware } = require('../../auth');
+const { orders, order_items, shops, shop_listings, users, chats, user_addresses } = require('../../models');
+const { authMiddleware, isAdminReq } = require('../../auth');
+const {
+  getSettings: getPlatformSettings,
+  computeOrderFees,
+  orderBlock,
+  distanceKm,
+} = require('../../services/platformSettings');
 const {
   sendPushNotification,
   getOrderStatusNotification,
@@ -8,10 +14,43 @@ const {
 
 const router = express.Router();
 
-// 3. Get shop's incoming orders (Merchant side - resilient for store dashboard)
-router.get('/shop/:shop_id', async (req, res) => {
+// Status moves the merchant, customer and delivery UIs make (see manage_store.jsx getOrderActions).
+// Completed and cancelled are final. Any open order can be cancelled (handled in canMoveOrder).
+const PREPARING_MOVES = ['placed', 'packed', 'ready_for_pickup', 'open_to_delivery', 'completed'];
+const ORDER_TRANSITIONS = {
+  pending: ['placed', 'order_prepare', 'accepted'],
+  placed: ['order_prepare', 'preparing', 'accepted'],
+  order_prepare: PREPARING_MOVES,
+  preparing: PREPARING_MOVES,
+  accepted: PREPARING_MOVES,
+  packed: PREPARING_MOVES,
+  ready_for_pickup: ['out_for_delivery', 'completed'],
+  open_to_delivery: ['out_for_delivery', 'completed'],
+  out_for_delivery: ['completed'],
+  completed: [],
+  cancelled: [],
+};
+const canMoveOrder = (from, to) => {
+  if (!Object.prototype.hasOwnProperty.call(ORDER_TRANSITIONS, from) || from === to) return false;
+  if (to === 'cancelled') return ORDER_TRANSITIONS[from].length > 0; // any open order
+  return ORDER_TRANSITIONS[from].includes(to);
+};
+
+// Orders a delivery partner can take before anyone has claimed them
+const CLAIMABLE_STATUSES = ['open_to_delivery', 'accepted', 'packed', 'ready_for_pickup'];
+
+// 3. Get shop's incoming orders (Merchant side - resilient for store dashboard). Owner or admin only.
+router.get('/shop/:shop_id', authMiddleware, async (req, res) => {
   try {
     const { shop_id } = req.params;
+    const { user_id } = req.headers;
+    const shop = await shops.findByPk(shop_id, { attributes: ['id', 'owner_id'] });
+    if (!shop) {
+      return res.status(404).json({ success: false, error: 'Shop not found' });
+    }
+    if (!isAdminReq(req) && !(shop.owner_id && shop.owner_id === user_id)) {
+      return res.status(403).json({ success: false, error: 'Only the shop owner can view these orders' });
+    }
     const shopOrders = await orders.findAll({
       where: { shop_id },
       include: [
@@ -47,13 +86,20 @@ router.post('/', async (req, res) => {
       customer_phone,
       notes,
       items,
-      platform_fee = 5.0,
-      delivery_fee = 0.0,
+      delivery_address_id,
       shop_upi_id,
     } = req.body;
+    // platform_fee / delivery_fee in the body are ignored: fees come from platform settings
 
     if (!shop_id || !items || !Array.isArray(items) || items.length === 0) {
       return res.status(400).json({ error: 'Shop ID and non-empty items array are required' });
+    }
+    if (items.some((it) => !it || typeof it !== 'object' || Array.isArray(it))) {
+      return res.status(400).json({ success: false, error: 'Each item must be an object with listing_id and quantity' });
+    }
+    // Any other value would skip the delivery fee and the enable_delivery switch
+    if (!['delivery', 'pickup', 'service'].includes(order_type)) {
+      return res.status(400).json({ success: false, error: 'Unknown order type' });
     }
 
     const shop = await shops.findByPk(shop_id);
@@ -61,25 +107,74 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ error: 'Shop not found' });
     }
 
+    // Prices and names come from this shop's own listings, never from the request body
+    const UUID_RE_LISTING = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const listingIds = [...new Set(items.map((it) => it.listing_id).filter((v) => UUID_RE_LISTING.test(String(v || ''))))];
+    const shopListings = listingIds.length
+      ? await shop_listings.findAll({
+          where: { id: listingIds, shop_id },
+          attributes: ['id', 'name', 'price'],
+        })
+      : [];
+    const listingById = new Map(shopListings.map((l) => [l.id, l]));
+    if (items.some((it) => !listingById.has(it.listing_id))) {
+      return res.status(400).json({
+        success: false,
+        error: 'One or more items are not sold by this shop. Please refresh your cart.',
+      });
+    }
+
     // Calculate subtotal
     let itemsTotal = 0;
     const validatedItems = items.map((it) => {
-      const unit_price = parseFloat(it.unit_price) || 0;
-      const quantity = parseInt(it.quantity) || 1;
+      const listing = listingById.get(it.listing_id);
+      const unit_price = parseFloat(listing.price) || 0;
+      // Positive whole number only: a negative quantity would make the server total go negative
+      const quantity = Math.max(1, parseInt(it.quantity) || 1);
       const subtotal = unit_price * quantity;
       itemsTotal += subtotal;
       return {
-        listing_id: it.listing_id || null,
-        item_name: it.item_name || 'Item',
+        listing_id: listing.id,
+        item_name: listing.name || 'Item',
         unit_price,
         quantity,
         subtotal,
       };
     });
 
-    const parsedPlatformFee = parseFloat(platform_fee) || 0.0;
-    const parsedDeliveryFee = order_type === 'delivery' ? parseFloat(delivery_fee) || 0.0 : 0.0;
-    const totalAmount = itemsTotal + parsedPlatformFee;
+    // Order rules and fees from Admin > Platform configuration (maintenance, delivery switch,
+    // minimum order, delivery distance, platform + delivery fees)
+    const platformSettings = await getPlatformSettings();
+    const block = orderBlock({ orderType: order_type, itemsTotal }, platformSettings);
+    if (block) {
+      return res.status(block.status).json(block.body);
+    }
+
+    const maxDeliveryKm = Number(platformSettings.max_delivery_radius_km) || 0;
+    const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    if (
+      order_type === 'delivery' &&
+      maxDeliveryKm > 0 &&
+      UUID_RE.test(String(delivery_address_id || '')) &&
+      shop.latitude != null &&
+      shop.longitude != null
+    ) {
+      const addr = await user_addresses.findOne({ where: { id: delivery_address_id, user_id } });
+      if (addr && addr.latitude != null && addr.longitude != null) {
+        const km = distanceKm(shop.latitude, shop.longitude, addr.latitude, addr.longitude);
+        if (km > maxDeliveryKm) {
+          const msg = `${shop.shop_name || 'This store'} delivers within ${maxDeliveryKm} km and this address is about ${km.toFixed(1)} km away. Choose self-pickup or a closer address.`;
+          return res.status(400).json({ success: false, code: 'OUT_OF_DELIVERY_RANGE', error: msg, message: msg });
+        }
+      }
+    }
+
+    // Total = items + platform fee + delivery fee (what the customer pays)
+    const {
+      platformFee: parsedPlatformFee,
+      deliveryFee: parsedDeliveryFee,
+      total: totalAmount,
+    } = computeOrderFees({ itemsTotal, orderType: order_type }, platformSettings);
     const orderNumber = `RQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
     const newOrder = await orders.create({
@@ -282,15 +377,9 @@ router.get('/owner', async (req, res) => {
 // 2c. Get all orders across all shops for Platform Admin (Backup, Accounts & Auditing)
 router.get('/admin/all', async (req, res) => {
   try {
-    const { role_id, username } = req.headers;
     const { Op } = require('sequelize');
 
-    const isAdmin =
-      role_id === 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9' ||
-      username === 'admin' ||
-      username === 'root';
-
-    if (!isAdmin) {
+    if (!isAdminReq(req)) {
       return res.status(403).json({ error: 'Platform Super Admin access required' });
     }
 
@@ -426,6 +515,26 @@ router.put('/:id/status', async (req, res) => {
       return res.status(404).json({ error: 'Order not found' });
     }
 
+    // Shop owner and platform admin manage the order. The customer may only cancel their own order,
+    // and the assigned delivery partner may only mark it out for delivery or delivered.
+    const { user_id } = req.headers;
+    const isShopOwner = Boolean(order.shop?.owner_id) && order.shop.owner_id === user_id;
+    const isCustomerCancel = order.customer_id === user_id && status === 'cancelled';
+    const isDriverUpdate =
+      Boolean(order.delivery_partner_id) &&
+      order.delivery_partner_id === user_id &&
+      ['out_for_delivery', 'completed'].includes(status);
+    if (!isAdminReq(req) && !isShopOwner && !isCustomerCancel && !isDriverUpdate) {
+      return res.status(403).json({ success: false, error: 'You are not allowed to change this order status' });
+    }
+
+    if (!canMoveOrder(order.status, status)) {
+      return res.status(409).json({
+        success: false,
+        error: `Order cannot move from ${order.status} to ${status}`,
+      });
+    }
+
     const previousStatus = order.status;
     order.status = status;
     if (shop_upi_id) order.shop_upi_id = shop_upi_id;
@@ -523,7 +632,7 @@ router.get('/delivery/feed', async (req, res) => {
       include: [
         { model: order_items, as: 'items' },
         { model: shops, as: 'shop', attributes: ['id', 'shop_name', 'mobile_number', 'address', 'latitude', 'longitude'] },
-        { model: users, as: 'customer', attributes: ['id', 'username', 'mobile'] },
+        { model: users, as: 'customer', attributes: ['mobile'] },
       ],
       order: [['createdAt', 'DESC']],
     });
@@ -544,20 +653,40 @@ router.put('/:id/claim-delivery', async (req, res) => {
     const { id } = req.params;
     const { user_id } = req.headers;
 
-    const order = await orders.findByPk(id);
+    const order = await orders.findByPk(id, { attributes: ['id', 'order_type', 'status', 'delivery_partner_id'] });
     if (!order) {
-      return res.status(404).json({ error: 'Order not found' });
+      return res.status(404).json({ success: false, error: 'Order not found' });
+    }
+    if (order.order_type !== 'delivery') {
+      return res.status(409).json({ success: false, error: 'Only delivery orders can be claimed' });
+    }
+    if (order.delivery_partner_id) {
+      return res.status(409).json({ success: false, error: 'Order has already been claimed by a delivery partner' });
+    }
+    if (!CLAIMABLE_STATUSES.includes(order.status)) {
+      return res.status(409).json({ success: false, error: `Order is ${order.status} and cannot be claimed` });
     }
 
-    if (order.delivery_partner_id && order.delivery_partner_id !== user_id) {
-      return res.status(400).json({ error: 'Order has already been claimed by another delivery partner' });
+    // Conditional update: only one partner can win the race for an unassigned order
+    const [claimedRows] = await orders.update(
+      {
+        delivery_partner_id: user_id,
+        status: orders.sequelize.literal(
+          "CASE WHEN status = 'ready_for_pickup' THEN 'out_for_delivery' ELSE status END"
+        ),
+      },
+      {
+        where: {
+          id,
+          order_type: 'delivery',
+          delivery_partner_id: null,
+          status: CLAIMABLE_STATUSES,
+        },
+      }
+    );
+    if (claimedRows === 0) {
+      return res.status(409).json({ success: false, error: 'Order has already been claimed or is no longer available' });
     }
-
-    order.delivery_partner_id = user_id;
-    if (order.status === 'ready_for_pickup') {
-      order.status = 'out_for_delivery';
-    }
-    await order.save();
 
     const updated = await orders.findByPk(id, {
       include: [

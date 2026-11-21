@@ -9,9 +9,18 @@ const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
 const notificationsRouter = require('./notifications');
 const aiRouter = require('./ai');
+const platformRouter = require('./platform');
+const catalogRouter = require('./catalog');
+const { requireFeature } = require('../services/platformSettings');
 const { authMiddleware } = require('../auth');
 
 const router = express.Router();
+
+// Platform configuration (public GET, admin PUT) and the feature switches it controls
+router.use('/platform', platformRouter);
+router.post('/quotes', requireFeature('enable_quotes', { pauseInMaintenance: true }));
+router.post('/chat/create', requireFeature('enable_chat'));
+router.use('/ai', requireFeature('enable_ai_search'));
 
 router.use('/location', locationRouter);
 router.use('/shops', shopsRouter);
@@ -21,6 +30,8 @@ router.use('/listings', listingsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
 router.use('/notifications', notificationsRouter);
+// Master catalog: owner search/import, and the admin catalog console (each route checks its own auth)
+router.use('/catalog', catalogRouter);
 
 router.use(authMiddleware);
 

@@ -3,6 +3,11 @@ require('dotenv').config();
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+if (!process.env.AUTH_TOKEN) {
+  console.warn(
+    '[SECURITY] AUTH_TOKEN is not set. JWTs are signed with a weak built-in fallback secret, so tokens can be forged. Set AUTH_TOKEN in the environment before any non-dev deployment.'
+  );
+}
 const AUTH_TOKEN = process.env.AUTH_TOKEN || '12';
 const BCRYPT_ROUNDS = Number(process.env.BCRYPT_ROUNDS) || 12;
 
@@ -60,17 +65,24 @@ async function authMiddleware(req, res, next) {
 
 const ADMIN_ROLE_ID = 'd5e858d8-636c-4fc3-8c3a-0a76131c95e9';
 
-// Use after authMiddleware. Same rule as the orders/quotes admin endpoints.
+// True when the authenticated request belongs to a platform super admin (role only).
+// Use after authMiddleware, which copies role_id from the verified JWT into req.headers.
+const isAdminReq = (req) => {
+  const role_id = req && req.headers ? req.headers.role_id : undefined;
+  return role_id === ADMIN_ROLE_ID;
+};
+
+// Use after authMiddleware.
 function requireAdmin(req, res, next) {
-  const { role_id, username } = req.headers;
-  if (role_id === ADMIN_ROLE_ID || username === 'admin' || username === 'root') {
+  if (isAdminReq(req)) {
     return next();
   }
-  return res.status(403).json({ error: 'Platform Super Admin access required' });
+  return res.status(403).json({ success: false, error: 'Platform Super Admin access required' });
 }
 
 module.exports = {
   requireAdmin,
+  isAdminReq,
   generateHash,
   validateUser,
   generateJwt,

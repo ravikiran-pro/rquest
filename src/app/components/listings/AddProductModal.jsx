@@ -1,8 +1,9 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
   Modal,
   Form,
+  AutoComplete,
   Input,
   InputNumber,
   Select,
@@ -25,6 +26,7 @@ import {
   PlusCircleOutlined,
   SaveOutlined,
   EditOutlined,
+  SearchOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
 import { colors, radii, typography, shadows } from '../../styles/theme';
@@ -159,11 +161,17 @@ const AddProductModal = ({
   onSuccess,
   shop,
   editingItem = null,
-  width = 650,
+  width = 'min(650px, calc(100vw - 32px))',
   onOpenImportCsv = null,
 }) => {
   const [form] = Form.useForm();
   const [submitting, setSubmitting] = useState(false);
+  // Master-catalog autofill (new products only)
+  const [autofillText, setAutofillText] = useState('');
+  const [autofillDebounced, setAutofillDebounced] = useState('');
+  const [autofillOptions, setAutofillOptions] = useState([]);
+  const [autofillHidden, setAutofillHidden] = useState(false);
+  const autofillSeq = useRef(0);
   const [categoriesList, setCategoriesList] = useState([]);
   const [selectedCategoryId, setSelectedCategoryId] = useState(null);
 
@@ -213,6 +221,76 @@ const AddProductModal = ({
     }
     return [];
   }, [shop, activeCategory, isCustomShopForm]);
+
+  // Debounce the autofill search box
+  useEffect(() => {
+    const t = setTimeout(() => setAutofillDebounced(autofillText.trim()), 300);
+    return () => clearTimeout(t);
+  }, [autofillText]);
+
+  // Search the master catalog for new products. A failed search hides the box quietly.
+  useEffect(() => {
+    if (!open || editingItem) return;
+    if (autofillDebounced.length < 2) {
+      autofillSeq.current += 1;
+      setAutofillOptions([]);
+      return;
+    }
+    const seq = ++autofillSeq.current;
+    netWorkCall(
+      `${apiConfig.catalog_search}?q=${encodeURIComponent(autofillDebounced)}&limit=8`,
+      'GET',
+      null,
+      true
+    )
+      .then((res) => {
+        if (seq !== autofillSeq.current) return;
+        if (!res?.success || !Array.isArray(res.data)) {
+          setAutofillHidden(true);
+          setAutofillOptions([]);
+          return;
+        }
+        setAutofillHidden(false);
+        setAutofillOptions(
+          res.data.map((item) => ({
+            value: `${item.id}`,
+            item,
+            label: (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {item.name}
+                </div>
+                <div style={{ fontSize: 12, color: colors.textMuted }}>
+                  {[item.brand, item.quantity_label, item.category].filter(Boolean).join(' · ')}
+                </div>
+              </div>
+            ),
+          }))
+        );
+      })
+      .catch(() => {
+        if (seq !== autofillSeq.current) return;
+        setAutofillHidden(true);
+        setAutofillOptions([]);
+      });
+  }, [open, editingItem, autofillDebounced]);
+
+  // Prefill the fields this form has from a catalog item
+  const applyCatalogItem = (item) => {
+    const current = form.getFieldsValue(['name', 'img_url', 'description']);
+    const brandLine = [item.brand && `Brand: ${item.brand}`, item.quantity_label && `Pack: ${item.quantity_label}`]
+      .filter(Boolean)
+      .join(' · ');
+    const values = {};
+    if (item.name) values.name = item.name;
+    if (item.image_url) values.img_url = item.image_url;
+    if (brandLine && !current.description) values.description = brandLine;
+    form.setFieldsValue(values);
+    setAutofillText('');
+    setAutofillDebounced('');
+    setAutofillOptions([]);
+    message.success('Filled from master catalog. Review the details and set your price.');
+  };
 
   // Sync form values on open/edit
   useEffect(() => {
@@ -342,7 +420,8 @@ const AddProductModal = ({
       onCancel={onClose}
       footer={null}
       width={width}
-      style={{ maxWidth: 'calc(100vw - 24px)', top: 20 }}
+      style={{ maxWidth: 'calc(100vw - 32px)', top: 16 }}
+      styles={{ body: { maxHeight: 'max(300px, calc(100vh - 150px))', overflowY: 'auto', paddingRight: 4 } }}
       destroyOnHidden
     >
       <Form
@@ -351,6 +430,45 @@ const AddProductModal = ({
         onFinish={handleFinish}
         style={{ marginTop: 8, fontFamily: typography.fontFamily.body }}
       >
+        {/* Autofill from the master catalog (new products only) */}
+        {!editingItem && !autofillHidden && (
+          <div
+            style={{
+              background: colors.primaryLight,
+              border: `1px solid ${colors.verifiedChipBorder}`,
+              borderRadius: radii.lg,
+              padding: '10px 14px',
+              marginBottom: 16,
+            }}
+          >
+            <Text
+              strong
+              style={{ display: 'block', fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginBottom: 6 }}
+            >
+              Autofill from master catalog
+            </Text>
+            <AutoComplete
+              value={autofillText}
+              options={autofillOptions}
+              onChange={(v, option) => {
+                // A selection also fires onChange with the option; applyCatalogItem clears the box
+                if (!option) setAutofillText(typeof v === 'string' ? v : '');
+              }}
+              onSelect={(_, option) => applyCatalogItem(option.item)}
+              style={{ width: '100%' }}
+              popupMatchSelectWidth
+              aria-label="Autofill from master catalog"
+            >
+              <Input
+                prefix={<SearchOutlined style={{ color: colors.textMuted }} />}
+                placeholder="Start typing a product, e.g. amul butter"
+                size="large"
+                style={{ borderRadius: radii.md }}
+              />
+            </AutoComplete>
+          </div>
+        )}
+
         {/* Store Business Category Badge */}
         <div
           style={{
@@ -780,8 +898,13 @@ const AddProductModal = ({
           </Space>
         </div>
 
-        {/* Submit Buttons */}
-        <Flex justify="end" gap={10}>
+        {/* Submit Buttons (sticky at the bottom of the scrolling body so they stay reachable on phones) */}
+        <Flex
+          justify="end"
+          gap={10}
+          wrap="wrap"
+          style={{ position: 'sticky', bottom: -10, background: colors.surface, padding: '10px 0 2px', zIndex: 2 }}
+        >
           <Button
             onClick={onClose}
             style={{
@@ -823,7 +946,7 @@ AddProductModal.propTypes = {
   onOpenImportCsv: PropTypes.func,
   shop: PropTypes.object,
   editingItem: PropTypes.object,
-  width: PropTypes.number,
+  width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default AddProductModal;

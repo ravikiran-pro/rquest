@@ -1,6 +1,10 @@
+const { where, fn, col } = require('sequelize');
 const { generateHash, generateJwt } = require('../../auth');
 const { users } = require('../../models');
 const { sendPushNotification } = require('../../services/notificationService');
+
+const CUSTOMER_ROLE_ID = 'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d';
+const RESERVED_USERNAMES = ['admin', 'root'];
 
 const createUser = async (req, res) => {
   try {
@@ -9,6 +13,14 @@ const createUser = async (req, res) => {
     if (userDetails.mobile && userDetails.username && userDetails.password) {
       const cleanMobile = String(userDetails.mobile).trim();
       const cleanUsername = String(userDetails.username).trim();
+
+      if (RESERVED_USERNAMES.includes(cleanUsername.toLowerCase())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Username not available',
+          message: 'This username is reserved. Please choose another one.',
+        });
+      }
 
       const existingUser = await users.findOne({
         where: { mobile: cleanMobile },
@@ -22,11 +34,21 @@ const createUser = async (req, res) => {
         });
       }
 
+      const takenUsername = await users.findOne({
+        where: where(fn('LOWER', col('username')), cleanUsername.toLowerCase()),
+      });
+      if (takenUsername) {
+        return res.status(400).json({
+          success: false,
+          error: 'Username already taken',
+          message: 'This username is already taken. Please choose another one.',
+        });
+      }
+
       let hashedPassword = await generateHash(userDetails.password);
-      const roleId =
-        userDetails.userRole ||
-        userDetails.role_id ||
-        'c0f93a2f-16c9-49cf-b47b-e0c0a38a5a4d'; // Default to customer role
+      // Role is never taken from the request: every self-registered account starts as a customer.
+      // Shop creation promotes the account to merchant on the server.
+      const roleId = CUSTOMER_ROLE_ID;
 
       const payload = {
         username: cleanUsername,
@@ -55,7 +77,7 @@ const createUser = async (req, res) => {
             userId: user.id,
             username: user.username,
             role_id: user.role_id,
-            url: roleId === 'a5e858d8-636c-4fc3-8c3a-0a76131c95e5' ? '/client' : '/app',
+            url: '/app',
           },
         });
       } catch (notifErr) {

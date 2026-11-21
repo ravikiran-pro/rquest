@@ -8,19 +8,25 @@ Postgres schema**. It is fully isolated from the app:
 | No app code touched | Own `package.json` / `node_modules`; nothing imports from `src/`, and `src/` never imports this. Not included in `npm run build`. |
 | No app tables touched | Writes only `catalog.*` (schema-qualified everywhere). Linking catalog rows to `public.products` is a separate, explicit step that is **not** part of this folder. |
 | Dev server not disturbed | Raw downloads go to `~/.cache/rquest-catalog` (outside the repo); snapshots are `.ndjson.gz`, which nodemon ignores. (Editing pipeline `.js` files still restarts `npm run dev`, like any `.js` in the repo.) |
-| Own credentials | Reads `catalog/.env.catalog` → `CATALOG_DATABASE_URL`, never the app's `DB_*`. |
+| Database | By default uses the **app's own database** (the `DB_*` / `NODE_ENV` settings in the root `.env`, the same connection the API uses), so `catalog` sits next to `public`. Set `CATALOG_DATABASE_URL` in `catalog/.env.catalog` to use a different database. |
 
 ## Quick start
 
+The pipeline uses the app's database by default, so there is nothing to configure when the
+API already runs (`DB_*` in the root `.env`). From the repo root:
+
 ```bash
-cd catalog
-npm install
-cp .env.catalog.example .env.catalog   # set CATALOG_DATABASE_URL
-npm run migrate                        # create/upgrade the catalog schema
-node cli.js run-all --dry-run          # every source inside transactions, then ROLLBACK
-node cli.js run-all                    # real load of every source, then the duplicate finder
-npm run status                         # last runs, catalog health, open review items
+npm run catalog:install                # the pipeline's own dependencies (catalog/node_modules)
+npm run catalog:migrate                # create/upgrade the catalog schema (catalog.* only)
+cd catalog && node cli.js run-all --dry-run   # every source inside transactions, then ROLLBACK
+npm run catalog:load                   # real load of every source, then the duplicate finder
+npm run catalog:status                 # last runs, catalog health, open review items
 ```
+
+To load into another database instead, copy `catalog/.env.catalog.example` to
+`catalog/.env.catalog` and set `CATALOG_DATABASE_URL`; it overrides the app's settings.
+
+Until `catalog:migrate` has run, the admin catalog and owner search endpoints answer 503.
 
 Single sources: `node cli.js run <source> [--dry-run] [--force]`. Behind an HTTPS proxy,
 Node's built-in `fetch` needs `NODE_USE_ENV_PROXY=1` (Node ≥ 22.21).

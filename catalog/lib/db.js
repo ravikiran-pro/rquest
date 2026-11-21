@@ -12,8 +12,11 @@ const { config } = require('./env');
  */
 async function connect(databaseUrl = config().databaseUrl) {
   if (!databaseUrl) {
+    const missing = config().databaseMissing;
     throw new Error(
-      'CATALOG_DATABASE_URL is not set. Copy catalog/.env.catalog.example to catalog/.env.catalog.'
+      `No database configured${missing ? ` (missing ${missing.join(', ')})` : ''}. ` +
+        "Set the app's DB_* variables in the root .env (the catalog then uses the app's own " +
+        'database), or set CATALOG_DATABASE_URL in catalog/.env.catalog to use another one.'
     );
   }
   const client = new Client({

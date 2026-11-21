@@ -322,8 +322,8 @@ code {
 
 @media (max-width: 767px) {
   .app-route-shell {
-    min-height: calc(100vh - 58px);
-    min-height: calc(100dvh - 58px);
+    min-height: calc(100vh - 60px);
+    min-height: calc(100dvh - 60px);
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
   }
 
@@ -646,10 +646,7 @@ button.rquest-chat-fab:focus-visible {
     display: none !important;
   }
 
-  .navBar {
-    padding: 0 14px !important;
-    height: 60px !important;
-  }
+  /* .navBar phone height/padding (60px, 14px + safe-area) lives in components/navbar/index.css */
 
   .cart-floating-badge {
     width: calc(100% - 28px) !important;

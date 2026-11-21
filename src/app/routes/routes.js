@@ -4,7 +4,9 @@ const Routes = {
   search: '/search',
   login: '/login',
   client: '/client_register',
-  clientShop: '/client?shop_id=:shop_id',
+  // Legacy owner deep link used by server notifications ('/client', '/client?shop_id=…');
+  // redirected to /client_register with the query string kept.
+  clientShop: '/client',
   chat: '/chat',
   register: '/register',
   storefront: '/shop/:shop_id',

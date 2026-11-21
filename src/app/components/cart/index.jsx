@@ -133,6 +133,21 @@ const CartScreen = () => {
   const { cart, updateQuantity, removeItem, clearCart } = useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
+
+  // Fees come from Admin > Platform configuration. Until (or unless) the settings load, the
+  // cart shows the fees it always used: no platform fee and a Rs 30 delivery fee.
+  const [platformSettings, setPlatformSettings] = useState(null);
+  useEffect(() => {
+    let active = true;
+    netWorkCall(apiConfig.platform_settings, 'GET', null, false)
+      .then((res) => {
+        if (active && res?.success && res.data) setPlatformSettings(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
   const screens = Grid.useBreakpoint();
   // Two columns (items left, bill right) from laptop width up; single column below
   const isWide = !!screens.lg;
@@ -276,9 +291,17 @@ const CartScreen = () => {
 
   const itemCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const itemsTotal = cart.items.reduce((sum, item) => sum + item.unit_price * item.quantity, 0);
-  const deliveryFee = orderType === 'delivery' ? 30.0 : 0.0;
-  const platformFee = 0.0; // 0% commission direct commerce
-  const finalTotal = itemsTotal + deliveryFee;
+  // Display only: the server recomputes both fees from the settings when the order is placed
+  const platformFee = platformSettings ? Number(platformSettings.platform_fee) || 0 : 0;
+  const freeDeliveryOver = Number(platformSettings?.free_delivery_threshold) || 0;
+  const baseDeliveryFee = platformSettings ? Number(platformSettings.delivery_fee_base) || 0 : 30;
+  const deliveryFee =
+    orderType === 'delivery'
+      ? freeDeliveryOver > 0 && itemsTotal >= freeDeliveryOver
+        ? 0
+        : baseDeliveryFee
+      : 0.0;
+  const finalTotal = itemsTotal + deliveryFee + platformFee;
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
@@ -312,8 +335,6 @@ const CartScreen = () => {
         delivery_address: orderType === 'pickup' ? 'Store Self-Pickup' : address,
         customer_phone: phone,
         notes: notes,
-        platform_fee: platformFee,
-        delivery_fee: deliveryFee,
         items: cart.items.map((i) => ({
           listing_id: i.listing_id,
           item_name: i.item_name,
@@ -813,7 +834,7 @@ const CartScreen = () => {
         {orderType === 'delivery' && <SummaryRow label="Delivery fee" value={`₹${deliveryFee.toFixed(2)}`} />}
         <div className="rq-cart-summary-row">
           <span>Platform fee</span>
-          <span className="rq-cart-pill-free">Free</span>
+          {platformFee > 0 ? <strong>₹{platformFee.toFixed(2)}</strong> : <span className="rq-cart-pill-free">Free</span>}
         </div>
         <div className="rq-cart-summary-row rq-cart-summary-total">
           <span>Total</span>

@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import PropTypes from 'prop-types';
 import { Space, Table, Tag, Input, Button, Row, Col, Avatar, Upload } from 'antd';
-import { apiConfig, config } from '../../utils';
+import { apiConfig, config, storageKeys } from '../../utils';
 import { PlusOutlined, PictureOutlined, CloseOutlined, ShoppingOutlined } from '@ant-design/icons';
 import { colors, typography, radii } from '../../styles/theme';
 
@@ -62,8 +62,11 @@ const DataTable = ({ rows, columns, initRow, isAddNew, pagination, handleTableCh
       const formData = new FormData();
       formData.append('fileData', file);
 
+      const token =
+        sessionStorage.getItem(storageKeys.auth_token) || localStorage.getItem(storageKeys.auth_token);
       const response = await fetch(`${config.api_url}/api/v1/${apiConfig.upload}`, {
         method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
         body: formData,
       });
       const resJson = await response.json();
