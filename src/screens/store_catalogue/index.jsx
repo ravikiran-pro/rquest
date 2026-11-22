@@ -31,7 +31,9 @@ import {
   UploadOutlined,
   ReloadOutlined,
 } from '@ant-design/icons';
-import { apiConfig, netWorkCall, getShopSubCategoryIds } from '../../app/utils';
+import { apiConfig, netWorkCall, shopSubCategories } from '../../app/utils';
+import { codeText, apiErrorText, isCatalogueUnavailable } from '../../app/utils/catalogue_api';
+import { fallbackStockMode, DEFAULT_LOW_STOCK } from '../../app/utils/stock';
 import { AddProductModal, ImportProductCsvModal } from '../../app/components/listings';
 import routes from '../../app/routes/routes';
 import { colors } from '../../app/styles/theme';
@@ -43,8 +45,7 @@ const { Text } = Typography;
 const PAGE_SIZE = 50;
 const BULK_LIMIT = 200; // catalog/import-bulk accepts at most 200 items per call
 const SEARCH_DEBOUNCE_MS = 300;
-const SCOPE_SHOP = 'shop'; // the shop's own sub-categories (default)
-const SCOPE_ALL = 'all';
+const SCOPE_SHOP = 'shop'; // all of the shop's own sub-categories (owners can't browse others)
 
 const STATUS_TAG = {
   added: { color: 'success', text: 'Added' },
@@ -64,21 +65,41 @@ const KIND_OPTIONS = [
   { label: 'Services', value: 'service' },
 ];
 
-// Skip reasons from catalog/import-bulk, in words for the owner
-const SKIP_REASON_TEXT = {
-  already_added: 'already in your store',
-  not_found: 'no longer in the master catalogue',
-  invalid_price: 'price must be 0 or more',
-  invalid_stock: 'stock must be a whole number',
-  invalid_mrp: 'MRP must be 0 or more',
-  invalid: 'could not be added',
-};
-
 const formatRupees = (value) => {
   const n = Number(value);
   if (value === null || value === undefined || value === '' || Number.isNaN(n)) return null;
   return `₹${n.toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 };
+
+const STOCK_MODE_OPTIONS = [
+  { value: 'tracked', label: 'Count' },
+  { value: 'toggle', label: 'On/Off' },
+  { value: 'always', label: 'Always' },
+];
+
+const hintNumber = (v) => (Number(v) > 0 ? Number(v) : null);
+
+// Stock mode the API suggests for a catalogue row; services are always available
+const defaultModeFor = (item) =>
+  item.kind === 'service' ? 'always' : item.default_stock_mode || fallbackStockMode(item.kind === 'service' ? 'service' : 'product');
+
+/** First problem with a price / MRP / stock entry, or null. */
+const entryError = ({ price, mrp, mode, qty }) => {
+  if (price === null || price === undefined || !(Number(price) >= 0)) return 'Enter a price';
+  if (mrp !== null && mrp !== undefined && mrp !== '' && Number(price) > Number(mrp)) return 'Price is above MRP';
+  if (mode === 'tracked' && (qty === null || qty === undefined || !(Number(qty) >= 0))) return 'Enter the stock quantity';
+  return null;
+};
+
+/** One catalog/import(-bulk) item in the spec §E5 shape. */
+const importItem = (item, { price, mrp, mode, qty }) => ({
+  item_id: item.id,
+  price: Number(price),
+  ...(mrp !== null && mrp !== undefined && mrp !== '' ? { mrp: Number(mrp) } : {}),
+  ...(item.sub_category_id ? { sub_category_id: item.sub_category_id } : {}),
+  stock_mode: mode,
+  ...(mode === 'tracked' ? { stock_qty: Number(qty), low_stock_threshold: DEFAULT_LOW_STOCK } : {}),
+});
 
 const categoryText = (path) => (Array.isArray(path) ? path.filter(Boolean).join(' › ') : path || '');
 
@@ -139,38 +160,36 @@ ItemName.propTypes = { item: PropTypes.object.isRequired };
 /* ------------------------------------------------------------------ */
 
 const SingleAddModal = ({ item, shopId, onClose, onAdded }) => {
-  const hint = Number(item.price_hint);
-  const [price, setPrice] = useState(hint > 0 ? hint : null);
-  const [mrp, setMrp] = useState(null);
-  const [stock, setStock] = useState(null);
+  const mrpHint = hintNumber(item.mrp_hint);
+  const [price, setPrice] = useState(mrpHint ?? hintNumber(item.price_hint));
+  const [mrp, setMrp] = useState(mrpHint);
+  const [mode, setMode] = useState(defaultModeFor(item));
+  const [qty, setQty] = useState(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
   const submit = async () => {
-    if (!(Number(price) > 0)) {
-      setError('Enter a price greater than 0');
+    const problem = entryError({ price, mrp, mode, qty });
+    if (problem) {
+      setError(problem);
       return;
     }
     setSaving(true);
     setError(null);
     let outcome = null;
     try {
-      const body = {
-        shop_id: shopId,
-        item_id: item.id,
-        price: Number(price),
-        ...(mrp ? { mrp: Number(mrp) } : {}),
-        ...(stock !== null && stock !== undefined ? { stock_quantity: Number(stock) } : {}),
-      };
+      const body = { shop_id: shopId, ...importItem(item, { price, mrp, mode, qty }) };
       const res = await netWorkCall(apiConfig.catalog_import, 'POST', JSON.stringify(body), true);
       if (res?.success) {
-        message.success(res.message || `${item.name} added to your store`);
+        message.success(`${item.name} added to your store`);
         outcome = 'added';
-      } else if (/already|409/i.test(`${res?.error || ''} ${res?.message || ''}`)) {
-        message.info('This item is already in your store');
+      } else if (res?.httpStatus === 409 || res?.code === 'already_added') {
+        message.info(codeText('already_added'));
         outcome = 'added';
+      } else if (isCatalogueUnavailable(res)) {
+        setError('Catalogue not available yet');
       } else {
-        setError(res?.error || res?.message || 'Could not add this item');
+        setError(apiErrorText(res, 'Could not add this item'));
       }
     } catch (err) {
       setError('Network error. Please try again.');
@@ -185,7 +204,7 @@ const SingleAddModal = ({ item, shopId, onClose, onAdded }) => {
       open
       title={`Add ${item.name}`}
       onCancel={onClose}
-      destroyOnHidden
+      destroyOnClose
       width="min(480px, calc(100vw - 32px))"
       footer={
         <Flex justify="end" gap={8} wrap="wrap">
@@ -197,7 +216,7 @@ const SingleAddModal = ({ item, shopId, onClose, onAdded }) => {
       }
     >
       <Text style={{ display: 'block', fontSize: 13, color: colors.textMuted, marginBottom: 12 }}>
-        Your store keeps its own copy. Changes here don&apos;t affect the master catalogue.
+        Brand, pack size and other details come from the catalogue. Set your price and stock.
       </Text>
       <Flex vertical gap={12}>
         <div>
@@ -216,12 +235,21 @@ const SingleAddModal = ({ item, shopId, onClose, onAdded }) => {
           />
         </div>
         <div>
-          <Text strong>Standard rate / MRP (₹)</Text>
-          <InputNumber size="large" min={0} precision={2} value={mrp} onChange={setMrp} style={{ width: '100%', marginTop: 4 }} />
+          <Text strong>MRP (₹)</Text>
+          <InputNumber size="large" min={0} precision={2} value={mrp} onChange={setMrp} style={{ width: '100%', marginTop: 4 }} aria-label="MRP" />
         </div>
         <div>
-          <Text strong>Stock</Text>
-          <InputNumber size="large" min={0} precision={0} placeholder="Optional" value={stock} onChange={setStock} style={{ width: '100%', marginTop: 4 }} />
+          <Text strong>Stock *</Text>
+          {item.kind === 'service' ? (
+            <div style={{ marginTop: 4, color: colors.textMuted }}>Always available</div>
+          ) : (
+            <Flex gap={8} wrap="wrap" align="center" style={{ marginTop: 4 }}>
+              <Segmented options={STOCK_MODE_OPTIONS} value={mode} onChange={setMode} aria-label="How you track stock" />
+              {mode === 'tracked' && (
+                <InputNumber size="large" min={0} precision={0} placeholder="Quantity" value={qty} onChange={setQty} style={{ width: 130 }} aria-label="Quantity in stock" />
+              )}
+            </Flex>
+          )}
         </div>
         {error && <Alert type="error" showIcon message={error} />}
       </Flex>
@@ -241,23 +269,36 @@ SingleAddModal.propTypes = {
 /* ------------------------------------------------------------------ */
 
 const BulkAddModal = ({ items, shopId, onClose, onDone }) => {
-  const [prices, setPrices] = useState(() => {
+  const [entries, setEntries] = useState(() => {
     const init = {};
     items.forEach((it) => {
-      const hint = Number(it.price_hint);
-      if (hint > 0) init[it.id] = hint;
+      const mrpHint = hintNumber(it.mrp_hint);
+      init[it.id] = { price: mrpHint ?? hintNumber(it.price_hint), mrp: mrpHint, mode: defaultModeFor(it), qty: null };
     });
     return init;
   });
-  const [stocks, setStocks] = useState({});
+  const [stockForAll, setStockForAll] = useState(null);
   const [saving, setSaving] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState(null);
+  const [showErrors, setShowErrors] = useState(false);
+
+  const setEntry = (id, patch) => setEntries((e) => ({ ...e, [id]: { ...e[id], ...patch } }));
+  const applyAll = (fn) =>
+    setEntries((e) => {
+      const next = { ...e };
+      items.forEach((it) => {
+        const patch = fn(next[it.id]);
+        if (patch) next[it.id] = { ...next[it.id], ...patch };
+      });
+      return next;
+    });
 
   const submit = async () => {
-    const missing = items.filter((it) => !(Number(prices[it.id]) > 0));
-    if (missing.length > 0) {
-      setError(`Enter a price above 0 for ${missing.length} item${missing.length === 1 ? '' : 's'}.`);
+    const bad = items.filter((it) => entryError(entries[it.id]));
+    if (bad.length > 0) {
+      setShowErrors(true);
+      setError(`Fix ${bad.length} item${bad.length === 1 ? '' : 's'}: each needs a price (not above MRP) and, when counting stock, a quantity.`);
       return;
     }
     setSaving(true);
@@ -266,11 +307,7 @@ const BulkAddModal = ({ items, shopId, onClose, onDone }) => {
     const skipped = [];
     let failure = null;
     for (let start = 0; start < items.length; start += BULK_LIMIT) {
-      const chunk = items.slice(start, start + BULK_LIMIT).map((it) => ({
-        item_id: it.id,
-        price: Number(prices[it.id]),
-        ...(stocks[it.id] !== null && stocks[it.id] !== undefined ? { stock: Number(stocks[it.id]) } : {}),
-      }));
+      const chunk = items.slice(start, start + BULK_LIMIT).map((it) => importItem(it, entries[it.id]));
       try {
         const res = await netWorkCall(
           apiConfig.catalog_import_bulk,
@@ -278,10 +315,15 @@ const BulkAddModal = ({ items, shopId, onClose, onDone }) => {
           JSON.stringify({ shop_id: shopId, items: chunk }),
           true
         );
-        if (!Array.isArray(res?.created)) {
-          failure = res?.error || res?.message || 'Some items could not be added. Try again.';
+        if (isCatalogueUnavailable(res)) {
+          failure = 'Catalogue not available yet.';
           break;
         }
+        if (!Array.isArray(res?.created)) {
+          failure = apiErrorText(res, 'Some items could not be added. Try again.');
+          break;
+        }
+        // created is [{ item_id, listing_id }]
         created.push(...res.created);
         skipped.push(...(Array.isArray(res.skipped) ? res.skipped : []));
       } catch (err) {
@@ -305,8 +347,8 @@ const BulkAddModal = ({ items, shopId, onClose, onDone }) => {
       onCancel={saving ? undefined : onClose}
       closable={!saving}
       maskClosable={!saving}
-      destroyOnHidden
-      width="min(640px, calc(100vw - 32px))"
+      destroyOnClose
+      width="min(720px, calc(100vw - 32px))"
       footer={
         <Flex justify="end" gap={8} wrap="wrap">
           <Button onClick={onClose} disabled={saving} style={{ minHeight: 44 }}>Cancel</Button>
@@ -317,39 +359,73 @@ const BulkAddModal = ({ items, shopId, onClose, onDone }) => {
       }
     >
       <Text style={{ display: 'block', fontSize: 13, color: colors.textMuted, marginBottom: 8 }}>
-        Your store keeps its own copy. Changes here don&apos;t affect the master catalogue. Each item needs a price.
+        Each item needs a price and a stock choice. Brand and pack details come from the catalogue.
       </Text>
+      <Flex wrap="wrap" gap={8} align="center" style={{ marginBottom: 10 }}>
+        <Button size="small" onClick={() => applyAll((e) => (e.mrp ? { price: e.mrp } : null))} disabled={saving}>
+          Price = MRP
+        </Button>
+        <Text style={{ fontSize: 12, color: colors.textMuted }}>Stock for all</Text>
+        <InputNumber size="small" min={0} precision={0} value={stockForAll} onChange={setStockForAll} style={{ width: 80 }} aria-label="Stock for all counted items" />
+        <Button size="small" disabled={saving || stockForAll === null} onClick={() => applyAll((e) => (e.mode === 'tracked' ? { qty: stockForAll } : null))}>
+          Apply
+        </Button>
+      </Flex>
       {error && <Alert type="error" showIcon message={error} style={{ marginBottom: 8 }} />}
       <div className="sc-bulk-list">
-        {items.map((it) => (
-          <div className="sc-bulk-row" key={it.id}>
-            <div className="sc-bulk-row-name">
-              <div className="sc-item-name">{it.name}</div>
-              <div className="sc-item-meta">{[it.brand, it.size, it.unit].filter(Boolean).join(' · ')}</div>
+        {items.map((it) => {
+          const e = entries[it.id];
+          const problem = showErrors ? entryError(e) : e.mrp && Number(e.price) > Number(e.mrp) ? 'Price is above MRP' : null;
+          return (
+            <div className="sc-bulk-row" key={it.id} style={{ flexWrap: 'wrap' }}>
+              <div className="sc-bulk-row-name">
+                <div className="sc-item-name">{it.name}</div>
+                <div className="sc-item-meta">{[it.brand, it.size, it.unit].filter(Boolean).join(' · ')}</div>
+                {problem && <div style={{ color: colors.semantic.error, fontSize: 12 }}>{problem}</div>}
+              </div>
+              <InputNumber
+                min={0}
+                precision={2}
+                prefix="₹"
+                placeholder="Price *"
+                value={e.price ?? null}
+                disabled={saving}
+                status={problem && problem.startsWith('Price') ? 'error' : undefined}
+                onChange={(v) => setEntry(it.id, { price: v })}
+                style={{ width: 120, minHeight: 44 }}
+                aria-label={`Price for ${it.name}`}
+              />
+              <InputNumber
+                min={0}
+                precision={2}
+                placeholder="MRP"
+                value={e.mrp ?? null}
+                disabled={saving}
+                onChange={(v) => setEntry(it.id, { mrp: v })}
+                style={{ width: 100, minHeight: 44 }}
+                aria-label={`MRP for ${it.name}`}
+              />
+              {it.kind === 'service' ? (
+                <Text style={{ fontSize: 12, color: colors.textMuted }}>Always available</Text>
+              ) : (
+                <Segmented size="small" options={STOCK_MODE_OPTIONS} value={e.mode} disabled={saving} onChange={(m) => setEntry(it.id, { mode: m })} aria-label={`Stock mode for ${it.name}`} />
+              )}
+              {e.mode === 'tracked' && (
+                <InputNumber
+                  min={0}
+                  precision={0}
+                  placeholder="Stock *"
+                  value={e.qty ?? null}
+                  disabled={saving}
+                  status={problem && problem.includes('stock') ? 'error' : undefined}
+                  onChange={(v) => setEntry(it.id, { qty: v })}
+                  style={{ width: 100, minHeight: 44 }}
+                  aria-label={`Stock for ${it.name}`}
+                />
+              )}
             </div>
-            <InputNumber
-              min={0}
-              precision={2}
-              prefix="₹"
-              placeholder="Price *"
-              value={prices[it.id] ?? null}
-              disabled={saving}
-              onChange={(v) => setPrices((p) => ({ ...p, [it.id]: v }))}
-              style={{ width: 130, minHeight: 44 }}
-              aria-label={`Price for ${it.name}`}
-            />
-            <InputNumber
-              min={0}
-              precision={0}
-              placeholder="Stock"
-              value={stocks[it.id] ?? null}
-              disabled={saving}
-              onChange={(v) => setStocks((s) => ({ ...s, [it.id]: v }))}
-              style={{ width: 100, minHeight: 44 }}
-              aria-label={`Stock for ${it.name}`}
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </Modal>
   );
@@ -376,7 +452,6 @@ const StoreCatalogueScreen = () => {
 
   const [shops, setShops] = useState([]);
   const [shopsLoaded, setShopsLoaded] = useState(false);
-  const [categories, setCategories] = useState([]);
   const [listings, setListings] = useState([]);
 
   const [scope, setScope] = useState(SCOPE_SHOP);
@@ -407,7 +482,7 @@ const StoreCatalogueScreen = () => {
     [shops, shopParam]
   );
   const shopId = shop?.id ?? null;
-  const shopSubIds = useMemo(() => getShopSubCategoryIds(shop), [shop]);
+  const shopSubs = useMemo(() => shopSubCategories(shop), [shop]);
 
   // Shops: the owner's stores (the same list the listings page uses)
   useEffect(() => {
@@ -420,19 +495,6 @@ const StoreCatalogueScreen = () => {
       .finally(() => {
         if (!cancelled) setShopsLoaded(true);
       });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Category tree with each category's sub-categories (for the selector)
-  useEffect(() => {
-    let cancelled = false;
-    netWorkCall(apiConfig.my_categories, 'GET', null, false)
-      .then((res) => {
-        if (!cancelled && Array.isArray(res?.data)) setCategories(res.data);
-      })
-      .catch(() => {});
     return () => {
       cancelled = true;
     };
@@ -467,8 +529,7 @@ const StoreCatalogueScreen = () => {
     params.set('limit', String(pageSize));
     params.set('offset', String((page - 1) * pageSize));
     if (q) params.set('q', q);
-    if (scope === SCOPE_ALL) params.set('all', '1');
-    else if (scope !== SCOPE_SHOP) params.set('sub_category_id', String(scope));
+    if (scope !== SCOPE_SHOP) params.set('sub_category_id', String(scope));
     if (kindFilter !== 'all') params.set('kind', kindFilter);
     if (statusFilter !== 'all') params.set('status', statusFilter);
 
@@ -480,7 +541,11 @@ const StoreCatalogueScreen = () => {
         if (!Array.isArray(res?.data)) {
           setRows([]);
           setTotal(0);
-          setLoadError(res?.error || res?.message || 'Could not load the master catalogue.');
+          setLoadError(
+            isCatalogueUnavailable(res)
+              ? 'Catalogue not available yet. You can still add custom items or import a CSV from your store.'
+              : apiErrorText(res, 'Could not load the master catalogue.')
+          );
           return;
         }
         setRows(res.data);
@@ -526,25 +591,14 @@ const StoreCatalogueScreen = () => {
     [rows, listingsById]
   );
 
-  const scopeOptions = useMemo(() => {
-    const groups = categories
-      .filter((c) => (c.sub_categories || []).length > 0)
-      .map((c) => ({
-        label: c.name,
-        options: c.sub_categories.map((sc) => ({ value: sc.id, label: sc.name })),
-      }));
-    const subNames = shopSubIds
-      .map((id) => categories.flatMap((c) => c.sub_categories || []).find((sc) => sc.id === id)?.name)
-      .filter(Boolean);
-    return [
-      {
-        value: SCOPE_SHOP,
-        label: subNames.length > 0 ? `Your store: ${subNames.join(', ')}` : 'Your store categories',
-      },
-      { value: SCOPE_ALL, label: 'All categories' },
-      ...groups,
-    ];
-  }, [categories, shopSubIds]);
+  // Owners browse only their own sub-categories (spec §B1.1)
+  const scopeOptions = useMemo(
+    () => [
+      { value: SCOPE_SHOP, label: shopSubs.length > 1 ? 'All my categories' : shopSubs[0]?.name || 'Your store categories' },
+      ...(shopSubs.length > 1 ? shopSubs.map((sc) => ({ value: sc.id, label: sc.name })) : []),
+    ],
+    [shopSubs]
+  );
 
   const changeScope = (value) => {
     setScope(value);
@@ -656,11 +710,11 @@ const StoreCatalogueScreen = () => {
       render: (_, item) => categoryText(item.category_path) || '—',
     },
     {
-      title: 'Price hint',
+      title: 'MRP',
       key: 'price_hint',
       width: 110,
       align: 'right',
-      render: (_, item) => formatRupees(item.price_hint) || '—',
+      render: (_, item) => formatRupees(item.mrp_hint ?? item.price_hint) || '—',
     },
     {
       title: 'Status',
@@ -742,8 +796,8 @@ const StoreCatalogueScreen = () => {
                 </div>
                 <Flex align="center" gap={8} wrap="wrap" style={{ marginTop: 6 }}>
                   <StatusTag status={item._status} />
-                  {formatRupees(item.price_hint) && (
-                    <Text style={{ fontSize: 13 }}>Hint {formatRupees(item.price_hint)}</Text>
+                  {formatRupees(item.mrp_hint ?? item.price_hint) && (
+                    <Text style={{ fontSize: 13 }}>MRP {formatRupees(item.mrp_hint ?? item.price_hint)}</Text>
                   )}
                 </Flex>
               </div>
@@ -815,7 +869,12 @@ const StoreCatalogueScreen = () => {
       </div>
 
       <p className="sc-note">
-        Your store keeps its own copy. Changes here don&apos;t affect the master catalogue.
+        Your store keeps its own copy with the catalogue&apos;s details. Changes here don&apos;t affect the master catalogue.{' '}
+        {shopId && (
+          <Button type="link" size="small" style={{ padding: 0 }} onClick={() => history.push(`${routes.client}?shop_id=${shopId}&add=catalogue`)}>
+            Try the quick picker in Manage store
+          </Button>
+        )}
       </p>
 
       <div className="ms-filterbar sc-filterbar">
@@ -907,7 +966,7 @@ const StoreCatalogueScreen = () => {
                 <ul style={{ maxHeight: 240, overflowY: 'auto', paddingLeft: 18, margin: 0 }}>
                   {summary.skipped.map((s) => (
                     <li key={`${s.item_id}-${s.reason}`} style={{ marginBottom: 4, fontSize: 13 }}>
-                      {s.name}: {SKIP_REASON_TEXT[s.reason] || s.reason}
+                      {s.name}: {s.message || codeText(s.reason, 'Could not be added')}
                     </li>
                   ))}
                 </ul>

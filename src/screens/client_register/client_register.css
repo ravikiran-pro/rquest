@@ -1859,6 +1859,32 @@
     padding: 0 6px;
   }
 
+  /* Tab bar scrolls sideways so all six tabs stay reachable at 360px (no antd arrows, native scroll) */
+  .ms-tabs .ant-tabs-nav .ant-tabs-nav-wrap {
+    min-width: 0;
+    overflow-x: auto !important;
+    scrollbar-width: none;
+    transform: none !important;
+  }
+
+  .ms-tabs .ant-tabs-nav .ant-tabs-nav-wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ms-tabs .ant-tabs-nav .ant-tabs-nav-operations {
+    display: none !important;
+  }
+
+  .ms-tabs .ant-tabs-nav .ant-tabs-nav-list {
+    flex-wrap: nowrap;
+    transform: none !important;
+    transition: none;
+  }
+
+  .ms-tabs .ant-tabs-nav .ant-tabs-tab {
+    flex: 0 0 auto;
+  }
+
   .ms-tabs .ant-tabs-tab + .ant-tabs-tab {
     margin-left: 0 !important;
   }

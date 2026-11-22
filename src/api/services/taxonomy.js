@@ -7,7 +7,7 @@
  * can use it without loading the app's models.
  */
 const { CATEGORIES, SUB_CATEGORIES } = require('../data/taxonomy');
-const { FORM_TEMPLATES, normalizeSchema } = require('./formSchema');
+const { FORM_TEMPLATES, normalizeSchema, annotateFieldSources } = require('./formSchema');
 
 const LISTING_TYPES = ['product', 'food', 'service', 'rental'];
 const KEY_PATTERN = /^[a-z][a-z0-9_]{1,49}$/;
@@ -28,7 +28,8 @@ const buildSubCategoryForm = (sub) => {
     ...template.fields.filter((f) => !omit.has(f.key)),
     ...(sub.extra_fields || []),
   ];
-  const { schema, errors } = normalizeSchema(fields);
+  // Extra fields carry no ownership props; known catalogue keys (brand, ...) get them here
+  const { schema, errors } = normalizeSchema(annotateFieldSources(fields));
   if (errors.length) {
     throw new Error(`${sub.key}: ${errors.map((e) => e.message).join('; ')}`);
   }

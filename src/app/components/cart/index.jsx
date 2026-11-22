@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
+  Alert,
   Button,
   Input,
   Radio,
@@ -130,7 +131,7 @@ export const CartOpenBridge = () => {
 
 const CartScreen = () => {
   const history = useHistory();
-  const { cart, updateQuantity, removeItem, clearCart } = useCartStore((state) => state);
+  const { cart, updateQuantity, removeItem, clearCart, markStockIssues, resolveStockIssues } = useCartStore((state) => state);
   const { user_data } = useGlobalStore((state) => state);
   const { handleChatOpen } = useChatStore((state) => state);
 
@@ -302,6 +303,9 @@ const CartScreen = () => {
         : baseDeliveryFee
       : 0.0;
   const finalTotal = itemsTotal + deliveryFee + platformFee;
+  // Lines the store said it can't fill (409 OUT_OF_STOCK) block the order until fixed
+  const stockIssueLines = cart.items.filter((i) => i.stock_issue && i.quantity > i.stock_issue.available);
+  const hasStockIssues = stockIssueLines.length > 0;
 
   const handlePlaceOrder = async () => {
     if (!user_data?.user_id) {
@@ -347,7 +351,19 @@ const CartScreen = () => {
 
       const res = await netWorkCall(apiConfig.orders_create, 'POST', JSON.stringify(payload), true);
 
-      if (res?.data) {
+      if (res?.httpStatus === 409 && res?.code === 'OUT_OF_STOCK') {
+        // Nothing was ordered: mark the lines the store can't fill and let the customer fix them
+        const issues = Array.isArray(res.items) ? res.items : [];
+        markStockIssues(issues);
+        const n = issues.length;
+        const text =
+          n > 0
+            ? `${n} ${n === 1 ? 'item' : 'items'} went out of stock. Update your cart to continue.`
+            : 'Some items went out of stock. Update your cart to continue.';
+        setLiveMessage(text);
+        message.warning(text);
+        setTimeout(() => itemsHeadingRef.current?.focus(), 0);
+      } else if (res?.data) {
         setOrderSuccess(res.data);
         clearCart();
         clearCheckoutDraft();
@@ -490,7 +506,7 @@ const CartScreen = () => {
         </div>
       )}
       {user_data?.user_id ? (
-        <Button type="primary" size="large" block loading={loading} onClick={handlePlaceOrder}>
+        <Button type="primary" size="large" block loading={loading} disabled={hasStockIssues} onClick={handlePlaceOrder}>
           {compact ? 'Place order' : `Place order · ₹${finalTotal.toFixed(2)}`}
         </Button>
       ) : (
@@ -596,6 +612,23 @@ const CartScreen = () => {
         {liveMessage}
       </div>
 
+      {hasStockIssues && (
+        <Alert
+          type="warning"
+          showIcon
+          style={{ marginBottom: 12 }}
+          message={`${stockIssueLines.length} ${stockIssueLines.length === 1 ? 'item' : 'items'} went out of stock. Remove them to continue.`}
+          description={stockIssueLines
+            .map((i) => (i.stock_issue.available > 0 ? `${i.item_name}: only ${i.stock_issue.available} left` : `${i.item_name}: out of stock`))
+            .join(' · ')}
+          action={
+            <Button size="small" onClick={resolveStockIssues}>
+              Update cart
+            </Button>
+          }
+        />
+      )}
+
       {cart.items.map((item) => (
         <div key={item.listing_id} className="rq-cart-item">
           {item.img_url ? (
@@ -615,6 +648,11 @@ const CartScreen = () => {
               {item.unit ? ` / ${item.unit}` : ''}
             </div>
             <div className="rq-cart-item-line">₹{(item.unit_price * item.quantity).toFixed(2)}</div>
+            {item.stock_issue && item.quantity > item.stock_issue.available && (
+              <div className="rq-cart-item-stock" role="status" style={{ color: 'var(--error-hover, #b3261e)', fontSize: 12, fontWeight: 600 }}>
+                {item.stock_issue.available > 0 ? `Only ${item.stock_issue.available} available` : 'Out of stock'}
+              </div>
+            )}
           </div>
 
           <div className="rq-qty" role="group" aria-label={`Quantity of ${item.item_name}`}>
@@ -633,6 +671,10 @@ const CartScreen = () => {
               type="text"
               icon={<PlusOutlined />}
               onClick={() => updateQuantity(item.listing_id, 1)}
+              disabled={
+                (item.max_qty !== null && item.max_qty !== undefined && item.quantity >= item.max_qty) ||
+                Boolean(item.stock_issue)
+              }
               aria-label={`Increase quantity of ${item.item_name}`}
             />
           </div>

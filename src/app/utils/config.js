@@ -90,6 +90,17 @@ export const apiConfig = {
   listings_update: 'listings',
   listings_delete: 'listings',
   listings_import_master: 'listings/import-master',
+  // Catalogue / inventory / sections / store forms (docs/catalogue/03-spec.md §E8)
+  listings_storefront: 'listings/shop', // + `/${shop_id}/storefront`
+  listings_manage: 'listings/manage', // + `/${shop_id}`
+  listings_inventory: 'listings/inventory', // PATCH
+  listings_assign_section: 'listings/section', // PATCH
+  sections_shop: 'sections/shop', // + `/${shop_id}`
+  sections_manage: 'sections/manage', // + `/${shop_id}`
+  sections_create: 'sections', // POST
+  sections_update: 'sections', // PUT/DELETE + `/${id}`
+  sections_reorder: 'sections/reorder', // PUT
+  forms_shop: 'forms/shop', // GET + `/${shop_id}`; PUT/DELETE + `/${shop_id}/${sub_id}`; GET + `/${shop_id}/${sub_id}/resolved`
 
   orders_create: 'orders',
   orders_user: 'orders/user',

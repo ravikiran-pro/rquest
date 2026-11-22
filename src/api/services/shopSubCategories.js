@@ -7,6 +7,7 @@
  */
 const { Op, literal } = require('sequelize');
 const { shops, sub_categories, shop_sub_categories } = require('../models');
+const { ensureAutoSections } = require('./sections');
 
 /** Platform default cap for a new shop (GET /shops/my_categories returns it as limits). */
 const DEFAULT_MAX_SUB_CATEGORIES = 5;
@@ -80,6 +81,8 @@ async function loadSubCategories(ids, { allowInactive = false, transaction } = {
 /**
  * Replace a shop's sub-category list (ordered) and its primary columns, in the caller's
  * transaction. ids must already be validated. Empty ids clear the list and the primary.
+ * Then each sub-category gets its auto storefront section, and the auto sections of removed
+ * sub-categories become manual ones (their listings stay visible).
  */
 async function saveShopSubCategories(shopId, ids, { transaction, categoryId } = {}) {
   await shop_sub_categories.destroy({ where: { shop_id: shopId }, transaction });
@@ -96,6 +99,37 @@ async function saveShopSubCategories(shopId, ids, { transaction, categoryId } = 
     },
     { where: { id: shopId }, transaction }
   );
+  await ensureAutoSections(shopId, { transaction });
+}
+
+/** The shop's sub-categories for API responses: [{ id, key, name, listing_type, position }]. */
+async function subCategoriesForShop(shop, { transaction } = {}) {
+  const links = await shop_sub_categories.findAll({
+    where: { shop_id: shop.id },
+    attributes: ['sub_category_id', 'position'],
+    order: [
+      ['position', 'ASC'],
+      ['id', 'ASC'],
+    ],
+    raw: true,
+    transaction,
+  });
+  const ordered = links.length
+    ? links.map((l) => ({ id: l.sub_category_id, position: l.position }))
+    : shop.sub_category_id
+      ? [{ id: shop.sub_category_id, position: 0 }]
+      : [];
+  if (!ordered.length) return [];
+  const rows = await sub_categories.findAll({
+    where: { id: ordered.map((o) => o.id) },
+    attributes: ['id', 'key', 'name', 'listing_type'],
+    raw: true,
+    transaction,
+  });
+  const byId = new Map(rows.map((r) => [r.id, r]));
+  return ordered
+    .filter((o) => byId.has(o.id))
+    .map((o) => ({ ...byId.get(o.id), position: o.position }));
 }
 
 /** Ordered sub-category ids for a set of shop ids: Map<shopId, number[]>. */
@@ -165,6 +199,7 @@ module.exports = {
   capError,
   loadSubCategories,
   saveShopSubCategories,
+  subCategoriesForShop,
   subCategoryIdsByShop,
   serializeShops,
   subCategoryFilter,

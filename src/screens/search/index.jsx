@@ -1186,7 +1186,11 @@ const SearchScreen = () => {
                           item={item}
                           onOrder={(it) => {
                             // Cart is keyed by shop: pass the listing's shop alongside the item
-                            addItem(it.shop, it);
+                            const added = addItem(it.shop, it);
+                            if (added && added.ok === false) {
+                              message.warning(added.reason === 'max' ? `Only ${added.max} in stock` : 'This item is out of stock');
+                              return;
+                            }
                             openCart();
                           }}
                         />

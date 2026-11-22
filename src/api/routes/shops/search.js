@@ -1,6 +1,6 @@
 const { shops, categories, sub_categories } = require('../../models');
 const { Op, literal } = require('sequelize');
-const { serializeShops, subCategoryFilter } = require('../../services/shopSubCategories');
+const { serializeShops, subCategoryFilter, subCategoriesForShop } = require('../../services/shopSubCategories');
 
 // Category and sub-category as shops carry them. The sub-category form is what the
 // shop's listings follow (unless the shop has its own form).
@@ -155,8 +155,11 @@ const getShopDetails = async (req, res) => {
       return res.status(404).json({ error: 'Shop not found', success: false });
     }
 
+    const data = await serializeShops(shop);
+    // Ordered sub-categories with their keys and listing types (storefront section chips, forms)
+    if (!data.sub_categories) data.sub_categories = await subCategoriesForShop(shop);
     res.status(200).json({
-      data: await serializeShops(shop),
+      data,
       success: true,
     });
   } catch (error) {

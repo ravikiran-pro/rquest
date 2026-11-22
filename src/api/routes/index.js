@@ -4,6 +4,8 @@ const userRouter = require('./user');
 const chatRouter = require('./chats');
 const masterRouter = require('./master');
 const listingsRouter = require('./listings');
+const sectionsRouter = require('./sections');
+const formsRouter = require('./forms');
 const ordersRouter = require('./orders');
 const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
@@ -28,6 +30,9 @@ router.use('/shops', shopsRouter);
 router.use('/user', userRouter);
 router.use('/master', masterRouter);
 router.use('/listings', listingsRouter);
+// Storefront sections (public GET /shop/:id; the rest checks auth itself) and store forms (owner)
+router.use('/sections', sectionsRouter);
+router.use('/forms', formsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
 // Public VAPID key for service-worker registration (no user context needed)

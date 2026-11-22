@@ -1,5 +1,6 @@
 const express = require('express');
-const { orders, order_items, shops, shop_listings, users, chats, user_addresses } = require('../../models');
+const { sequelize, orders, order_items, shops, shop_listings, users, chats, user_addresses } = require('../../models');
+const { planOrderStock, planRestock } = require('../../services/stock');
 const { authMiddleware, isAdminReq } = require('../../auth');
 const {
   getSettings: getPlatformSettings,
@@ -35,6 +36,47 @@ const canMoveOrder = (from, to) => {
   if (to === 'cancelled') return ORDER_TRANSITIONS[from].length > 0; // any open order
   return ORDER_TRANSITIONS[from].includes(to);
 };
+
+/** Thrown inside the order transaction when a conditional stock decrement finds too few units. */
+class OutOfStockError extends Error {
+  constructor(listingId) {
+    super('OUT_OF_STOCK');
+    this.listingId = listingId;
+  }
+}
+
+const outOfStockBody = (short) => ({
+  success: false,
+  code: 'OUT_OF_STOCK',
+  error: 'Some items are out of stock',
+  items: short.map(({ listing_id, name, requested, available }) => ({ listing_id, name, requested, available })),
+});
+
+/**
+ * Cancelling an order puts back what it took from counted listings, once: the lines'
+ * stock_deducted is read and zeroed in one statement (row-locked), so a second cancel finds
+ * nothing to restock. Listings no longer counted are skipped.
+ */
+async function restockOrder(orderId, transaction) {
+  const [lines] = await sequelize.query(
+    `WITH taken AS (
+       SELECT id, listing_id, stock_deducted FROM order_items
+        WHERE order_id = :orderId AND stock_deducted > 0
+        FOR UPDATE
+     )
+     UPDATE order_items oi SET stock_deducted = 0, "updatedAt" = now()
+       FROM taken WHERE oi.id = taken.id
+     RETURNING taken.listing_id, taken.stock_deducted`,
+    { replacements: { orderId }, transaction }
+  );
+  for (const { listing_id, quantity } of planRestock(lines)) {
+    await sequelize.query(
+      `UPDATE shop_listings SET stock_qty = stock_qty + :q, is_available = true, "updatedAt" = now()
+        WHERE id = :id AND stock_mode = 'tracked'`,
+      { replacements: { id: listing_id, q: quantity }, transaction }
+    );
+  }
+}
 
 // Orders a delivery partner can take before anyone has claimed them
 const CLAIMABLE_STATUSES = ['open_to_delivery', 'accepted', 'packed', 'ready_for_pickup'];
@@ -113,7 +155,7 @@ router.post('/', async (req, res) => {
     const shopListings = listingIds.length
       ? await shop_listings.findAll({
           where: { id: listingIds, shop_id },
-          attributes: ['id', 'name', 'price'],
+          attributes: ['id', 'name', 'price', 'stock_mode', 'stock_qty', 'is_available'],
         })
       : [];
     const listingById = new Map(shopListings.map((l) => [l.id, l]));
@@ -141,6 +183,12 @@ router.post('/', async (req, res) => {
         subtotal,
       };
     });
+
+    // Stock: unavailable items and counted items with too few units stop the order
+    const stockPlan = planOrderStock(validatedItems, listingById);
+    if (stockPlan.short.length) {
+      return res.status(409).json(outOfStockBody(stockPlan.short));
+    }
 
     // Order rules and fees from Admin > Platform configuration (maintenance, delivery switch,
     // minimum order, delivery distance, platform + delivery fees)
@@ -177,28 +225,63 @@ router.post('/', async (req, res) => {
     } = computeOrderFees({ itemsTotal, orderType: order_type }, platformSettings);
     const orderNumber = `RQ-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
 
-    const newOrder = await orders.create({
-      order_number: orderNumber,
-      customer_id: user_id,
-      shop_id,
-      order_type,
-      status: 'placed',
-      total_amount: totalAmount,
-      platform_fee: parsedPlatformFee,
-      delivery_fee: parsedDeliveryFee,
-      payment_mode,
-      delivery_address: delivery_address || '',
-      customer_phone: customer_phone || '',
-      notes: notes || '',
-      shop_upi_id: shop_upi_id || shop.mobile_number || '',
-    });
+    // Order, its lines and the stock decrement commit together. Each counted listing is
+    // decremented only if it still has enough units; otherwise everything rolls back.
+    let newOrder;
+    try {
+      newOrder = await sequelize.transaction(async (transaction) => {
+        const created = await orders.create(
+          {
+            order_number: orderNumber,
+            customer_id: user_id,
+            shop_id,
+            order_type,
+            status: 'placed',
+            total_amount: totalAmount,
+            platform_fee: parsedPlatformFee,
+            delivery_fee: parsedDeliveryFee,
+            payment_mode,
+            delivery_address: delivery_address || '',
+            customer_phone: customer_phone || '',
+            notes: notes || '',
+            shop_upi_id: shop_upi_id || shop.mobile_number || '',
+          },
+          { transaction }
+        );
 
-    // Bulk create items with order_id
-    const itemsToInsert = validatedItems.map((it) => ({
-      ...it,
-      order_id: newOrder.id,
-    }));
-    await order_items.bulkCreate(itemsToInsert);
+        await order_items.bulkCreate(
+          validatedItems.map((it, index) => ({
+            ...it,
+            order_id: created.id,
+            stock_deducted: stockPlan.lineDeducted[index] || 0,
+          })),
+          { transaction }
+        );
+
+        // Fixed order (by id) so two orders never wait on each other's rows
+        const deductions = [...stockPlan.deductions].sort((a, b) => String(a.listing_id).localeCompare(String(b.listing_id)));
+        for (const { listing_id, quantity } of deductions) {
+          const [rows] = await sequelize.query(
+            `UPDATE shop_listings
+                SET stock_qty = stock_qty - :q, is_available = (stock_qty - :q) > 0, "updatedAt" = now()
+              WHERE id = :id AND stock_mode = 'tracked' AND stock_qty >= :q
+              RETURNING id`,
+            { replacements: { id: listing_id, q: quantity }, transaction }
+          );
+          if (!rows.length) throw new OutOfStockError(listing_id);
+        }
+        return created;
+      });
+    } catch (err) {
+      if (!(err instanceof OutOfStockError)) throw err;
+      // Someone else bought the last units meanwhile: report the current stock
+      const fresh = await shop_listings.findAll({
+        where: { id: listingIds, shop_id },
+        attributes: ['id', 'name', 'price', 'stock_mode', 'stock_qty', 'is_available'],
+      });
+      const short = planOrderStock(validatedItems, new Map(fresh.map((l) => [l.id, l]))).short;
+      return res.status(409).json(outOfStockBody(short.length ? short : [{ listing_id: err.listingId, name: listingById.get(err.listingId)?.name || null, requested: 0, available: 0 }]));
+    }
 
     // Automated chat notification to shop owner on self-pickup order or service booking
     if (shop.owner_id) {
@@ -535,11 +618,23 @@ router.put('/:id/status', async (req, res) => {
       });
     }
 
-    const previousStatus = order.status;
-    order.status = status;
-    if (shop_upi_id) order.shop_upi_id = shop_upi_id;
-    if (delivery_notes) order.delivery_notes = delivery_notes;
-    await order.save();
+    // Every status move re-checks the status under a row lock in the same transaction, so a
+    // concurrent change (a cancel that restocks, say) waits and then sees the final status.
+    // Cancelled and completed orders fail the check, so the restock runs once.
+    const outcome = await sequelize.transaction(async (transaction) => {
+      const locked = await orders.findByPk(order.id, { attributes: ['id', 'status'], transaction, lock: transaction.LOCK.UPDATE });
+      if (!locked || !canMoveOrder(locked.status, status)) return { conflict: locked ? locked.status : order.status };
+      order.status = status;
+      if (shop_upi_id) order.shop_upi_id = shop_upi_id;
+      if (delivery_notes) order.delivery_notes = delivery_notes;
+      await order.save({ transaction });
+      if (status === 'cancelled') await restockOrder(order.id, transaction);
+      return { from: locked.status };
+    });
+    if (outcome.conflict) {
+      return res.status(409).json({ success: false, error: `Order cannot move from ${outcome.conflict} to ${status}` });
+    }
+    const previousStatus = outcome.from;
 
     // Auto-notify customer in chat on status change
     if (previousStatus !== status && order.customer_id && order.shop?.owner_id) {

@@ -1,36 +1,113 @@
 /**
  * Which form a listing follows and which listing type it defaults to.
  *
- * Form, most specific first:
- *   1. the shop's own form (shops.form_schema, set by an admin for one shop)
- *   2. the listing's sub-category form: metadata.sub_category_id (multi-category shops),
- *      else the shop's sub-category
- *   3. the category form (fallback for shops with only a category)
+ * Sub-category of a listing: the shop_listings.sub_category_id column, else the legacy
+ * metadata.sub_category_id, else the shop's primary sub-category.
+ *
+ * Form, most specific first (services/formOverrides.resolveListingSchema):
+ *   1. the shop's override for that sub-category (shop_form_overrides), layered on the
+ *      sub-category form (or the category form when the sub-category has none)
+ *   2. the shop's own form (shops.form_schema, set by an admin for one shop)
+ *   3. the sub-category form
+ *   4. the category form (fallback for shops with only a category)
  */
-const { categories, sub_categories } = require('../models');
-const { resolveSchema } = require('./formSchema');
+const { categories, sub_categories, shop_form_overrides } = require('../models');
+const { resolveListingSchema } = require('./formOverrides');
+const { subCategoryIdsByShop } = require('./shopSubCategories');
 
 const toId = (value) => {
   const n = Number.parseInt(value, 10);
   return Number.isInteger(n) && n >= 0 ? n : null;
 };
 
-const subCategoryIdFor = (shop, metadata) => toId(metadata?.sub_category_id) ?? toId(shop?.sub_category_id);
+/** The listing's sub-category id: column, then metadata, then the shop's primary. */
+const subCategoryIdFor = (shop, metadata, columnId) =>
+  toId(columnId) ?? toId(metadata?.sub_category_id) ?? toId(shop?.sub_category_id);
 const categoryIdFor = (shop, metadata) => toId(metadata?.category_id) ?? toId(shop?.category_id);
 
-const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type'];
+const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type', 'template_key'];
 
-/** { schema, subCategory, category } for a listing of `shop` with `metadata`. */
-const loadListingContext = async (shop, metadata) => {
-  const subId = subCategoryIdFor(shop, metadata);
-  const subCategory = subId !== null ? await sub_categories.findByPk(subId, { attributes: SUB_ATTRS }) : null;
+/**
+ * { schema, base, schemaSource, subCategory, category, override, subCategoryId } for a
+ * listing of `shop`.
+ *   metadata               legacy source of the sub-category (metadata.sub_category_id)
+ *   options.subCategoryId  the listing's sub_category_id column (wins over metadata)
+ * `base` is the form an override is layered on; `override` is the shop_form_overrides row.
+ */
+const loadListingContext = async (shop, metadata, { subCategoryId, transaction } = {}) => {
+  const subId = subCategoryIdFor(shop, metadata, subCategoryId);
+  const subCategory =
+    subId !== null ? await sub_categories.findByPk(subId, { attributes: SUB_ATTRS, transaction }) : null;
   const categoryId = subCategory ? subCategory.category_id : categoryIdFor(shop, metadata);
   const category =
-    categoryId !== null ? await categories.findByPk(categoryId, { attributes: ['id', 'name', 'form_schema'] }) : null;
-  return { schema: resolveSchema(shop, category, subCategory), subCategory, category };
+    categoryId !== null
+      ? await categories.findByPk(categoryId, { attributes: ['id', 'name', 'form_schema'], transaction })
+      : null;
+  const override =
+    shop?.id && subCategory
+      ? await shop_form_overrides.findOne({
+          where: { shop_id: shop.id, sub_category_id: subCategory.id },
+          transaction,
+        })
+      : null;
+  const { schema, base, source } = resolveListingSchema({
+    override: override ? override.overrides : null,
+    shopForm: shop?.form_schema,
+    subForm: subCategory?.form_schema,
+    categoryForm: category?.form_schema,
+  });
+  return {
+    schema,
+    base,
+    schemaSource: source,
+    subCategory,
+    category,
+    override,
+    subCategoryId: subCategory ? subCategory.id : null,
+  };
 };
 
-const loadListingSchema = async (shop, metadata) => (await loadListingContext(shop, metadata)).schema;
+const loadListingSchema = async (shop, metadata, options) => (await loadListingContext(shop, metadata, options)).schema;
+
+/**
+ * Memoised loadListingContext for one shop, keyed by sub-category id (null = the shop's
+ * fallback). For endpoints that resolve the form of many listings.
+ */
+const createContextLoader = (shop, { transaction } = {}) => {
+  const cache = new Map();
+  return (subCategoryId) => {
+    const key = toId(subCategoryId);
+    if (!cache.has(key)) {
+      cache.set(key, loadListingContext(shop, {}, { subCategoryId: key ?? undefined, transaction }));
+    }
+    return cache.get(key);
+  };
+};
+
+/** The shop's sub-category ids in position order (the primary alone for shops without links). */
+const shopSubCategoryIds = async (shop, { transaction } = {}) => {
+  const linked = (await subCategoryIdsByShop([shop.id], { transaction })).get(String(shop.id)) || [];
+  if (linked.length) return linked;
+  return toId(shop.sub_category_id) !== null ? [toId(shop.sub_category_id)] : [];
+};
+
+/**
+ * The sub-category a listing write files under: `requested` (must be one of `ownIds`), else
+ * `fallback`, else the first of ownIds. Returns { id } (null = the shop has none) or
+ * { code: 'sub_category_not_in_shop', error }.
+ */
+const pickShopSubCategory = (requested, ownIds, fallback) => {
+  if (requested === undefined || requested === null || requested === '') {
+    const id = toId(fallback);
+    if (id !== null && ownIds.includes(id)) return { id };
+    return { id: ownIds.length ? ownIds[0] : null };
+  }
+  const id = toId(requested);
+  if (id === null || String(id) !== String(requested).trim() || !ownIds.includes(id)) {
+    return { code: 'sub_category_not_in_shop', error: "That sub-category is not one of your shop's" };
+  }
+  return { id };
+};
 
 /**
  * The sub-category's listing type; for shops without one, a guess from the shop type text
@@ -45,7 +122,7 @@ const listingTypeFor = (shop, subCategory) => {
   return 'product';
 };
 
-/** Fields the server records on every listing so it knows which form it follows. */
+/** Fields the server records on every listing so search knows which form it follows. */
 const categoryMetadata = (subCategory, category) => {
   if (subCategory) {
     return {
@@ -61,6 +138,9 @@ const categoryMetadata = (subCategory, category) => {
 module.exports = {
   loadListingContext,
   loadListingSchema,
+  createContextLoader,
+  shopSubCategoryIds,
+  pickShopSubCategory,
   listingTypeFor,
   categoryMetadata,
   subCategoryIdFor,

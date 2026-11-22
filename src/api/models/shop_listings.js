@@ -59,6 +59,46 @@ module.exports = (sequelize) => {
       img_url: {
         type: DataTypes.TEXT,
       },
+      // The sub-category whose form the listing follows (one of the shop's at write time)
+      sub_category_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'sub_categories', key: 'id' },
+      },
+      section_id: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: 'shop_sections', key: 'id' },
+      },
+      // Catalogue copy: the master item id (no FK; catalog.* is optional) and its facts at import
+      catalog_item_id: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
+      catalog_snapshot: {
+        type: DataTypes.JSONB,
+        allowNull: true,
+      },
+      catalog_synced_at: {
+        type: DataTypes.DATE,
+        allowNull: true,
+      },
+      // Stock (services/stock.js): tracked | toggle | always. is_available is derived for
+      // tracked (qty > 0) and always (true), and the owner's switch for toggle.
+      stock_mode: {
+        type: DataTypes.STRING(10),
+        allowNull: false,
+        defaultValue: 'toggle',
+        validate: { isIn: [['tracked', 'toggle', 'always']] },
+      },
+      stock_qty: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+      low_stock_threshold: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,
@@ -70,6 +110,9 @@ module.exports = (sequelize) => {
       foreignKey: 'shop_id',
       as: 'shop',
     });
+    if (models.shop_sections) {
+      ShopListing.belongsTo(models.shop_sections, { foreignKey: 'section_id', as: 'section' });
+    }
     if (models.products) {
       ShopListing.belongsTo(models.products, {
         foreignKey: 'master_product_id',

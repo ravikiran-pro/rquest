@@ -1,14 +1,14 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useParams, useHistory } from 'react-router-dom';
 import {
-  Row,
   Col,
   Card,
   Button,
   Tag,
   Typography,
-  Tabs,
   Modal,
+  Alert,
+  Skeleton,
   Input,
   message,
   Spin,
@@ -30,7 +30,6 @@ import {
   ArrowLeftOutlined,
   FileTextOutlined,
   ClockCircleOutlined,
-  SearchOutlined,
   StarFilled,
   EditOutlined,
   ShopOutlined,
@@ -47,6 +46,12 @@ import {
   matchesSchemaFilters,
 } from '../../app/utils';
 import { useGlobalStore, useChatStore, useCartStore } from '../../app/services';
+import { isSellable, maxOrderQty, availabilityLabels, lowStockHint } from '../../app/utils/stock';
+import { useStorefront } from './useStorefrontSections';
+import SectionChips from './SectionChips';
+import SectionBlock from './SectionBlock';
+import SectionGridDrawer, { PagedListingGrid } from './SectionGridDrawer';
+import './storefront.css';
 import Routes from '../../app/routes/routes';
 import { colors, radii } from '../../app/styles/theme';
 
@@ -62,10 +67,11 @@ const StorefrontScreen = () => {
   const { cart, addItem, updateQuantity, openCart } = useCartStore((state) => state);
 
   const [shop, setShop] = useState(null);
-  const [listings, setListings] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState(null);
+  const [seeAllSection, setSeeAllSection] = useState(null);
   const [foodFilter, setFoodFilter] = useState('all'); // 'all', 'veg', 'non-veg'
   const [fieldFilters, setFieldFilters] = useState({}); // custom-field filters: { fieldKey: value }
 
@@ -80,15 +86,8 @@ const StorefrontScreen = () => {
     const fetchShopData = async () => {
       setLoading(true);
       try {
-        const [shopRes, listingsRes] = await Promise.all([
-          netWorkCall(`${apiConfig.shop_details}/${shop_id}/details`, 'GET', null, false),
-          netWorkCall(`${apiConfig.listings_by_shop}/${shop_id}`, 'GET', null, false),
-        ]);
-
-        if (isMounted) {
-          if (shopRes?.data) setShop(shopRes.data);
-          if (listingsRes?.data) setListings(listingsRes.data);
-        }
+        const shopRes = await netWorkCall(`${apiConfig.shop_details}/${shop_id}/details`, 'GET', null, false);
+        if (isMounted && shopRes?.data) setShop(shopRes.data);
       } catch (err) {
         console.error('Error fetching storefront:', err);
       } finally {
@@ -101,6 +100,48 @@ const StorefrontScreen = () => {
       isMounted = false;
     };
   }, [shop_id]);
+
+  // Sections with their first items; the rest load as the customer scrolls (spec §F9)
+  const storefront = useStorefront(shop_id);
+  const visibleSections = storefront.sections;
+  const loadedItems = useMemo(() => visibleSections.flatMap((s) => s.items || []), [visibleSections]);
+  const listings = loadedItems;
+
+  // Search in the store is server-side and paged
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(searchQuery.trim().slice(0, 100)), 300);
+    return () => clearTimeout(t);
+  }, [searchQuery]);
+  const isSearching = debouncedQuery.length > 0;
+
+  // The chip of the section in view is the active one
+  const sectionKey = visibleSections.map((s) => s.id).join(',');
+  useEffect(() => {
+    if (isSearching || typeof IntersectionObserver === 'undefined') return undefined;
+    const blocks = Array.from(document.querySelectorAll('[data-section-id]'));
+    if (blocks.length === 0) return undefined;
+    const io = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.filter((e) => e.isIntersecting).sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
+        if (visible[0]) setActiveSectionId(visible[0].target.getAttribute('data-section-id'));
+      },
+      { rootMargin: '-170px 0px -55% 0px' }
+    );
+    blocks.forEach((b) => io.observe(b));
+    return () => io.disconnect();
+  }, [sectionKey, isSearching, storefront.status, loading]);
+
+  const jumpToSection = useCallback(
+    (id) => {
+      setActiveSectionId(String(id));
+      storefront.loadSection(id);
+      const el = document.getElementById(`sf-sec-${id}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+    // loadSection is stable for a shop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [storefront.loadSection]
+  );
 
   // Determine store archetype based on shop_type, category, or listings
   const storeArchetype = useMemo(() => {
@@ -171,122 +212,18 @@ const StorefrontScreen = () => {
     return 'product';
   }, [shop, listings]);
 
-  // DYNAMIC TABS: Tailored to the store's actual catalog & sections (NO empty tabs!)
-  const dynamicTabs = useMemo(() => {
-    if (!listings || listings.length === 0) {
-      return [{ key: 'all', label: 'All Items (0)' }];
-    }
-
-    // 1. Check unique sections in metadata
-    const sections = [
-      ...new Set(
-        listings
-          .map((it) => it.metadata?.section || it.metadata?.category)
-          .filter(Boolean)
-      ),
-    ];
-
-    // If store has defined sections (e.g. "Biryani & Rice", "Starters & Fry", etc.)
-    if (sections.length > 1) {
-      return [
-        {
-          key: 'all',
-          label: (
-            <span>
-              All ({listings.length})
-            </span>
-          ),
-        },
-        ...sections.map((sec) => {
-          const count = listings.filter(
-            (it) => (it.metadata?.section || it.metadata?.category) === sec
-          ).length;
-          return {
-            key: `section:${sec}`,
-            label: (
-              <span>
-                {sec} ({count})
-              </span>
-            ),
-          };
-        }),
-      ];
-    }
-
-    // 2. If store items span multiple types, only show types with count > 0!
-    const typesPresent = [...new Set(listings.map((it) => it.listing_type || 'product'))];
-    if (typesPresent.length > 1) {
-      const typeLabels = {
-        food: 'Food & Dishes',
-        product: 'Products & Groceries',
-        service: 'Services & Rate Card',
-        rental: 'Rental Items',
-      };
-      return [
-        { key: 'all', label: `All Items (${listings.length})` },
-        ...typesPresent.map((t) => {
-          const count = listings.filter((it) => (it.listing_type || 'product') === t).length;
-          return {
-            key: `type:${t}`,
-            label: `${typeLabels[t] || t} (${count})`,
-          };
-        }),
-      ];
-    }
-
-    // 3. Single domain fallback
-    const archetypeLabels = {
-      food: 'All Dishes',
-      product: 'All Products',
-      service: 'All Services & Packages',
-      wellness: 'All Treatments & Sessions',
-      rental: 'All Rental Items',
-    };
-
-    return [
-      {
-        key: 'all',
-        label: `${archetypeLabels[storeArchetype] || 'All Items'} (${listings.length})`,
-      },
-    ];
-  }, [listings, storeArchetype]);
-
-  // Filter listings based on active tab, search, and dietary filter
-  const filteredListings = useMemo(() => {
-    return listings.filter((item) => {
-      // Tab filter
-      if (activeTab !== 'all') {
-        if (activeTab.startsWith('section:')) {
-          const sec = activeTab.replace('section:', '');
-          const itemSec = item.metadata?.section || item.metadata?.category;
-          if (itemSec !== sec) return false;
-        } else if (activeTab.startsWith('type:')) {
-          const type = activeTab.replace('type:', '');
-          if (item.listing_type !== type) return false;
-        }
-      }
-
-      // Search query filter
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase();
-        const matchName = item.name?.toLowerCase().includes(q);
-        const matchDesc = item.description?.toLowerCase().includes(q);
-        if (!matchName && !matchDesc) return false;
-      }
-
-      // Dietary filter for food
+  // Filters run on the items on screen (dietary switch and filterable form fields)
+  const filterItem = useCallback(
+    (item) => {
       if (foodFilter !== 'all' && item.listing_type === 'food') {
         const itemFoodType = item.metadata?.food_type;
         if (foodFilter === 'veg' && itemFoodType !== 'veg') return false;
         if (foodFilter === 'non-veg' && itemFoodType !== 'non-veg') return false;
       }
-
-      // Filters from the category's custom form fields
-      if (!matchesSchemaFilters(item, fieldFilters)) return false;
-
-      return true;
-    });
-  }, [listings, activeTab, searchQuery, foodFilter, fieldFilters]);
+      return matchesSchemaFilters(item, fieldFilters);
+    },
+    [foodFilter, fieldFilters]
+  );
 
   const hasFoodItems = listings.some((i) => i.listing_type === 'food');
 
@@ -294,10 +231,11 @@ const StorefrontScreen = () => {
   // dietary tag is left out when the veg / non-veg switch already covers it.
   const schemaFilters = useMemo(
     () =>
-      getAvailableFilters(resolveShopSchema(shop), listings).filter(
-        (field) => !(hasFoodItems && field.key === 'food_type')
-      ),
-    [shop, listings, hasFoodItems]
+      getAvailableFilters(
+        storefront.filterFields.length > 0 ? storefront.filterFields : resolveShopSchema(shop),
+        listings
+      ).filter((field) => !(hasFoodItems && field.key === 'food_type')),
+    [shop, listings, hasFoodItems, storefront.filterFields]
   );
   const hasActiveFieldFilters = Object.values(fieldFilters).some(
     (value) => value !== undefined && value !== null && value !== ''
@@ -314,7 +252,7 @@ const StorefrontScreen = () => {
       return;
     }
     if (isOwnStore) {
-      message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
+      message.info('You are viewing your own store. Open Manage Store to edit listings.');
       return;
     }
     setQuoteItem(item);
@@ -322,12 +260,18 @@ const StorefrontScreen = () => {
     setQuoteModalVisible(true);
   };
 
+  // The cart refuses items that are out of stock, or more than the counted stock
   const handleAddToCart = (item) => {
     if (isOwnStore) {
-      message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
-      return;
+      message.info('You are viewing your own store. Open Manage Store to edit listings.');
+      return false;
     }
-    addItem(shop, item);
+    const result = addItem(shop, item);
+    if (result && result.ok === false) {
+      message.warning(result.reason === 'max' ? `Only ${result.max} in stock` : `${item.name} is ${availabilityLabels(item.listing_type).off.toLowerCase()}`);
+      return false;
+    }
+    return true;
   };
 
   const submitQuote = async () => {
@@ -356,7 +300,7 @@ const StorefrontScreen = () => {
         setQuoteModalVisible(false);
         setQuoteDesc('');
       } else {
-        message.error(res?.error || 'Failed to submit quote');
+        message.error(res?.error || "Couldn't send your request. Try again.");
       }
     } catch (err) {
       console.error(err);
@@ -394,6 +338,339 @@ const StorefrontScreen = () => {
     );
   }
 
+  const gridGutter = screens.xs ? [12, 12] : [16, 16];
+
+  // One item card. Out-of-stock items are greyed with their label and can't be added.
+  const renderItem = (item) => {
+            const inCartItem = cart.items.find((i) => i.listing_id === item.id);
+            const qty = inCartItem?.quantity || 0;
+            const isFood = item.listing_type === 'food';
+            const isService = item.listing_type === 'service';
+            const isRental = item.listing_type === 'rental';
+            const foodType = item.metadata?.food_type;
+            const durationMins = item.metadata?.duration_mins;
+            const deposit = item.metadata?.security_deposit;
+            const sellable = isSellable(item);
+            const offLabel = availabilityLabels(item.listing_type).off;
+            const lowHint = sellable ? lowStockHint(item) : null;
+            const cap = maxOrderQty(item);
+
+            return (
+              <Col xs={24} sm={12} md={8} key={item.id}>
+                <Card
+                  hoverable={sellable}
+                  className={`sf-card ${sellable ? '' : 'is-out'}`}
+                  aria-label={sellable ? undefined : `${item.name}, ${offLabel.toLowerCase()}`}
+                  style={{
+                    height: '100%',
+                    borderRadius: 16,
+                    border: `1px solid ${colors.border}`,
+                    boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
+                    transition: 'all 0.2s ease',
+                  }}
+                  bodyStyle={{
+                    padding: screens.xs ? 14 : 16,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    height: '100%',
+                  }}
+                >
+                  <Flex gap={12} align="start" className="sf-card-dim" style={{ marginBottom: 10 }}>
+                    {item.img_url ? (
+                      <img
+                        src={item.img_url}
+                        alt={item.name}
+                        style={{
+                          width: screens.xs ? 76 : 84,
+                          height: screens.xs ? 76 : 84,
+                          borderRadius: 12,
+                          objectFit: 'cover',
+                          flexShrink: 0,
+                          border: `1px solid ${colors.borderLight}`,
+                        }}
+                      />
+                    ) : (
+                      <div
+                        style={{
+                          width: screens.xs ? 76 : 84,
+                          height: screens.xs ? 76 : 84,
+                          borderRadius: 12,
+                          background: colors.surfaceContainerLow,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: colors.textLight,
+                          fontSize: 26,
+                          flexShrink: 0,
+                          border: `1px solid ${colors.borderLight}`,
+                        }}
+                      >
+                        <FileTextOutlined />
+                      </div>
+                    )}
+
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      {/* Section & Indicator Badges */}
+                      <Flex align="center" gap={6} wrap="wrap" style={{ marginBottom: 4 }}>
+                        {isFood && foodType && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              width: 14,
+                              height: 14,
+                              border: `1.5px solid ${foodType === 'veg' ? colors.semantic.success : colors.semantic.error}`,
+                              borderRadius: 3,
+                              padding: 2,
+                            }}
+                            title={foodType === 'veg' ? 'Pure Veg' : 'Non-Veg'}
+                          >
+                            <span
+                              style={{
+                                width: 6,
+                                height: 6,
+                                borderRadius: foodType === 'veg' ? '50%' : 0,
+                                backgroundColor: foodType === 'veg' ? colors.semantic.success : colors.semantic.error,
+                              }}
+                            />
+                          </span>
+                        )}
+
+
+                        {durationMins && (
+                          <Tag color="purple" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            <ClockCircleOutlined /> {durationMins}m
+                          </Tag>
+                        )}
+
+                        {item.metadata?.prescription_required && (
+                          <Tag color="error" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0, fontWeight: 700 }}>
+                            Rx Required
+                          </Tag>
+                        )}
+
+                        {item.metadata?.dosage_form && (
+                          <Tag color="cyan" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            Dosage: {item.metadata.dosage_form}
+                          </Tag>
+                        )}
+
+                        {item.metadata?.expiry_date && (
+                          <Tag color="orange" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            Exp: {item.metadata.expiry_date}
+                          </Tag>
+                        )}
+
+                        {(item.metadata?.warranty_period || item.metadata?.warranty_months) && (
+                          <Tag color="green" icon={<SafetyCertificateFilled style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.warranty_period || item.metadata.warranty_months}m Warranty
+                          </Tag>
+                        )}
+
+                        {item.metadata?.vehicle_type && (
+                          <Tag color="geekblue" icon={<CarOutlined style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.vehicle_type}
+                          </Tag>
+                        )}
+
+                        {item.metadata?.category_name && (
+                          <Tag color="purple" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
+                            {item.metadata.category_name}
+                          </Tag>
+                        )}
+                      </Flex>
+
+                      <Title
+                        level={5}
+                        ellipsis={{ rows: 2 }}
+                        style={{
+                          margin: '0 0 6px 0',
+                          fontWeight: 700,
+                          fontSize: screens.xs ? 14 : 15,
+                          color: colors.textMain,
+                          lineHeight: 1.3,
+                        }}
+                      >
+                        {item.name}
+                      </Title>
+
+                      <Flex align="baseline" gap={6}>
+                        <span style={{ fontSize: 17, fontWeight: 800, color: colors.primary }}>
+                          ₹{item.price}
+                        </span>
+                        {item.mrp && item.mrp > item.price && (
+                          <span
+                            style={{
+                              fontSize: 12,
+                              color: colors.textLight,
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            ₹{item.mrp}
+                          </span>
+                        )}
+                        <span style={{ fontSize: 11, color: colors.textLight }}>
+                          / {item.unit || 'unit'}
+                        </span>
+                      </Flex>
+                    </div>
+                  </Flex>
+
+                  {/* Description & Metadata */}
+                  {item.description && (
+                    <Paragraph
+                      type="secondary"
+                      className="sf-card-dim"
+                      ellipsis={{ rows: 2 }}
+                      style={{
+                        fontSize: 12,
+                        color: colors.textLight,
+                        marginBottom: 12,
+                        minHeight: 34,
+                        lineHeight: '17px',
+                      }}
+                    >
+                      {item.description}
+                    </Paragraph>
+                  )}
+
+                  {/* Deposit notice for rentals */}
+                  {isRental && deposit && (
+                    <div
+                      style={{
+                        background: colors.semantic.successLight,
+                        border: `1px solid ${colors.semantic.successBorder}`,
+                        borderRadius: 6,
+                        padding: '4px 8px',
+                        fontSize: 11,
+                        color: colors.semantic.successHover,
+                        fontWeight: 600,
+                        marginBottom: 10,
+                      }}
+                    >
+                      <SafetyCertificateFilled style={{ marginRight: 6, color: colors.semantic.successHover }} /> Refundable Deposit: ₹{deposit}
+                    </div>
+                  )}
+
+                  {/* Stock state */}
+                  {!sellable && <span className="sf-stock-label">{offLabel}</span>}
+                  {lowHint && <span className="sf-low-label">{lowHint}</span>}
+
+                  {/* Archetype Action Buttons */}
+                  <div style={{ marginTop: 'auto', paddingTop: 6 }}>
+                    {isService ? (
+                      <Flex gap={8}>
+                        <Button
+                          block
+                          style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
+                          onClick={() => handleOpenQuote(item)}
+                        >
+                          Request Quote
+                        </Button>
+                        <Button
+                          type="primary"
+                          block
+                          style={{
+                            borderRadius: radii.md,
+                            fontWeight: 700,
+                            height: 38,
+                            background: colors.primary,
+                            borderColor: colors.primary,
+                          }}
+                          disabled={!sellable}
+                          onClick={() => handleAddToCart(item)}
+                        >
+                          {sellable ? 'Book Visit' : offLabel}
+                        </Button>
+                      </Flex>
+                    ) : isRental ? (
+                      <Flex gap={8}>
+                        <Button
+                          block
+                          style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
+                          onClick={() => {
+                            if (isOwnStore) {
+                              message.info('You are viewing your own store. Open Manage Store to edit listings.');
+                              return;
+                            }
+                            handleChatOpen(shop.owner_id, shop.id, { shop_name: shop.shop_name });
+                          }}
+                        >
+                          Inquire
+                        </Button>
+                        <Button
+                          type="primary"
+                          block
+                          icon={<ShoppingCartOutlined />}
+                          style={{
+                            borderRadius: radii.md,
+                            fontWeight: 700,
+                            height: 38,
+                            background: colors.primary,
+                            borderColor: colors.primary,
+                          }}
+                          disabled={!sellable}
+                          onClick={() => {
+                            if (handleAddToCart(item)) openCart();
+                          }}
+                        >
+                          {sellable ? 'Reserve' : offLabel}
+                        </Button>
+                      </Flex>
+                    ) : qty > 0 ? (
+                      <Flex
+                        align="center"
+                        justify="space-between"
+                        style={{
+                          background: colors.surfaceContainerLow,
+                          border: `1px solid ${colors.borderDark}`,
+                          borderRadius: 8,
+                          padding: '2px 8px',
+                          height: 38,
+                        }}
+                      >
+                        <Button
+                          type="text"
+                          icon={<MinusOutlined />}
+                          aria-label={`Remove one ${item.name}`}
+                          onClick={() => updateQuantity(item.id, -1)}
+                        />
+                        <span style={{ fontWeight: 800, color: colors.textMain, fontSize: 13 }}>
+                          {qty} in Cart
+                        </span>
+                        <Button
+                          type="text"
+                          icon={<PlusOutlined />}
+                          disabled={cap !== null && qty >= cap}
+                          aria-label={`Add one more ${item.name}`}
+                          onClick={() => updateQuantity(item.id, 1)}
+                        />
+                      </Flex>
+                    ) : (
+                      <Button
+                        type="primary"
+                        block
+                        icon={<ShoppingCartOutlined />}
+                        style={{
+                          borderRadius: radii.md,
+                          fontWeight: 700,
+                          height: 38,
+                          background: colors.primary,
+                          borderColor: colors.primary,
+                        }}
+                        disabled={!sellable}
+                        onClick={() => handleAddToCart(item)}
+                      >
+                        {!sellable ? offLabel : isFood ? 'Add to Order' : 'Add to Cart'}
+                      </Button>
+                    )}
+                  </div>
+                </Card>
+              </Col>
+            );
+  };
+
   const directionsUrl =
     shop.directions ||
     (shop.latitude && shop.longitude
@@ -414,7 +691,7 @@ const StorefrontScreen = () => {
           onClick={() => history.push(Routes.home)}
           style={{
             fontWeight: 600,
-            color: '#475569',
+            color: colors.textMuted,
             padding: '4px 8px',
             borderRadius: 8,
             transition: 'all 0.2s ease',
@@ -428,7 +705,7 @@ const StorefrontScreen = () => {
             type="primary"
             icon={<EditOutlined />}
             style={{
-              background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+              background: colors.semantic.success,
               border: 'none',
               borderRadius: 8,
               fontWeight: 600,
@@ -446,8 +723,8 @@ const StorefrontScreen = () => {
             marginBottom: 16,
             padding: '12px 16px',
             borderRadius: 14,
-            background: '#ecfdf5',
-            border: '1px solid #a7f3d0',
+            background: colors.semantic.successLight,
+            border: `1px solid ${colors.semantic.successBorder}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
@@ -456,27 +733,27 @@ const StorefrontScreen = () => {
           }}
         >
           <Flex align="center" gap={10}>
-            <ShopOutlined style={{ fontSize: 22, color: '#047857' }} />
+            <ShopOutlined style={{ fontSize: 22, color: colors.semantic.successHover }} />
             <div>
               <div style={{ fontWeight: 700, color: '#065f46', fontSize: 13 }}>
                 Storefront Preview Mode
               </div>
-              <div style={{ color: '#047857', fontSize: 12 }}>
-                This is your live storefront as seen by customers. To edit listings, stock, or prices, open Merchant Hub.
+              <div style={{ color: colors.semantic.successHover, fontSize: 12 }}>
+                This is your live storefront as seen by customers. To edit listings, stock, or prices, open Manage Store.
               </div>
             </div>
           </Flex>
           <Button
             size="small"
             style={{
-              borderColor: '#059669',
-              color: '#059669',
+              borderColor: colors.semantic.success,
+              color: colors.semantic.success,
               fontWeight: 600,
               borderRadius: 6,
             }}
             onClick={() => history.push(`/client_register?shop_id=${shop.id}`)}
           >
-            Edit in Merchant Hub
+            Edit in Manage Store
           </Button>
         </div>
       )}
@@ -487,9 +764,9 @@ const StorefrontScreen = () => {
           borderRadius: 20,
           overflow: 'hidden',
           marginBottom: 24,
-          border: '1px solid #e2e8f0',
+          border: `1px solid ${colors.border}`,
           boxShadow: '0 4px 20px -2px rgba(15, 23, 42, 0.06)',
-          background: '#ffffff',
+          background: colors.white,
         }}
         bodyStyle={{ padding: 0 }}
       >
@@ -499,7 +776,7 @@ const StorefrontScreen = () => {
             height: screens.xs ? 130 : 160,
             position: 'relative',
             overflow: 'hidden',
-            background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%)',
+            background: colors.primaryGradient,
           }}
         >
           {shop.img_url ? (
@@ -524,17 +801,7 @@ const StorefrontScreen = () => {
                 }}
               />
             </>
-          ) : (
-            <div
-              style={{
-                position: 'absolute',
-                inset: 0,
-                opacity: 0.15,
-                backgroundImage:
-                  'radial-gradient(circle at 20% 50%, rgba(255,255,255,0.8) 0%, transparent 50%), radial-gradient(circle at 80% 80%, rgba(255,255,255,0.6) 0%, transparent 50%)',
-              }}
-            />
-          )}
+          ) : null}
 
           {/* Badges on Banner */}
           <div
@@ -562,7 +829,7 @@ const StorefrontScreen = () => {
                 border: '1px solid rgba(255, 255, 255, 0.2)',
                 backdropFilter: 'blur(8px)',
                 WebkitBackdropFilter: 'blur(8px)',
-                color: '#ffffff',
+                color: colors.white,
                 fontSize: 11,
                 fontWeight: 700,
                 letterSpacing: '0.2px',
@@ -584,7 +851,7 @@ const StorefrontScreen = () => {
                   border: '1px solid rgba(167, 243, 208, 0.4)',
                   backdropFilter: 'blur(8px)',
                   WebkitBackdropFilter: 'blur(8px)',
-                  color: '#ffffff',
+                  color: colors.white,
                   fontSize: 11,
                   fontWeight: 700,
                 }}
@@ -615,8 +882,8 @@ const StorefrontScreen = () => {
                     width: 6,
                     height: 6,
                     borderRadius: '50%',
-                    backgroundColor: '#10b981',
-                    boxShadow: '0 0 6px #10b981',
+                    backgroundColor: colors.semantic.success,
+                    boxShadow: `0 0 6px ${colors.semantic.success}`,
                     display: 'inline-block',
                   }}
                 />
@@ -638,10 +905,10 @@ const StorefrontScreen = () => {
                     width: 76,
                     height: 76,
                     borderRadius: 16,
-                    background: '#ffffff',
+                    background: colors.white,
                     padding: 3,
                     boxShadow: '0 8px 24px rgba(15, 23, 42, 0.16)',
-                    border: '3px solid #ffffff',
+                    border: `3px solid ${colors.white}`,
                     overflow: 'hidden',
                     flexShrink: 0,
                     position: 'relative',
@@ -665,7 +932,7 @@ const StorefrontScreen = () => {
                       style={{
                         margin: 0,
                         fontWeight: 800,
-                        color: '#0f172a',
+                        color: colors.textMain,
                         fontSize: 19,
                         letterSpacing: '-0.3px',
                         lineHeight: 1.2,
@@ -695,13 +962,13 @@ const StorefrontScreen = () => {
                         fontSize: 11,
                         fontWeight: 700,
                         color: '#b45309',
-                        background: '#fef3c7',
+                        background: colors.semantic.warningLight,
                         padding: '1px 6px',
                         borderRadius: 6,
-                        border: '1px solid #fde68a',
+                        border: `1px solid ${colors.semantic.warningBorder}`,
                       }}
                     >
-                      <StarFilled style={{ fontSize: 11, color: '#f59e0b' }} />
+                      <StarFilled style={{ fontSize: 11, color: colors.semantic.warning }} />
                       <span>{shop.rating || 5}.0</span>
                     </Flex>
                   </Flex>
@@ -716,9 +983,9 @@ const StorefrontScreen = () => {
                       marginBottom: 6,
                       borderRadius: 6,
                       fontSize: 11,
-                      background: '#f1f5f9',
-                      color: '#475569',
-                      border: '1px solid #e2e8f0',
+                      background: colors.borderLight,
+                      color: colors.textMuted,
+                      border: `1px solid ${colors.border}`,
                       fontWeight: 600,
                     }}
                   >
@@ -730,7 +997,7 @@ const StorefrontScreen = () => {
                   style={{
                     margin: '4px 0 6px 0',
                     fontSize: 12,
-                    color: '#64748b',
+                    color: colors.textLight,
                     display: 'flex',
                     alignItems: 'flex-start',
                     gap: 6,
@@ -740,8 +1007,8 @@ const StorefrontScreen = () => {
                   <EnvironmentOutlined style={{ color: colors.primary, marginTop: 3, flexShrink: 0 }} />
                   <span>{shop.address}</span>
                 </Paragraph>
-                <Flex align="center" gap={6} style={{ fontSize: 12, color: '#059669', fontWeight: 600 }}>
-                  <ClockCircleOutlined style={{ color: '#10b981' }} />
+                <Flex align="center" gap={6} style={{ fontSize: 12, color: colors.semantic.success, fontWeight: 600 }}>
+                  <ClockCircleOutlined style={{ color: colors.semantic.success }} />
                   <span>Open for direct orders • Instant confirmation</span>
                 </Flex>
               </div>
@@ -757,7 +1024,7 @@ const StorefrontScreen = () => {
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
-                      borderColor: '#cbd5e1',
+                      borderColor: colors.borderDark,
                     }}
                   >
                     Call
@@ -774,7 +1041,7 @@ const StorefrontScreen = () => {
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
-                      borderColor: '#cbd5e1',
+                      borderColor: colors.borderDark,
                     }}
                   >
                     Directions
@@ -790,7 +1057,7 @@ const StorefrontScreen = () => {
                       height: 42,
                       borderRadius: 10,
                       fontWeight: 700,
-                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                      background: colors.semantic.success,
                       boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)',
                       border: 'none',
                     }}
@@ -840,10 +1107,10 @@ const StorefrontScreen = () => {
                     width: 96,
                     height: 96,
                     borderRadius: 18,
-                    background: '#ffffff',
+                    background: colors.white,
                     padding: 3,
                     boxShadow: '0 10px 25px -4px rgba(15, 23, 42, 0.16)',
-                    border: '3px solid #ffffff',
+                    border: `3px solid ${colors.white}`,
                     overflow: 'hidden',
                     flexShrink: 0,
                     marginTop: -48,
@@ -870,7 +1137,7 @@ const StorefrontScreen = () => {
                       style={{
                         margin: 0,
                         fontWeight: 800,
-                        color: '#0f172a',
+                        color: colors.textMain,
                         fontSize: 24,
                         letterSpacing: '-0.5px',
                         lineHeight: 1.2,
@@ -903,9 +1170,9 @@ const StorefrontScreen = () => {
                           borderRadius: 6,
                           fontSize: 12,
                           padding: '1px 8px',
-                          background: '#f1f5f9',
-                          color: '#475569',
-                          border: '1px solid #e2e8f0',
+                          background: colors.borderLight,
+                          color: colors.textMuted,
+                          border: `1px solid ${colors.border}`,
                           fontWeight: 500,
                         }}
                       >
@@ -920,13 +1187,13 @@ const StorefrontScreen = () => {
                         fontSize: 12,
                         fontWeight: 700,
                         color: '#b45309',
-                        background: '#fef3c7',
+                        background: colors.semantic.warningLight,
                         padding: '1px 8px',
                         borderRadius: 6,
-                        border: '1px solid #fde68a',
+                        border: `1px solid ${colors.semantic.warningBorder}`,
                       }}
                     >
-                      <StarFilled style={{ fontSize: 12, color: '#f59e0b' }} />
+                      <StarFilled style={{ fontSize: 12, color: colors.semantic.warning }} />
                       <span>{shop.rating || 5}.0</span>
                     </Flex>
                   </Flex>
@@ -937,7 +1204,7 @@ const StorefrontScreen = () => {
                     style={{
                       margin: '2px 0 0 0',
                       fontSize: 13,
-                      color: '#64748b',
+                      color: colors.textLight,
                       display: 'flex',
                       alignItems: 'flex-start',
                       gap: 6,
@@ -948,8 +1215,8 @@ const StorefrontScreen = () => {
                   </Paragraph>
 
                   {/* Status line */}
-                  <Flex align="center" gap={6} style={{ fontSize: 12, color: '#059669', fontWeight: 600, marginTop: 2 }}>
-                    <ClockCircleOutlined style={{ color: '#10b981' }} />
+                  <Flex align="center" gap={6} style={{ fontSize: 12, color: colors.semantic.success, fontWeight: 600, marginTop: 2 }}>
+                    <ClockCircleOutlined style={{ color: colors.semantic.success }} />
                     <span>Open for direct orders • Instant confirmation • 0% Commission</span>
                   </Flex>
                 </Flex>
@@ -972,8 +1239,8 @@ const StorefrontScreen = () => {
                       height: 40,
                       borderRadius: 10,
                       fontWeight: 600,
-                      borderColor: '#cbd5e1',
-                      color: '#334155',
+                      borderColor: colors.borderDark,
+                      color: colors.textMuted,
                     }}
                   >
                     Call
@@ -990,8 +1257,8 @@ const StorefrontScreen = () => {
                       height: 40,
                       borderRadius: 10,
                       fontWeight: 600,
-                      borderColor: '#cbd5e1',
-                      color: '#334155',
+                      borderColor: colors.borderDark,
+                      color: colors.textMuted,
                     }}
                   >
                     Directions
@@ -1008,7 +1275,7 @@ const StorefrontScreen = () => {
                       borderRadius: 10,
                       fontWeight: 700,
                       padding: '0 18px',
-                      background: 'linear-gradient(135deg, #059669 0%, #10b981 100%)',
+                      background: colors.semantic.success,
                       boxShadow: '0 4px 14px rgba(5, 150, 105, 0.28)',
                       border: 'none',
                     }}
@@ -1050,7 +1317,7 @@ const StorefrontScreen = () => {
       <div style={{ marginBottom: 24 }}>
         <Flex justify="space-between" align="center" wrap="wrap" gap={12} style={{ marginBottom: 12 }}>
           <div>
-            <Title level={4} style={{ fontWeight: 800, color: '#0f172a', margin: 0, letterSpacing: '-0.3px' }}>
+            <Title level={4} style={{ fontWeight: 800, color: colors.textMain, margin: 0, letterSpacing: '-0.3px' }}>
               {storeArchetype === 'food'
                 ? 'Menu & Dishes'
                 : storeArchetype === 'service'
@@ -1065,16 +1332,6 @@ const StorefrontScreen = () => {
               Direct prices with 0% aggregator markups
             </Text>
           </div>
-
-          {/* Quick Search within store */}
-          <Input
-            prefix={<SearchOutlined style={{ color: '#94a3b8' }} />}
-            placeholder="Search items in this store..."
-            allowClear
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: screens.xs ? '100%' : 260, borderRadius: 10 }}
-          />
         </Flex>
 
         {/* Dietary Veg/Non-Veg Filter (Only shown if restaurant/food items exist) */}
@@ -1088,7 +1345,7 @@ const StorefrontScreen = () => {
                 { label: 'Pure Veg', value: 'veg' },
                 { label: 'Non-Veg', value: 'non-veg' },
               ]}
-              style={{ fontWeight: 700, padding: 3, background: '#f1f5f9' }}
+              style={{ fontWeight: 700, padding: 3, background: colors.borderLight }}
             />
           </Flex>
         )}
@@ -1106,7 +1363,7 @@ const StorefrontScreen = () => {
                     padding: '3px 12px',
                     borderRadius: 16,
                     fontWeight: 600,
-                    border: '1px solid #e2e8f0',
+                    border: `1px solid ${colors.border}`,
                   }}
                 >
                   {field.label}
@@ -1116,6 +1373,7 @@ const StorefrontScreen = () => {
                   key={field.key}
                   allowClear
                   size="small"
+                  className="sf-filter-select"
                   placeholder={field.label}
                   aria-label={`Filter by ${field.label}`}
                   value={fieldFilters[field.key]}
@@ -1132,372 +1390,87 @@ const StorefrontScreen = () => {
             )}
           </Flex>
         )}
-
-        {/* DYNAMIC CATEGORY TABS (Only relevant sections, NO empty zeros!) */}
-        <Tabs
-          activeKey={activeTab}
-          onChange={setActiveTab}
-          items={dynamicTabs}
-          style={{ marginBottom: 16 }}
-        />
       </div>
 
-      {/* Item Cards Grid */}
-      {filteredListings.length === 0 ? (
-        <Card style={{ borderRadius: 16, textAlign: 'center', padding: '40px 16px', border: '1px solid #e2e8f0' }}>
-          <Empty
-            description="No items found in this section"
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-          >
-            <Button
-              type="primary"
-              onClick={() => {
-                setActiveTab('all');
-                setSearchQuery('');
-                setFoodFilter('all');
-                setFieldFilters({});
-              }}
-              style={{ borderRadius: 8, fontWeight: 700 }}
-            >
-              Reset Filters
+      {/* Sticky search + section chips */}
+      <SectionChips
+        sections={visibleSections}
+        activeId={activeSectionId}
+        onJump={jumpToSection}
+        search={searchQuery}
+        onSearch={setSearchQuery}
+        placeholder="Search items in this store"
+        showChips={!isSearching}
+      />
+
+      {isSearching ? (
+        <PagedListingGrid
+          key={debouncedQuery}
+          shopId={shop_id}
+          q={debouncedQuery}
+          renderItem={renderItem}
+          filterItem={filterItem}
+          gutter={gridGutter}
+          emptyText={`No items match "${debouncedQuery}"`}
+          header={(n) => (
+            <div className="sf-results-head" aria-live="polite">
+              {n} {n === 1 ? 'result' : 'results'} for &quot;{debouncedQuery}&quot;
+            </div>
+          )}
+        />
+      ) : storefront.status === 'loading' ? (
+        <div aria-busy="true">
+          <Flex gap={8} style={{ marginBottom: 16 }}>
+            {[0, 1, 2, 3].map((i) => (
+              <Skeleton.Button key={i} active size="small" shape="round" />
+            ))}
+          </Flex>
+          {[0, 1].map((i) => (
+            <div key={i} className="sf-block">
+              <Skeleton active title={{ width: 160 }} paragraph={false} />
+              <div className="sf-block-skeleton">
+                <Skeleton active avatar={{ shape: 'square', size: 76 }} paragraph={{ rows: 2 }} />
+                <Skeleton active avatar={{ shape: 'square', size: 76 }} paragraph={{ rows: 2 }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : storefront.status === 'error' ? (
+        <Alert
+          type="error"
+          showIcon
+          message="This store's items didn't load"
+          description={storefront.error}
+          action={
+            <Button size="small" onClick={storefront.reload}>
+              Retry
             </Button>
-          </Empty>
-        </Card>
+          }
+        />
+      ) : visibleSections.length === 0 ? (
+        <div className="sf-empty-store">This store hasn&apos;t added products yet.</div>
       ) : (
-        <Row gutter={screens.xs ? [12, 12] : [16, 16]}>
-          {filteredListings.map((item) => {
-            const inCartItem = cart.items.find((i) => i.listing_id === item.id);
-            const qty = inCartItem?.quantity || 0;
-            const isFood = item.listing_type === 'food';
-            const isService = item.listing_type === 'service';
-            const isRental = item.listing_type === 'rental';
-            const foodType = item.metadata?.food_type;
-            const durationMins = item.metadata?.duration_mins;
-            const deposit = item.metadata?.security_deposit;
-
-            return (
-              <Col xs={24} sm={12} md={8} key={item.id}>
-                <Card
-                  hoverable
-                  style={{
-                    height: '100%',
-                    borderRadius: 16,
-                    border: '1px solid #e2e8f0',
-                    boxShadow: '0 2px 10px rgba(15, 23, 42, 0.04)',
-                    transition: 'all 0.2s ease',
-                  }}
-                  bodyStyle={{
-                    padding: screens.xs ? 14 : 16,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    height: '100%',
-                  }}
-                >
-                  <Flex gap={12} align="start" style={{ marginBottom: 10 }}>
-                    {item.img_url ? (
-                      <img
-                        src={item.img_url}
-                        alt={item.name}
-                        style={{
-                          width: screens.xs ? 76 : 84,
-                          height: screens.xs ? 76 : 84,
-                          borderRadius: 12,
-                          objectFit: 'cover',
-                          flexShrink: 0,
-                          border: '1px solid #f1f5f9',
-                        }}
-                      />
-                    ) : (
-                      <div
-                        style={{
-                          width: screens.xs ? 76 : 84,
-                          height: screens.xs ? 76 : 84,
-                          borderRadius: 12,
-                          background: '#f8fafc',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          color: '#94a3b8',
-                          fontSize: 26,
-                          flexShrink: 0,
-                          border: '1px solid #f1f5f9',
-                        }}
-                      >
-                        <FileTextOutlined />
-                      </div>
-                    )}
-
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      {/* Section & Indicator Badges */}
-                      <Flex align="center" gap={6} wrap="wrap" style={{ marginBottom: 4 }}>
-                        {isFood && foodType && (
-                          <span
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              width: 14,
-                              height: 14,
-                              border: `1.5px solid ${foodType === 'veg' ? '#10b981' : '#ef4444'}`,
-                              borderRadius: 3,
-                              padding: 2,
-                            }}
-                            title={foodType === 'veg' ? 'Pure Veg' : 'Non-Veg'}
-                          >
-                            <span
-                              style={{
-                                width: 6,
-                                height: 6,
-                                borderRadius: foodType === 'veg' ? '50%' : 0,
-                                backgroundColor: foodType === 'veg' ? '#10b981' : '#ef4444',
-                              }}
-                            />
-                          </span>
-                        )}
-
-                        {item.metadata?.section && (
-                          <Tag
-                            color="blue"
-                            style={{
-                              fontSize: 10,
-                              lineHeight: '16px',
-                              padding: '0 6px',
-                              fontWeight: 600,
-                              margin: 0,
-                            }}
-                          >
-                            {item.metadata.section}
-                          </Tag>
-                        )}
-
-                        {durationMins && (
-                          <Tag color="purple" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            ⏱️ {durationMins}m
-                          </Tag>
-                        )}
-
-                        {item.metadata?.prescription_required && (
-                          <Tag color="error" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0, fontWeight: 700 }}>
-                            Rx Required
-                          </Tag>
-                        )}
-
-                        {item.metadata?.dosage_form && (
-                          <Tag color="cyan" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            Dosage: {item.metadata.dosage_form}
-                          </Tag>
-                        )}
-
-                        {item.metadata?.expiry_date && (
-                          <Tag color="orange" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            Exp: {item.metadata.expiry_date}
-                          </Tag>
-                        )}
-
-                        {(item.metadata?.warranty_period || item.metadata?.warranty_months) && (
-                          <Tag color="green" icon={<SafetyCertificateFilled style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            {item.metadata.warranty_period || item.metadata.warranty_months}m Warranty
-                          </Tag>
-                        )}
-
-                        {item.metadata?.vehicle_type && (
-                          <Tag color="geekblue" icon={<CarOutlined style={{ fontSize: 10 }} />} style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            {item.metadata.vehicle_type}
-                          </Tag>
-                        )}
-
-                        {item.metadata?.category_name && (
-                          <Tag color="purple" style={{ fontSize: 10, lineHeight: '16px', padding: '0 6px', margin: 0 }}>
-                            {item.metadata.category_name}
-                          </Tag>
-                        )}
-                      </Flex>
-
-                      <Title
-                        level={5}
-                        ellipsis={{ rows: 2 }}
-                        style={{
-                          margin: '0 0 6px 0',
-                          fontWeight: 700,
-                          fontSize: screens.xs ? 14 : 15,
-                          color: '#0f172a',
-                          lineHeight: 1.3,
-                        }}
-                      >
-                        {item.name}
-                      </Title>
-
-                      <Flex align="baseline" gap={6}>
-                        <span style={{ fontSize: 17, fontWeight: 800, color: colors.primary }}>
-                          ₹{item.price}
-                        </span>
-                        {item.mrp && item.mrp > item.price && (
-                          <span
-                            style={{
-                              fontSize: 12,
-                              color: '#94a3b8',
-                              textDecoration: 'line-through',
-                            }}
-                          >
-                            ₹{item.mrp}
-                          </span>
-                        )}
-                        <span style={{ fontSize: 11, color: '#64748b' }}>
-                          / {item.unit || 'unit'}
-                        </span>
-                      </Flex>
-                    </div>
-                  </Flex>
-
-                  {/* Description & Metadata */}
-                  {item.description && (
-                    <Paragraph
-                      type="secondary"
-                      ellipsis={{ rows: 2 }}
-                      style={{
-                        fontSize: 12,
-                        color: '#64748b',
-                        marginBottom: 12,
-                        minHeight: 34,
-                        lineHeight: '17px',
-                      }}
-                    >
-                      {item.description}
-                    </Paragraph>
-                  )}
-
-                  {/* Deposit notice for rentals */}
-                  {isRental && deposit && (
-                    <div
-                      style={{
-                        background: '#f0fdf4',
-                        border: '1px solid #bbf7d0',
-                        borderRadius: 6,
-                        padding: '4px 8px',
-                        fontSize: 11,
-                        color: '#166534',
-                        fontWeight: 600,
-                        marginBottom: 10,
-                      }}
-                    >
-                      <SafetyCertificateFilled style={{ marginRight: 6, color: '#166534' }} /> Refundable Deposit: ₹{deposit}
-                    </div>
-                  )}
-
-                  {/* Archetype Action Buttons */}
-                  <div style={{ marginTop: 'auto', paddingTop: 6 }}>
-                    {isService ? (
-                      <Flex gap={8}>
-                        <Button
-                          block
-                          style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
-                          onClick={() => handleOpenQuote(item)}
-                        >
-                          Request Quote
-                        </Button>
-                        <Button
-                          type="primary"
-                          block
-                          style={{
-                            borderRadius: radii.md,
-                            fontWeight: 700,
-                            height: 38,
-                            background: colors.primary,
-                            borderColor: colors.primary,
-                          }}
-                          onClick={() => handleAddToCart(item)}
-                        >
-                          Book Visit
-                        </Button>
-                      </Flex>
-                    ) : isRental ? (
-                      <Flex gap={8}>
-                        <Button
-                          block
-                          style={{ borderRadius: 8, fontWeight: 600, height: 38 }}
-                          onClick={() => {
-                            if (isOwnStore) {
-                              message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
-                              return;
-                            }
-                            handleChatOpen(shop.owner_id, shop.id, { shop_name: shop.shop_name });
-                          }}
-                        >
-                          Inquire
-                        </Button>
-                        <Button
-                          type="primary"
-                          block
-                          icon={<ShoppingCartOutlined />}
-                          style={{
-                            borderRadius: radii.md,
-                            fontWeight: 700,
-                            height: 38,
-                            background: colors.primary,
-                            borderColor: colors.primary,
-                          }}
-                          onClick={() => {
-                            if (isOwnStore) {
-                              message.info('You are viewing your own store. Open Merchant Hub to edit listings.');
-                              return;
-                            }
-                            addItem(shop, item);
-                            openCart();
-                          }}
-                        >
-                          Reserve
-                        </Button>
-                      </Flex>
-                    ) : qty > 0 ? (
-                      <Flex
-                        align="center"
-                        justify="space-between"
-                        style={{
-                          background: '#f8fafc',
-                          border: '1px solid #cbd5e1',
-                          borderRadius: 8,
-                          padding: '2px 8px',
-                          height: 38,
-                        }}
-                      >
-                        <Button
-                          type="text"
-                          icon={<MinusOutlined />}
-                          onClick={() => updateQuantity(item.id, -1)}
-                        />
-                        <span style={{ fontWeight: 800, color: '#0f172a', fontSize: 13 }}>
-                          {qty} in Cart
-                        </span>
-                        <Button
-                          type="text"
-                          icon={<PlusOutlined />}
-                          onClick={() => updateQuantity(item.id, 1)}
-                        />
-                      </Flex>
-                    ) : (
-                      <Button
-                        type="primary"
-                        block
-                        icon={<ShoppingCartOutlined />}
-                        style={{
-                          borderRadius: radii.md,
-                          fontWeight: 700,
-                          height: 38,
-                          background: colors.primary,
-                          borderColor: colors.primary,
-                        }}
-                        onClick={() => handleAddToCart(item)}
-                      >
-                        {isFood ? 'Add to Order' : 'Add to Cart'}
-                      </Button>
-                    )}
-                  </div>
-                </Card>
-              </Col>
-            );
-          })}
-        </Row>
+        visibleSections.map((section) => (
+          <SectionBlock
+            key={section.id}
+            section={section}
+            renderItem={renderItem}
+            filterItem={filterItem}
+            onNeedItems={storefront.loadSection}
+            onSeeAll={setSeeAllSection}
+            gutter={gridGutter}
+          />
+        ))
       )}
+
+      <SectionGridDrawer
+        shopId={shop_id}
+        section={seeAllSection}
+        onClose={() => setSeeAllSection(null)}
+        renderItem={renderItem}
+        filterItem={filterItem}
+        gutter={gridGutter}
+      />
 
       {/* Floating Bottom Cart Bar */}
       {cartItemsForThisShop > 0 && (
@@ -1530,7 +1503,7 @@ const StorefrontScreen = () => {
 
       {/* Quote Request Modal */}
       <Modal
-        title={`Request Estimate / Quote: ${quoteItem?.name || ''}`}
+        title={`Request a quote: ${quoteItem?.name || ''}`}
         open={quoteModalVisible}
         onCancel={() => setQuoteModalVisible(false)}
         footer={[
@@ -1560,11 +1533,11 @@ const StorefrontScreen = () => {
             placeholder="e.g. 1.5 Ton Split AC is blowing room temperature air. Need gas pressure check and repair on Saturday morning."
           />
         </div>
-        <div style={{ background: '#f8fafc', padding: 12, borderRadius: radii.md, border: `1px solid ${colors.border}` }}>
+        <div style={{ background: colors.surfaceContainerLow, padding: 12, borderRadius: radii.md, border: `1px solid ${colors.border}` }}>
           <Text type="secondary">Base Service / Inspection Rate:</Text>
           <div style={{ fontSize: 18, fontWeight: 800, color: colors.primary }}>
             ₹{quoteItem?.price || 0}{' '}
-            <span style={{ fontSize: 12, color: '#64748b', fontWeight: 400 }}>
+            <span style={{ fontSize: 12, color: colors.textLight, fontWeight: 400 }}>
               / {quoteItem?.unit || 'visit'}
             </span>
           </div>
