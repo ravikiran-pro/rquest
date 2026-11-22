@@ -320,6 +320,10 @@ const SearchScreen = () => {
 
   useEffect(() => {
     let cancelled = false;
+    // The master catalogue endpoints are auth-protected; skip for guests
+    const hasToken =
+      sessionStorage.getItem('auth_token') || localStorage.getItem('auth_token');
+    if (!hasToken) return;
     Promise.all([
       netWorkCall(apiConfig.master_categories, 'POST', JSON.stringify({ limit: 500, offset: 0 }), false),
       netWorkCall(apiConfig.master_sub_categories, 'POST', JSON.stringify({ limit: 500, offset: 0 }), false),
@@ -532,7 +536,7 @@ const SearchScreen = () => {
                 placement="bottomLeft"
                 content={
                   <div style={{ width: 230, padding: 6 }}>
-                    <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 8, padding: '0 4px' }}>
+                    <div style={{ fontSize: 12, fontWeight: 700, color: '#2A2620', marginBottom: 8, padding: '0 4px' }}>
                       Walking & Delivery Radius
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -552,7 +556,7 @@ const SearchScreen = () => {
                               borderRadius: radii.md,
                               border: 'none',
                               background: isSelected ? '#EFF6FF' : 'transparent',
-                              color: isSelected ? '#0B2D6B' : '#374151',
+                              color: isSelected ? '#C2542B' : '#374151',
                               fontWeight: isSelected ? 700 : 500,
                               fontSize: 13,
                               cursor: 'pointer',
@@ -562,7 +566,7 @@ const SearchScreen = () => {
                             }}
                           >
                             <span>{item.label}</span>
-                            {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
+                            {isSelected && <CheckOutlined style={{ color: '#C2542B', fontSize: 12 }} />}
                           </button>
                         );
                       })}
@@ -581,14 +585,14 @@ const SearchScreen = () => {
                     gap: 6,
                     fontSize: isMobile ? 12 : 13.5,
                     fontWeight: 600,
-                    color: '#111827',
+                    color: '#2A2620',
                     cursor: 'pointer',
                     padding: '4px 0',
                     whiteSpace: 'nowrap',
                     flexShrink: 0,
                   }}
                 >
-                  <CompassOutlined style={{ color: '#0B2D6B', fontSize: 15 }} />
+                  <CompassOutlined style={{ color: '#C2542B', fontSize: 15 }} />
                   <span>{filters.maxDistance ? `${filters.maxDistance} km` : 'All distances'}</span>
                   <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
                 </button>
@@ -599,7 +603,7 @@ const SearchScreen = () => {
     <div
       className={`rq-search-page${isImmersive ? ' is-immersive' : ''}${isImmersive && isScrolled ? ' is-scrolled' : ''}`}
       onScroll={isImmersive ? handleImmersiveScroll : undefined}
-      style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19', padding: isMobile ? '0 0 calc(40px + env(safe-area-inset-bottom, 0px))' : '24px 28px 60px' }}
+      style={{ minHeight: '100%', background: '#FAF7F2', color: '#1C1C19', padding: isMobile ? '0 0 calc(40px + env(safe-area-inset-bottom, 0px))' : '24px 28px 60px' }}
     >
       <div style={{ maxWidth: 1680, width: '100%', margin: '0 auto' }}>
         {/* Navigation Breadcrumb & Page Header (desktop only; phones use the bottom nav) */}
@@ -611,7 +615,7 @@ const SearchScreen = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#0B2D6B',
+              color: '#C2542B',
               fontWeight: 700,
               fontSize: 13.5,
               textDecoration: 'none',
@@ -683,7 +687,7 @@ const SearchScreen = () => {
               display: 'flex',
               alignItems: 'center',
               gap: isMobile ? 8 : 12,
-              background: '#F8F4EF',
+              background: '#FAF7F2',
               border: '1px solid #E5E7EB',
               borderRadius: radii.full,
               padding: isMobile ? '4px 6px 4px 12px' : '5px 8px 5px 16px',
@@ -723,7 +727,7 @@ const SearchScreen = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
               <SearchOutlined
                 style={{
-                  color: isSearchFocused ? '#0B2D6B' : '#9CA3AF',
+                  color: isSearchFocused ? '#C2542B' : '#9CA3AF',
                   fontSize: 16,
                   flexShrink: 0,
                   transition: 'color 0.2s ease',
@@ -759,7 +763,7 @@ const SearchScreen = () => {
                   outline: 'none',
                   background: 'transparent',
                   fontSize: isMobile ? 13 : 14.5,
-                  color: '#111827',
+                  color: '#2A2620',
                   width: '100%',
                   fontFamily: 'Inter, sans-serif',
                 }}
@@ -856,7 +860,7 @@ const SearchScreen = () => {
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  color: '#0159C5',
+                  color: '#3D6B4F',
                   cursor: 'pointer',
                   padding: 6,
                   borderRadius: '50%',
@@ -879,7 +883,7 @@ const SearchScreen = () => {
                 width: isMobile ? 34 : 38,
                 height: isMobile ? 34 : 38,
                 borderRadius: '50%',
-                background: '#0F172A',
+                background: '#2A2620',
                 color: '#FFFFFF',
                 border: 'none',
                 cursor: 'pointer',
@@ -931,25 +935,25 @@ const SearchScreen = () => {
                 onClick={() => setIsModalVisible(true)}
                 className="rq-location-chip"
                 style={{
-                  background: '#F8F4EF',
+                  background: '#FAF7F2',
                   border: '1px solid #ECE7DF',
                   borderRadius: 9999,
                   padding: '6px 12px',
                   fontSize: 12,
                   fontWeight: 600,
-                  color: '#111827',
+                  color: '#2A2620',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 5,
                 }}
               >
-                <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
+                <EnvironmentOutlined style={{ color: '#C2542B' }} />
                 <span className="rq-location-name">{cleanAreaName}</span>
                 {isDetectingLocation ? (
                   <Spin size="small" />
                 ) : (
-                  <span style={{ color: '#0159C5', fontWeight: 700 }}>· Change</span>
+                  <span style={{ color: '#3D6B4F', fontWeight: 700 }}>· Change</span>
                 )}
                 {savedAddresses.length > 0 && (
                   <span style={{ fontSize: 10.5, color: '#64748B', fontWeight: 500 }}>
@@ -965,12 +969,12 @@ const SearchScreen = () => {
                 aria-label="Detect precise location"
                 className="rq-nearby-btn"
                 style={{
-                  background: '#F8F4EF',
+                  background: '#FAF7F2',
                   border: '1px solid #ECE7DF',
                   borderRadius: 9999,
                   padding: '6px 10px',
                   fontSize: 12,
-                  color: '#0B2D6B',
+                  color: '#C2542B',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1011,7 +1015,7 @@ const SearchScreen = () => {
                   title="Grid View"
                   style={{
                     background: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
-                    color: viewMode === 'grid' ? '#0B2D6B' : '#64748B',
+                    color: viewMode === 'grid' ? '#C2542B' : '#64748B',
                     border: 'none',
                     borderRadius: radii.xs,
                     padding: '5px 8px',
@@ -1026,7 +1030,7 @@ const SearchScreen = () => {
                   title="List View"
                   style={{
                     background: viewMode === 'list' ? '#FFFFFF' : 'transparent',
-                    color: viewMode === 'list' ? '#0B2D6B' : '#64748B',
+                    color: viewMode === 'list' ? '#C2542B' : '#64748B',
                     border: 'none',
                     borderRadius: radii.xs,
                     padding: '5px 8px',
@@ -1093,7 +1097,7 @@ const SearchScreen = () => {
               <button
                 type="button"
                 onClick={() => setFilters(DEFAULT_FILTERS)}
-                style={{ background: 'none', border: 'none', color: '#0159C5', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}
+                style={{ background: 'none', border: 'none', color: '#3D6B4F', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' }}
               >
                 Clear all
               </button>
@@ -1130,7 +1134,7 @@ const SearchScreen = () => {
                 <Empty
                   description={
                     <div>
-                      <div style={{ fontWeight: 700, color: '#111827', fontSize: 16, marginBottom: 6 }}>
+                      <div style={{ fontWeight: 700, color: '#2A2620', fontSize: 16, marginBottom: 6 }}>
                         {searchError || 'No matching stores or items in this radius'}
                       </div>
                       <div style={{ color: '#64748B', fontSize: 13 }}>
@@ -1221,7 +1225,7 @@ const SearchScreen = () => {
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
+            <EnvironmentOutlined style={{ color: '#C2542B' }} />
             <span>Select Your Neighborhood Location</span>
           </div>
         }

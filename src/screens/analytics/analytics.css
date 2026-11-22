@@ -16,7 +16,7 @@
 
 /* Hero band */
 .rq-analytics-hero {
-  background: linear-gradient(135deg, #0b2d6b 0%, #1a4a9c 100%); /* colors.primaryGradient */
+  background: linear-gradient(135deg, #C2542B 0%, #A8451F 100%); /* colors.primaryGradient */
   border-radius: 16px; /* radii.xl */
   padding: 22px 22px 20px 22px;
   color: #ffffff;
@@ -25,7 +25,7 @@
 
 .rq-analytics-hero-title {
   margin: 0;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Fraunces', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 22px;
   font-weight: 800;
   letter-spacing: -0.5px;
@@ -60,9 +60,9 @@
 }
 
 .rq-analytics-hero-chip--lime {
-  background: #d2f82e; /* colors.lime */
-  border-color: #d2f82e;
-  color: #111827; /* colors.limeText */
+  background: #E2A63D; /* colors.lime */
+  border-color: #E2A63D;
+  color: #2A2620; /* colors.limeText */
 }
 
 /* Section headers */
@@ -76,11 +76,11 @@
 
 .rq-analytics-section-title {
   margin: 0;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Fraunces', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 16px;
   font-weight: 700;
   letter-spacing: -0.3px;
-  color: #1c1c19; /* colors.textMain */
+  color: #2A2620; /* colors.textMain */
 }
 
 .rq-analytics-section-link {
@@ -89,7 +89,7 @@
   padding: 0;
   font-size: 12px;
   font-weight: 600;
-  color: #0159c5; /* colors.secondary */
+  color: #3D6B4F; /* colors.secondary */
   cursor: pointer;
 }
 
@@ -112,7 +112,7 @@
 
 .rq-analytics-stat {
   background: #ffffff; /* colors.surface */
-  border: 1px solid #ebe7e0; /* colors.border */
+  border: 1px solid #E6DED2; /* colors.border */
   border-radius: 12px; /* radii.lg */
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03); /* shadows.card */
   padding: 14px 16px;
@@ -130,7 +130,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #575a65; /* colors.textLight */
+  color: #7A7268; /* colors.textLight */
 }
 
 .rq-analytics-stat-icon {
@@ -140,26 +140,26 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #e6f0ff; /* colors.primaryLight */
-  color: #0b2d6b; /* colors.primary */
+  background: #FBEDE6; /* colors.primaryLight */
+  color: #C2542B; /* colors.primary */
   font-size: 15px;
   flex-shrink: 0;
 }
 
 .rq-analytics-stat-value {
   margin-top: 8px;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Fraunces', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 24px;
   font-weight: 800;
   letter-spacing: -0.5px;
-  color: #1c1c19;
+  color: #2A2620;
   line-height: 1.25;
 }
 
 .rq-analytics-stat-hint {
   margin-top: 2px;
   font-size: 11px;
-  color: #575a65;
+  color: #7A7268;
 }
 
 /* Delta pill (semantic colors only) */
@@ -184,8 +184,8 @@
 }
 
 .rq-analytics-delta--flat {
-  background: #f1ede8; /* colors.surfaceContainer */
-  color: #444650; /* colors.textMuted */
+  background: #F0EAE0; /* colors.surfaceContainer */
+  color: #5C554B; /* colors.textMuted */
 }
 
 /* Two-column row: sparkline + recent orders */
@@ -204,7 +204,7 @@
 
 .rq-analytics-card {
   background: #ffffff;
-  border: 1px solid #ebe7e0;
+  border: 1px solid #E6DED2;
   border-radius: 12px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.03);
   padding: 16px;
@@ -212,10 +212,10 @@
 
 .rq-analytics-card-title {
   margin: 0 0 12px 0;
-  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Fraunces', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 14px;
   font-weight: 700;
-  color: #1c1c19;
+  color: #2A2620;
 }
 
 /* 7-day bar list — plain divs, no chart lib */
@@ -242,28 +242,28 @@
   width: 100%;
   max-width: 34px;
   border-radius: 6px 6px 2px 2px;
-  background: #d8e2ff; /* colors.secondaryLight */
+  background: #E7F0E9; /* colors.secondaryLight */
   min-height: 3px;
 }
 
 .rq-analytics-bar--peak {
-  background: #0b2d6b; /* colors.primary */
+  background: #C2542B; /* colors.primary */
 }
 
 .rq-analytics-bar--today {
-  background: #d2f82e; /* colors.lime accent for today */
+  background: #E2A63D; /* colors.lime accent for today */
 }
 
 .rq-analytics-bar-count {
   font-size: 10px;
   font-weight: 700;
-  color: #444650;
+  color: #5C554B;
 }
 
 .rq-analytics-bar-day {
   font-size: 10px;
   font-weight: 600;
-  color: #575a65;
+  color: #7A7268;
 }
 
 /* Recent orders list */
@@ -273,7 +273,7 @@
   justify-content: space-between;
   gap: 10px;
   padding: 10px 0;
-  border-bottom: 1px solid #f1ede8; /* colors.borderLight */
+  border-bottom: 1px solid #F0EAE0; /* colors.borderLight */
 }
 
 .rq-analytics-order-row:last-child {
@@ -287,7 +287,7 @@
 .rq-analytics-order-number {
   font-size: 13px;
   font-weight: 700;
-  color: #1c1c19;
+  color: #2A2620;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -295,7 +295,7 @@
 
 .rq-analytics-order-sub {
   font-size: 11px;
-  color: #575a65;
+  color: #7A7268;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -311,7 +311,7 @@
 .rq-analytics-order-amount {
   font-size: 13px;
   font-weight: 700;
-  color: #0b2d6b;
+  color: #C2542B;
 }
 
 /* Status tag colors use the existing semantic palette */
@@ -327,8 +327,8 @@
 }
 
 .rq-analytics-status--active {
-  background: #e6f0ff;
-  color: #0b2d6b;
+  background: #FBEDE6;
+  color: #C2542B;
 }
 
 .rq-analytics-status--done {

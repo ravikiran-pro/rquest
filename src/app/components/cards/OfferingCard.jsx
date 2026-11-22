@@ -18,17 +18,17 @@ const { Text } = Typography;
 // Curated authentic fallbacks matching Indian hyperlocal categories
 const FALLBACK_IMAGES = {
   groceries:
-    'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1542838132-92c53300491e.jpg',
   food:
-    'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1589301760014-d929f3979dbc.jpg',
   repairs:
-    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1621905251189-08b45d6a269e.jpg',
   electronics:
-    'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1583863788434-e58a36330cf0.jpg',
   rentals:
-    'https://images.unsplash.com/photo-1504148455328-c376907d081c?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1504148455328-c376907d081c.jpg',
   default:
-    'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80',
+    '/images/stock/1578916171728-46686eac8d58.jpg',
 };
 
 const resolveImage = (item) => {
@@ -348,7 +348,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             {/* Item Title */}
             <div
               style={{
-                fontFamily: 'Plus Jakarta Sans, sans-serif',
+                fontFamily: 'Fraunces, sans-serif',
                 fontSize: 14.5,
                 fontWeight: 700,
                 color: colors.textMain,
@@ -582,7 +582,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             color: colors.textMain,
             lineHeight: 1.3,
             marginBottom: 8,
-            fontFamily: 'Plus Jakarta Sans, sans-serif',
+            fontFamily: 'Fraunces, sans-serif',
           }}
         >
           {item.name}

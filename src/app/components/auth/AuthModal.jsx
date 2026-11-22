@@ -366,7 +366,7 @@ export const AuthModal = ({
       styles={{
         body: {
           padding: '24px 24px 28px',
-          background: '#F8F4EF',
+          background: '#FAF7F2',
           borderRadius: 20,
         },
       }}
@@ -437,7 +437,7 @@ export const AuthModal = ({
                         </span>
                       </div>
                       <Input.Password
-                        prefix={<LockOutlined style={{ color: '#747781' }} />}
+                        prefix={<LockOutlined style={{ color: '#7A7268' }} />}
                         placeholder="Enter your account password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -457,7 +457,7 @@ export const AuthModal = ({
                       style={{
                         height: 44,
                         borderRadius: 9999,
-                        background: '#0B2D6B',
+                        background: '#C2542B',
                         fontWeight: 700,
                         fontSize: 14,
                         width: '100%',
@@ -507,7 +507,7 @@ export const AuthModal = ({
                         style={{
                           background: 'none',
                           border: 'none',
-                          color: '#0159C5',
+                          color: '#3D6B4F',
                           fontSize: 12.5,
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -534,7 +534,7 @@ export const AuthModal = ({
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#0B2D6B',
+                      color: '#C2542B',
                       fontWeight: 700,
                       cursor: 'pointer',
                       padding: 0,
@@ -556,7 +556,7 @@ export const AuthModal = ({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#0B2D6B',
+                    color: '#C2542B',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -592,7 +592,7 @@ export const AuthModal = ({
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: '#0159C5',
+                        color: '#3D6B4F',
                         marginLeft: 4,
                       }}
                     >
@@ -640,7 +640,7 @@ export const AuthModal = ({
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#0B2D6B',
+                        color: '#C2542B',
                         fontWeight: 700,
                         cursor: 'pointer',
                       }}
@@ -660,7 +660,7 @@ export const AuthModal = ({
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#0B2D6B',
+                        color: '#C2542B',
                         fontSize: 12,
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -703,7 +703,7 @@ export const AuthModal = ({
                     width: '100%',
                     height: 44,
                     borderRadius: 9999,
-                    background: '#0B2D6B',
+                    background: '#C2542B',
                     fontWeight: 700,
                     fontSize: 14,
                   }}
@@ -741,7 +741,7 @@ export const AuthModal = ({
                     </span>
                   </div>
                   <Input
-                    prefix={<UserOutlined style={{ color: '#747781' }} />}
+                    prefix={<UserOutlined style={{ color: '#7A7268' }} />}
                     placeholder="Enter your name"
                     value={regFullName}
                     onChange={(e) => setRegFullName(e.target.value)}
@@ -780,7 +780,7 @@ export const AuthModal = ({
                     </span>
                   </div>
                   <Input.Password
-                    prefix={<LockOutlined style={{ color: '#747781' }} />}
+                    prefix={<LockOutlined style={{ color: '#7A7268' }} />}
                     placeholder="Create a password (min 4 chars)"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
@@ -797,7 +797,7 @@ export const AuthModal = ({
                     style={{
                       height: 44,
                       borderRadius: 9999,
-                      background: '#0B2D6B',
+                      background: '#C2542B',
                       fontWeight: 700,
                       fontSize: 14,
                     }}
@@ -824,7 +824,7 @@ export const AuthModal = ({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#0B2D6B',
+                    color: '#C2542B',
                     fontWeight: 700,
                     cursor: 'pointer',
                     padding: 0,

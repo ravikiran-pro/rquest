@@ -38,8 +38,8 @@
   width: 36px;
   height: 36px;
   border-radius: 8px;
-  background: #e6f0ff;
-  color: #0b2d6b;
+  background: #FBEDE6;
+  color: #C2542B;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -156,7 +156,7 @@
   min-width: 0;
   font-size: 13px;
   font-weight: 600;
-  color: #1c1c19;
+  color: #2A2620;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

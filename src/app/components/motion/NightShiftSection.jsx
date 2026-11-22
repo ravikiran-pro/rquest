@@ -15,8 +15,8 @@ const NIGHT_STEPS = [
     title: 'Pinpoint nearby inventory',
     description:
       'Set your street and walking radius. Rquest’s live geospatial radar pings local merchants within 1–5 km who are open and stocked right now.',
-    icon: <AimOutlined style={{ fontSize: 22, color: '#D2F82E' }} />,
-    accent: '#D2F82E',
+    icon: <AimOutlined style={{ fontSize: 22, color: '#E2A63D' }} />,
+    accent: '#E2A63D',
   },
   {
     number: '02',
@@ -24,8 +24,8 @@ const NIGHT_STEPS = [
     title: 'Confirm shelf stock & craft',
     description:
       'Skip the guesswork. Chat directly with the actual brick-and-mortar shopkeeper in real-time to verify sizes, fresh batches, or custom requests.',
-    icon: <ChatIcon style={{ fontSize: 22, color: '#5690FE' }} />,
-    accent: '#5690FE',
+    icon: <ChatIcon style={{ fontSize: 22, color: '#628F72' }} />,
+    accent: '#628F72',
   },
   {
     number: '03',
@@ -65,7 +65,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
               borderRadius: 9999,
               background: 'rgba(210, 248, 46, 0.12)',
               border: '1px solid rgba(210, 248, 46, 0.35)',
-              color: '#D2F82E',
+              color: '#E2A63D',
               fontSize: 11.5,
               fontWeight: 800,
               letterSpacing: '0.08em',
@@ -77,8 +77,8 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
                 width: 6,
                 height: 6,
                 borderRadius: '50%',
-                background: '#D2F82E',
-                boxShadow: '0 0 8px #D2F82E',
+                background: '#E2A63D',
+                boxShadow: '0 0 8px #E2A63D',
               }}
             />
             NEIGHBORHOOD COMMERCE NOCTURNE
@@ -94,11 +94,11 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
             letterSpacing: '-0.025em',
             margin: '0 auto 14px',
             maxWidth: 720,
-            fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+            fontFamily: "'Fraunces', -apple-system, BlinkMacSystemFont, sans-serif",
           }}
         >
           Effortless local trade,{' '}
-          <span style={{ color: '#D2F82E' }}>perfected day & night.</span>
+          <span style={{ color: '#E2A63D' }}>perfected day & night.</span>
         </h2>
 
         <p
@@ -138,7 +138,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
                   style={{
                     fontSize: 28,
                     fontWeight: 900,
-                    fontFamily: "'Plus Jakarta Sans', sans-serif",
+                    fontFamily: "'Fraunces', sans-serif",
                     color: activeStep === idx ? step.accent : 'rgba(255, 255, 255, 0.4)',
                     transition: 'color 0.25s ease',
                   }}
@@ -213,12 +213,12 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
                 {idx === 0 && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span className="radar-blip-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#D2F82E', display: 'inline-block' }} />
+                      <span className="radar-blip-pulse" style={{ width: 8, height: 8, borderRadius: '50%', background: '#E2A63D', display: 'inline-block' }} />
                       <span style={{ fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>
                         Local Radar Active
                       </span>
                     </div>
-                    <span style={{ fontSize: 11, color: '#D2F82E', fontWeight: 600 }}>
+                    <span style={{ fontSize: 11, color: '#E2A63D', fontWeight: 600 }}>
                       Radius: 2.0 km
                     </span>
                   </div>
@@ -228,13 +228,13 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                       <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Sunrise Bakehouse:</span>
-                      <span style={{ fontSize: 11, color: '#5690FE', fontWeight: 700 }}>“Hot batch at 7 AM”</span>
+                      <span style={{ fontSize: 11, color: '#628F72', fontWeight: 700 }}>“Hot batch at 7 AM”</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)' }}>Typing</span>
-                      <span className="typing-dot-1" style={{ width: 3, height: 3, borderRadius: '50%', background: '#5690FE' }} />
-                      <span className="typing-dot-2" style={{ width: 3, height: 3, borderRadius: '50%', background: '#5690FE' }} />
-                      <span className="typing-dot-3" style={{ width: 3, height: 3, borderRadius: '50%', background: '#5690FE' }} />
+                      <span className="typing-dot-1" style={{ width: 3, height: 3, borderRadius: '50%', background: '#628F72' }} />
+                      <span className="typing-dot-2" style={{ width: 3, height: 3, borderRadius: '50%', background: '#628F72' }} />
+                      <span className="typing-dot-3" style={{ width: 3, height: 3, borderRadius: '50%', background: '#628F72' }} />
                     </div>
                   </div>
                 )}
@@ -248,7 +248,7 @@ export const NightShiftSection = ({ onOpenRadar, onOpenChat, isMobile = false })
                         <div style={{ fontSize: 10, color: '#10B981', fontWeight: 700 }}>₹0 Platform Fee</div>
                       </div>
                     </div>
-                    <span style={{ fontSize: 11, background: 'rgba(210, 248, 46, 0.15)', color: '#D2F82E', padding: '3px 8px', borderRadius: 9999, fontWeight: 700 }}>
+                    <span style={{ fontSize: 11, background: 'rgba(210, 248, 46, 0.15)', color: '#E2A63D', padding: '3px 8px', borderRadius: 9999, fontWeight: 700 }}>
                       15 min
                     </span>
                   </div>

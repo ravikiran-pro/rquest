@@ -219,7 +219,7 @@ const ChatMessageItem = ({
           <span className="rquest-msg-status-indicator">
             {msg.status === 'pending' ? (
               <LoadingOutlined
-                style={{ fontSize: 10, color: 'var(--text-light, #747781)' }}
+                style={{ fontSize: 10, color: 'var(--text-light, #7A7268)' }}
                 title="Sending..."
               />
             ) : msg.is_read ? (

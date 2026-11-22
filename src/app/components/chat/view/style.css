@@ -2,14 +2,14 @@
   display: flex;
   cursor: pointer;
   border-radius: var(--radius-lg, 12px) !important;
-  border: 1px solid var(--border-color, #ebe7e0) !important;
+  border: 1px solid var(--border-color, #E6DED2) !important;
   background: var(--surface, #ffffff) !important;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .message-header-root:hover {
-  background: var(--surface-container-low, #f7f3ee) !important;
-  border-color: var(--border-color-dark, #c2c6d5) !important;
+  background: var(--surface-container-low, #F6F1E9) !important;
+  border-color: var(--border-color-dark, #C9BEB0) !important;
 }
 
 .message-header-root .ant-card-body {
@@ -32,16 +32,16 @@
 }
 
 .message-header-root .badge.offline {
-  background-color: var(--outline-variant, #c2c6d5);
+  background-color: var(--outline-variant, #C9BEB0);
 }
 
 .message-header-root .title {
-  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-family: var(--font-headline, 'Fraunces', sans-serif);
   font-size: 15px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
   letter-spacing: -0.01em;
 }
 
@@ -53,7 +53,7 @@
 .message-header-root .sub-title {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 12.5px;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
   margin-top: 2px;
 }
 
@@ -63,5 +63,5 @@
   align-items: flex-end;
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 11px;
-  color: var(--text-light, #747781);
+  color: var(--text-light, #7A7268);
 }

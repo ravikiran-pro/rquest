@@ -213,11 +213,11 @@ const AddressModal = ({
             key: `loc-${r.place_id || `${r.lat}-${r.lon}`}-${i}`,
             label: (
               <div style={{ padding: '4px 0' }}>
-                <div style={{ fontWeight: 600, fontSize: 13, color: '#1c1c19' }}>{r.name}</div>
+                <div style={{ fontWeight: 600, fontSize: 13, color: '#2A2620' }}>{r.name}</div>
                 <div
                   style={{
                     fontSize: 12,
-                    color: '#575a65',
+                    color: '#7A7268',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',

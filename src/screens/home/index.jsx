@@ -185,8 +185,8 @@ const CATEGORIES_IN_FOCUS = [
     title: 'Home Repairs & Tech',
     count: '16 providers',
     iconBg: '#EDE9FE',
-    iconColor: '#7C3AED',
-    icon: <AppstoreOutlined style={{ fontSize: 24, color: '#7C3AED' }} />,
+    iconColor: '#4F8A5B',
+    icon: <AppstoreOutlined style={{ fontSize: 24, color: '#4F8A5B' }} />,
     categoryFilter: 'Technicians',
   },
 ];
@@ -475,7 +475,7 @@ const HomeScreen = () => {
     history.push(`/search?category=${encodeURIComponent(catFilter)}`);
   };
 
-  const handleVisitFeaturedShop = (shopId) => {
+  const handleVisitFeaturedShop = (shopId, shopName) => {
     // If a matching shop exists in real DB searchMarkers, navigate to it
     const matched = searchMarkers.find(
       (s) =>
@@ -484,8 +484,10 @@ const HomeScreen = () => {
     );
     if (matched?.id) {
       history.push(`/shop/${matched.id}`);
+    } else if (shopName) {
+      // Fixture shop with no real DB record: show live search results instead
+      history.push(`/search?q=${encodeURIComponent(shopName)}`);
     } else {
-      // Navigate or view storefront
       history.push(`/shop/${shopId}`);
     }
   };
@@ -541,14 +543,14 @@ const HomeScreen = () => {
   }, [searchMarkers.length]);
 
   return (
-    <div style={{ minHeight: '100%', background: '#FDF9F4', color: '#1C1C19' }}>
+    <div style={{ minHeight: '100%', background: '#FAF7F2', color: '#1C1C19' }}>
       {/* =========================================================================
           SECTION 1: HERO SECTION (designs/main-inspiration-gpt.png)
           ========================================================================= */}
       <section
         style={{
           position: 'relative',
-          background: 'linear-gradient(180deg, #FDF9F4 0%, #FAF6F0 100%)',
+          background: 'linear-gradient(180deg, #FAF7F2 0%, #FAF6F0 100%)',
           padding: isMobile ? '36px 16px' : '56px 24px',
           borderBottom: '1px solid #ECE7DF',
           overflow: 'hidden',
@@ -634,7 +636,7 @@ const HomeScreen = () => {
                     placement="bottomLeft"
                     content={
                       <div style={{ width: 230, padding: 6 }}>
-                        <div style={{ fontSize: 12, fontWeight: 700, color: '#111827', marginBottom: 8, padding: '0 4px' }}>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: '#2A2620', marginBottom: 8, padding: '0 4px' }}>
                           Walking & Delivery Radius
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -654,7 +656,7 @@ const HomeScreen = () => {
                                   borderRadius: radii.md,
                                   border: 'none',
                                   background: isSelected ? '#EFF6FF' : 'transparent',
-                                  color: isSelected ? '#0B2D6B' : '#374151',
+                                  color: isSelected ? '#C2542B' : '#374151',
                                   fontWeight: isSelected ? 700 : 500,
                                   fontSize: 13,
                                   cursor: 'pointer',
@@ -664,7 +666,7 @@ const HomeScreen = () => {
                                 }}
                               >
                                 <span>{item.label}</span>
-                                {isSelected && <CheckOutlined style={{ color: '#0B2D6B', fontSize: 12 }} />}
+                                {isSelected && <CheckOutlined style={{ color: '#C2542B', fontSize: 12 }} />}
                               </button>
                             );
                           })}
@@ -682,14 +684,14 @@ const HomeScreen = () => {
                         gap: 5,
                         fontSize: isMobile ? 12 : 13.5,
                         fontWeight: 600,
-                        color: '#111827',
+                        color: '#2A2620',
                         cursor: 'pointer',
                         padding: '4px 0',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
                       }}
                     >
-                      <CompassOutlined style={{ color: '#0B2D6B', fontSize: isMobile ? 14 : 15 }} />
+                      <CompassOutlined style={{ color: '#C2542B', fontSize: isMobile ? 14 : 15 }} />
                       <span>{filters.maxDistance ? (isMobile ? `${filters.maxDistance} km` : `${filters.maxDistance} km radius`) : 'All radius'}</span>
                       <DownOutlined style={{ fontSize: 9, color: '#6B7280' }} />
                     </button>
@@ -703,7 +705,7 @@ const HomeScreen = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                   <SearchOutlined
                     style={{
-                      color: isSearchFocused ? '#0B2D6B' : '#9CA3AF',
+                      color: isSearchFocused ? '#C2542B' : '#9CA3AF',
                       fontSize: 16,
                       flexShrink: 0,
                       transition: 'color 0.2s ease',
@@ -735,7 +737,7 @@ const HomeScreen = () => {
                       outline: 'none',
                       background: 'transparent',
                       fontSize: isMobile ? 12.5 : 14.5,
-                      color: '#111827',
+                      color: '#2A2620',
                       width: '100%',
                       fontFamily: 'Inter, sans-serif',
                     }}
@@ -817,7 +819,7 @@ const HomeScreen = () => {
                     width: isMobile ? 36 : 44,
                     height: isMobile ? 36 : 44,
                     borderRadius: '50%',
-                    background: '#0F172A',
+                    background: '#2A2620',
                     color: '#FFFFFF',
                     border: 'none',
                     cursor: 'pointer',
@@ -966,7 +968,7 @@ const HomeScreen = () => {
                 fontWeight: 800,
                 color: '#110E28',
                 letterSpacing: '-0.025em',
-                fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+                fontFamily: "'Fraunces', -apple-system, BlinkMacSystemFont, sans-serif",
                 margin: 0,
               }}
             >
@@ -996,7 +998,7 @@ const HomeScreen = () => {
             style={{
               background: 'transparent',
               border: 'none',
-              color: '#0159C5',
+              color: '#3D6B4F',
               fontWeight: 700,
               fontSize: 14,
               cursor: 'pointer',
@@ -1059,7 +1061,7 @@ const HomeScreen = () => {
                     >
                       {shop.category}
                     </span>
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#111827', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: '#2A2620', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                       <StarFilled style={{ color: '#F59E0B', fontSize: 11 }} />
                       {shop.rating}
                     </span>
@@ -1073,7 +1075,7 @@ const HomeScreen = () => {
                       color: '#110E28',
                       margin: '0 0 6px',
                       letterSpacing: '-0.015em',
-                      fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+                      fontFamily: "'Fraunces', -apple-system, BlinkMacSystemFont, sans-serif",
                       whiteSpace: 'nowrap',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -1166,7 +1168,7 @@ const HomeScreen = () => {
                     </span>
                     <button
                       type="button"
-                      onClick={() => handleVisitFeaturedShop(shop.id)}
+                      onClick={() => handleVisitFeaturedShop(shop.id, shop.name)}
                       style={{
                         background: '#FFFFFF',
                         border: '1px solid #E5E7EB',
@@ -1174,18 +1176,18 @@ const HomeScreen = () => {
                         padding: '4px 12px',
                         fontSize: 12,
                         fontWeight: 600,
-                        color: '#111827',
+                        color: '#2A2620',
                         cursor: 'pointer',
                         transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#0B2D6B';
+                        e.currentTarget.style.background = '#C2542B';
                         e.currentTarget.style.color = '#FFFFFF';
-                        e.currentTarget.style.borderColor = '#0B2D6B';
+                        e.currentTarget.style.borderColor = '#C2542B';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#FFFFFF';
-                        e.currentTarget.style.color = '#111827';
+                        e.currentTarget.style.color = '#2A2620';
                         e.currentTarget.style.borderColor = '#E5E7EB';
                       }}
                     >
@@ -1224,7 +1226,7 @@ const HomeScreen = () => {
             style={{
               fontSize: 11.5,
               fontWeight: 800,
-              color: '#0B2D6B',
+              color: '#C2542B',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               marginBottom: 6,
@@ -1326,7 +1328,7 @@ const HomeScreen = () => {
                 style={{
                   fontSize: isMobile ? 'clamp(20px, 5.5vw, 24px)' : 34,
                   fontWeight: 700,
-                  color: '#1C1917',
+                  color: '#2A2620',
                   margin: '0 0 10px',
                   lineHeight: 1.25,
                 }}
@@ -1345,7 +1347,7 @@ const HomeScreen = () => {
                 }}
               >
                 List your storefront in under 5 minutes from your mobile phone. Enjoy{' '}
-                <strong style={{ color: '#1C1917' }}>zero listing fees</strong>, direct instant UPI bank settlements,
+                <strong style={{ color: '#2A2620' }}>zero listing fees</strong>, direct instant UPI bank settlements,
                 and zero commission cuts on retail sales.
               </p>
 
@@ -1354,7 +1356,7 @@ const HomeScreen = () => {
                 align="center"
                 gap={isMobile ? 10 : 24}
                 wrap="wrap"
-                style={{ fontSize: isMobile ? 12 : 13.5, color: '#1C1917', fontWeight: 600 }}
+                style={{ fontSize: isMobile ? 12 : 13.5, color: '#2A2620', fontWeight: 600 }}
               >
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <CheckCircleFilled style={{ color: '#059669', fontSize: 15 }} />
@@ -1444,7 +1446,7 @@ const HomeScreen = () => {
                     style={{
                       background: '#FFFFFF',
                       border: '1px solid #D7C6B4',
-                      color: '#1C1917',
+                      color: '#2A2620',
                       borderRadius: radii.full,
                       padding: isMobile ? '10px 18px' : '10px 16px',
                       fontSize: 13.5,
@@ -1478,7 +1480,7 @@ const HomeScreen = () => {
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <EnvironmentOutlined style={{ color: '#0B2D6B' }} />
+            <EnvironmentOutlined style={{ color: '#C2542B' }} />
             <span>Select Your Neighborhood Location</span>
           </div>
         }
@@ -1593,7 +1595,7 @@ const HomeScreen = () => {
                 height: 32,
                 borderRadius: '50%',
                 background: '#EFF6FF',
-                color: '#0B2D6B',
+                color: '#C2542B',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',
@@ -1604,7 +1606,7 @@ const HomeScreen = () => {
               1
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+              <div style={{ fontWeight: 700, color: '#2A2620', fontSize: 14, marginBottom: 2 }}>
                 List Your Store in 5 Minutes
               </div>
               <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
@@ -1631,7 +1633,7 @@ const HomeScreen = () => {
               2
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+              <div style={{ fontWeight: 700, color: '#2A2620', fontSize: 14, marginBottom: 2 }}>
                 Instant Neighborhood Radar Visibility
               </div>
               <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
@@ -1658,7 +1660,7 @@ const HomeScreen = () => {
               3
             </div>
             <div>
-              <div style={{ fontWeight: 700, color: '#111827', fontSize: 14, marginBottom: 2 }}>
+              <div style={{ fontWeight: 700, color: '#2A2620', fontSize: 14, marginBottom: 2 }}>
                 Direct Messaging & 100% Direct UPI
               </div>
               <div style={{ color: '#64748B', fontSize: 13, lineHeight: 1.5 }}>
@@ -1681,7 +1683,7 @@ const HomeScreen = () => {
             {!isMobile && (
               <>
                 {activeMerchantCount > 0 ? ' open in ' : ' near '}
-                <span style={{ color: '#0159C5' }}>{cleanAreaName}</span>
+                <span style={{ color: '#3D6B4F' }}>{cleanAreaName}</span>
               </>
             )}
           </span>
@@ -1691,7 +1693,7 @@ const HomeScreen = () => {
               history.push('/search');
             }}
             style={{
-              background: '#0F172A',
+              background: '#2A2620',
               color: '#FFFFFF',
               border: 'none',
               borderRadius: radii.full,

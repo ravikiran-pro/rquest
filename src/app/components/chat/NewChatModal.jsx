@@ -75,7 +75,7 @@ const NewChatModal = ({
     >
       <div style={{ marginBottom: 14 }}>
         <Input
-          prefix={<SearchOutlined style={{ color: 'var(--text-light, #747781)' }} />}
+          prefix={<SearchOutlined style={{ color: 'var(--text-light, #7A7268)' }} />}
           placeholder={
             userRole === 'customer'
               ? 'Search stores to message...'
@@ -121,7 +121,7 @@ const NewChatModal = ({
                         <Avatar
                           icon={<ShopOutlined />}
                           style={{
-                            backgroundColor: 'var(--primary, #0B2D6B)',
+                            backgroundColor: 'var(--primary, #C2542B)',
                             color: '#ffffff',
                           }}
                         />
@@ -219,7 +219,7 @@ const NewChatModal = ({
                                 <Avatar
                                   icon={<ShopOutlined />}
                                   style={{
-                                    backgroundColor: 'var(--primary, #0B2D6B)',
+                                    backgroundColor: 'var(--primary, #C2542B)',
                                     color: '#ffffff',
                                   }}
                                 />

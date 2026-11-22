@@ -188,7 +188,7 @@ const RegisterScreen = () => {
                     </span>
                   </div>
                   <Input
-                    prefix={<UserOutlined style={{ color: '#747781' }} />}
+                    prefix={<UserOutlined style={{ color: '#7A7268' }} />}
                     placeholder={
                       selectedRole === MERCHANT_ROLE_ID
                         ? 'e.g. Sri Krishna Provisions'
@@ -229,7 +229,7 @@ const RegisterScreen = () => {
                     <span className="rq-auth-label-main">Create Password</span>
                   </div>
                   <Input.Password
-                    prefix={<LockOutlined style={{ color: '#747781' }} />}
+                    prefix={<LockOutlined style={{ color: '#7A7268' }} />}
                     placeholder="Create a secure password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

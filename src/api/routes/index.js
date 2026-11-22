@@ -29,11 +29,14 @@ router.use('/master', masterRouter);
 router.use('/listings', listingsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
-router.use('/notifications', notificationsRouter);
 // Master catalog: owner search/import, and the admin catalog console (each route checks its own auth)
 router.use('/catalog', catalogRouter);
 
+// authMiddleware copies user_id/role_id from the verified JWT into req.headers;
+// routers mounted below it (notifications, chat, ai) depend on those fields.
 router.use(authMiddleware);
+
+router.use('/notifications', notificationsRouter);
 
 router.use('/chat', chatRouter);
 

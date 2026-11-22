@@ -373,7 +373,7 @@ const LoginScreen = () => {
                         <span className="rq-auth-label-main">Password</span>
                       </div>
                       <Input.Password
-                        prefix={<LockOutlined style={{ color: '#747781' }} />}
+                        prefix={<LockOutlined style={{ color: '#7A7268' }} />}
                         placeholder="Enter your account password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -558,7 +558,7 @@ const LoginScreen = () => {
                       className="rq-otp-resend-link"
                       onClick={() => handleRequestOtp('sms')}
                       disabled={loading}
-                      style={{ fontSize: 13, color: '#0B2D6B', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                      style={{ fontSize: 13, color: '#C2542B', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       Send OTP via SMS instead
                     </button>

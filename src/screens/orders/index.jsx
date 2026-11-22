@@ -592,7 +592,7 @@ const OrdersScreen = () => {
                   style={{
                     margin: 0,
                     fontWeight: 700,
-                    color: '#0B2D6B',
+                    color: '#C2542B',
                     fontSize: 20,
                     letterSpacing: '-0.5px',
                   }}
@@ -644,7 +644,7 @@ const OrdersScreen = () => {
             <Button
               type="link"
               onClick={() => setActiveTab(activeTab === 'quotes' ? 'customer_orders' : 'quotes')}
-              style={{ color: '#0056bd', fontWeight: 700, padding: 0 }}
+              style={{ color: '#2F5D3C', fontWeight: 700, padding: 0 }}
             >
               {activeTab === 'quotes' ? 'Back to orders' : `View Service Quotes (${customerQuotes.length})`}
             </Button>
@@ -1114,7 +1114,7 @@ const OrdersScreen = () => {
                     fontFamily: typography.fontFamily.headline,
                     fontWeight: 700,
                     fontSize: 20,
-                    color: '#0B2D6B',
+                    color: '#C2542B',
                     }}
                 >
                   Your orders
@@ -1124,8 +1124,8 @@ const OrdersScreen = () => {
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: 6,
-                    background: '#E6F0FF',
-                    color: '#0056bd',
+                    background: '#FBEDE6',
+                    color: '#2F5D3C',
                     borderRadius: radii.full,
                     padding: '4px 12px',
                     fontSize: 12,
@@ -1137,7 +1137,7 @@ const OrdersScreen = () => {
                       width: 7,
                       height: 7,
                       borderRadius: '50%',
-                      background: '#0056bd',
+                      background: '#2F5D3C',
                       display: 'inline-block',
                     }}
                   />
@@ -1194,7 +1194,7 @@ const OrdersScreen = () => {
                     borderRadius: radii.md,
                     border: 'none',
                     background: selected ? '#ffffff' : 'transparent',
-                    color: selected ? colors.primary : '#575a65',
+                    color: selected ? colors.primary : '#7A7268',
                     fontWeight: selected ? 700 : 600,
                     fontSize: 14,
                     fontFamily: 'inherit',
@@ -1232,8 +1232,8 @@ const OrdersScreen = () => {
                       style={{
                         borderRadius: 8,
                         fontWeight: 700,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
+                        background: '#C2542B',
+                        borderColor: '#C2542B',
                       }}
                     >
                       Explore Nearby Stores
@@ -1600,7 +1600,7 @@ const OrdersScreen = () => {
                             <Avatar
                               shape="square"
                               size={48}
-                              src={ord.shop?.img_url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=600&q=80'}
+                              src={ord.shop?.img_url || '/images/stock/1542838132-92c53300491e.jpg'}
                               icon={<ShopOutlined />}
                               style={{ borderRadius: 12, flexShrink: 0 }}
                             />
@@ -1609,7 +1609,7 @@ const OrdersScreen = () => {
                                 style={{
                                   fontWeight: 700,
                                   fontSize: 14,
-                                  color: '#0B2D6B',
+                                  color: '#C2542B',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -1628,14 +1628,14 @@ const OrdersScreen = () => {
                               >
                                 {itemsSummary}
                               </div>
-                              <div style={{ fontSize: 12, color: '#0056bd', fontWeight: 600, marginTop: 1 }}>
+                              <div style={{ fontSize: 12, color: '#2F5D3C', fontWeight: 600, marginTop: 1 }}>
                                 {paymentLabel(ord)}
                               </div>
                             </div>
                           </div>
 
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 16, color: '#0B2D6B' }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: '#C2542B' }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
                             </div>
                           </div>
@@ -1656,8 +1656,8 @@ const OrdersScreen = () => {
                               }
                             }}
                             style={{
-                              background: '#0B2D6B',
-                              borderColor: '#0B2D6B',
+                              background: '#C2542B',
+                              borderColor: '#C2542B',
                               borderRadius: 9999,
                               fontWeight: 700,
                               padding: '0 18px',
@@ -1692,8 +1692,8 @@ const OrdersScreen = () => {
                       style={{
                         borderRadius: 8,
                         fontWeight: 700,
-                        background: '#0B2D6B',
-                        borderColor: '#0B2D6B',
+                        background: '#C2542B',
+                        borderColor: '#C2542B',
                       }}
                     >
                       Start Shopping

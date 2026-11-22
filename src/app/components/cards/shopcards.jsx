@@ -111,7 +111,7 @@ const ShopCard = ({
               <img
                 src={
                   img_url ||
-                  'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
+                  '/images/stock/1578916171728-46686eac8d58.jpg'
                 }
                 alt={shop_name}
                 style={{ width: '100%', height: '100%', objectFit: 'cover' }}

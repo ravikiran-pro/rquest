@@ -68,7 +68,7 @@ export const KineticHeadline = ({ isMobile = false }) => {
         lineHeight: 1.14,
         letterSpacing: '-0.035em',
         margin: '0 0 18px',
-        fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+        fontFamily: "'Fraunces', -apple-system, BlinkMacSystemFont, sans-serif",
       }}
     >
       Shops near you,
@@ -97,21 +97,21 @@ export const KineticHeadline = ({ isMobile = false }) => {
           <path
             className="spark-line-1"
             d="M4 36 L15 10"
-            stroke="#7C3AED"
+            stroke="#4F8A5B"
             strokeWidth="4.5"
             strokeLinecap="round"
           />
           <path
             className="spark-line-2"
             d="M17 37 L36 21"
-            stroke="#7C3AED"
+            stroke="#4F8A5B"
             strokeWidth="4.5"
             strokeLinecap="round"
           />
           <path
             className="spark-line-3"
             d="M23 38 L42 33"
-            stroke="#7C3AED"
+            stroke="#4F8A5B"
             strokeWidth="4.5"
             strokeLinecap="round"
           />

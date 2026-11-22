@@ -39,12 +39,12 @@ import ChatMessageItem from './ChatMessageItem';
 import NewChatModal from './NewChatModal';
 
 const AVATAR_PALETTE = [
-  colors.primary, // Maritime Navy (#0B2D6B)
-  colors.secondary, // Radiant Cobalt (#0159c5)
+  colors.primary, // Maritime Navy (#C2542B)
+  colors.secondary, // Radiant Cobalt (#3D6B4F)
   colors.tertiary, // Roasted Amber-Brown (#5B3A29)
   colors.semantic.success, // Emerald (#059669)
-  colors.primaryContainer, // Cobalt Container (#2e6fdb)
-  colors.secondaryHover, // Deep Cobalt (#004397)
+  colors.primaryContainer, // Cobalt Container (#D9714A)
+  colors.secondaryHover, // Deep Cobalt (#2F5540)
   colors.semantic.warningHover, // Warm Amber (#d97706)
   colors.tertiaryHover, // Deep Espresso (#472919)
   colors.tertiaryContainer, // Umber Container (#926a56)
@@ -1209,17 +1209,17 @@ function ChatApp() {
               <div className="rquest-chat-search-wrapper">
                 <Input
                   placeholder="Search conversations..."
-                  prefix={<SearchOutlined style={{ color: 'var(--text-light, #747781)', marginRight: 6 }} />}
+                  prefix={<SearchOutlined style={{ color: 'var(--text-light, #7A7268)', marginRight: 6 }} />}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   allowClear
                   style={{
                     borderRadius: 10,
-                    background: 'var(--surface-container-low, #f7f3ee)',
-                    border: '1px solid var(--border-color, #ebe7e0)',
+                    background: 'var(--surface-container-low, #F6F1E9)',
+                    border: '1px solid var(--border-color, #E6DED2)',
                     fontSize: 13,
                     padding: '6px 12px',
-                    color: 'var(--text-main, #1c1c19)',
+                    color: 'var(--text-main, #2A2620)',
                     fontFamily: "var(--font-body, 'Inter', sans-serif)",
                   }}
                 />
@@ -1338,7 +1338,7 @@ function ChatApp() {
                                   </span>
                                 ) : item.lastMsg ? (
                                   item.lastMsg.is_deleted ? (
-                                    <span style={{ fontStyle: 'italic', color: 'var(--text-light, #747781)' }}>
+                                    <span style={{ fontStyle: 'italic', color: 'var(--text-light, #7A7268)' }}>
                                       This message was deleted
                                     </span>
                                   ) : (
@@ -1350,7 +1350,7 @@ function ChatApp() {
                                     </span>
                                   )
                                 ) : (
-                                  <span style={{ color: 'var(--text-light, #747781)', fontStyle: 'italic' }}>
+                                  <span style={{ color: 'var(--text-light, #7A7268)', fontStyle: 'italic' }}>
                                     Start a conversation
                                   </span>
                                 )}
@@ -1657,10 +1657,10 @@ function ChatApp() {
                 />
                 <div
                   style={{
-                    fontFamily: "var(--font-headline, 'Plus Jakarta Sans', sans-serif)",
+                    fontFamily: "var(--font-headline, 'Fraunces', sans-serif)",
                     fontSize: 18,
                     fontWeight: 700,
-                    color: 'var(--text-main, #1c1c19)',
+                    color: 'var(--text-main, #2A2620)',
                     marginBottom: 6,
                     letterSpacing: '-0.02em',
                   }}
@@ -1671,7 +1671,7 @@ function ChatApp() {
                   style={{
                     fontFamily: "var(--font-body, 'Inter', sans-serif)",
                     fontSize: 13,
-                    color: 'var(--text-muted, #444650)',
+                    color: 'var(--text-muted, #5C554B)',
                     maxWidth: 300,
                     lineHeight: 1.5,
                   }}

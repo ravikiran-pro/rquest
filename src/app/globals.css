@@ -1,35 +1,37 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+/* Fonts are self-hosted: see public/fonts/fonts.css (loaded from index.html) */
 
 :root {
   /* ========================================================================
-     Rquest Centralized Design System - "Neighborhood Commerce" (Main Spec)
+     Rquest Centralized Design System - "Corner Store Gallery" (Selected Spec)
+     Warm cream canvas, ink-brown type, terracotta shopfront accent, serif
+     display headings. Distances & open/closed status read as signage.
      ======================================================================== */
 
-  /* Primary Brand Palette - Maritime Navy & Deep Indigo */
-  --primary: #0B2D6B;
-  --primary-hover: #1a4a9c;
-  --primary-active: #001947;
-  --primary-container: #2e6fdb;
-  --primary-light: #E6F0FF;
-  --primary-gradient: linear-gradient(135deg, #0B2D6B 0%, #1a4a9c 100%);
-  --primary-gradient-alt: linear-gradient(90deg, #0B2D6B 0%, #2e6fdb 100%);
+  /* Primary Brand Palette - Shopfront Terracotta */
+  --primary: #C2542B;
+  --primary-hover: #A8451F;
+  --primary-active: #8A3918;
+  --primary-container: #D9714A;
+  --primary-light: #FBEDE6;
+  --primary-gradient: linear-gradient(135deg, #C2542B 0%, #A8451F 100%);
+  --primary-gradient-alt: linear-gradient(90deg, #C2542B 0%, #D9714A 100%);
 
-  /* Signature Accent from designs/Main.png - Electric Lime / Chartreuse */
-  --brand-lime: #D2F82E;
-  --brand-lime-hover: #c5ea24;
-  --brand-lime-light: #f6fee7;
-  --brand-lime-text: #111827;
+  /* Signature Accent - Warm Honey (signage highlights) */
+  --brand-lime: #E2A63D;
+  --brand-lime-hover: #D0952C;
+  --brand-lime-light: #FBF3E2;
+  --brand-lime-text: #2A2620;
 
-  /* Hyperlocal Badge Accent - Soft Lavender & Rich Violet */
-  --brand-purple-badge: #ECE6F8;
-  --brand-purple-text: #4C1D95;
-  --brand-purple-dot: #7C3AED;
+  /* Hyperlocal Badge Accent - Soft Sage & Forest Green (open-now signage) */
+  --brand-purple-badge: #EAF0E7;
+  --brand-purple-text: #2F5D3C;
+  --brand-purple-dot: #4F8A5B;
 
-  /* Secondary Accent Palette - Radiant Cobalt */
-  --secondary: #0159c5;
-  --secondary-hover: #004397;
-  --secondary-container: #5690fe;
-  --secondary-light: #d8e2ff;
+  /* Secondary Accent Palette - Deep Forest Green */
+  --secondary: #3D6B4F;
+  --secondary-hover: #2F5540;
+  --secondary-container: #628F72;
+  --secondary-light: #E7F0E9;
 
   /* Tertiary - Roasted Amber-Brown & Craft Accents */
   --tertiary: #5B3A29;
@@ -38,44 +40,44 @@
   --tertiary-fixed: #ffdbcb;
   --on-tertiary-fixed: #2e1507;
 
-  /* Surface & Canvas System - Warm Tactile Parchment */
+  /* Surface & Canvas System - Warm Cream Gallery */
   --surface: #ffffff;
-  --surface-warm: #F7F3EE;
-  --surface-peach: #F7EDE4;
-  --surface-peach-border: #EADBCC;
-  --surface-container: #f1ede8;
-  --surface-container-low: #f7f3ee;
+  --surface-warm: #F3EDE4;
+  --surface-peach: #F6E8DC;
+  --surface-peach-border: #EAD8C6;
+  --surface-container: #F0EAE0;
+  --surface-container-low: #F6F1E9;
   --surface-container-lowest: #ffffff;
-  --surface-container-high: #ebe8e3;
-  --surface-container-highest: #e6e2dd;
+  --surface-container-high: #EBE3D6;
+  --surface-container-highest: #E4DACB;
 
   /* Layout & Surface Aliases */
-  --brand-dark: #0B2D6B;
+  --brand-dark: #2A2620;
   --brand-surface: #ffffff;
-  --brand-bg: #FDF9F4;
-  --brand-muted: #f1ede8;
-  --border-color: #ebe7e0;
-  --border-color-light: #f1ede8;
-  --border-color-dark: #c2c6d5;
-  --outline: #747781;
-  --outline-variant: #c2c6d5;
-  --text-main: #1c1c19;
-  --text-muted: #444650;
-  --text-light: #575a65;
+  --brand-bg: #FAF7F2;
+  --brand-muted: #F0EAE0;
+  --border-color: #E6DED2;
+  --border-color-light: #F0EAE0;
+  --border-color-dark: #C9BEB0;
+  --outline: #7A7268;
+  --outline-variant: #C9BEB0;
+  --text-main: #2A2620;
+  --text-muted: #5C554B;
+  --text-light: #7A7268;
   --white: #ffffff;
-  --dark-pill: #1C1917;
-  --dark-button: #0F172A;
+  --dark-pill: #2A2620;
+  --dark-button: #2A2620;
 
   /* Hyperlocal Badges & Status Chips */
-  --live-badge-bg: #ffdbcb;
-  --live-badge-text: #2e1507;
-  --verified-chip-bg: #E6F0FF;
-  --verified-chip-border: #d2e3fc;
-  --verified-chip-text: #0056bd;
-  --service-chip-bg: #f7ebe1;
-  --service-chip-border: #e8d5c8;
+  --live-badge-bg: #FBEDE6;
+  --live-badge-text: #8A3918;
+  --verified-chip-bg: #E7F0E9;
+  --verified-chip-border: #CFE3D4;
+  --verified-chip-text: #2F5D3C;
+  --service-chip-bg: #f6ede1;
+  --service-chip-border: #ead9c3;
   --service-chip-text: #5B3A29;
-  --star-gold: #926a56;
+  --star-gold: #E2A63D;
 
   /* Functional / Semantic Feedback */
   --success: #059669;
@@ -93,17 +95,17 @@
   --error-light: #ffdad6;
   --error-border: #fecaca;
 
-  --info: #0056bd;
-  --info-hover: #004397;
-  --info-light: #E6F0FF;
-  --info-border: #d2e3fc;
+  --info: #2F5D3C;
+  --info-hover: #2F5540;
+  --info-light: #FBEDE6;
+  --info-border: #CFE3D4;
 
-  /* Typography System */
-  --font-headline: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-sans-headline: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  /* Typography System - Fraunces display serif + Inter body */
+  --font-headline: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-sans-headline: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-sans: 'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-serif: var(--font-headline);
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-serif: 'Fraunces', Georgia, 'Times New Roman', serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
 
   --font-size-xs: 11px;
@@ -128,24 +130,24 @@
   --line-height-normal: 1.5;
   --line-height-relaxed: 1.625;
 
-  /* Border Radii System (Level 2) */
+  /* Border Radii System - shopfront signage softness */
   --radius-xs: 4px;
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-2xl: 24px;
   --radius-full: 9999px;
 
-  /* Elevation Shadows (Tactile / Diffuse) */
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.05);
-  --shadow-lg: 0 8px 24px -4px rgba(11, 45, 107, 0.08);
-  --shadow-card: 0 1px 4px rgba(0, 0, 0, 0.03);
-  --shadow-popover: 0 10px 25px -4px rgba(11, 45, 107, 0.12);
-  --shadow-primary: 0 2px 8px rgba(11, 45, 107, 0.18);
-  --shadow-ambient-glow: 0 8px 30px rgba(11, 45, 107, 0.08);
-  --shadow-nav: 0 -4px 16px rgba(11, 45, 107, 0.06);
+  /* Elevation Shadows (Warm, Diffuse) */
+  --shadow-sm: 0 1px 3px rgba(42, 38, 32, 0.04);
+  --shadow-md: 0 2px 8px rgba(42, 38, 32, 0.06);
+  --shadow-lg: 0 8px 24px -4px rgba(42, 38, 32, 0.1);
+  --shadow-card: 0 1px 4px rgba(42, 38, 32, 0.04);
+  --shadow-popover: 0 10px 25px -4px rgba(42, 38, 32, 0.14);
+  --shadow-primary: 0 2px 8px rgba(194, 84, 43, 0.22);
+  --shadow-ambient-glow: 0 8px 30px rgba(42, 38, 32, 0.08);
+  --shadow-nav: 0 -4px 16px rgba(42, 38, 32, 0.06);
 }
 
 * {
@@ -270,7 +272,7 @@ code {
   z-index: 2000;
   padding: 10px 16px;
   border-radius: var(--radius-md, 8px);
-  background: var(--primary, #0b2d6b);
+  background: var(--primary);
   color: #ffffff;
   font-weight: 700;
   transform: translateY(-200%);
@@ -499,7 +501,7 @@ button.rquest-chat-fab {
 }
 
 button.rquest-chat-fab:focus-visible {
-  outline: 3px solid var(--primary, #0b2d6b);
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
 
@@ -520,7 +522,7 @@ button.rquest-chat-fab:focus-visible {
   width: 58px;
   height: 58px;
   border-radius: 50%;
-  background: var(--primary, #0B2D6B);
+  background: var(--primary, var(--primary));
   box-shadow: 0 10px 25px -4px rgba(11, 45, 107, 0.45), 0 4px 10px -2px rgba(11, 45, 107, 0.25);
   display: flex;
   align-items: center;
@@ -529,14 +531,14 @@ button.rquest-chat-fab:focus-visible {
 }
 
 .rquest-chat-fab.active .rquest-chat-fab-inner {
-  background: var(--primary-active, #001947);
+  background: var(--primary-active, #8A3918);
   box-shadow: 0 8px 20px rgba(11, 45, 107, 0.3);
 }
 
 .chat-footer-icon .ant-avatar {
   width: 58px;
   height: 58px;
-  background: var(--primary, #0B2D6B) !important;
+  background: var(--primary, var(--primary)) !important;
   box-shadow: 0 8px 24px rgba(11, 45, 107, 0.35);
   display: flex;
   align-items: center;
@@ -768,7 +770,7 @@ button.rquest-chat-fab:focus-visible {
 }
 
 .ant-message-info .ant-message-notice-content {
-  border-left: 4px solid var(--primary, #0B2D6B) !important;
+  border-left: 4px solid var(--primary, var(--primary)) !important;
 }
 
 @keyframes slideUpToast {
@@ -817,14 +819,14 @@ button.rquest-chat-fab:focus-visible {
 
 /* 1. Visible Focus Indicator for Keyboard Navigation */
 :focus-visible {
-  outline: 2px solid var(--primary, #0B2D6B);
+  outline: 2px solid var(--primary, var(--primary));
   outline-offset: 2px;
 }
 
 button:focus-visible,
 a:focus-visible,
 [tabindex]:focus-visible {
-  outline: 2px solid var(--primary, #0B2D6B);
+  outline: 2px solid var(--primary, var(--primary));
   outline-offset: 2px;
 }
 
@@ -845,8 +847,8 @@ select:focus-visible {
    the ripple gives the press feedback instead. */
 @media (hover: none) {
   .ant-btn-primary:not(:disabled):not(.ant-btn-disabled):not(.ant-btn-dangerous):hover {
-    background: var(--primary, #0B2D6B);
-    border-color: var(--primary, #0B2D6B);
+    background: var(--primary, var(--primary));
+    border-color: var(--primary, var(--primary));
     color: #ffffff;
   }
 }
@@ -896,7 +898,7 @@ select:focus-visible {
 }
 
 .rquest-search-pill:focus-within {
-  border-color: var(--primary, #0B2D6B) !important;
+  border-color: var(--primary, var(--primary)) !important;
   /* Focus ring layered on top of any existing drop shadow; !important so it
      overrides inline box-shadow set on some pills (e.g. the homepage hero). */
   box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.12),
@@ -924,8 +926,8 @@ select:focus-visible {
 }
 
 .hero-lime-highlight {
-  background-color: var(--brand-lime, #D2F82E);
-  color: var(--brand-lime-text, #111827);
+  background-color: var(--brand-lime, var(--brand-lime));
+  color: var(--brand-lime-text, #2A2620);
   display: inline-block;
   padding: 0px 8px;
   border-radius: 6px;
@@ -938,8 +940,8 @@ select:focus-visible {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background-color: var(--brand-purple-badge, #ECE6F8);
-  color: var(--brand-purple-text, #4C1D95);
+  background-color: var(--brand-purple-badge, #EAF0E7);
+  color: var(--brand-purple-text, #2F5D3C);
   border-radius: 9999px;
   padding: 6px 14px;
   font-size: 11.5px;
@@ -970,7 +972,7 @@ select:focus-visible {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background-color: var(--brand-purple-dot, #7C3AED);
+  background-color: var(--brand-purple-dot, #4F8A5B);
 }
 
 .trust-proof-dot {
@@ -1229,7 +1231,7 @@ select:focus-visible {
   width: min(480px, 33vw);
   height: min(500px, 35vw);
   border-radius: 56% 44% 48% 52% / 46% 54% 46% 54%;
-  background: #ECE6F8;
+  background: #EAF0E7;
   pointer-events: none;
   z-index: 0;
   opacity: 0.82;
@@ -1360,7 +1362,7 @@ select:focus-visible {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   font-size: 13px;
   font-weight: 600;
-  color: #111827;
+  color: #2A2620;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   white-space: nowrap;
@@ -1594,7 +1596,7 @@ select:focus-visible {
 /* ==========================================================================
    Overlay theme: notifications, modals, the cart and sheets share the home
    page look - parchment canvas, soft lime glow, lime icon tile, navy actions
-   and Plus Jakarta Sans headings.
+   and Fraunces headings.
    ========================================================================== */
 
 :root {

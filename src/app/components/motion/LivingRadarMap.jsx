@@ -13,7 +13,7 @@ const PINS = [
     reviews: 184,
     x: 68,
     y: 20,
-    accent: '#D2F82E',
+    accent: '#E2A63D',
   },
   {
     id: 'fixit-hardware',
@@ -25,7 +25,7 @@ const PINS = [
     reviews: 96,
     x: 88,
     y: 8,
-    accent: '#0159C5',
+    accent: '#3D6B4F',
   },
   {
     id: 'petal-stem-botanics',
@@ -160,7 +160,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
               width: 14,
               height: 14,
               borderRadius: '50%',
-              background: '#0159C5',
+              background: '#3D6B4F',
               border: '3px solid #FFFFFF',
               boxShadow: '0 0 12px rgba(1, 89, 197, 0.8)',
             }}
@@ -189,7 +189,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
                 className="radar-pin-pill"
                 style={{
                   background: isSelected ? '#110E28' : 'rgba(17, 14, 40, 0.92)',
-                  borderColor: isSelected ? '#D2F82E' : 'rgba(255, 255, 255, 0.4)',
+                  borderColor: isSelected ? '#E2A63D' : 'rgba(255, 255, 255, 0.4)',
                   transform: isSelected ? 'scale(1.08)' : 'scale(1)',
                 }}
               >
@@ -235,7 +235,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
               width: 32,
               height: 32,
               borderRadius: 10,
-              background: '#D2F82E',
+              background: '#E2A63D',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -313,7 +313,7 @@ export const LivingRadarMap = ({ onSelectShop }) => {
                   <span style={{ fontSize: 13.5, fontWeight: 700, color: '#110E28' }}>
                     {activePin.fullName}
                   </span>
-                  <CheckCircleFilled style={{ color: '#0159C5', fontSize: 12 }} />
+                  <CheckCircleFilled style={{ color: '#3D6B4F', fontSize: 12 }} />
                 </div>
                 <div style={{ fontSize: 11.5, color: '#64748B', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                   <span>{activePin.distance} · {activePin.category}</span>

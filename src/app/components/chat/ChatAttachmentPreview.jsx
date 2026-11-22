@@ -52,7 +52,7 @@ const ChatAttachmentPreview = ({ attachments = [], onRemove, onRetry }) => {
                 />
               ) : (
                 <div className="rquest-attach-fallback-thumb">
-                  <PictureOutlined style={{ fontSize: 22, color: 'var(--primary, #0B2D6B)' }} />
+                  <PictureOutlined style={{ fontSize: 22, color: 'var(--primary, #C2542B)' }} />
                 </div>
               )}
 

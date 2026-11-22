@@ -7,7 +7,7 @@ const INITIAL_SHOPPERS = [
     name: 'Priya',
     distance: '0.4km',
     seeking: 'sourdough boules',
-    color: '#7C3AED',
+    color: '#4F8A5B',
     initialX: 68,
     initialY: 18,
     vx: 0.18,
@@ -18,7 +18,7 @@ const INITIAL_SHOPPERS = [
     name: 'Arun',
     distance: '0.9km',
     seeking: 'wall anchors',
-    color: '#0159C5',
+    color: '#3D6B4F',
     initialX: 14,
     initialY: 76,
     vx: -0.14,
@@ -145,7 +145,7 @@ export const ShopperCursors = ({ containerRef }) => {
             <span style={{ opacity: 0.65, fontWeight: 500, margin: '0 4px' }}>
               ({shopper.distance})
             </span>
-            <span style={{ color: '#0159C5', fontWeight: 600 }}>
+            <span style={{ color: '#3D6B4F', fontWeight: 600 }}>
               · {shopper.seeking}
             </span>
           </span>

@@ -1,40 +1,40 @@
 /**
  * Rquest Central Design System & Theme Engine
- * Adapted from "Neighborhood Commerce" (Stitch Design Specification)
+ * Adapted from "Corner Store Gallery" (Selected Design Specification)
  * 
  * Hyperlocal community-first marketplace design language:
- * - Deep Maritime Navy (#0B2D6B) for high-trust authority and focal CTAs
- * - Warm Parchment Canvas (#F8F4EF) for tactile, grounded contrast
- * - Fine hairline borders (#ebe7e0) and clean white elevated card surfaces
- * - Two-tier typography: Plus Jakarta Sans (Headings) + Inter (Body & Labels)
+ * - Deep Maritime Navy (#C2542B) for high-trust authority and focal CTAs
+ * - Warm Parchment Canvas (#FAF7F2) for tactile, grounded contrast
+ * - Fine hairline borders (#E6DED2) and clean white elevated card surfaces
+ * - Two-tier typography: Fraunces (Headings) + Inter (Body & Labels)
  */
 
 export const colors = {
-  // Brand Palette - Maritime Navy & Cobalt
-  primary: '#0B2D6B',
-  primaryHover: '#1a4a9c',
-  primaryActive: '#001947',
-  primaryContainer: '#2e6fdb',
-  primaryLight: '#E6F0FF',
-  primaryGradient: 'linear-gradient(135deg, #0B2D6B 0%, #1a4a9c 100%)',
-  primaryGradientAlt: 'linear-gradient(90deg, #0B2D6B 0%, #2e6fdb 100%)',
+  // Brand Palette - Shopfront Terracotta
+  primary: '#C2542B',
+  primaryHover: '#A8451F',
+  primaryActive: '#8A3918',
+  primaryContainer: '#D9714A',
+  primaryLight: '#FBEDE6',
+  primaryGradient: 'linear-gradient(135deg, #C2542B 0%, #A8451F 100%)',
+  primaryGradientAlt: 'linear-gradient(90deg, #C2542B 0%, #D9714A 100%)',
 
-  // Secondary Accent - Radiant Cobalt
-  secondary: '#0159c5',
-  secondaryHover: '#004397',
-  secondaryContainer: '#5690fe',
-  secondaryLight: '#d8e2ff',
+  // Secondary Accent - Deep Forest Green (open-now signage)
+  secondary: '#3D6B4F',
+  secondaryHover: '#2F5540',
+  secondaryContainer: '#628F72',
+  secondaryLight: '#E7F0E9',
 
-  // Signature Accent from designs/Main.png - High-Impact Electric Lime / Chartreuse
-  lime: '#D2F82E',
-  limeHover: '#c5ea24',
-  limeLight: '#f6fee7',
-  limeText: '#111827',
+  // Signature Accent - Warm Honey (signage highlights)
+  lime: '#E2A63D',
+  limeHover: '#D0952C',
+  limeLight: '#FBF3E2',
+  limeText: '#2A2620',
 
-  // Hyperlocal Badge - Pastel Lavender & Rich Violet
-  hyperBadgeBg: '#ECE6F8',
-  hyperBadgeText: '#4C1D95',
-  hyperBadgeDot: '#7C3AED',
+  // Hyperlocal Badge - Soft Sage & Forest Green
+  hyperBadgeBg: '#EAF0E7',
+  hyperBadgeText: '#2F5D3C',
+  hyperBadgeDot: '#4F8A5B',
 
   // Tertiary - Roasted Amber-Brown & Craft Accents
   tertiary: '#5B3A29',
@@ -43,52 +43,52 @@ export const colors = {
   tertiaryFixed: '#ffdbcb',
   onTertiaryFixed: '#2e1507',
 
-  // Warm Parchment & Neutral Surface Scales
+  // Warm Cream & Neutral Surface Scales
   surface: '#ffffff',
-  surfaceWarm: '#F7F3EE',
-  surfacePeach: '#F7EDE4',
-  surfacePeachBorder: '#EADBCC',
-  surfaceContainer: '#f1ede8',
-  surfaceContainerLow: '#f7f3ee',
+  surfaceWarm: '#F3EDE4',
+  surfacePeach: '#F6E8DC',
+  surfacePeachBorder: '#EAD8C6',
+  surfaceContainer: '#F0EAE0',
+  surfaceContainerLow: '#F6F1E9',
   surfaceContainerLowest: '#ffffff',
-  surfaceContainerHigh: '#ebe8e3',
-  surfaceContainerHighest: '#e6e2dd',
+  surfaceContainerHigh: '#EBE3D6',
+  surfaceContainerHighest: '#E4DACB',
 
   // Canvas & Layout Aliases
-  bg: '#FDF9F4',
-  bgHero: '#FDF9F4',
-  bgDim: '#ddd9d5',
-  bgBright: '#fdf9f4',
-  brandDark: '#0B2D6B',
+  bg: '#FAF7F2',
+  bgHero: '#FAF7F2',
+  bgDim: '#ddd6cb',
+  bgBright: '#FAF7F2',
+  brandDark: '#2A2620',
   brandSurface: '#ffffff',
-  brandBg: '#FDF9F4',
-  brandMuted: '#f1ede8',
-  darkPill: '#1C1917',
-  darkButton: '#0F172A',
+  brandBg: '#FAF7F2',
+  brandMuted: '#F0EAE0',
+  darkPill: '#2A2620',
+  darkButton: '#2A2620',
 
   // Fine Hairline Borders & Outlines
-  border: '#ebe7e0',
-  borderLight: '#f1ede8',
-  borderDark: '#c2c6d5',
-  outline: '#747781',
-  outlineVariant: '#c2c6d5',
+  border: '#E6DED2',
+  borderLight: '#F0EAE0',
+  borderDark: '#C9BEB0',
+  outline: '#7A7268',
+  outlineVariant: '#C9BEB0',
 
   // Typography Content Colors
-  textMain: '#1c1c19',
-  textMuted: '#444650',
-  textLight: '#575a65',
+  textMain: '#2A2620',
+  textMuted: '#5C554B',
+  textLight: '#7A7268',
   white: '#ffffff',
 
   // Hyperlocal Specialized Badges & Chips
-  liveBadgeBg: '#ffdbcb',
-  liveBadgeText: '#2e1507',
-  verifiedChipBg: '#E6F0FF',
-  verifiedChipBorder: '#d2e3fc',
-  verifiedChipText: '#0056bd',
-  serviceChipBg: '#f7ebe1',
-  serviceChipBorder: '#e8d5c8',
+  liveBadgeBg: '#FBEDE6',
+  liveBadgeText: '#8A3918',
+  verifiedChipBg: '#E7F0E9',
+  verifiedChipBorder: '#CFE3D4',
+  verifiedChipText: '#2F5D3C',
+  serviceChipBg: '#f6ede1',
+  serviceChipBorder: '#ead9c3',
   serviceChipText: '#5B3A29',
-  starGold: '#926a56',
+  starGold: '#E2A63D',
 
   // Functional & Semantic Feedback
   semantic: {
@@ -107,21 +107,21 @@ export const colors = {
     errorLight: '#ffdad6',
     errorBorder: '#fecaca',
 
-    info: '#0056bd',
-    infoHover: '#004397',
-    infoLight: '#E6F0FF',
-    infoBorder: '#d2e3fc',
+    info: '#2F5D3C',
+    infoHover: '#2F5540',
+    infoLight: '#FBEDE6',
+    infoBorder: '#CFE3D4',
   },
 };
 
 export const typography = {
   fontFamily: {
-    serif: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    display: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    headline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    sansHeadline: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    serif: "'Fraunces', Georgia, 'Times New Roman', serif",
+    display: "'Fraunces', Georgia, 'Times New Roman', serif",
+    headline: "'Fraunces', Georgia, 'Times New Roman', serif",
+    sansHeadline: "'Fraunces', Georgia, 'Times New Roman', serif",
     body: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-    sans: "'Inter', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    sans: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
     mono: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   },
   fontSize: {
@@ -163,23 +163,23 @@ export const typography = {
 
 export const radii = {
   xs: 4,
-  sm: 4,
-  md: 8,
-  lg: 12,
-  xl: 16,
+  sm: 6,
+  md: 10,
+  lg: 14,
+  xl: 18,
   '2xl': 24,
   full: 9999,
 };
 
 export const shadows = {
-  sm: '0 1px 3px rgba(0, 0, 0, 0.04)',
-  md: '0 2px 8px rgba(0, 0, 0, 0.05)',
-  lg: '0 8px 24px -4px rgba(11, 45, 107, 0.08)',
-  card: '0 1px 4px rgba(0, 0, 0, 0.03)',
-  popover: '0 10px 25px -4px rgba(11, 45, 107, 0.12)',
-  primary: '0 2px 8px rgba(11, 45, 107, 0.18)',
-  ambientGlow: '0 8px 30px rgba(11, 45, 107, 0.08)',
-  nav: '0 -4px 16px rgba(11, 45, 107, 0.06)',
+  sm: '0 1px 3px rgba(42, 38, 32, 0.04)',
+  md: '0 2px 8px rgba(42, 38, 32, 0.06)',
+  lg: '0 8px 24px -4px rgba(42, 38, 32, 0.1)',
+  card: '0 1px 4px rgba(42, 38, 32, 0.04)',
+  popover: '0 10px 25px -4px rgba(42, 38, 32, 0.14)',
+  primary: '0 2px 8px rgba(194, 84, 43, 0.22)',
+  ambientGlow: '0 8px 30px rgba(42, 38, 32, 0.08)',
+  nav: '0 -4px 16px rgba(42, 38, 32, 0.06)',
 };
 
 /**
@@ -200,7 +200,7 @@ export const antdTheme = {
     colorBorder: colors.border,
     colorBorderSecondary: colors.surfaceContainer,
     // One soft focus ring for every field (inputs, selects, date pickers)
-    controlOutline: 'rgba(11, 45, 107, 0.14)',
+    controlOutline: 'rgba(194, 84, 43, 0.16)',
     controlOutlineWidth: 3,
     colorErrorOutline: 'rgba(186, 26, 26, 0.14)',
     colorBgBase: colors.surface,
@@ -222,7 +222,7 @@ export const antdTheme = {
       controlHeight: 38,
       borderRadius: radii.md,
       fontWeight: typography.fontWeight.semibold,
-      primaryShadow: '0 2px 8px rgba(11, 45, 107, 0.18)',
+      primaryShadow: '0 2px 8px rgba(194, 84, 43, 0.22)',
       colorText: colors.textMain,
     },
     Input: {
@@ -232,7 +232,7 @@ export const antdTheme = {
       colorBgContainer: colors.surface,
       activeBorderColor: colors.primary,
       hoverBorderColor: colors.borderDark,
-      activeShadow: '0 0 0 3px rgba(11, 45, 107, 0.14)',
+      activeShadow: '0 0 0 3px rgba(194, 84, 43, 0.16)',
       errorActiveShadow: '0 0 0 3px rgba(186, 26, 26, 0.14)',
     },
     Select: {

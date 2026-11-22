@@ -80,10 +80,22 @@ const StorefrontScreen = () => {
     const fetchShopData = async () => {
       setLoading(true);
       try {
-        const [shopRes, listingsRes] = await Promise.all([
-          netWorkCall(`${apiConfig.shop_details}/${shop_id}/details`, 'GET', null, false),
-          netWorkCall(`${apiConfig.listings_by_shop}/${shop_id}`, 'GET', null, false),
-        ]);
+        const shopRes = await netWorkCall(
+          `${apiConfig.shop_details}/${shop_id}/details`,
+          'GET',
+          null,
+          false
+        );
+        // The URL may carry a slug; listings always key off the shop UUID
+        const resolvedId = shopRes?.data?.id;
+        const listingsRes = resolvedId
+          ? await netWorkCall(
+              `${apiConfig.listings_by_shop}/${resolvedId}`,
+              'GET',
+              null,
+              false
+            )
+          : null;
 
         if (isMounted) {
           if (shopRes?.data) setShop(shopRes.data);
@@ -651,7 +663,7 @@ const StorefrontScreen = () => {
                   <img
                     src={
                       shop.img_url ||
-                      'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
+                      '/images/stock/1578916171728-46686eac8d58.jpg'
                     }
                     alt={shop.shop_name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 12 }}
@@ -854,7 +866,7 @@ const StorefrontScreen = () => {
                   <img
                     src={
                       shop.img_url ||
-                      'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=300'
+                      '/images/stock/1578916171728-46686eac8d58.jpg'
                     }
                     alt={shop.shop_name}
                     style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 14 }}

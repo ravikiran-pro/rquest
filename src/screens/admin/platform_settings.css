@@ -40,7 +40,7 @@
   justify-content: space-between;
   gap: 16px;
   padding: 12px 0;
-  border-top: 1px solid var(--border-color-light, #f1ede8);
+  border-top: 1px solid var(--border-color-light, #F0EAE0);
 }
 
 .ps-switch-row:first-of-type {

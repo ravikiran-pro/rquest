@@ -45,14 +45,22 @@ export default defineConfig({
     // }),
   ],
   server: {
+    host: true,
+    port: 3000,
+    allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'https://rquest.onrender.com',
+        target: `http://localhost:${PORT}`,
         changeOrigin: true,
       },
       '/uploads': {
         target: `http://localhost:${PORT}`,
         changeOrigin: true,
+      },
+      '/socket.io': {
+        target: `http://localhost:${PORT}`,
+        changeOrigin: true,
+        ws: true,
       },
     },
   },

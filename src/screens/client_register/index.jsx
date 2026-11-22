@@ -29,12 +29,12 @@ const { Title, Text, Paragraph } = Typography;
 
 // Pictures. The category names, ids and sub-categories come from GET /shops/my_categories.
 const IMG = {
-  grocery: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=500&auto=format&fit=crop&q=80',
-  restaurant: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=500&auto=format&fit=crop&q=80',
-  pharmacy: 'https://images.unsplash.com/photo-1584308666744-24d5c474f2ae?w=500&auto=format&fit=crop&q=80',
-  repairs: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
-  salon: 'https://images.unsplash.com/photo-1560066984-138dadb4c035?w=500&auto=format&fit=crop&q=80',
-  retail: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=500&auto=format&fit=crop&q=80',
+  grocery: '/images/stock/1578916171728-46686eac8d58.jpg',
+  restaurant: '/images/stock/1555396273-367ea4eb4db5.jpg',
+  pharmacy: '/images/stock/1584308666744-24d5c474f2ae.jpg',
+  repairs: '/images/stock/1621905251189-08b45d6a269e.jpg',
+  salon: '/images/stock/1560066984-138dadb4c035.jpg',
+  retail: '/images/stock/1542838132-92c53300491e.jpg',
 };
 
 // Cover picture per category (keys match src/api/data/taxonomy.js), used until the owner picks one
@@ -914,7 +914,7 @@ const ClientRegister = () => {
                       <Form.Item label="Store cover photo URL (optional)">
                         <Input
                           size="large"
-                          placeholder="https://images.unsplash.com/..."
+                          placeholder="https://example.com/product-photo"
                           value={onboardingData.img_url}
                           onChange={(e) => setOnboardingData({ ...onboardingData, img_url: e.target.value })}
                         />

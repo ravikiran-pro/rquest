@@ -147,9 +147,18 @@ const getMyShops = async (req, res) => {
 const getShopDetails = async (req, res) => {
   try {
     const { shop_id } = req.params;
-    const shop = await shops.findByPk(shop_id, {
-      include: categoryIncludes(),
-    });
+    const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(shop_id);
+    const shop = isUuid
+      ? await shops.findByPk(shop_id, {
+          include: categoryIncludes(),
+        })
+      : await shops.findOne({
+          // URL slugs ("sunrise-bakehouse") fall back to a shop-name match
+          where: literal(
+            `lower("shops"."shop_name") = ${JSON.stringify(shop_id.replace(/-/g, ' ')).replace(/"/g, "'")}`
+          ),
+          include: categoryIncludes(),
+        });
 
     if (!shop) {
       return res.status(404).json({ error: 'Shop not found', success: false });

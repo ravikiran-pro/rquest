@@ -38,7 +38,7 @@ export const CategoryStall = ({
           transform: isHovered ? 'scale(1.15) rotate(6deg)' : 'scale(1) rotate(0deg)',
           transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: isHovered
-            ? `0 10px 20px -4px ${iconColor || '#0B2D6B'}40`
+            ? `0 10px 20px -4px ${iconColor || '#C2542B'}40`
             : 'none',
           flexShrink: 0,
         }}
@@ -56,7 +56,7 @@ export const CategoryStall = ({
           color: '#110E28',
           margin: '0 0 6px',
           letterSpacing: '-0.01em',
-          fontFamily: "'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif",
+          fontFamily: "'Fraunces', -apple-system, BlinkMacSystemFont, sans-serif",
           lineHeight: 1.25,
           overflowWrap: 'break-word',
           wordBreak: 'break-word',
@@ -73,7 +73,7 @@ export const CategoryStall = ({
             fontSize: 'clamp(10.5px, 3vw, 12px)',
             fontWeight: 600,
             color: '#64748B',
-            background: '#F8F4EF',
+            background: '#FAF7F2',
             padding: '2px 8px',
             borderRadius: 9999,
             border: '1px solid #ECE7DF',

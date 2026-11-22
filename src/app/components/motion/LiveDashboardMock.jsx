@@ -52,7 +52,7 @@ export const LiveDashboardMock = () => {
             style={{
               fontSize: 12,
               fontWeight: 700,
-              color: '#1C1917',
+              color: '#2A2620',
               whiteSpace: 'nowrap',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -87,7 +87,7 @@ export const LiveDashboardMock = () => {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginBottom: 12 }}>
           <div style={{ background: '#FAF6F0', borderRadius: 10, padding: '8px 6px', textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#6B7280', fontWeight: 600, whiteSpace: 'nowrap' }}>Orders Today</div>
-            <div style={{ fontSize: 'clamp(13px, 3.6vw, 17px)', fontWeight: 800, color: '#1C1917', marginTop: 2, whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 'clamp(13px, 3.6vw, 17px)', fontWeight: 800, color: '#2A2620', marginTop: 2, whiteSpace: 'nowrap' }}>
               {ordersCount}{' '}
               <span style={{ fontSize: 10, color: '#059669', fontWeight: 700 }}>
                 <ArrowUpOutlined style={{ fontSize: 8 }} /> 12%
@@ -97,7 +97,7 @@ export const LiveDashboardMock = () => {
 
           <div style={{ background: '#FAF6F0', borderRadius: 10, padding: '8px 6px', textAlign: 'center' }}>
             <div style={{ fontSize: 10, color: '#6B7280', fontWeight: 600, whiteSpace: 'nowrap' }}>Revenue</div>
-            <div style={{ fontSize: 'clamp(13px, 3.6vw, 17px)', fontWeight: 800, color: '#1C1917', marginTop: 2, whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: 'clamp(13px, 3.6vw, 17px)', fontWeight: 800, color: '#2A2620', marginTop: 2, whiteSpace: 'nowrap' }}>
               ₹{revenue.toLocaleString()}
             </div>
           </div>
@@ -126,7 +126,7 @@ export const LiveDashboardMock = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: 7, minWidth: 0 }}>
             <CoffeeOutlined style={{ fontSize: 13, color: '#78716C', flexShrink: 0 }} />
             <div style={{ minWidth: 0 }}>
-              <div style={{ color: '#1C1917', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ color: '#2A2620', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 Multi-grain boule (2x)
               </div>
               <div style={{ fontSize: 10, color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -159,7 +159,7 @@ export const LiveDashboardMock = () => {
               width: 24,
               height: 24,
               borderRadius: '50%',
-              background: '#D2F82E',
+              background: '#E2A63D',
               color: '#110E28',
               display: 'flex',
               alignItems: 'center',
@@ -171,7 +171,7 @@ export const LiveDashboardMock = () => {
             <BellFilled />
           </div>
           <div>
-            <div style={{ color: '#D2F82E', fontWeight: 800, fontSize: 11 }}>
+            <div style={{ color: '#E2A63D', fontWeight: 800, fontSize: 11 }}>
               NEW ORDER RECEIVED
             </div>
             <div style={{ color: '#FFFFFF', fontSize: 11.5 }}>

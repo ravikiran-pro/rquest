@@ -653,7 +653,7 @@ button.toggle-option-card:focus-visible {
 }
 
 .onb-chip:hover:not(:disabled) {
-  border-color: var(--border-color-dark, #c2c6d5);
+  border-color: var(--border-color-dark, #C9BEB0);
   background: var(--surface-container-low);
 }
 

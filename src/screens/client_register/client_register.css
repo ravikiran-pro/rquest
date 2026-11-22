@@ -2,14 +2,14 @@
    Merchant Store Onboarding & Outlets Hub - Clean Light Minimalist Style
    Mobile-First, Touch-Friendly, Native App Feel
    Centralized with Rquest "Neighborhood Commerce" Design Tokens
-   Warm Parchment (#F8F4EF), Maritime Navy (#0B2D6B), Charcoal (#1C1C19),
-   Roasted Umber (#5B3A29), Fine Hairline Borders (#ebe7e0)
+   Warm Parchment (#FAF7F2), Maritime Navy (#C2542B), Charcoal (#1C1C19),
+   Roasted Umber (#5B3A29), Fine Hairline Borders (#E6DED2)
    ========================================================================== */
 
 /* Outer Shell & Canvas */
 .merchant-page-wrapper {
   min-height: calc(100vh - 64px);
-  background-color: var(--brand-bg, #F8F4EF);
+  background-color: var(--brand-bg, #FAF7F2);
   position: relative;
   width: 100%;
   box-sizing: border-box;
@@ -44,7 +44,7 @@
 /* Elevated Warm Card Standards */
 .merchant-clean-card {
   background: var(--brand-surface, #ffffff) !important;
-  border: 1px solid var(--border-color, #ebe7e0) !important;
+  border: 1px solid var(--border-color, #E6DED2) !important;
   border-radius: var(--radius-xl, 16px) !important;
   box-shadow: 0 4px 20px rgba(11, 45, 107, 0.04) !important;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -53,34 +53,34 @@
 }
 
 .merchant-clean-card:hover {
-  border-color: var(--border-color-dark, #c2c6d5) !important;
+  border-color: var(--border-color-dark, #C9BEB0) !important;
 }
 
 /* Warm Tactile Onboarding Inputs (aligned with auth.css Stitch aesthetic) */
 .merchant-clean-card .merchant-warm-input.ant-input,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper {
-  background-color: var(--surface-container-low, #f7f3ee);
-  border: 1px solid var(--border-color, #ebe7e0);
+  background-color: var(--surface-container-low, #F6F1E9);
+  border: 1px solid var(--border-color, #E6DED2);
   border-radius: 11px;
   min-height: 44px;
   padding: 0 14px;
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 14px;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
   box-shadow: none;
   transition: all 0.2s ease;
 }
 
 .merchant-clean-card .merchant-warm-input.ant-input:hover,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper:hover {
-  border-color: var(--border-color-dark, #c2c6d5);
+  border-color: var(--border-color-dark, #C9BEB0);
 }
 
 .merchant-clean-card .merchant-warm-input.ant-input:focus,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper:focus,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper-focused {
   background-color: var(--surface, #ffffff);
-  border-color: var(--primary, #0B2D6B);
+  border-color: var(--primary, #C2542B);
   box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.1);
 }
 
@@ -89,25 +89,25 @@
   border: none;
   padding: 0;
   box-shadow: none;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
   font-size: 14px;
 }
 
 .merchant-clean-card .merchant-warm-input.ant-input::placeholder,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper input::placeholder {
-  color: var(--text-light, #747781);
+  color: var(--text-light, #7A7268);
 }
 
 .merchant-outlet-card {
   background: var(--brand-surface, #ffffff) !important;
-  border: 1px solid var(--border-color, #ebe7e0) !important;
+  border: 1px solid var(--border-color, #E6DED2) !important;
   border-radius: var(--radius-lg, 12px) !important;
   box-shadow: var(--shadow-card, 0 1px 4px rgba(0, 0, 0, 0.03)) !important;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 .merchant-outlet-card:hover {
-  border-color: var(--border-color-dark, #c2c6d5) !important;
+  border-color: var(--border-color-dark, #C9BEB0) !important;
   box-shadow: var(--shadow-md, 0 2px 8px rgba(11, 45, 107, 0.05)) !important;
   transform: translateY(-2px);
 }
@@ -129,7 +129,7 @@
 .toggle-option-card {
   padding: 12px 14px;
   border-radius: var(--radius-md, 8px);
-  border: 1.5px solid var(--border-color, #ebe7e0);
+  border: 1.5px solid var(--border-color, #E6DED2);
   background: var(--brand-surface, #ffffff);
   cursor: pointer;
   display: flex;
@@ -141,32 +141,32 @@
 }
 
 .toggle-option-card:hover {
-  border-color: var(--border-color-dark, #c2c6d5);
-  background: var(--surface-container-low, #f7f3ee);
+  border-color: var(--border-color-dark, #C9BEB0);
+  background: var(--surface-container-low, #F6F1E9);
 }
 
 .toggle-option-card.active {
-  border-color: var(--primary, #0B2D6B);
-  background: var(--primary-light, #E6F0FF);
+  border-color: var(--primary, #C2542B);
+  background: var(--primary-light, #FBEDE6);
   box-shadow: 0 2px 8px rgba(11, 45, 107, 0.08);
 }
 
 .toggle-option-title {
-  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-family: var(--font-headline, 'Fraunces', sans-serif);
   font-weight: var(--font-weight-semibold, 600);
   font-size: var(--font-size-sm, 12px);
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
 }
 
 .toggle-option-desc {
   font-size: var(--font-size-xs, 11px);
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
 }
 
 /* Live Storefront Preview Card */
 .store-preview-card {
-  background: var(--brand-bg, #F8F4EF);
-  border: 1px solid var(--border-color, #ebe7e0);
+  background: var(--brand-bg, #FAF7F2);
+  border: 1px solid var(--border-color, #E6DED2);
   border-radius: var(--radius-xl, 16px);
   padding: 16px;
   margin-bottom: 20px;
@@ -178,7 +178,7 @@
   border-radius: var(--radius-md, 8px);
   object-fit: cover;
   flex-shrink: 0;
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
 }
 
 /* Onboarding Step Tracker */
@@ -193,19 +193,19 @@
 .store-step-dot {
   flex: 1;
   height: 4px;
-  background: var(--border-color, #ebe7e0);
+  background: var(--border-color, #E6DED2);
   border-radius: var(--radius-xs, 4px);
   margin: 0 4px;
   transition: all 0.3s ease;
 }
 
 .store-step-dot.active {
-  background: var(--primary, #0B2D6B);
+  background: var(--primary, #C2542B);
   box-shadow: 0 1px 4px rgba(11, 45, 107, 0.25);
 }
 
 .store-step-dot.completed {
-  background: var(--secondary, #0159c5);
+  background: var(--secondary, #3D6B4F);
 }
 
 /* Floating / Sticky Mobile Navigation */
@@ -216,7 +216,7 @@
   gap: 12px;
   margin-top: 24px;
   padding-top: 16px;
-  border-top: 1px solid var(--border-color-light, #f1ede8);
+  border-top: 1px solid var(--border-color-light, #F0EAE0);
 }
 
 @media (max-width: 480px) {

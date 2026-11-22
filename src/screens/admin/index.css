@@ -21,12 +21,12 @@
 
 .admin-console .admin-console-title.ant-typography {
   margin: 0;
-  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-family: var(--font-headline, 'Fraunces', sans-serif);
   font-size: 26px;
   font-weight: 800;
   line-height: 1.2;
   letter-spacing: -0.02em;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
 }
 
 .admin-console .admin-role-tag {
@@ -37,8 +37,8 @@
   font-size: 11px;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  background: var(--primary-light, #e6f0ff);
-  color: var(--primary, #0b2d6b);
+  background: var(--primary-light, #FBEDE6);
+  color: var(--primary, #C2542B);
   border-color: rgba(11, 45, 107, 0.2);
 }
 
@@ -47,12 +47,12 @@
   margin-top: 4px;
   font-size: 14px;
   line-height: 1.5;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
 }
 
 .admin-console .admin-console-card {
   border-radius: 16px;
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
   box-shadow: 0 2px 8px rgba(11, 45, 107, 0.03);
   background: var(--surface, #ffffff);
 }
@@ -79,7 +79,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-family: var(--font-headline, 'Fraunces', sans-serif);
 }
 
 .admin-tabs .admin-tab-label .anticon,
@@ -148,7 +148,7 @@
   gap: 12px;
   margin-left: auto;
   font-size: 13px;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
   font-variant-numeric: tabular-nums;
 }
 
@@ -158,16 +158,16 @@
 
 /* ---------- Shared surfaces ---------- */
 .admin-table-wrap {
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
   border-radius: 12px;
   overflow: hidden;
   background: var(--surface, #ffffff);
 }
 
 .admin-state {
-  border: 1px dashed var(--border-color-dark, #c2c6d5);
+  border: 1px dashed var(--border-color-dark, #C9BEB0);
   border-radius: 12px;
-  background: var(--surface-container-low, #f7f3ee);
+  background: var(--surface-container-low, #F6F1E9);
   padding: 8px 16px;
 }
 
@@ -178,7 +178,7 @@
 .admin-state .ant-result-title {
   font-size: 18px;
   font-weight: 700;
-  font-family: var(--font-headline, 'Plus Jakarta Sans', sans-serif);
+  font-family: var(--font-headline, 'Fraunces', sans-serif);
 }
 
 .admin-hint {
@@ -189,17 +189,17 @@
   justify-content: center;
   margin-top: 4px;
   font-size: 13px;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
 }
 
 .admin-hint code {
   padding: 2px 8px;
   border-radius: 6px;
   background: var(--surface, #ffffff);
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 12px;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
 }
 
 /* Stacked record cards (phones) */
@@ -210,7 +210,7 @@
 }
 
 .admin-record-card {
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
   border-radius: 12px;
   background: var(--surface, #ffffff);
   padding: 12px;
@@ -233,14 +233,14 @@
   font-weight: 600;
   font-size: 14px;
   line-height: 1.35;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
   overflow-wrap: anywhere;
 }
 
 .admin-record-card__meta {
   margin-top: 2px;
   font-size: 12px;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
   overflow-wrap: anywhere;
 }
 
@@ -262,7 +262,7 @@
   gap: 10px;
   margin-top: 10px;
   font-size: 12px;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
 }
 
 .admin-record-card__actions {
@@ -270,7 +270,7 @@
   gap: 8px;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid var(--border-color-light, #f1ede8);
+  border-top: 1px solid var(--border-color-light, #F0EAE0);
 }
 
 .admin-record-card__actions > * {
@@ -314,7 +314,7 @@
   width: 56px;
   height: 6px;
   border-radius: 9999px;
-  background: var(--surface-container-high, #ebe8e3);
+  background: var(--surface-container-high, #EBE3D6);
   overflow: hidden;
 }
 
@@ -326,7 +326,7 @@
 
 .admin-quality__value {
   font-weight: 700;
-  color: var(--text-main, #1c1c19);
+  color: var(--text-main, #2A2620);
   min-width: 22px;
 }
 
@@ -363,7 +363,7 @@
 }
 
 .schema-field-card {
-  border: 1px solid var(--border-color, #ebe7e0);
+  border: 1px solid var(--border-color, #E6DED2);
   border-radius: 12px;
   background: var(--surface, #ffffff);
   padding: 12px;
@@ -390,8 +390,8 @@
   height: 28px;
   padding: 0 6px;
   border-radius: 9999px;
-  background: var(--primary-light, #e6f0ff);
-  color: var(--primary, #0b2d6b);
+  background: var(--primary-light, #FBEDE6);
+  color: var(--primary, #C2542B);
   font-weight: 700;
   font-size: 12px;
 }
@@ -417,7 +417,7 @@
   margin-bottom: 4px;
   font-size: 12px;
   font-weight: 600;
-  color: var(--text-muted, #444650);
+  color: var(--text-muted, #5C554B);
 }
 
 .schema-field-card__checks {

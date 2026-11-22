@@ -130,7 +130,7 @@ const DeliveryPortalScreen = () => {
       <div
         style={{
           borderRadius: radii.xl || 18,
-          background: 'linear-gradient(135deg, #0B2D6B 0%, #0159C5 100%)',
+          background: 'linear-gradient(135deg, #C2542B 0%, #3D6B4F 100%)',
           border: '1px solid rgba(255, 255, 255, 0.15)',
           marginBottom: 20,
           padding: '24px',
@@ -335,7 +335,7 @@ const DeliveryPortalScreen = () => {
                           style={{
                             borderRadius: radii.xl || 14,
                             border: `1px solid ${colors.border || '#EAE4DA'}`,
-                            background: '#F8F4EF',
+                            background: '#FAF7F2',
                             boxShadow: '0 4px 12px rgba(11, 45, 107, 0.05)',
                           }}
                           bodyStyle={{ padding: 20 }}

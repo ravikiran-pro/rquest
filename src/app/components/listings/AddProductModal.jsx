@@ -700,7 +700,7 @@ const AddProductModal = ({
           </Col>
           <Col xs={24} sm={12}>
             <Form.Item name="img_url" label="Image URL">
-              <Input placeholder="https://images.unsplash.com/..." />
+              <Input placeholder="https://example.com/product-photo" />
             </Form.Item>
           </Col>
         </Row>
