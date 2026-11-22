@@ -1,6 +1,6 @@
 const express = require('express');
+// GET /vapid-key is public and lives in routes/index.js, above authMiddleware.
 const {
-  VAPID_PUBLIC_KEY,
   subscribeUser,
   unsubscribeUser,
   sendPushNotification,
@@ -10,21 +10,11 @@ const { notifications } = require('../../models');
 const router = express.Router();
 
 /**
- * 1. Get Public VAPID Key for browser service worker registration
- */
-router.get('/vapid-key', (req, res) => {
-  res.status(200).json({
-    success: true,
-    publicKey: VAPID_PUBLIC_KEY,
-  });
-});
-
-/**
  * 2. Save / update Web Push subscription
  */
 router.post('/subscribe', async (req, res) => {
   try {
-    const userId = req.headers.user_id || req.body.user_id || null;
+    const userId = req.headers.user_id || null;
     const subscription = req.body.subscription || req.body;
 
     if (!subscription || !subscription.endpoint) {
@@ -54,7 +44,7 @@ router.post('/subscribe', async (req, res) => {
  */
 router.post('/unsubscribe', async (req, res) => {
   try {
-    const userId = req.headers.user_id || req.body.user_id || null;
+    const userId = req.headers.user_id || null;
     const { endpoint } = req.body;
 
     if (!endpoint) {
@@ -184,7 +174,7 @@ router.put('/read-all', async (req, res) => {
  */
 router.post('/test', async (req, res) => {
   try {
-    const userId = req.headers.user_id || req.body.user_id;
+    const userId = req.headers.user_id;
     if (!userId) {
       return res.status(400).json({
         success: false,

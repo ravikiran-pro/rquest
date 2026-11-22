@@ -8,6 +8,7 @@ const ordersRouter = require('./orders');
 const quotesRouter = require('./quotes');
 const locationRouter = require('./location');
 const notificationsRouter = require('./notifications');
+const { VAPID_PUBLIC_KEY } = require('../services/notificationService');
 const aiRouter = require('./ai');
 const platformRouter = require('./platform');
 const catalogRouter = require('./catalog');
@@ -29,11 +30,17 @@ router.use('/master', masterRouter);
 router.use('/listings', listingsRouter);
 router.use('/orders', ordersRouter);
 router.use('/quotes', quotesRouter);
-router.use('/notifications', notificationsRouter);
+// Public VAPID key for service-worker registration (no user context needed)
+router.get('/notifications/vapid-key', (req, res) => {
+  res.status(200).json({ success: true, publicKey: VAPID_PUBLIC_KEY });
+});
 // Master catalog: owner search/import, and the admin catalog console (each route checks its own auth)
 router.use('/catalog', catalogRouter);
 
 router.use(authMiddleware);
+
+// Notifications need the verified user: authMiddleware copies user_id from the JWT into req.headers.
+router.use('/notifications', notificationsRouter);
 
 router.use('/chat', chatRouter);
 
