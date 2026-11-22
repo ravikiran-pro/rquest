@@ -1184,8 +1184,9 @@ const SearchScreen = () => {
                       <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={item.id}>
                         <OfferingCard
                           item={item}
-                          onAddToCart={(it) => {
-                            addItem(it);
+                          onOrder={(it) => {
+                            // Cart is keyed by shop: pass the listing's shop alongside the item
+                            addItem(it.shop, it);
                             openCart();
                           }}
                         />
