@@ -14,7 +14,10 @@ const Routes = {
   orders: '/orders',
   profile: '/profile',
   deliveryPortal: '/delivery-portal',
-  analytics: '/analytics',
+  dashboard: '/dashboard',
+  // Old analytics URL, redirected to the dashboard in routes/index.jsx
+  analyticsLegacy: '/analytics',
+  notifications: '/notifications',
   // Owner: full-page master catalogue table (?shop_id=)
   storeCatalogue: '/store-catalogue',
   admin: '/admin',

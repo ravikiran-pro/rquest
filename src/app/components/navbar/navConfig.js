@@ -30,10 +30,10 @@ const ADMIN_LEGACY_TABS = { 1: 'categories', 2: 'stores', 3: 'orders', 4: 'catal
 export const adminTabPath = (key) => `${Routes.admin}?tab=${encodeURIComponent(key)}`;
 
 // Where a signed-in role lands by default (logo, login bounce, denied routes).
-// Analytics is the dashboard for owners and admins; shoppers keep the marketplace.
+// Dashboard is the home for owners and admins; shoppers keep the marketplace.
 export const ROLE_HOME = {
-  admin: Routes.analytics,
-  owner: Routes.analytics,
+  admin: Routes.dashboard,
+  owner: Routes.dashboard,
   user: Routes.search,
   guest: Routes.search,
 };
@@ -124,7 +124,7 @@ export const navMatch = {
     return isUnder(p, Routes.client) || isUnder(p, Routes.clientShop);
   },
   orders: (loc) => isUnder(cleanPath(loc.pathname), Routes.orders),
-  analytics: (loc) => isUnder(cleanPath(loc.pathname), Routes.analytics),
+  dashboard: (loc) => isUnder(cleanPath(loc.pathname), Routes.dashboard),
   profile: (loc) => isUnder(cleanPath(loc.pathname), Routes.profile),
   delivery: (loc) => isUnder(cleanPath(loc.pathname), Routes.deliveryPortal),
   cart: (loc) => isUnder(cleanPath(loc.pathname), Routes.cart),
@@ -145,3 +145,13 @@ export const spaLink = (history, to, onNavigate) => ({
     if (onNavigate) onNavigate();
   },
 });
+
+/**
+ * Where a notification leads when tapped: its own url if the server set one, otherwise the
+ * orders list for order events. Shared by the bell popup (web) and the notifications page (mobile).
+ */
+export const notificationTarget = (item) => {
+  if (item?.data?.url) return item.data.url;
+  if (item?.type === 'order_status_change' || item?.type === 'order_placed') return Routes.orders;
+  return null;
+};

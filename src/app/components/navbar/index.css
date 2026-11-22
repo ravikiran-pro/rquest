@@ -749,3 +749,16 @@ button.navbar-user-capsule:focus-visible,
   cursor: pointer;
   flex-shrink: 0;
 }
+
+/* Bell popup footer and the mobile bell wrapper (opens /notifications) */
+.nav-notif-foot {
+  display: flex;
+  justify-content: center;
+  padding: 8px 12px;
+  border-top: 1px solid #f1ede8;
+}
+
+.nav-notif-bell-link {
+  display: inline-flex;
+  cursor: pointer;
+}

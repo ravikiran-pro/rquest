@@ -120,12 +120,12 @@ const SideBar = ({ open, handleClose }) => {
     case 'admin':
       items = [
         {
-          key: 'analytics',
+          key: 'dashboard',
           Icon: DatabaseOutlined,
-          label: 'Analytics',
+          label: 'Dashboard',
           tone: 'brand',
-          active: navMatch.analytics(location),
-          onClick: go(Routes.analytics),
+          active: navMatch.dashboard(location),
+          onClick: go(Routes.dashboard),
           trailing: <span className="drawer-nav-pill">Dashboard</span>,
         },
         {
@@ -167,12 +167,12 @@ const SideBar = ({ open, handleClose }) => {
     case 'owner':
       items = [
         {
-          key: 'analytics',
+          key: 'dashboard',
           Icon: DatabaseOutlined,
-          label: 'Analytics',
+          label: 'Dashboard',
           tone: 'brand',
-          active: navMatch.analytics(location),
-          onClick: go(Routes.analytics),
+          active: navMatch.dashboard(location),
+          onClick: go(Routes.dashboard),
           trailing: <span className="drawer-nav-pill">Dashboard</span>,
         },
         {

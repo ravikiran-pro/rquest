@@ -34,6 +34,7 @@ import {
   ADMIN_TABS,
   adminTabPath,
   ROLE_HOME,
+  notificationTarget,
 } from './navConfig';
 
 const ADMIN_TAB_ICONS = {
@@ -133,9 +134,21 @@ const Navbar = ({ open, handleOpen }) => {
   });
 
   const openNotification = (item) => {
-    if (item.data?.url) history.push(item.data.url);
-    else if (item.type === 'order_status_change' || item.type === 'order_placed') history.push(Routes.orders);
+    const target = notificationTarget(item);
+    if (target) history.push(target);
   };
+
+  // Bell: web opens the popup; phone opens the full notifications page instead
+  const notifBell = (trigger) =>
+    isMobile ? (
+      <span className="nav-notif-bell-link" onClick={() => history.push(Routes.notifications)}>
+        {trigger}
+      </span>
+    ) : (
+      <Dropdown trigger={['click']} placement="bottomRight" dropdownRender={notificationsPanel}>
+        {trigger}
+      </Dropdown>
+    );
 
   const logoDestination = ROLE_HOME[navRole] || Routes.home;
 
@@ -160,10 +173,10 @@ const Navbar = ({ open, handleOpen }) => {
   if (isAdmin) {
     roleMenuItems = [
       {
-        key: 'analytics',
+        key: 'dashboard',
         icon: <DatabaseOutlined />,
-        label: <span style={{ fontWeight: 700 }}>Analytics</span>,
-        onClick: go(Routes.analytics),
+        label: <span style={{ fontWeight: 700 }}>Dashboard</span>,
+        onClick: go(Routes.dashboard),
       },
       {
         key: 'admin',
@@ -191,15 +204,15 @@ const Navbar = ({ open, handleOpen }) => {
       chatMenuItem('Messages'),
       { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
     ];
-    if (navMatch.analytics(location)) activeMenuKeys.push('analytics');
+    if (navMatch.dashboard(location)) activeMenuKeys.push('dashboard');
     if (navMatch.search(location)) activeMenuKeys.push('search');
   } else if (isOwner) {
     roleMenuItems = [
       {
-        key: 'analytics',
+        key: 'dashboard',
         icon: <DatabaseOutlined />,
-        label: <span style={{ fontWeight: 700 }}>Analytics</span>,
-        onClick: go(Routes.analytics),
+        label: <span style={{ fontWeight: 700 }}>Dashboard</span>,
+        onClick: go(Routes.dashboard),
       },
       {
         key: 'my-stores',
@@ -212,7 +225,7 @@ const Navbar = ({ open, handleOpen }) => {
       { key: 'profile', icon: <UserOutlined />, label: 'Profile', onClick: go(Routes.profile) },
     ];
     if (navMatch.myStores(location)) activeMenuKeys.push('my-stores');
-    if (navMatch.analytics(location)) activeMenuKeys.push('analytics');
+    if (navMatch.dashboard(location)) activeMenuKeys.push('dashboard');
   } else {
     roleMenuItems = [
       { key: 'explore', icon: <CompassOutlined />, label: 'Explore Marketplace', onClick: go(Routes.app) },
@@ -271,12 +284,12 @@ const Navbar = ({ open, handleOpen }) => {
       { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'My Orders', active: navMatch.orders(location) },
     ],
     owner: [
-      { key: 'analytics', to: Routes.analytics, Icon: DatabaseOutlined, label: 'Analytics', active: navMatch.analytics(location) },
+      { key: 'dashboard', to: Routes.dashboard, Icon: DatabaseOutlined, label: 'Dashboard', active: navMatch.dashboard(location) },
       { key: 'my-stores', to: Routes.client, Icon: ShopOutlined, label: 'My stores', active: navMatch.myStores(location) },
       { key: 'orders', to: Routes.orders, Icon: OrderedListOutlined, label: 'Orders & quotes', active: navMatch.orders(location) },
     ],
     admin: [
-      { key: 'analytics', to: Routes.analytics, Icon: DatabaseOutlined, label: 'Analytics', active: navMatch.analytics(location) },
+      { key: 'dashboard', to: Routes.dashboard, Icon: DatabaseOutlined, label: 'Dashboard', active: navMatch.dashboard(location) },
       { key: 'admin', to: Routes.admin, Icon: SafetyCertificateOutlined, label: 'Admin console', active: navMatch.admin(location) },
       { key: 'search', to: Routes.search, Icon: SearchOutlined, label: 'Search', active: navMatch.search(location) },
     ],
@@ -349,6 +362,13 @@ const Navbar = ({ open, handleOpen }) => {
           ))
         )}
       </div>
+      {notificationsList.length > 0 && (
+        <div className="nav-notif-foot">
+          <Button type="link" size="small" onClick={() => history.push(Routes.notifications)} style={{ padding: 0 }}>
+            See all notifications
+          </Button>
+        </div>
+      )}
     </div>
   );
 
@@ -380,7 +400,7 @@ const Navbar = ({ open, handleOpen }) => {
         </div>
 
         <Flex align="center" gap={8}>
-          <Dropdown trigger={['click']} placement="bottomRight" popupRender={notificationsPanel}>
+          {notifBell(
             <button
               type="button"
               className="navbar-orders-bell"
@@ -390,7 +410,7 @@ const Navbar = ({ open, handleOpen }) => {
                 <BellOutlined style={{ fontSize: 16, color: colors.textMain }} />
               </Badge>
             </button>
-          </Dropdown>
+          )}
           {avatarMenuButton()}
         </Flex>
       </header>
@@ -456,7 +476,7 @@ const Navbar = ({ open, handleOpen }) => {
         )}
 
         {isLoggedIn && (
-          <Dropdown trigger={['click']} placement="bottomRight" popupRender={notificationsPanel}>
+          notifBell(
             <Badge
               count={unreadNotifCount}
               offset={[-2, 4]}
@@ -476,7 +496,7 @@ const Navbar = ({ open, handleOpen }) => {
                 aria-label={unreadNotifCount > 0 ? `Notifications, ${unreadNotifCount} unread` : 'Notifications'}
               />
             </Badge>
-          </Dropdown>
+          )
         )}
 
         {/* Tablet and desktop (>= 768px): account capsule and menu, or sign in */}

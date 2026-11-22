@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Form, Input, Button, Typography, Row, Col, Tag, message, Flex, Spin, Modal, Alert } from 'antd';
+import React, { useEffect, useMemo, useState } from 'react';
+import { Form, Input, Button, Typography, Row, Col, Tag, message, Flex, Spin, Modal, Alert, Select, Empty } from 'antd';
 import {
   EnvironmentOutlined,
   PhoneOutlined,
@@ -101,7 +101,30 @@ const ClientRegister = () => {
 
   const [allShops, setAllShops] = useState([]);
   const [loadingShops, setLoadingShops] = useState(true);
+  // Merchant Studio hub filters: name / area / type search, business-type filter, sort
+  const [storeSearch, setStoreSearch] = useState('');
+  const [storeTypeFilter, setStoreTypeFilter] = useState('all');
+  const [storeSort, setStoreSort] = useState('name');
   const [managedShop, setManagedShop] = useState(null);
+
+  const storeTypeOptions = useMemo(() => {
+    const types = [...new Set(allShops.map((sh) => sh.shop_type).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+    return [{ value: 'all', label: 'All business types' }, ...types.map((t) => ({ value: t, label: t }))];
+  }, [allShops]);
+
+  const visibleShops = useMemo(() => {
+    const q = storeSearch.trim().toLowerCase();
+    const list = allShops.filter((sh) => {
+      if (storeTypeFilter !== 'all' && sh.shop_type !== storeTypeFilter) return false;
+      if (!q) return true;
+      return [sh.shop_name, sh.shop_type, sh.area, sh.address].some((v) => String(v || '').toLowerCase().includes(q));
+    });
+    const byName = (a, b) => String(a.shop_name || '').localeCompare(String(b.shop_name || ''));
+    if (storeSort === 'newest') {
+      return [...list].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+    }
+    return [...list].sort(byName);
+  }, [allShops, storeSearch, storeTypeFilter, storeSort]);
   const [isFormEnable, setIsFormEnable] = useState(false);
   const [platformSettings, setPlatformSettings] = useState(null);
   // Set when the server refuses a registration (403 REGISTRATIONS_CLOSED or 503 maintenance)
@@ -627,8 +650,58 @@ const ClientRegister = () => {
                 </Button>
               </div>
             ) : (
+              <>
+              <div className="ms-filterbar onb-store-filterbar">
+                <Input
+                  allowClear
+                  prefix={<SearchOutlined className="ms-muted" />}
+                  placeholder="Search outlet, type, area or address"
+                  value={storeSearch}
+                  onChange={(e) => setStoreSearch(e.target.value)}
+                  className="ms-filter-search"
+                  aria-label="Search outlets"
+                />
+                <div className="ms-filter-selects">
+                  <Select
+                    value={storeTypeFilter}
+                    onChange={setStoreTypeFilter}
+                    options={storeTypeOptions}
+                    showSearch
+                    optionFilterProp="label"
+                    className="ms-filter-select"
+                    aria-label="Filter by business type"
+                  />
+                  <Select
+                    value={storeSort}
+                    onChange={setStoreSort}
+                    className="ms-filter-select"
+                    aria-label="Sort outlets"
+                    options={[
+                      { value: 'name', label: 'Name A–Z' },
+                      { value: 'newest', label: 'Newest first' },
+                    ]}
+                  />
+                </div>
+              </div>
+              <div className="onb-store-count" aria-live="polite">
+                Showing {visibleShops.length} of {allShops.length}
+              </div>
+              {visibleShops.length === 0 ? (
+                <div className="onb-state">
+                  <Empty description="No outlets match these filters">
+                    <Button
+                      onClick={() => {
+                        setStoreSearch('');
+                        setStoreTypeFilter('all');
+                      }}
+                    >
+                      Clear filters
+                    </Button>
+                  </Empty>
+                </div>
+              ) : (
               <div className="onb-store-grid">
-                {allShops.map((shop) => (
+                {visibleShops.map((shop) => (
                   <article key={shop.id} className="onb-store-card">
                     <div className="onb-store-top">
                       <div className="onb-thumb">
@@ -671,6 +744,8 @@ const ClientRegister = () => {
                   </article>
                 ))}
               </div>
+              )}
+              </>
             )}
           </div>
         )}

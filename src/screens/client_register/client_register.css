@@ -2079,3 +2079,14 @@
     transition: none;
   }
 }
+
+/* Merchant Studio hub: filter row above the outlet grid */
+.onb-store-filterbar {
+  margin-bottom: 8px;
+}
+
+.onb-store-count {
+  font-size: 13px;
+  color: #575a65;
+  margin: 0 0 12px;
+}

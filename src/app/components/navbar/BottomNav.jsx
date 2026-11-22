@@ -21,8 +21,8 @@ import './index.css';
  * Fixed bottom navigation for phones and tablets (<= 991px). Items per role:
  *   guest    Explore, Stores, Cart, Sign In
  *   customer Explore, Stores, Chat, Orders, Account
- *   owner    Analytics, Orders, Chat, Account (My stores via the account drawer)
- *   admin    Analytics, Console, Chat, Account
+ *   owner    Dashboard, Orders, Chat, Account (My stores via the account drawer)
+ *   admin    Dashboard, Console, Chat, Account
  * The rest of each role's menu (admin sections, delivery portal, sign out) is in the account
  * drawer opened from the header avatar.
  */
@@ -80,12 +80,12 @@ const BottomNav = () => {
     case 'admin':
       items = [
         {
-          key: 'analytics',
-          label: 'Analytics',
+          key: 'dashboard',
+          label: 'Dashboard',
           Icon: DatabaseOutlined,
-          ariaLabel: 'Analytics dashboard',
-          active: navMatch.analytics(location),
-          onClick: go(Routes.analytics),
+          ariaLabel: 'Dashboard',
+          active: navMatch.dashboard(location),
+          onClick: go(Routes.dashboard),
         },
         {
           key: 'console',
@@ -107,15 +107,15 @@ const BottomNav = () => {
       ];
       break;
     case 'owner':
-      // Analytics is the owner's landing item; My stores stays reachable via the account drawer
+      // Dashboard is the owner's landing item; My stores stays reachable via the account drawer
       items = [
         {
-          key: 'analytics',
-          label: 'Analytics',
+          key: 'dashboard',
+          label: 'Dashboard',
           Icon: DatabaseOutlined,
-          ariaLabel: 'Analytics dashboard',
-          active: navMatch.analytics(location),
-          onClick: go(Routes.analytics),
+          ariaLabel: 'Dashboard',
+          active: navMatch.dashboard(location),
+          onClick: go(Routes.dashboard),
         },
         {
           key: 'orders',
