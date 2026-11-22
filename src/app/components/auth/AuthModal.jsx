@@ -457,7 +457,7 @@ export const AuthModal = ({
                       style={{
                         height: 44,
                         borderRadius: 9999,
-                        background: '#C2542B',
+                        background: '#A8451F',
                         fontWeight: 700,
                         fontSize: 14,
                         width: '100%',
@@ -534,7 +534,7 @@ export const AuthModal = ({
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: '#C2542B',
+                      color: '#A8451F',
                       fontWeight: 700,
                       cursor: 'pointer',
                       padding: 0,
@@ -556,7 +556,7 @@ export const AuthModal = ({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#C2542B',
+                    color: '#A8451F',
                     fontSize: 12,
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -640,7 +640,7 @@ export const AuthModal = ({
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#C2542B',
+                        color: '#A8451F',
                         fontWeight: 700,
                         cursor: 'pointer',
                       }}
@@ -660,7 +660,7 @@ export const AuthModal = ({
                       style={{
                         background: 'none',
                         border: 'none',
-                        color: '#C2542B',
+                        color: '#A8451F',
                         fontSize: 12,
                         fontWeight: 600,
                         cursor: 'pointer',
@@ -703,7 +703,7 @@ export const AuthModal = ({
                     width: '100%',
                     height: 44,
                     borderRadius: 9999,
-                    background: '#C2542B',
+                    background: '#A8451F',
                     fontWeight: 700,
                     fontSize: 14,
                   }}
@@ -797,7 +797,7 @@ export const AuthModal = ({
                     style={{
                       height: 44,
                       borderRadius: 9999,
-                      background: '#C2542B',
+                      background: '#A8451F',
                       fontWeight: 700,
                       fontSize: 14,
                     }}
@@ -824,7 +824,7 @@ export const AuthModal = ({
                   style={{
                     background: 'none',
                     border: 'none',
-                    color: '#C2542B',
+                    color: '#A8451F',
                     fontWeight: 700,
                     cursor: 'pointer',
                     padding: 0,

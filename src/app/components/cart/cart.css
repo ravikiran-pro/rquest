@@ -46,7 +46,7 @@
   height: 36px;
   border-radius: 8px;
   background: #FBEDE6;
-  color: #C2542B;
+  color: #A8451F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -59,7 +59,7 @@
   font-weight: 700;
   font-size: 20px;
   line-height: 1.2;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
 }
 
 .rq-cart-title-sub {
@@ -103,7 +103,7 @@
 }
 
 .rq-cart-section-title:focus-visible {
-  outline: 2px solid var(--primary, #C2542B);
+  outline: 2px solid var(--primary, #A8451F);
   outline-offset: 2px;
 }
 
@@ -132,7 +132,7 @@
   margin-bottom: 10px;
 }
 
-/* Guest sign-in card: app parchment + navy, not the stock blue alert */
+/* Guest sign-in card: app parchment + terracotta, not the stock blue alert */
 .rq-cart-signin {
   display: flex;
   align-items: center;
@@ -149,7 +149,7 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: 50%;
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
   display: flex;
   align-items: center;
@@ -264,7 +264,7 @@
 .rq-cart-item-line {
   font-size: 13px;
   font-weight: 700;
-  color: #C2542B;
+  color: #A8451F;
   margin-top: 2px;
 }
 
@@ -317,7 +317,7 @@
 }
 
 .rq-payment-option.ant-radio-wrapper-checked {
-  border-color: #C2542B;
+  border-color: #A8451F;
   background: #FBEDE6;
 }
 
@@ -368,7 +368,7 @@
 }
 
 .rq-cart-summary-total strong {
-  color: #C2542B;
+  color: #A8451F;
   font-size: 16px;
   font-weight: 800;
 }
@@ -426,7 +426,7 @@
 .rq-cart-footer-amount {
   font-size: 18px;
   font-weight: 800;
-  color: #C2542B;
+  color: #A8451F;
   line-height: 1.2;
   white-space: nowrap;
 }

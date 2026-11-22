@@ -1,7 +1,7 @@
 /* ==========================================================================
    Profile screen. Uses antd components for structure; this sheet only
    handles layout, spacing and phone-width adjustments.
-   Palette mirrors styles/theme.js (primary #C2542B, parchment #FAF7F2).
+   Palette mirrors styles/theme.js (primary #A8451F, parchment #FAF7F2).
    ========================================================================== */
 
 .rq-profile {
@@ -37,7 +37,7 @@
 
 .rq-profile-avatar.ant-avatar {
   background: #FBEDE6;
-  color: #C2542B;
+  color: #A8451F;
   border: 1px solid #CFE3D4;
   font-weight: 700;
   flex-shrink: 0;
@@ -191,7 +191,7 @@
 }
 
 .rq-quick-link.ant-btn:hover {
-  color: #C2542B;
+  color: #A8451F;
   background: #F6F1E9;
 }
 
@@ -343,14 +343,14 @@
 }
 
 .rq-interest-card:focus-visible {
-  outline: 2px solid #C2542B;
+  outline: 2px solid #A8451F;
   outline-offset: 2px;
 }
 
 .rq-interest-card.is-selected {
-  border-color: #C2542B;
+  border-color: #A8451F;
   background: #FBEDE6;
-  box-shadow: 0 0 0 1px #C2542B;
+  box-shadow: 0 0 0 1px #A8451F;
 }
 
 .rq-interest-icon {
@@ -358,7 +358,7 @@
   height: 36px;
   border-radius: 8px;
   background: #F6F1E9;
-  color: #C2542B;
+  color: #A8451F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -386,7 +386,7 @@
 }
 
 .rq-interest-check {
-  color: #C2542B;
+  color: #A8451F;
   font-size: 14px;
   flex-shrink: 0;
 }

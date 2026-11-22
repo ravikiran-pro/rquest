@@ -3,7 +3,7 @@
  * Adapted from "Corner Store Gallery" (Selected Design Specification)
  * 
  * Hyperlocal community-first marketplace design language:
- * - Deep Maritime Navy (#C2542B) for high-trust authority and focal CTAs
+ * - Shopfront Terracotta (#A8451F) for focal CTAs (white text 5.9:1, WCAG AA)
  * - Warm Parchment Canvas (#FAF7F2) for tactile, grounded contrast
  * - Fine hairline borders (#E6DED2) and clean white elevated card surfaces
  * - Two-tier typography: Fraunces (Headings) + Inter (Body & Labels)
@@ -11,13 +11,13 @@
 
 export const colors = {
   // Brand Palette - Shopfront Terracotta
-  primary: '#C2542B',
-  primaryHover: '#A8451F',
-  primaryActive: '#8A3918',
-  primaryContainer: '#D9714A',
+  primary: '#A8451F',
+  primaryHover: '#8A3918',
+  primaryActive: '#6F2D12',
+  primaryContainer: '#C2542B',
   primaryLight: '#FBEDE6',
-  primaryGradient: 'linear-gradient(135deg, #C2542B 0%, #A8451F 100%)',
-  primaryGradientAlt: 'linear-gradient(90deg, #C2542B 0%, #D9714A 100%)',
+  primaryGradient: 'linear-gradient(135deg, #A8451F 0%, #8A3918 100%)',
+  primaryGradientAlt: 'linear-gradient(90deg, #A8451F 0%, #C2542B 100%)',
 
   // Secondary Accent - Deep Forest Green (open-now signage)
   secondary: '#3D6B4F',
@@ -26,10 +26,10 @@ export const colors = {
   secondaryLight: '#E7F0E9',
 
   // Signature Accent - Warm Honey (signage highlights)
-  lime: '#E2A63D',
-  limeHover: '#D0952C',
-  limeLight: '#FBF3E2',
-  limeText: '#2A2620',
+  accent: '#E2A63D',
+  accentHover: '#D0952C',
+  accentLight: '#FBF3E2',
+  accentText: '#2A2620',
 
   // Hyperlocal Badge - Soft Sage & Forest Green
   hyperBadgeBg: '#EAF0E7',
@@ -81,7 +81,7 @@ export const colors = {
 
   // Hyperlocal Specialized Badges & Chips
   liveBadgeBg: '#FBEDE6',
-  liveBadgeText: '#8A3918',
+  liveBadgeText: '#6F2D12',
   verifiedChipBg: '#E7F0E9',
   verifiedChipBorder: '#CFE3D4',
   verifiedChipText: '#2F5D3C',
@@ -102,8 +102,8 @@ export const colors = {
     warningLight: '#fffbeb',
     warningBorder: '#fde68a',
 
-    error: '#ba1a1a',
-    errorHover: '#93000a',
+    error: '#B3123F',
+    errorHover: '#8C0D30',
     errorLight: '#ffdad6',
     errorBorder: '#fecaca',
 
@@ -177,7 +177,7 @@ export const shadows = {
   lg: '0 8px 24px -4px rgba(42, 38, 32, 0.1)',
   card: '0 1px 4px rgba(42, 38, 32, 0.04)',
   popover: '0 10px 25px -4px rgba(42, 38, 32, 0.14)',
-  primary: '0 2px 8px rgba(194, 84, 43, 0.22)',
+  primary: '0 2px 8px rgba(168, 69, 31, 0.22)',
   ambientGlow: '0 8px 30px rgba(42, 38, 32, 0.08)',
   nav: '0 -4px 16px rgba(42, 38, 32, 0.06)',
 };
@@ -200,9 +200,9 @@ export const antdTheme = {
     colorBorder: colors.border,
     colorBorderSecondary: colors.surfaceContainer,
     // One soft focus ring for every field (inputs, selects, date pickers)
-    controlOutline: 'rgba(194, 84, 43, 0.16)',
+    controlOutline: 'rgba(168, 69, 31, 0.16)',
     controlOutlineWidth: 3,
-    colorErrorOutline: 'rgba(186, 26, 26, 0.14)',
+    colorErrorOutline: 'rgba(179, 18, 63, 0.14)',
     colorBgBase: colors.surface,
     colorBgLayout: colors.bg,
     colorSuccess: colors.semantic.success,
@@ -222,7 +222,7 @@ export const antdTheme = {
       controlHeight: 38,
       borderRadius: radii.md,
       fontWeight: typography.fontWeight.semibold,
-      primaryShadow: '0 2px 8px rgba(194, 84, 43, 0.22)',
+      primaryShadow: '0 2px 8px rgba(168, 69, 31, 0.22)',
       colorText: colors.textMain,
     },
     Input: {
@@ -232,8 +232,8 @@ export const antdTheme = {
       colorBgContainer: colors.surface,
       activeBorderColor: colors.primary,
       hoverBorderColor: colors.borderDark,
-      activeShadow: '0 0 0 3px rgba(194, 84, 43, 0.16)',
-      errorActiveShadow: '0 0 0 3px rgba(186, 26, 26, 0.14)',
+      activeShadow: '0 0 0 3px rgba(168, 69, 31, 0.16)',
+      errorActiveShadow: '0 0 0 3px rgba(179, 18, 63, 0.14)',
     },
     Select: {
       controlHeight: 38,

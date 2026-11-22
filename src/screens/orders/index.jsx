@@ -592,7 +592,7 @@ const OrdersScreen = () => {
                   style={{
                     margin: 0,
                     fontWeight: 700,
-                    color: '#C2542B',
+                    color: '#A8451F',
                     fontSize: 20,
                     letterSpacing: '-0.5px',
                   }}
@@ -1114,7 +1114,7 @@ const OrdersScreen = () => {
                     fontFamily: typography.fontFamily.headline,
                     fontWeight: 700,
                     fontSize: 20,
-                    color: '#C2542B',
+                    color: '#A8451F',
                     }}
                 >
                   Your orders
@@ -1232,8 +1232,8 @@ const OrdersScreen = () => {
                       style={{
                         borderRadius: 8,
                         fontWeight: 700,
-                        background: '#C2542B',
-                        borderColor: '#C2542B',
+                        background: '#A8451F',
+                        borderColor: '#A8451F',
                       }}
                     >
                       Explore Nearby Stores
@@ -1609,7 +1609,7 @@ const OrdersScreen = () => {
                                 style={{
                                   fontWeight: 700,
                                   fontSize: 14,
-                                  color: '#C2542B',
+                                  color: '#A8451F',
                                   whiteSpace: 'nowrap',
                                   overflow: 'hidden',
                                   textOverflow: 'ellipsis',
@@ -1635,7 +1635,7 @@ const OrdersScreen = () => {
                           </div>
 
                           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <div style={{ fontWeight: 700, fontSize: 16, color: '#C2542B' }}>
+                            <div style={{ fontWeight: 700, fontSize: 16, color: '#A8451F' }}>
                               ₹{(parseFloat(ord.total_amount) || 0).toFixed(0)}
                             </div>
                           </div>
@@ -1656,8 +1656,8 @@ const OrdersScreen = () => {
                               }
                             }}
                             style={{
-                              background: '#C2542B',
-                              borderColor: '#C2542B',
+                              background: '#A8451F',
+                              borderColor: '#A8451F',
                               borderRadius: 9999,
                               fontWeight: 700,
                               padding: '0 18px',
@@ -1692,8 +1692,8 @@ const OrdersScreen = () => {
                       style={{
                         borderRadius: 8,
                         fontWeight: 700,
-                        background: '#C2542B',
-                        borderColor: '#C2542B',
+                        background: '#A8451F',
+                        borderColor: '#A8451F',
                       }}
                     >
                       Start Shopping

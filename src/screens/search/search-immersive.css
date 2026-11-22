@@ -59,7 +59,7 @@
     border: none;
     border-radius: 50%;
     background: transparent;
-    color: #C2542B;
+    color: #A8451F;
     font-size: 16px;
     cursor: pointer;
   }
@@ -84,7 +84,7 @@
 
 /* ==========================================================================
    Result tabs (Stores & Outlets / Items & Services): underline tabs, not
-   buttons. The active tab gets a navy underline and a lime count badge.
+   buttons. The active tab gets a terracotta underline and a honey count badge.
    ========================================================================== */
 .rq-mode-tabs {
   display: flex;
@@ -120,8 +120,8 @@
 }
 
 .rq-mode-tab.is-active {
-  color: var(--primary, #C2542B);
-  border-bottom-color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
+  border-bottom-color: var(--primary, #A8451F);
   font-weight: 700;
 }
 

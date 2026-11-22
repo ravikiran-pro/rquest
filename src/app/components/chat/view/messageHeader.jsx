@@ -37,7 +37,7 @@ const MessageHeader = ({
       <div style={{ flex: 1, display: 'flex', alignItems: 'center' }}>
         <Avatar
           style={{
-            backgroundColor: color || 'var(--primary, #C2542B)',
+            backgroundColor: color || 'var(--primary, #A8451F)',
             verticalAlign: 'middle',
             marginRight: 12,
             fontFamily: "var(--font-headline, 'Fraunces', sans-serif)",
@@ -67,7 +67,7 @@ const MessageHeader = ({
           <div>
             <span>{formatDateTime(dateTime)}</span>
           </div>
-          <div>{totalUnread ? <Badge count={totalUnread} style={{ backgroundColor: 'var(--primary, #C2542B)' }} /> : null}</div>
+          <div>{totalUnread ? <Badge count={totalUnread} style={{ backgroundColor: 'var(--primary, #A8451F)' }} /> : null}</div>
         </Col>
       </div>
     </Card>

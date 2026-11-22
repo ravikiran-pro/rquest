@@ -130,7 +130,7 @@ const DeliveryPortalScreen = () => {
       <div
         style={{
           borderRadius: radii.xl || 18,
-          background: 'linear-gradient(135deg, #C2542B 0%, #3D6B4F 100%)',
+          background: 'linear-gradient(135deg, #A8451F 0%, #3D6B4F 100%)',
           border: '1px solid rgba(255, 255, 255, 0.15)',
           marginBottom: 20,
           padding: '24px',

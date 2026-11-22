@@ -34,7 +34,7 @@
 
 .rq-m-field.is-focused {
   background: var(--surface, #ffffff);
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
 }
 
 .rq-m-field-icon {
@@ -103,7 +103,7 @@
 .rq-m-view button:focus-visible,
 .rq-m-clear:focus-visible,
 .rq-m-tags button:focus-visible {
-  outline: 2px solid var(--primary, #C2542B);
+  outline: 2px solid var(--primary, #A8451F);
   outline-offset: 2px;
 }
 
@@ -112,7 +112,7 @@
   padding: 8px 2px;
   border: 0;
   background: none;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   font-family: var(--font-sans);
   font-size: 15px;
   font-weight: 600;
@@ -152,7 +152,7 @@
 
 .rq-m-tab.is-active {
   background: var(--surface, #ffffff);
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 
@@ -213,7 +213,7 @@
 
 .rq-m-chip .anticon {
   font-size: 14px;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
 }
 
 .rq-m-chip:disabled {
@@ -258,7 +258,7 @@
   height: 18px;
   padding: 0 5px;
   border-radius: 9999px;
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
   font-size: 11px;
   line-height: 18px;
@@ -296,7 +296,7 @@
 
 .rq-m-radius-option.is-selected {
   background: #eff6ff;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   font-weight: 700;
 }
 
@@ -344,7 +344,7 @@
 
 .rq-m-view button[aria-pressed='true'] {
   background: var(--surface, #ffffff);
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
 

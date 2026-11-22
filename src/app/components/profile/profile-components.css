@@ -16,7 +16,7 @@
   height: 36px;
   border-radius: 8px;
   background: #FBEDE6;
-  color: #C2542B;
+  color: #A8451F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -163,14 +163,14 @@
 }
 
 .rq-address-option:focus-visible {
-  outline: 2px solid #C2542B;
+  outline: 2px solid #A8451F;
   outline-offset: 2px;
 }
 
 .rq-address-option.is-selected {
-  border-color: #C2542B;
+  border-color: #A8451F;
   background: #FBEDE6;
-  box-shadow: 0 0 0 1px #C2542B;
+  box-shadow: 0 0 0 1px #A8451F;
 }
 
 .rq-address-option-icon {
@@ -178,7 +178,7 @@
   height: 32px;
   border-radius: 8px;
   background: #F6F1E9;
-  color: #C2542B;
+  color: #A8451F;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -243,7 +243,7 @@
   flex-shrink: 0;
   font-size: 18px;
   line-height: 1;
-  color: #C2542B;
+  color: #A8451F;
   min-width: 18px;
 }
 

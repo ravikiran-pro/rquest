@@ -656,7 +656,7 @@ const HomeScreen = () => {
                                   borderRadius: radii.md,
                                   border: 'none',
                                   background: isSelected ? '#EFF6FF' : 'transparent',
-                                  color: isSelected ? '#C2542B' : '#374151',
+                                  color: isSelected ? '#A8451F' : '#374151',
                                   fontWeight: isSelected ? 700 : 500,
                                   fontSize: 13,
                                   cursor: 'pointer',
@@ -666,7 +666,7 @@ const HomeScreen = () => {
                                 }}
                               >
                                 <span>{item.label}</span>
-                                {isSelected && <CheckOutlined style={{ color: '#C2542B', fontSize: 12 }} />}
+                                {isSelected && <CheckOutlined style={{ color: '#A8451F', fontSize: 12 }} />}
                               </button>
                             );
                           })}
@@ -691,7 +691,7 @@ const HomeScreen = () => {
                         flexShrink: 0,
                       }}
                     >
-                      <CompassOutlined style={{ color: '#C2542B', fontSize: isMobile ? 14 : 15 }} />
+                      <CompassOutlined style={{ color: '#A8451F', fontSize: isMobile ? 14 : 15 }} />
                       <span>{filters.maxDistance ? (isMobile ? `${filters.maxDistance} km` : `${filters.maxDistance} km radius`) : 'All radius'}</span>
                       <DownOutlined style={{ fontSize: 9, color: '#6B7280' }} />
                     </button>
@@ -705,7 +705,7 @@ const HomeScreen = () => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
                   <SearchOutlined
                     style={{
-                      color: isSearchFocused ? '#C2542B' : '#9CA3AF',
+                      color: isSearchFocused ? '#A8451F' : '#9CA3AF',
                       fontSize: 16,
                       flexShrink: 0,
                       transition: 'color 0.2s ease',
@@ -1181,9 +1181,9 @@ const HomeScreen = () => {
                         transition: 'all 0.15s ease',
                       }}
                       onMouseEnter={(e) => {
-                        e.currentTarget.style.background = '#C2542B';
+                        e.currentTarget.style.background = '#A8451F';
                         e.currentTarget.style.color = '#FFFFFF';
-                        e.currentTarget.style.borderColor = '#C2542B';
+                        e.currentTarget.style.borderColor = '#A8451F';
                       }}
                       onMouseLeave={(e) => {
                         e.currentTarget.style.background = '#FFFFFF';
@@ -1226,7 +1226,7 @@ const HomeScreen = () => {
             style={{
               fontSize: 11.5,
               fontWeight: 800,
-              color: '#C2542B',
+              color: '#A8451F',
               letterSpacing: '0.08em',
               textTransform: 'uppercase',
               marginBottom: 6,
@@ -1480,7 +1480,7 @@ const HomeScreen = () => {
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <EnvironmentOutlined style={{ color: '#C2542B' }} />
+            <EnvironmentOutlined style={{ color: '#A8451F' }} />
             <span>Select Your Neighborhood Location</span>
           </div>
         }
@@ -1595,7 +1595,7 @@ const HomeScreen = () => {
                 height: 32,
                 borderRadius: '50%',
                 background: '#EFF6FF',
-                color: '#C2542B',
+                color: '#A8451F',
                 fontWeight: 800,
                 display: 'flex',
                 alignItems: 'center',

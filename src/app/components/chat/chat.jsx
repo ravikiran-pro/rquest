@@ -39,12 +39,12 @@ import ChatMessageItem from './ChatMessageItem';
 import NewChatModal from './NewChatModal';
 
 const AVATAR_PALETTE = [
-  colors.primary, // Maritime Navy (#C2542B)
-  colors.secondary, // Radiant Cobalt (#3D6B4F)
+  colors.primary, // Shopfront Terracotta (#A8451F)
+  colors.secondary, // Forest Green (#3D6B4F)
   colors.tertiary, // Roasted Amber-Brown (#5B3A29)
   colors.semantic.success, // Emerald (#059669)
-  colors.primaryContainer, // Cobalt Container (#D9714A)
-  colors.secondaryHover, // Deep Cobalt (#2F5540)
+  colors.primaryContainer, // Terracotta Container (#C2542B)
+  colors.secondaryHover, // Deep Forest Green (#2F5540)
   colors.semantic.warningHover, // Warm Amber (#d97706)
   colors.tertiaryHover, // Deep Espresso (#472919)
   colors.tertiaryContainer, // Umber Container (#926a56)

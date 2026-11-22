@@ -16,7 +16,7 @@
 
 /* Hero band */
 .rq-analytics-hero {
-  background: linear-gradient(135deg, #C2542B 0%, #A8451F 100%); /* colors.primaryGradient */
+  background: linear-gradient(135deg, #A8451F 0%, #8A3918 100%); /* colors.primaryGradient */
   border-radius: 16px; /* radii.xl */
   padding: 22px 22px 20px 22px;
   color: #ffffff;
@@ -60,9 +60,9 @@
 }
 
 .rq-analytics-hero-chip--lime {
-  background: #E2A63D; /* colors.lime */
+  background: #E2A63D; /* colors.accent */
   border-color: #E2A63D;
-  color: #2A2620; /* colors.limeText */
+  color: #2A2620; /* colors.accentText */
 }
 
 /* Section headers */
@@ -141,7 +141,7 @@
   align-items: center;
   justify-content: center;
   background: #FBEDE6; /* colors.primaryLight */
-  color: #C2542B; /* colors.primary */
+  color: #A8451F; /* colors.primary */
   font-size: 15px;
   flex-shrink: 0;
 }
@@ -180,7 +180,7 @@
 
 .rq-analytics-delta--down {
   background: #ffdad6; /* semantic.errorLight */
-  color: #ba1a1a; /* semantic.error */
+  color: #B3123F; /* semantic.error */
 }
 
 .rq-analytics-delta--flat {
@@ -247,11 +247,11 @@
 }
 
 .rq-analytics-bar--peak {
-  background: #C2542B; /* colors.primary */
+  background: #A8451F; /* colors.primary */
 }
 
 .rq-analytics-bar--today {
-  background: #E2A63D; /* colors.lime accent for today */
+  background: #E2A63D; /* colors.accent for today */
 }
 
 .rq-analytics-bar-count {
@@ -311,7 +311,7 @@
 .rq-analytics-order-amount {
   font-size: 13px;
   font-weight: 700;
-  color: #C2542B;
+  color: #A8451F;
 }
 
 /* Status tag colors use the existing semantic palette */
@@ -328,7 +328,7 @@
 
 .rq-analytics-status--active {
   background: #FBEDE6;
-  color: #C2542B;
+  color: #A8451F;
 }
 
 .rq-analytics-status--done {
@@ -338,7 +338,7 @@
 
 .rq-analytics-status--bad {
   background: #ffdad6;
-  color: #ba1a1a;
+  color: #B3123F;
 }
 
 .rq-analytics-status--new {

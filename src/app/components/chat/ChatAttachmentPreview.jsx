@@ -52,7 +52,7 @@ const ChatAttachmentPreview = ({ attachments = [], onRemove, onRetry }) => {
                 />
               ) : (
                 <div className="rquest-attach-fallback-thumb">
-                  <PictureOutlined style={{ fontSize: 22, color: 'var(--primary, #C2542B)' }} />
+                  <PictureOutlined style={{ fontSize: 22, color: 'var(--primary, #A8451F)' }} />
                 </div>
               )}
 
@@ -86,7 +86,7 @@ const ChatAttachmentPreview = ({ attachments = [], onRemove, onRetry }) => {
               </span>
               <span className="rquest-attach-size">
                 {isError ? (
-                  <span style={{ color: 'var(--error, #ba1a1a)' }}>Failed</span>
+                  <span style={{ color: 'var(--error, #B3123F)' }}>Failed</span>
                 ) : (
                   formatFileSize(item.size)
                 )}

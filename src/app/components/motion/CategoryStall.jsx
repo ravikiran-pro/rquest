@@ -38,7 +38,7 @@ export const CategoryStall = ({
           transform: isHovered ? 'scale(1.15) rotate(6deg)' : 'scale(1) rotate(0deg)',
           transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           boxShadow: isHovered
-            ? `0 10px 20px -4px ${iconColor || '#C2542B'}40`
+            ? `0 10px 20px -4px ${iconColor || '#A8451F'}40`
             : 'none',
           flexShrink: 0,
         }}

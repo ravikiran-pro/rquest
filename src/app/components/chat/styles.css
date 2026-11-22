@@ -80,7 +80,7 @@
   height: 30px;
   border-radius: var(--radius-md, 8px);
   background: var(--primary-light, #FBEDE6);
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -130,9 +130,9 @@
 }
 
 .rquest-chat-filter-tab.active {
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
   font-weight: 700;
   box-shadow: 0 2px 8px rgba(11, 45, 107, 0.22);
 }
@@ -190,7 +190,7 @@
 
 .rquest-chat-app .cs-conversation.cs-conversation--active {
   background-color: var(--primary-light, #FBEDE6);
-  border-left: 3.5px solid var(--primary, #C2542B);
+  border-left: 3.5px solid var(--primary, #A8451F);
 }
 
 .rquest-chat-app .cs-conversation > .cs-avatar {
@@ -324,7 +324,7 @@
 
 /* Unread Badge on Conversation Item */
 .rquest-conv-unread-badge {
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 11px;
@@ -366,7 +366,7 @@
   border-radius: 50% !important;
   border: none !important;
   background: transparent !important;
-  color: var(--primary, #C2542B) !important;
+  color: var(--primary, #A8451F) !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
@@ -546,7 +546,7 @@
 
 .rquest-header-close-btn:hover {
   background: var(--error-light, #ffdad6);
-  color: var(--error, #ba1a1a);
+  color: var(--error, #B3123F);
   border-color: var(--error-border, #fecaca);
 }
 
@@ -557,9 +557,9 @@
   gap: 4px;
   padding: 4px 10px;
   border-radius: var(--radius-md, 8px);
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
-  border: 1px solid var(--primary, #C2542B);
+  border: 1px solid var(--primary, #A8451F);
   font-family: var(--font-headline, 'Fraunces', sans-serif);
   font-size: 11.5px;
   font-weight: 700;
@@ -569,7 +569,7 @@
 }
 
 .rquest-sidebar-compose-btn:hover {
-  background: var(--primary-hover, #A8451F);
+  background: var(--primary-hover, #8A3918);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(11, 45, 107, 0.2);
 }
@@ -603,7 +603,7 @@
 }
 
 .rquest-chat-app .cs-message--outgoing .cs-message__content {
-  background: var(--primary, #C2542B) !important;
+  background: var(--primary, #A8451F) !important;
   color: #ffffff !important;
   border-radius: 16px 16px 4px 16px !important;
   font-family: var(--font-body, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif);
@@ -776,7 +776,7 @@
 
 .rquest-msg-markdown-body.incoming a,
 .rquest-msg-markdown-body.incoming a.rquest-chat-link {
-  color: var(--primary, #C2542B) !important;
+  color: var(--primary, #A8451F) !important;
   font-weight: 600;
   text-decoration: underline;
   word-break: break-all;
@@ -919,13 +919,13 @@
 
 .rquest-msg-bubble-inner.incoming .rquest-pdf-btn {
   background: #ffffff;
-  color: var(--primary, #C2542B) !important;
+  color: var(--primary, #A8451F) !important;
   border-color: var(--border-color, #E6DED2);
 }
 
 .rquest-msg-bubble-inner.incoming .rquest-pdf-btn:hover {
   background: var(--primary-light, #FBEDE6);
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
 }
 
 .rquest-msg-bubble-inner.outgoing .rquest-pdf-btn {
@@ -1048,8 +1048,8 @@
 
 .rquest-msg-delete-btn:hover {
   opacity: 1;
-  background: var(--error, #ba1a1a);
-  border-color: var(--error, #ba1a1a);
+  background: var(--error, #B3123F);
+  border-color: var(--error, #B3123F);
 }
 
 /* Pre-Send Attachment Previews Strip */
@@ -1082,7 +1082,7 @@
 }
 
 .rquest-attach-preview-item.error {
-  border-color: var(--error, #ba1a1a);
+  border-color: var(--error, #B3123F);
 }
 
 .rquest-attach-remove-btn {
@@ -1107,7 +1107,7 @@
 }
 
 .rquest-attach-remove-btn:hover {
-  background: var(--error, #ba1a1a);
+  background: var(--error, #B3123F);
   transform: scale(1.12);
 }
 
@@ -1170,7 +1170,7 @@
 
 .rquest-attach-retry-btn {
   border: none;
-  background: var(--error, #ba1a1a);
+  background: var(--error, #B3123F);
   color: #ffffff;
   font-size: 10px;
   font-weight: 600;
@@ -1239,8 +1239,8 @@
 
 .rquest-chat-attach-btn:hover {
   background: var(--primary-light, #FBEDE6);
-  color: var(--primary, #C2542B);
-  border-color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
+  border-color: var(--primary, #A8451F);
 }
 
 .rquest-chat-textarea {
@@ -1266,7 +1266,7 @@
 
 .rquest-chat-textarea:focus {
   background: #ffffff;
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
   box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.12);
 }
 
@@ -1294,7 +1294,7 @@
 }
 
 .rquest-chat-send-btn.active {
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
   cursor: pointer;
   box-shadow: 0 3px 10px rgba(11, 45, 107, 0.3);
@@ -1302,7 +1302,7 @@
 }
 
 .rquest-chat-send-btn.active:hover {
-  background: var(--primary-hover, #A8451F);
+  background: var(--primary-hover, #8A3918);
   transform: scale(1.06);
   box-shadow: 0 4px 12px rgba(11, 45, 107, 0.35);
 }
@@ -1353,7 +1353,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   font-weight: 600;
   font-size: 12px;
 }
@@ -1363,7 +1363,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   font-weight: 600;
   font-size: 12px;
 }
@@ -1389,7 +1389,7 @@
 
 .rquest-standalone-close-btn:hover {
   background: var(--error-light, #ffdad6);
-  color: var(--error, #ba1a1a);
+  color: var(--error, #B3123F);
   border-color: var(--error-border, #fecaca);
 }
 
@@ -1453,7 +1453,7 @@
 .rquest-chat-start-btn {
   width: 100%;
   height: 38px;
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   color: #ffffff;
   border: none;
   border-radius: var(--radius-md, 8px);
@@ -1470,7 +1470,7 @@
 }
 
 .rquest-chat-start-btn:hover {
-  background: var(--primary-hover, #A8451F);
+  background: var(--primary-hover, #8A3918);
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(11, 45, 107, 0.35);
 }
@@ -1722,6 +1722,6 @@
 }
 
 .rquest-chat-overlay .cs-conversation:focus-visible {
-  outline: 2px solid var(--primary, #C2542B);
+  outline: 2px solid var(--primary, #A8451F);
   outline-offset: -2px;
 }

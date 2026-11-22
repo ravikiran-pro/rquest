@@ -720,7 +720,7 @@ const CartScreen = () => {
         </>
       ) : (
         <div className="rq-query-box" style={{ textAlign: 'center' }}>
-          <EnvironmentOutlined style={{ fontSize: 24, color: '#C2542B' }} />
+          <EnvironmentOutlined style={{ fontSize: 24, color: '#A8451F' }} />
           <div className="rq-cart-section-title" style={{ marginTop: 6 }}>
             Add a delivery address
           </div>

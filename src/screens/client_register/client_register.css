@@ -2,7 +2,7 @@
    Merchant Store Onboarding & Outlets Hub - Clean Light Minimalist Style
    Mobile-First, Touch-Friendly, Native App Feel
    Centralized with Rquest "Neighborhood Commerce" Design Tokens
-   Warm Parchment (#FAF7F2), Maritime Navy (#C2542B), Charcoal (#1C1C19),
+   Warm Parchment (#FAF7F2), Shopfront Terracotta (#A8451F), Charcoal (#1C1C19),
    Roasted Umber (#5B3A29), Fine Hairline Borders (#E6DED2)
    ========================================================================== */
 
@@ -80,7 +80,7 @@
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper:focus,
 .merchant-clean-card .merchant-warm-input.ant-input-affix-wrapper-focused {
   background-color: var(--surface, #ffffff);
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
   box-shadow: 0 0 0 3px rgba(11, 45, 107, 0.1);
 }
 
@@ -146,7 +146,7 @@
 }
 
 .toggle-option-card.active {
-  border-color: var(--primary, #C2542B);
+  border-color: var(--primary, #A8451F);
   background: var(--primary-light, #FBEDE6);
   box-shadow: 0 2px 8px rgba(11, 45, 107, 0.08);
 }
@@ -200,7 +200,7 @@
 }
 
 .store-step-dot.active {
-  background: var(--primary, #C2542B);
+  background: var(--primary, #A8451F);
   box-shadow: 0 1px 4px rgba(11, 45, 107, 0.25);
 }
 

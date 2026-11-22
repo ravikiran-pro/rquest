@@ -38,7 +38,7 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   background: var(--primary-light, #FBEDE6);
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   border-color: rgba(11, 45, 107, 0.2);
 }
 
@@ -391,7 +391,7 @@
   padding: 0 6px;
   border-radius: 9999px;
   background: var(--primary-light, #FBEDE6);
-  color: var(--primary, #C2542B);
+  color: var(--primary, #A8451F);
   font-weight: 700;
   font-size: 12px;
 }

@@ -8,19 +8,19 @@
      ======================================================================== */
 
   /* Primary Brand Palette - Shopfront Terracotta */
-  --primary: #C2542B;
-  --primary-hover: #A8451F;
-  --primary-active: #8A3918;
-  --primary-container: #D9714A;
+  --primary: #A8451F;
+  --primary-hover: #8A3918;
+  --primary-active: #6F2D12;
+  --primary-container: #C2542B;
   --primary-light: #FBEDE6;
-  --primary-gradient: linear-gradient(135deg, #C2542B 0%, #A8451F 100%);
-  --primary-gradient-alt: linear-gradient(90deg, #C2542B 0%, #D9714A 100%);
+  --primary-gradient: linear-gradient(135deg, #A8451F 0%, #8A3918 100%);
+  --primary-gradient-alt: linear-gradient(90deg, #A8451F 0%, #C2542B 100%);
 
   /* Signature Accent - Warm Honey (signage highlights) */
-  --brand-lime: #E2A63D;
-  --brand-lime-hover: #D0952C;
-  --brand-lime-light: #FBF3E2;
-  --brand-lime-text: #2A2620;
+  --brand-accent: #E2A63D;
+  --brand-accent-hover: #D0952C;
+  --brand-accent-light: #FBF3E2;
+  --brand-accent-text: #2A2620;
 
   /* Hyperlocal Badge Accent - Soft Sage & Forest Green (open-now signage) */
   --brand-purple-badge: #EAF0E7;
@@ -70,7 +70,7 @@
 
   /* Hyperlocal Badges & Status Chips */
   --live-badge-bg: #FBEDE6;
-  --live-badge-text: #8A3918;
+  --live-badge-text: #6F2D12;
   --verified-chip-bg: #E7F0E9;
   --verified-chip-border: #CFE3D4;
   --verified-chip-text: #2F5D3C;
@@ -90,8 +90,8 @@
   --warning-light: #fffbeb;
   --warning-border: #fde68a;
 
-  --error: #ba1a1a;
-  --error-hover: #93000a;
+  --error: #B3123F;
+  --error-hover: #8C0D30;
   --error-light: #ffdad6;
   --error-border: #fecaca;
 
@@ -145,7 +145,7 @@
   --shadow-lg: 0 8px 24px -4px rgba(42, 38, 32, 0.1);
   --shadow-card: 0 1px 4px rgba(42, 38, 32, 0.04);
   --shadow-popover: 0 10px 25px -4px rgba(42, 38, 32, 0.14);
-  --shadow-primary: 0 2px 8px rgba(194, 84, 43, 0.22);
+  --shadow-primary: 0 2px 8px rgba(168, 69, 31, 0.22);
   --shadow-ambient-glow: 0 8px 30px rgba(42, 38, 32, 0.08);
   --shadow-nav: 0 -4px 16px rgba(42, 38, 32, 0.06);
 }
@@ -531,7 +531,7 @@ button.rquest-chat-fab:focus-visible {
 }
 
 .rquest-chat-fab.active .rquest-chat-fab-inner {
-  background: var(--primary-active, #8A3918);
+  background: var(--primary-active, #6F2D12);
   box-shadow: 0 8px 20px rgba(11, 45, 107, 0.3);
 }
 
@@ -926,8 +926,8 @@ select:focus-visible {
 }
 
 .hero-lime-highlight {
-  background-color: var(--brand-lime, var(--brand-lime));
-  color: var(--brand-lime-text, #2A2620);
+  background-color: var(--brand-accent, var(--brand-accent));
+  color: var(--brand-accent-text, #2A2620);
   display: inline-block;
   padding: 0px 8px;
   border-radius: 6px;
@@ -1595,7 +1595,7 @@ select:focus-visible {
 
 /* ==========================================================================
    Overlay theme: notifications, modals, the cart and sheets share the home
-   page look - parchment canvas, soft lime glow, lime icon tile, navy actions
+   page look - parchment canvas, soft honey glow, honey icon tile, terracotta actions
    and Fraunces headings.
    ========================================================================== */
 
@@ -1641,7 +1641,7 @@ select:focus-visible {
   }
 }
 
-/* Thin navy line counting down to auto-dismiss */
+/* Thin terracotta line counting down to auto-dismiss */
 .ant-notification .rq-notify .ant-notification-notice-progress {
   height: 2px;
 }
@@ -1672,7 +1672,7 @@ select:focus-visible {
   font-size: 16px;
 }
 
-.rq-notify-icon--lime { background: var(--brand-lime); color: var(--primary); }
+.rq-notify-icon--lime { background: var(--brand-accent); color: var(--primary); }
 .rq-notify-icon--navy { background: var(--primary-light); color: var(--primary); }
 .rq-notify-icon--lavender { background: var(--brand-purple-badge); color: var(--brand-purple-text); }
 .rq-notify-icon--default { background: var(--surface-container); color: var(--text-main); }
@@ -1760,7 +1760,7 @@ select:focus-visible {
 
 .rq-cart-title-icon,
 .rq-sheet-title-icon {
-  background: var(--brand-lime) !important;
+  background: var(--brand-accent) !important;
   color: var(--primary) !important;
 }
 

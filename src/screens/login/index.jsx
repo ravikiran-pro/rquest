@@ -558,7 +558,7 @@ const LoginScreen = () => {
                       className="rq-otp-resend-link"
                       onClick={() => handleRequestOtp('sms')}
                       disabled={loading}
-                      style={{ fontSize: 13, color: '#C2542B', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
+                      style={{ fontSize: 13, color: '#A8451F', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
                     >
                       Send OTP via SMS instead
                     </button>

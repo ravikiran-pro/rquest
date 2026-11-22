@@ -121,7 +121,7 @@ const NewChatModal = ({
                         <Avatar
                           icon={<ShopOutlined />}
                           style={{
-                            backgroundColor: 'var(--primary, #C2542B)',
+                            backgroundColor: 'var(--primary, #A8451F)',
                             color: '#ffffff',
                           }}
                         />
@@ -219,7 +219,7 @@ const NewChatModal = ({
                                 <Avatar
                                   icon={<ShopOutlined />}
                                   style={{
-                                    backgroundColor: 'var(--primary, #C2542B)',
+                                    backgroundColor: 'var(--primary, #A8451F)',
                                     color: '#ffffff',
                                   }}
                                 />

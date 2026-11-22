@@ -556,7 +556,7 @@ const SearchScreen = () => {
                               borderRadius: radii.md,
                               border: 'none',
                               background: isSelected ? '#EFF6FF' : 'transparent',
-                              color: isSelected ? '#C2542B' : '#374151',
+                              color: isSelected ? '#A8451F' : '#374151',
                               fontWeight: isSelected ? 700 : 500,
                               fontSize: 13,
                               cursor: 'pointer',
@@ -566,7 +566,7 @@ const SearchScreen = () => {
                             }}
                           >
                             <span>{item.label}</span>
-                            {isSelected && <CheckOutlined style={{ color: '#C2542B', fontSize: 12 }} />}
+                            {isSelected && <CheckOutlined style={{ color: '#A8451F', fontSize: 12 }} />}
                           </button>
                         );
                       })}
@@ -592,7 +592,7 @@ const SearchScreen = () => {
                     flexShrink: 0,
                   }}
                 >
-                  <CompassOutlined style={{ color: '#C2542B', fontSize: 15 }} />
+                  <CompassOutlined style={{ color: '#A8451F', fontSize: 15 }} />
                   <span>{filters.maxDistance ? `${filters.maxDistance} km` : 'All distances'}</span>
                   <DownOutlined style={{ fontSize: 10, color: '#6B7280' }} />
                 </button>
@@ -615,7 +615,7 @@ const SearchScreen = () => {
               display: 'inline-flex',
               alignItems: 'center',
               gap: 6,
-              color: '#C2542B',
+              color: '#A8451F',
               fontWeight: 700,
               fontSize: 13.5,
               textDecoration: 'none',
@@ -727,7 +727,7 @@ const SearchScreen = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
               <SearchOutlined
                 style={{
-                  color: isSearchFocused ? '#C2542B' : '#9CA3AF',
+                  color: isSearchFocused ? '#A8451F' : '#9CA3AF',
                   fontSize: 16,
                   flexShrink: 0,
                   transition: 'color 0.2s ease',
@@ -948,7 +948,7 @@ const SearchScreen = () => {
                   gap: 5,
                 }}
               >
-                <EnvironmentOutlined style={{ color: '#C2542B' }} />
+                <EnvironmentOutlined style={{ color: '#A8451F' }} />
                 <span className="rq-location-name">{cleanAreaName}</span>
                 {isDetectingLocation ? (
                   <Spin size="small" />
@@ -974,7 +974,7 @@ const SearchScreen = () => {
                   borderRadius: 9999,
                   padding: '6px 10px',
                   fontSize: 12,
-                  color: '#C2542B',
+                  color: '#A8451F',
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1015,7 +1015,7 @@ const SearchScreen = () => {
                   title="Grid View"
                   style={{
                     background: viewMode === 'grid' ? '#FFFFFF' : 'transparent',
-                    color: viewMode === 'grid' ? '#C2542B' : '#64748B',
+                    color: viewMode === 'grid' ? '#A8451F' : '#64748B',
                     border: 'none',
                     borderRadius: radii.xs,
                     padding: '5px 8px',
@@ -1030,7 +1030,7 @@ const SearchScreen = () => {
                   title="List View"
                   style={{
                     background: viewMode === 'list' ? '#FFFFFF' : 'transparent',
-                    color: viewMode === 'list' ? '#C2542B' : '#64748B',
+                    color: viewMode === 'list' ? '#A8451F' : '#64748B',
                     border: 'none',
                     borderRadius: radii.xs,
                     padding: '5px 8px',
@@ -1225,7 +1225,7 @@ const SearchScreen = () => {
       <Modal
         title={
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <EnvironmentOutlined style={{ color: '#C2542B' }} />
+            <EnvironmentOutlined style={{ color: '#A8451F' }} />
             <span>Select Your Neighborhood Location</span>
           </div>
         }

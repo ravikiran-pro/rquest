@@ -4,7 +4,7 @@ import './card-media.css';
 
 // Soft tints from the existing palette, each paired with a readable ink colour.
 const TONES = [
-  { bg: '#FBEDE6', ink: '#C2542B' },
+  { bg: '#FBEDE6', ink: '#A8451F' },
   { bg: '#EAF0E7', ink: '#2F5D3C' },
   { bg: '#FBF3E2', ink: '#3F6212' },
   { bg: '#F7EDE4', ink: '#5B3A29' },
