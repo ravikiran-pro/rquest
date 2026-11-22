@@ -1,5 +1,5 @@
 const { shops, categories, sub_categories } = require('../../models');
-const { Op, literal } = require('sequelize');
+const { Op, literal, where, fn, col } = require('sequelize');
 const { serializeShops, subCategoryFilter } = require('../../services/shopSubCategories');
 
 // Category and sub-category as shops carry them. The sub-category form is what the
@@ -154,8 +154,10 @@ const getShopDetails = async (req, res) => {
         })
       : await shops.findOne({
           // URL slugs ("sunrise-bakehouse") fall back to a shop-name match
-          where: literal(
-            `lower("shops"."shop_name") = ${JSON.stringify(shop_id.replace(/-/g, ' ')).replace(/"/g, "'")}`
+          // Bound parameter: the slug value is never concatenated into the SQL string
+          where: where(
+            fn('lower', col('shops.shop_name')),
+            shop_id.replace(/-/g, ' ').toLowerCase()
           ),
           include: categoryIncludes(),
         });

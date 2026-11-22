@@ -45,9 +45,13 @@ export default defineConfig({
     // }),
   ],
   server: {
-    host: true,
     port: 3000,
-    allowedHosts: true,
+    // Expose the dev server on the LAN / allow tunnel hosts only when asked:
+    //   VITE_PREVIEW_HOST=true VITE_ALLOWED_HOSTS=my-tunnel.example.com npm run dev
+    host: process.env.VITE_PREVIEW_HOST === 'true',
+    allowedHosts: process.env.VITE_ALLOWED_HOSTS
+      ? process.env.VITE_ALLOWED_HOSTS.split(',').map((h) => h.trim())
+      : undefined,
     proxy: {
       '/api': {
         target: `http://localhost:${PORT}`,
