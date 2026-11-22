@@ -1,86 +1,65 @@
-# Vite React Express Boilerplate
+# Rquest — hyper-local marketplace & directory
 
-> Quickly bootstrap a new project with Vite React Express Boilerplate.
+> "Connect Everywhere Everything" — a web platform that connects physical retail merchants with nearby local customers, built as a single full-stack monorepo.
 
-This boilerplate contains all the tools you need to build a modern web app with JavaScript, React, Vite, and Express.  
-You can use it to quickly bootstrap your project.
+![Rquest design](designs/Main.png)
 
-ESLint, stylelint, prettier, husky and lintstaged are configured to give you a solid development experience.
+## What it does
 
-## Installing / Developing
+- **Proximity search & store discovery** — customers search for goods and shops within a geographic radius using live GPS coordinates and geospatial queries (PostgreSQL `earthdistance` + `cube`).
+- **Real-time consumer ↔ merchant messaging** — customers chat directly with shop owners over Socket.IO before visiting in person.
+- **Merchant onboarding & shop management** — store owners register outlets, drop location pins on interactive Leaflet maps, assign categories and maintain contact info.
+- **Admin taxonomy & catalog** — back-office management of a hierarchical `Category → SubCategory → Products` tree, with bulk GPS/Excel import tooling.
 
-Now you are ready to go:
+## Stack
 
-```shell
+| Layer | Tech |
+|---|---|
+| Frontend | React 17 + Vite 5, Ant Design 5, Leaflet / react-leaflet, Zustand, React Router v5 (PWA manifest) |
+| Backend | Node.js, Express 4 (REST under `/api/v1`), Socket.IO 4 |
+| Database | PostgreSQL + Sequelize 6 (migrations, seeders), `earthdistance` extension for geo queries |
+| Auth | Stateless JWT (Bearer header) + bcrypt, `PrivateRoute` guards on the client |
+| Storage / Geo data | AWS S3 for uploads, OpenCage for geocoding / reverse geocoding |
+
+## Architecture
+
+```
+Browser (PWA) ──HTTP──► Vite/React client
+              ──WS────► Socket.IO server
+                          │
+              REST /api/v1│
+                          ▼
+                 Express API server
+        ┌────────────┼──────────────┐
+   PostgreSQL   AWS S3       OpenCage API
+ (earthdistance) (uploads)   (geocoding)
+```
+
+Monorepo layout:
+
+```
+src/
+├── server.js          # Express HTTP + Socket.IO entry point
+├── api/               # Backend: auth, config, migrations, models, routes, seeders
+├── app/               # Frontend core: components (maps, chat, shop cards), routes, Zustand stores
+└── screens/           # Views: Home, Login, Register, ClientRegister, Admin
+py.sh                  # Utility script for parsing Excel / Google Maps GPS data
+```
+
+## Running locally
+
+```bash
 npm install
+
+# configure the API (DB URL, JWT secret, S3, OpenCage keys)
+cp src/api/.gitignore .env 2>/dev/null || true   # see src/api/config/config.js for required vars
+
+npm run dev        # Vite HMR client + Nodemon API
 ```
 
-This will install the dependencies required to run the boilerplate.
+Requirements: Node.js, PostgreSQL with the `cube` and `earthdistance` extensions enabled.
 
-```shell
-npm run dev
-```
+## Notes
 
-Boom! These scripts run your server and client in development mode.
-
-The default PORTS are:
-
-- `3001` for the server
-- `3000` for the client
-
-If you don't like to call all scripts at once, you can also run:
-
-```shell
-npm run server:dev
-npm run client:dev
-```
-
-You can configure the server port by setting the `PORT` environment variable. Creating a `.env` file is supported. You can copy `.env.example` to `.env`.
-
-| KEY  | VALUE                                                         |
-| ---- | ------------------------------------------------------------- |
-| PORT | (Optional) Port for the server environment (defaults to 3001) |
-
-## Building
-
-To build the project, run:
-
-```shell
-npm run build
-```
-
-This will build the client and server.
-
-```shell
-npm start
-```
-
-In production, you have a single server serving everything.
-
-`/api/*` is the API endpoint.  
-`/*` is the client.
-
-## Tests
-
-A test runner is not installed (right now). But ESLint and Prettier are checked on commit and pushed thanks to husky and lintstaged.
-
-## Google Antigravity & AI Agent Configuration
-
-This repository includes configuration and rules for **Google Antigravity** (IDE, CLI, and Agentic Pair Programming):
-
-- **Rules (`GEMINI.md`, `AGENTS.md`, `.agents/rules/`)**: Enforce project invariants, React 17 constraints, monorepo architecture, and backend guidelines.
-- **Build Policy (`.agents/rules/build-policy.md`)**:
-  - `npm run build` is executed **ONLY when explicitly requested in the prompt**.
-  - Background builds are disabled at prompt/turn ends to optimize speed and responsiveness.
-- **Custom Agents (`.agents/agents/`)**:
-  - `fullstack-orchestrator`: End-to-end features and architectural alignment.
-  - `frontend-specialist`: React 17, Vite 5, Ant Design 5, and Leaflet maps.
-  - `backend-specialist`: Express, PostgreSQL `earthdistance`, Sequelize ORM, and Socket.IO.
-- **Skills (`.agents/skills/`)**:
-  - `build-and-verify`: On-demand build execution and bundle diagnostics.
-  - `db-migrate`: Sequelize database migrations and seeders.
-- **Settings (`.agents/settings.json`, `.vscode/settings.json`)**: Workspace configuration preventing automatic task triggers and optimizing development flow.
-
-## Licensing
-
-MIT
+- All REST routes are prefixed `/api/v1`; geospatial distance uses the `<@>` point operator (statute miles).
+- Real-time events use `message_received`, with a server-side `socketData` map of connected users.
