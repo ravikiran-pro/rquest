@@ -41,6 +41,13 @@ module.exports = (sequelize) => {
         type: DataTypes.FLOAT,
         allowNull: false,
       },
+      // Units taken from a tracked listing's stock when the order was placed; a cancel puts
+      // them back and sets this to 0, so a restock happens at most once
+      stock_deducted: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0,
+      },
     },
     {
       timestamps: true,

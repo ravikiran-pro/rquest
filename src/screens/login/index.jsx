@@ -377,6 +377,7 @@ const LoginScreen = () => {
                         placeholder="Enter your account password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="current-password"
                         className="rq-auth-text-input"
                       />
                     </div>

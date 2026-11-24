@@ -14,6 +14,7 @@ import {
   Alert,
   Tooltip,
   Grid,
+  AutoComplete,
 } from 'antd';
 import {
   PlusOutlined,
@@ -29,6 +30,7 @@ import {
   apiConfig,
   getSchemaIssues,
   FILTERABLE_FIELD_TYPES,
+  CATALOG_PATH_SUGGESTIONS,
 } from '../../app/utils';
 import { colors, radii, typography } from '../../app/styles/theme';
 
@@ -43,6 +45,17 @@ const FIELD_TYPE_OPTIONS = [
   { value: 'date', label: 'Date Picker' },
   { value: 'textarea', label: 'Text Area' },
 ];
+
+// Who owns a field's value (docs/catalogue/03-spec.md §C2)
+const SOURCE_OPTIONS = [
+  { value: 'store', label: 'Store' },
+  { value: 'catalog', label: 'Catalogue' },
+];
+const PATH_OPTIONS = CATALOG_PATH_SUGGESTIONS.map((p) => ({ value: p }));
+const OWNER_HELP =
+  'Catalogue: the value comes from the master catalogue item and stores cannot change it. Store: each store fills it in; a catalogue path is then only a prefill.';
+const PATH_HELP = 'Where to read the value in a catalogue item, e.g. brand, quantity_text or attributes.dosage_form';
+const STATUTORY_HELP = 'Required by law: stores cannot hide or rename this field';
 
 const FormSchemaBuilderModal = ({
   open,
@@ -135,6 +148,10 @@ const FormSchemaBuilderModal = ({
     const updated = [...fields];
     updated[index] = { ...updated[index], [prop]: value };
     setServerErrors([]);
+
+    // Unset optional props instead of saving empty values; every other prop is kept as is
+    if (prop === 'catalog_path' && !String(value || '').trim()) delete updated[index].catalog_path;
+    if (prop === 'statutory' && !value) delete updated[index].statutory;
 
     // Only fields with a fixed set of values can be search filters
     if (prop === 'type' && !FILTERABLE_FIELD_TYPES.includes(value)) {
@@ -371,6 +388,48 @@ const FormSchemaBuilderModal = ({
       },
     },
     {
+      title: <Tooltip title={OWNER_HELP}>Owned by</Tooltip>,
+      dataIndex: 'source',
+      width: 120,
+      render: (val, _, idx) => (
+        <Select
+          value={val === 'catalog' ? 'catalog' : 'store'}
+          style={{ width: '100%' }}
+          options={SOURCE_OPTIONS}
+          onChange={(v) => handleFieldChange(idx, 'source', v)}
+          aria-label={`Owner of field ${idx + 1}`}
+        />
+      ),
+    },
+    {
+      title: <Tooltip title={PATH_HELP}>Catalogue path</Tooltip>,
+      dataIndex: 'catalog_path',
+      width: 190,
+      render: (val, _, idx) => (
+        <AutoComplete
+          value={val || ''}
+          options={PATH_OPTIONS}
+          style={{ width: '100%' }}
+          placeholder="e.g. brand"
+          filterOption={(input, option) => option.value.includes(input.trim().toLowerCase())}
+          onChange={(v) => handleFieldChange(idx, 'catalog_path', v)}
+          aria-label={`Catalogue path of field ${idx + 1}`}
+        />
+      ),
+    },
+    {
+      title: <Tooltip title={STATUTORY_HELP}>Law</Tooltip>,
+      dataIndex: 'statutory',
+      width: 60,
+      render: (val, _, idx) => (
+        <Checkbox
+          checked={Boolean(val)}
+          onChange={(e) => handleFieldChange(idx, 'statutory', e.target.checked)}
+          aria-label={`Field ${idx + 1} is required by law`}
+        />
+      ),
+    },
+    {
       title: (
         <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
           Req.
@@ -550,6 +609,31 @@ const FormSchemaBuilderModal = ({
           </label>
         </div>
 
+        <div className="schema-field-card__grid" style={{ marginTop: 10 }}>
+          <label>
+            <span className="schema-field-card__label">Owned by</span>
+            <Select
+              size={controlSize}
+              value={field.source === 'catalog' ? 'catalog' : 'store'}
+              style={{ width: '100%' }}
+              options={SOURCE_OPTIONS}
+              onChange={(v) => handleFieldChange(idx, 'source', v)}
+            />
+          </label>
+          <label>
+            <span className="schema-field-card__label">Catalogue path</span>
+            <AutoComplete
+              size={controlSize}
+              value={field.catalog_path || ''}
+              options={PATH_OPTIONS}
+              style={{ width: '100%' }}
+              placeholder="e.g. attributes.dosage_form"
+              filterOption={(input, option) => option.value.includes(input.trim().toLowerCase())}
+              onChange={(v) => handleFieldChange(idx, 'catalog_path', v)}
+            />
+          </label>
+        </div>
+
         <div className="schema-field-card__checks" style={{ marginTop: 10 }}>
           <Checkbox
             checked={Boolean(field.required)}
@@ -557,6 +641,11 @@ const FormSchemaBuilderModal = ({
           >
             Required
           </Checkbox>
+          <Tooltip title={STATUTORY_HELP}>
+            <Checkbox checked={Boolean(field.statutory)} onChange={(e) => handleFieldChange(idx, 'statutory', e.target.checked)}>
+              Required by law
+            </Checkbox>
+          </Tooltip>
           <Tooltip title="Show this field as a search filter for shoppers. Available for dropdown, radio and toggle fields.">
             <Checkbox
               checked={Boolean(field.filterable)}
@@ -635,7 +724,7 @@ const FormSchemaBuilderModal = ({
             : `Save Form Schema (${fields.length} Fields)`}
         </Button>,
       ]}
-      destroyOnHidden
+      destroyOnClose
     >
       <Alert
         message={

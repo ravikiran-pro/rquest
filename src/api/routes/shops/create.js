@@ -90,8 +90,15 @@ const createShops = async (req, res) => {
       }
     }
 
+    // A whole-shop custom form is an admin tool (PUT /master/shops/form_schema). Owners
+    // customise per sub-category through /forms; their form_schema is dropped silently so
+    // older clients keep working.
     let cleanFormSchema;
-    if (shopDetails.form_schema !== undefined) {
+    if (shopDetails.form_schema !== undefined && !isAdminRequest(req)) {
+      console.warn(
+        `[shops] ignored form_schema from non-admin user ${user_id || 'unknown'} (shop ${shopDetails.shop_id || 'new'})`
+      );
+    } else if (shopDetails.form_schema !== undefined) {
       const { schema, errors } = normalizeSchema(shopDetails.form_schema);
       if (errors.length) {
         return res.status(400).json({

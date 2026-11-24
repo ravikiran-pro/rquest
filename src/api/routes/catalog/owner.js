@@ -2,10 +2,15 @@
  * Owner endpoints for the master catalog: search it, browse a sub-category, and add items to
  * one of your shops.
  *
- * Mounted behind authMiddleware only (see ./index.js). Import creates a listing the same
- * way POST /api/v1/listings does. The copy is a plain listing: it records the catalog item id
- * (metadata.catalog_item_id, reference only, never synchronised afterwards), the sub-category
- * it was added under (metadata.sub_category_id) and the form fields.
+ * Mounted behind authMiddleware only (see ./index.js). Import creates a listing with the same
+ * rules as POST /api/v1/listings (services/listingWrite.js). The copy records the catalogue item
+ * id (shop_listings.catalog_item_id), a snapshot of the item's facts (catalog_snapshot), the
+ * sub-category it is filed under (sub_category_id: the requested one, else the first shop
+ * sub-category the item is linked to, else the primary), its section and its stock. Form
+ * fields with a catalog_path are filled from the snapshot.
+ *
+ * Owners only ever see their shop's sub-categories: browse refuses all=1 and foreign
+ * sub-categories for non-admins.
  */
 const express = require('express');
 const { handle, requireCatalog, select } = require('./db');
@@ -16,18 +21,27 @@ const {
   categoryCondition,
   subCategoryCondition,
 } = require('./items');
-const { UUID_PATTERN, displayGtin, intParam, numberField, quantityLabel } = require('./validate');
+const { UUID_PATTERN, displayGtin, intParam, quantityLabel } = require('./validate');
 const { shops, sub_categories, shop_listings } = require('../../models');
-const { validateMetadata } = require('../../services/formSchema');
-const { loadListingContext, listingTypeFor, categoryMetadata } = require('../../services/listingForm');
-const { subCategoryIdsByShop } = require('../../services/shopSubCategories');
+const { createContextLoader, shopSubCategoryIds, listingTypeFor } = require('../../services/listingForm');
+const { prefillFromSnapshot } = require('../../services/formOverrides');
+const { defaultStockMode } = require('../../services/stock');
+const { createSectionResolver } = require('../../services/sections');
+const {
+  serializeListing,
+  buildNewListing,
+  loadCatalogCopies,
+  isUniqueViolation,
+} = require('../../services/listingWrite');
+const { snapshotFromEnriched, mrpHint, statutoryFrom } = require('./items');
 const { isAdminReq } = require('../../auth');
 
 const router = express.Router();
 
 const IMPORT_BULK_LIMIT = 200;
 
-const fail = (res, status, error) => res.status(status).json({ success: false, error });
+const fail = (res, status, error, code, extra = {}) =>
+  res.status(status).json({ success: false, error, ...(code ? { code } : {}), ...extra });
 
 const textParam = (value, max = 200) => (typeof value === 'string' ? value.trim().slice(0, max) : '');
 
@@ -43,25 +57,35 @@ const searchResult = (row, inScope) => ({
   hsn_code: row.effective_hsn || null,
   gst_rate: row.gst_rate,
   gtin: displayGtin(row.gtin),
+  statutory: statutoryFrom(row.attributes),
   ...(inScope === undefined ? {} : { for_your_shop: Boolean(inScope) }),
 });
 
 const SUB_ATTRS = ['id', 'key', 'name', 'catalog_nodes'];
 
-/** The sub-category a search is about: ?sub_category_id=, else the shop's (?shop_id=). */
-async function scopeSubCategory(query) {
+/**
+ * The sub-categories a search is about: ?sub_category_id=, else every sub-category of the
+ * shop (?shop_id=), primary first. [] when neither is given.
+ */
+async function scopeSubCategories(query) {
   const subId = Number.parseInt(query.sub_category_id, 10);
   if (Number.isInteger(subId) && subId >= 0) {
-    return sub_categories.findByPk(subId, { attributes: SUB_ATTRS });
+    const sub = await sub_categories.findByPk(subId, { attributes: SUB_ATTRS });
+    return sub ? [sub] : [];
   }
   const shopId = textParam(query.shop_id, 64);
   if (shopId && UUID_PATTERN.test(shopId)) {
     const shop = await shops.findByPk(shopId, { attributes: ['id', 'sub_category_id'] });
-    if (shop && shop.sub_category_id !== null) {
-      return sub_categories.findByPk(shop.sub_category_id, { attributes: SUB_ATTRS });
+    if (shop) {
+      const ids = await shopSubCategoryIds(shop);
+      if (ids.length) {
+        const rows = await sub_categories.findAll({ where: { id: ids }, attributes: SUB_ATTRS });
+        const byId = new Map(rows.map((r) => [r.id, r]));
+        return ids.map((id) => byId.get(id)).filter(Boolean);
+      }
     }
   }
-  return null;
+  return [];
 }
 
 // ---------------------------------------------------------------------------------------
@@ -80,12 +104,16 @@ router.get(
     const q = textParam(req.query.q, 200);
     const category = textParam(req.query.category, 200);
     const onlyLinked = ['1', 'true'].includes(String(req.query.only_linked || ''));
-    const scope = await scopeSubCategory(req.query);
+    const scopes = await scopeSubCategories(req.query);
+    const scope = scopes[0] || null;
     if (!q && !category && !(scope && onlyLinked)) return res.json({ success: true, data: [] });
 
     const replacements = { limit: limit.value };
     const where = ['i.is_active', "i.status <> 'rejected'"];
-    const linked = scope ? subCategoryCondition(scope, replacements) : null;
+    // Linked to any of the shop's sub-categories ranks first
+    const linked = scopes.length
+      ? `(${scopes.map((sub, i) => subCategoryCondition(sub, replacements, `sc${i}`)).join(' OR ')})`
+      : null;
     if (linked && onlyLinked) where.push(linked);
     if (q) {
       const condition = searchConditions(q, replacements, { matchId: true });
@@ -124,35 +152,6 @@ router.get(
 // Shop access and the import itself (shared by POST /import and POST /import-bulk)
 // ---------------------------------------------------------------------------------------
 
-/** Whole number 0..1e9 or null; anything else is an error. */
-const stockField = (raw) => {
-  if (raw === undefined || raw === null || raw === '') return { value: null };
-  const n = typeof raw === 'number' ? raw : Number(String(raw).trim());
-  if (!Number.isInteger(n) || n < 0 || n > 1e9) return { error: true };
-  return { value: n };
-};
-
-/**
- * Price (required), stock and MRP (optional) of a copy. Returns { price, stock, mrp } or
- * { error } with the reason ('invalid_price' | 'invalid_stock' | 'invalid_mrp').
- */
-function copyFields(body) {
-  if (body.price === undefined || body.price === null || body.price === '') {
-    return { error: 'invalid_price', message: 'price is required' };
-  }
-  const price = numberField(body.price);
-  if (price.error || price.value === null || price.value < 0 || price.value > 1e9) {
-    return { error: 'invalid_price', message: 'price must be a number of 0 or more' };
-  }
-  const stock = stockField(body.stock_quantity ?? body.stock);
-  if (stock.error) return { error: 'invalid_stock', message: 'stock_quantity must be a whole number of 0 or more' };
-  const mrp = numberField(body.mrp);
-  if (mrp.error || (mrp.value !== null && (mrp.value < 0 || mrp.value > 1e9))) {
-    return { error: 'invalid_mrp', message: 'mrp must be a number of 0 or more' };
-  }
-  return { price: price.value, stock: stock.value, mrp: mrp.value };
-}
-
 /**
  * The shop a caller may import into (owner only), or the error to send. Browsing also
  * accepts a platform admin (allowAdmin).
@@ -169,79 +168,141 @@ async function shopForCaller(req, shopId, { allowAdmin = false } = {}) {
   return { shop };
 }
 
+/** The first of the shop's sub-categories (position order) a catalogue row is linked to. */
+const linkedShopSub = (row, ownIds) => {
+  const linked = new Set((row.sub_categories || []).map((s) => s.id));
+  return ownIds.find((id) => linked.has(id)) ?? null;
+};
+
+const isBlank = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+const pick = (...values) => values.find((v) => !isBlank(v));
+
+// listingWrite codes → import-bulk skip reasons
+const REASONS = {
+  invalid_price: 'invalid_price',
+  invalid_mrp: 'invalid_mrp',
+  price_above_mrp: 'price_above_mrp',
+  stock_qty_required: 'stock_qty_required',
+  sub_category_not_in_shop: 'sub_category_not_in_shop',
+  section_not_in_shop: 'section_not_in_shop',
+};
+const reasonFor = (built) => {
+  if (REASONS[built.code]) return REASONS[built.code];
+  if ((built.errors || []).some((e) => e.key === 'stock_qty')) return 'invalid_stock';
+  return 'invalid';
+};
+
 /**
- * The sub-category a copy is filed under: one of the shop's own, or the primary when none is
- * given. Returns { id } (null = no sub-category) or { error }.
+ * Imports catalogue items into a shop. Each entry:
+ *   { item_id, price, mrp?, sub_category_id?, section_id?, stock_mode?, stock_qty?,
+ *     low_stock_threshold?, metadata?, statutory?, description? }   (stock / stock_quantity = stock_qty)
+ * statutory: the owner's answers to a catalogue item's statutory fields ({ prescription_required, schedule_drug }).
+ * `defaults` fill missing stock_mode / section_id / sub_category_id / low_stock_threshold.
+ * Returns { created: [{ item_id, listing_id, listing, schema }], skipped: [{ item_id, reason, message?, errors? }] }.
  */
-async function subCategoryForCopy(shop, requested) {
-  if (requested === undefined || requested === null || requested === '') {
-    return { id: shop.sub_category_id ?? null };
+async function importItems(shop, entries, defaults = {}) {
+  const ownIds = await shopSubCategoryIds(shop);
+  const loadContext = createContextLoader(shop);
+  const sections = await createSectionResolver(shop.id);
+  const ids = entries.map((e) => (e && typeof e.item_id === 'string' ? e.item_id.trim() : '')).filter(Boolean);
+  const copies = await loadCatalogCopies(ids);
+  const existing = ids.length
+    ? await shop_listings.findAll({
+        where: { shop_id: shop.id, catalog_item_id: [...new Set(ids)] },
+        attributes: ['catalog_item_id'],
+        raw: true,
+      })
+    : [];
+  const added = new Set(existing.map((r) => r.catalog_item_id));
+
+  const created = [];
+  const skipped = [];
+  for (const entry of entries) {
+    const itemId = entry && typeof entry.item_id === 'string' ? entry.item_id.trim() : '';
+    if (!itemId) {
+      skipped.push({ item_id: entry?.item_id ?? null, reason: 'invalid', message: 'item_id is required' });
+      continue;
+    }
+    const copy = copies.get(itemId);
+    if (!copy || !copy.row.is_active || copy.row.status === 'rejected') {
+      skipped.push({ item_id: itemId, reason: 'not_found', message: 'Catalog item not found' });
+      continue;
+    }
+    if (added.has(itemId)) {
+      skipped.push({ item_id: itemId, reason: 'already_added', message: 'This item is already in your shop' });
+      continue;
+    }
+    const built = await buildNewListing({
+      shop,
+      ownIds,
+      loadContext,
+      sections,
+      body: {
+        price: entry.price,
+        mrp: entry.mrp,
+        description: entry.description,
+        sub_category_id: pick(entry.sub_category_id, defaults.sub_category_id),
+        section_id: pick(entry.section_id, defaults.section_id),
+        stock_mode: pick(entry.stock_mode, defaults.stock_mode),
+        stock_qty: pick(entry.stock_qty, entry.stock_quantity, entry.stock),
+        low_stock_threshold: pick(entry.low_stock_threshold, defaults.low_stock_threshold),
+        metadata: entry.metadata,
+        statutory: entry.statutory,
+      },
+      catalog: { id: itemId, snapshot: copy.snapshot, unit: copy.unit, mrpHint: copy.mrpHint },
+      fallbackSubId: linkedShopSub(copy.row, ownIds),
+      prefill: true,
+    });
+    if (built.code) {
+      skipped.push({
+        item_id: itemId,
+        reason: reasonFor(built),
+        message: built.error,
+        ...(built.errors ? { errors: built.errors } : {}),
+      });
+      continue;
+    }
+    try {
+      const listing = await shop_listings.create(built.values);
+      added.add(itemId);
+      created.push({ item_id: itemId, listing_id: listing.id, listing, schema: built.schema });
+    } catch (err) {
+      if (!isUniqueViolation(err)) throw err;
+      added.add(itemId);
+      skipped.push({ item_id: itemId, reason: 'already_added', message: 'This item is already in your shop' });
+    }
   }
-  const id = Number.parseInt(requested, 10);
-  if (!Number.isInteger(id) || id < 0) return { error: 'sub_category_id must be a sub-category id' };
-  const ownIds = (await subCategoryIdsByShop([shop.id])).get(String(shop.id)) || [];
-  if (!ownIds.includes(id)) {
-    return { error: "sub_category_id must be one of your shop's sub-categories" };
-  }
-  return { id };
+  return { created, skipped };
 }
 
-/**
- * Creates one listing from a catalogue item. Returns { listing } or { status, message, reason }.
- * Reasons: not_found, already_added, invalid (form fields), plus the copyFields reasons.
- */
-async function addCatalogItem(shop, itemId, fields, { description = '', subCategoryId = null } = {}) {
-  const [item] = await enrichedByIds([itemId]);
-  if (!item || !item.is_active || item.status === 'rejected') {
-    return { status: 404, reason: 'not_found', message: 'Catalog item not found' };
+/** Up to 4 catalogue facts of a row for the picker card, from the target form's catalogue fields. */
+function factsFor(schema, snapshot) {
+  const { values } = prefillFromSnapshot(schema, snapshot);
+  const facts = [];
+  for (const field of schema) {
+    if (facts.length >= 4) break;
+    if (field.source !== 'catalog' || values[field.key] === undefined) continue;
+    const value = values[field.key];
+    facts.push({ label: field.label || field.key, value: typeof value === 'boolean' ? (value ? 'Yes' : 'No') : String(value) });
   }
-
-  const table = shop_listings.getTableName();
-  const [existing] = await select(
-    `SELECT id FROM ${quoteTable(table)} WHERE shop_id = :shop_id AND metadata->>'catalog_item_id' = :item_id LIMIT 1`,
-    { shop_id: shop.id, item_id: item.id }
-  );
-  if (existing) return { status: 409, reason: 'already_added', message: 'This item is already in your shop' };
-
-  // Same form and listing type as a manual listing (services/listingForm)
-  const { schema, subCategory, category } = await loadListingContext(shop, { sub_category_id: subCategoryId ?? undefined });
-  const { metadata: cleanMetadata, errors } = validateMetadata(schema, {}, { enforceRequired: false });
-  if (errors.length) return { status: 400, reason: 'invalid', message: errors.map((e) => e.message).join('. ') };
-
-  // A catalog service item is a service, whatever the shop mostly sells
-  const listingType = item.kind === 'service' ? 'service' : listingTypeFor(shop, subCategory);
-
-  const listing = await shop_listings.create({
-    shop_id: shop.id,
-    master_product_id: null,
-    listing_type: listingType,
-    name: item.name,
-    description,
-    price: fields.price,
-    mrp: fields.mrp,
-    unit: 'piece',
-    is_available: true,
-    metadata: {
-      ...cleanMetadata,
-      ...categoryMetadata(subCategory, category),
-      catalog_item_id: item.id,
-      ...(fields.stock !== null ? { stock_quantity: fields.stock } : {}),
-    },
-    img_url: item.image_url || null,
-  });
-  return { listing };
+  return facts;
 }
 
 // ---------------------------------------------------------------------------------------
 // GET /catalog/browse?shop_id=&sub_category_id=&all=1&kind=&status=&q=&limit=&offset=
 //   Catalogue items linked (catalog_item_sub_categories) to the sub-category, ordered by name
 //   or, with q, by relevance. shop_id must be yours (or an admin's) and is required.
-//   Scope: all=1 ignores sub-categories; else sub_category_id; else the shop's own
-//   sub-categories (shop_sub_categories). kind = product|service; status = added|not_added
-//   (whether this shop already has a copy). Limit max 100, default 20.
+//   Scope: the shop's own sub-categories (shop_sub_categories), or one of them with
+//   sub_category_id. Admins may also pass any sub_category_id or all=1; for owners these are
+//   400 sub_category_not_in_shop / scope_not_allowed. kind = product|service;
+//   status = added|not_added (whether this shop already has a copy). Limit max 100, default 20.
 //   200 { success, data: [{ id, name, brand, unit, size, image_url, kind, category_path,
-//         price_hint, already_added }], count, sub_category: { id, key, name } | null }
-//   sub_category is null when the scope is several sub-categories or all.
+//         price_hint, mrp_hint, facts: [{ label, value }], sub_category_id,
+//         default_stock_mode, already_added, statutory: { prescription_required, schedule_drug } }],
+//         count, sub_category: { id, key, name } | null }
+//   statutory values are true / false, or null when the catalogue does not know.
+//   sub_category is null when the scope is several sub-categories or all. Each row's
+//   sub_category_id is the shop sub-category an import would file it under.
 // ---------------------------------------------------------------------------------------
 router.get(
   '/browse',
@@ -265,8 +326,13 @@ router.get(
       return fail(res, 400, 'status must be added or not_added');
     }
     const all = ['1', 'true'].includes(String(req.query.all || ''));
+    const admin = isAdminReq(req);
+    if (all && !admin) {
+      return fail(res, 400, "The catalogue is limited to your shop's sub-categories", 'scope_not_allowed');
+    }
+    const ownIds = await shopSubCategoryIds(shop);
 
-    // Scope: all categories, one sub-category, or the shop's own sub-categories
+    // Scope: all categories (admin), one sub-category, or the shop's own sub-categories
     let subIds = null;
     let sub = null;
     if (!all) {
@@ -274,11 +340,14 @@ router.get(
       if (requestedSub) {
         const subId = Number.parseInt(requestedSub, 10);
         if (!Number.isInteger(subId) || subId < 0) return fail(res, 400, 'sub_category_id must be a sub-category id');
+        if (!admin && !ownIds.includes(subId)) {
+          return fail(res, 400, "That sub-category is not one of your shop's", 'sub_category_not_in_shop');
+        }
         sub = await sub_categories.findByPk(subId, { attributes: ['id', 'key', 'name'] });
         if (!sub) return fail(res, 404, 'Sub-category not found');
         subIds = [sub.id];
       } else {
-        subIds = (await subCategoryIdsByShop([shop.id])).get(String(shop.id)) || [];
+        subIds = ownIds;
         if (subIds.length === 1) {
           sub = await sub_categories.findByPk(subIds[0], { attributes: ['id', 'key', 'name'] });
         }
@@ -301,8 +370,7 @@ router.get(
       where.push('i.kind = :kind');
     }
     if (status) {
-      const copied =
-        'EXISTS (SELECT 1 FROM shop_listings sl WHERE sl.shop_id = :shop_id AND sl.metadata->>\'catalog_item_id\' = i.id)';
+      const copied = 'EXISTS (SELECT 1 FROM shop_listings sl WHERE sl.shop_id = :shop_id AND sl.catalog_item_id = i.id)';
       where.push(status === 'added' ? copied : `NOT ${copied}`);
     }
     if (q) {
@@ -320,21 +388,26 @@ router.get(
     );
     const rows = await enrichedByIds(page.map((r) => r.id));
 
-    // Copies this shop already has (metadata.catalog_item_id) → the listing id
+    // Copies this shop already has (catalog_item_id) → the listing id
     const ids = rows.map((r) => r.id);
     const copies = ids.length
-      ? await select(
-          `SELECT id, metadata->>'catalog_item_id' AS catalog_item_id
-             FROM ${quoteTable(shop_listings.getTableName())}
-            WHERE shop_id = :shop_id AND metadata->>'catalog_item_id' IN (:ids)`,
-          { shop_id: shop.id, ids }
-        )
+      ? await shop_listings.findAll({
+          where: { shop_id: shop.id, catalog_item_id: ids },
+          attributes: ['id', 'catalog_item_id'],
+          raw: true,
+        })
       : [];
     const addedBy = new Map(copies.map((c) => [c.catalog_item_id, c.id]));
 
-    res.json({
-      success: true,
-      data: rows.map((row) => ({
+    // Where an import would land, and what the picker card shows from that form
+    const loadContext = createContextLoader(shop);
+    const data = [];
+    for (const row of rows) {
+      const landing = sub && ownIds.includes(sub.id) ? sub.id : linkedShopSub(row, ownIds) ?? ownIds[0] ?? null;
+      const ctx = await loadContext(landing);
+      const snapshot = snapshotFromEnriched(row);
+      const listingType = row.kind === 'service' ? 'service' : listingTypeFor(shop, ctx.subCategory);
+      data.push({
         id: row.id,
         name: row.name,
         brand: row.brand_name || null,
@@ -344,8 +417,18 @@ router.get(
         kind: row.kind,
         category_path: row.category_path || null,
         price_hint: priceHint(row),
+        mrp_hint: mrpHint(row.attributes),
+        facts: factsFor(ctx.schema, snapshot),
+        statutory: statutoryFrom(row.attributes),
+        sub_category_id: ctx.subCategoryId,
+        default_stock_mode: defaultStockMode({ listingType, templateKey: ctx.subCategory?.template_key, snapshot }),
         already_added: addedBy.get(row.id) || null,
-      })),
+      });
+    }
+
+    res.json({
+      success: true,
+      data,
       count,
       sub_category: sub ? { id: sub.id, key: sub.key, name: sub.name } : null,
     });
@@ -359,10 +442,13 @@ function priceHint(row) {
 }
 
 // ---------------------------------------------------------------------------------------
-// POST /catalog/import  { shop_id, item_id, price, stock_quantity?, mrp?, description?,
-//                         sub_category_id? }
-// 201 { success, message, data: listing }
-// 400 bad input · 403 not your shop · 404 shop or item not found · 409 already in this shop
+// POST /catalog/import  { shop_id, item_id, price, mrp?, sub_category_id?, section_id?,
+//                         stock_mode?, stock_qty?, low_stock_threshold?, metadata?, description? }
+//   (stock_quantity / stock are read as stock_qty)
+// 201 { success, message, data: Listing }
+// 400 bad input (code: invalid_price | price_above_mrp | stock_qty_required |
+//     sub_category_not_in_shop | section_not_in_shop | invalid, with errors) · 403 not your
+//     shop · 404 shop or item not found · 409 already_added
 // ---------------------------------------------------------------------------------------
 router.post(
   '/import',
@@ -373,26 +459,31 @@ router.post(
     const itemId = typeof body.item_id === 'string' ? body.item_id.trim() : '';
     if (!shopId || !itemId) return fail(res, 400, 'shop_id and item_id are required');
 
-    const fields = copyFields(body);
-    if (fields.error) return fail(res, 400, fields.message);
-    const description = typeof body.description === 'string' ? body.description.trim() : '';
-
     const access = await shopForCaller(req, shopId);
     if (access.message) return fail(res, access.status, access.message);
-    const sub = await subCategoryForCopy(access.shop, body.sub_category_id);
-    if (sub.error) return fail(res, 400, sub.error);
 
-    const result = await addCatalogItem(access.shop, itemId, fields, { description, subCategoryId: sub.id });
-    if (result.message) return fail(res, result.status, result.message);
-    return res.status(201).json({ success: true, message: 'Item added to your shop', data: result.listing });
+    const { created, skipped } = await importItems(access.shop, [{ ...body, item_id: itemId }]);
+    if (created.length) {
+      const { listing, schema } = created[0];
+      return res
+        .status(201)
+        .json({ success: true, message: 'Item added to your shop', data: serializeListing(listing, { owner: true, schema }) });
+    }
+    const skip = skipped[0];
+    const status = skip.reason === 'not_found' ? 404 : skip.reason === 'already_added' ? 409 : 400;
+    return fail(res, status, skip.message || 'Item could not be added', skip.reason, skip.errors ? { errors: skip.errors } : {});
   })
 );
 
 // ---------------------------------------------------------------------------------------
-// POST /catalog/import-bulk  { shop_id, items: [{ item_id, price, mrp?, stock? }], sub_category_id? }
+// POST /catalog/import-bulk  { shop_id, defaults?: { stock_mode?, section_id?, sub_category_id?,
+//                              low_stock_threshold? }, items: [<POST /import item>] }
 //   Up to 200 items. Each item is imported as POST /import does; a failing item is reported,
-//   not the whole batch. 200 { success, created: [listingId], skipped: [{ item_id, reason }] }
-//   reason: already_added · not_found · invalid_price · invalid_stock · invalid_mrp · invalid
+//   not the whole batch. (A top-level sub_category_id is still read as a default.)
+//   200 { success, created: [{ item_id, listing_id }], skipped: [{ item_id, reason, message?, errors? }] }
+//   reason: already_added · not_found · invalid_price · invalid_stock · invalid_mrp ·
+//           price_above_mrp · stock_qty_required · sub_category_not_in_shop ·
+//           section_not_in_shop · invalid
 // ---------------------------------------------------------------------------------------
 router.post(
   '/import-bulk',
@@ -408,35 +499,19 @@ router.post(
 
     const access = await shopForCaller(req, shopId);
     if (access.message) return fail(res, access.status, access.message);
-    const sub = await subCategoryForCopy(access.shop, body.sub_category_id);
-    if (sub.error) return fail(res, 400, sub.error);
 
-    const created = [];
-    const skipped = [];
-    for (const entry of body.items) {
-      const itemId = entry && typeof entry.item_id === 'string' ? entry.item_id.trim() : '';
-      if (!itemId) {
-        skipped.push({ item_id: entry?.item_id ?? null, reason: 'invalid' });
-        continue;
-      }
-      const fields = copyFields(entry);
-      if (fields.error) {
-        skipped.push({ item_id: itemId, reason: fields.error });
-        continue;
-      }
-      const result = await addCatalogItem(access.shop, itemId, fields, { subCategoryId: sub.id });
-      if (result.listing) created.push(result.listing.id);
-      else skipped.push({ item_id: itemId, reason: result.reason || 'invalid' });
-    }
+    const defaults = body.defaults && typeof body.defaults === 'object' && !Array.isArray(body.defaults) ? body.defaults : {};
+    const { created, skipped } = await importItems(access.shop, body.items, {
+      ...defaults,
+      sub_category_id: pick(defaults.sub_category_id, body.sub_category_id),
+    });
 
-    return res.status(200).json({ success: true, created, skipped });
+    return res.status(200).json({
+      success: true,
+      created: created.map(({ item_id, listing_id }) => ({ item_id, listing_id })),
+      skipped,
+    });
   })
 );
-
-/** Table name from the model (e.g. "shop_listings"), double-quoted for raw SQL. */
-function quoteTable(name) {
-  const value = typeof name === 'object' && name !== null ? name.tableName : name;
-  return `"${String(value).replace(/"/g, '""')}"`;
-}
 
 module.exports = router;

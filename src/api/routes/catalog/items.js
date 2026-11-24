@@ -216,7 +216,75 @@ function ruleCondition(prefix) {
            OR i.attributes->>'shop_type' = :${prefix}_key, false)`;
 }
 
+/**
+ * The facts frozen onto a listing when it is copied from the catalogue
+ * (shop_listings.catalog_snapshot). Same shape as the migration backfill.
+ */
+function snapshotFromEnriched(row, capturedAt = new Date()) {
+  if (!row) return null;
+  return {
+    item_id: row.id,
+    kind: row.kind || null,
+    name: row.name || null,
+    brand: row.brand_name || null,
+    manufacturer: row.manufacturer || null,
+    gtin: row.gtin || null,
+    net_quantity: toNumber(row.net_quantity),
+    unit: row.unit || null,
+    quantity_text: row.quantity_text || null,
+    hsn_code: row.effective_hsn || row.hsn_code || null,
+    gst_rate: toNumber(row.gst_rate),
+    country_of_origin: row.country_of_origin || null,
+    image_url: row.image_url || null,
+    category_path: row.category_path || null,
+    attributes: row.attributes && typeof row.attributes === 'object' && !Array.isArray(row.attributes) ? row.attributes : {},
+    captured_at: (capturedAt instanceof Date ? capturedAt : new Date(capturedAt)).toISOString(),
+  };
+}
+
+// How a loose item is sold (attributes.sold_by) → the listing unit
+const SOLD_BY_UNITS = [
+  [/kg|kilo/i, 'kg'],
+  [/dozen/i, 'dozen'],
+  [/bunch/i, 'bunch'],
+  [/litre|liter|\bl\b/i, 'litre'],
+];
+
+/** The listing unit for a catalogue item: from sold_by for loose goods, else 'piece'. */
+function listingUnitFor(snapshot) {
+  const soldBy = snapshot && snapshot.attributes ? snapshot.attributes.sold_by : null;
+  if (typeof soldBy === 'string') {
+    const match = SOLD_BY_UNITS.find(([re]) => re.test(soldBy));
+    if (match) return match[1];
+  }
+  return 'piece';
+}
+
+/** attributes.mrp when it is a positive number, else null. */
+function mrpHint(attributes) {
+  const raw = attributes && typeof attributes === 'object' ? attributes.mrp : undefined;
+  const n = typeof raw === 'number' ? raw : typeof raw === 'string' && raw.trim() ? Number(raw) : NaN;
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+/**
+ * The statutory answers the catalogue can give for an item: true / false, or null when the
+ * catalogue does not know (attributes.prescription_status 'unknown' and no schedule value).
+ * Only an explicit 'required' / 'not_required' status is read as an answer.
+ */
+function statutoryFrom(attributes) {
+  const attrs = attributes && typeof attributes === 'object' && !Array.isArray(attributes) ? attributes : {};
+  const yesNo = (v) => (typeof v === 'boolean' ? v : null);
+  const rx = attrs.prescription_status === 'required' ? true : attrs.prescription_status === 'not_required' ? false : null;
+  const foodType = typeof attrs.food_type === 'string' && attrs.food_type.trim() ? attrs.food_type.trim() : null;
+  return { prescription_required: yesNo(attrs.prescription_required) ?? rx, schedule_drug: yesNo(attrs.schedule_drug), food_type: foodType };
+}
+
 module.exports = {
+  snapshotFromEnriched,
+  listingUnitFor,
+  mrpHint,
+  statutoryFrom,
   ENRICHED_COLUMNS,
   subCategoryCondition,
   shapeItem,

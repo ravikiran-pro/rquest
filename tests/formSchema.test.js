@@ -10,6 +10,7 @@ const {
   resolveSchema,
   mergeFilterFields,
   buildMetadataFilter,
+  annotateFieldSources,
 } = require('../src/api/services/formSchema');
 
 test('every built-in template is a valid schema', () => {
@@ -102,11 +103,10 @@ test('validateMetadata rejects missing and invalid values', () => {
     expiry_date: '31-12-2026',
     prescription_required: 'maybe',
   });
-  assert.deepEqual(errors.map((e) => e.key), ['dosage_form', 'expiry_date', 'prescription_required']);
-  assert.deepEqual(
-    validateMetadata(pharmacy, {}).errors.map((e) => e.key),
-    ['dosage_form', 'expiry_date']
-  );
+  // Errors follow the template's field order
+  assert.deepEqual(errors.map((e) => e.key), ['dosage_form', 'prescription_required', 'expiry_date']);
+  // expiry_date is optional since the catalogue redesign (one expiry per listing is wrong)
+  assert.deepEqual(validateMetadata(pharmacy, {}).errors.map((e) => e.key), ['dosage_form']);
   assert.equal(validateMetadata(pharmacy, { dosage_form: 'Drops', expiry_date: '2026-02-30' }).errors.length, 1);
 
   const numeric = [{ key: 'warranty', label: 'Warranty', type: 'number', required: true }];
@@ -174,4 +174,71 @@ test('mergeFilterFields merges filterable fields across forms by key', () => {
   assert.deepEqual(clash, [{ key: 'organic', label: 'Organic', type: 'boolean', filterable: true }]);
   assert.deepEqual(mergeFilterFields([]), []);
   assert.deepEqual(mergeFilterFields(undefined), []);
+});
+
+// ── Field ownership (source / catalog_path / statutory) ─────────────────────────────────
+test('normalizeSchema keeps source, catalog_path and statutory', () => {
+  const { schema, errors } = normalizeSchema([
+    { key: 'brand', label: 'Brand', type: 'text', source: 'catalog', catalog_path: 'brand' },
+    { key: 'rx', label: 'Rx', type: 'boolean', source: 'catalog', catalog_path: 'attributes.prescription_required', statutory: true },
+    { key: 'batch', label: 'Batch', type: 'text', source: 'store' },
+    { key: 'plain', label: 'Plain', type: 'text' },
+  ]);
+  assert.deepEqual(errors, []);
+  assert.equal(schema[0].source, 'catalog');
+  assert.equal(schema[0].catalog_path, 'brand');
+  assert.equal(schema[1].statutory, true);
+  assert.equal(schema[1].catalog_path, 'attributes.prescription_required');
+  assert.equal(schema[2].source, 'store');
+  // Unset props are not added, so older schemas compare unchanged
+  assert.deepEqual(Object.keys(schema[3]).sort(), ['filterable', 'key', 'label', 'required', 'type']);
+});
+
+test('normalizeSchema rejects a bad source or catalog_path', () => {
+  assert.match(
+    normalizeSchema([{ key: 'a', label: 'A', type: 'text', source: 'master' }]).errors[0].message,
+    /source must be store or catalog/
+  );
+  for (const path of ['attributes', 'attributes.Bad', 'name', 'attributes.a.b', 'price']) {
+    assert.equal(
+      normalizeSchema([{ key: 'a', label: 'A', type: 'text', catalog_path: path }]).errors.length,
+      1,
+      path
+    );
+  }
+});
+
+test('annotated templates: pharmacy facts come from the catalogue, expiry is optional', () => {
+  const fields = Object.fromEntries(FORM_TEMPLATES.find((t) => t.key === 'pharmacy').fields.map((f) => [f.key, f]));
+  assert.equal(fields.composition.source, 'catalog');
+  assert.equal(fields.composition.catalog_path, 'attributes.generic');
+  assert.equal(fields.manufacturer.catalog_path, 'manufacturer');
+  assert.equal(fields.pack_size.catalog_path, 'quantity_text');
+  assert.equal(fields.prescription_required.statutory, true);
+  assert.equal(fields.schedule_drug.statutory, true);
+  assert.equal(fields.expiry_date.required, undefined);
+  assert.equal(fields.batch_no.source, 'store');
+  const food = FORM_TEMPLATES.find((t) => t.key === 'food').fields.find((f) => f.key === 'food_type');
+  assert.equal(food.statutory, true);
+  assert.equal(food.source, 'store');
+  // Every template still normalises with its ownership props intact
+  for (const template of FORM_TEMPLATES) {
+    const { schema } = normalizeSchema(template.fields);
+    template.fields.forEach((f, i) => {
+      assert.equal(schema[i].source, f.source, `${template.key}.${f.key}`);
+      assert.equal(schema[i].catalog_path, f.catalog_path, `${template.key}.${f.key}`);
+    });
+  }
+});
+
+test('annotateFieldSources fills only fields without a source', () => {
+  const out = annotateFieldSources([
+    { key: 'brand', label: 'Brand', type: 'text' },
+    { key: 'brand', label: 'Brand', type: 'text', source: 'store' },
+    { key: 'colour', label: 'Colour', type: 'text' },
+  ]);
+  assert.equal(out[0].source, 'catalog');
+  assert.equal(out[1].source, 'store');
+  assert.equal(out[1].catalog_path, undefined);
+  assert.equal(out[2].source, undefined);
 });

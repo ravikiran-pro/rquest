@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { Button, Tooltip } from 'antd';
+import { Button, Tooltip, message } from 'antd';
 import { CompassOutlined, StarFilled } from '@ant-design/icons';
 import ChatIcon from '../common/ChatIcon';
 import CardMedia from './CardMedia';
@@ -97,7 +97,11 @@ const ShopTableView = ({ items = [], searchMode = 'shops', onOpenMap }) => {
   };
 
   const orderItem = (row) => {
-    addItem(row.shop, row.item);
+    const added = addItem(row.shop, row.item);
+    if (added && added.ok === false) {
+      message.warning(added.reason === 'max' ? `Only ${added.max} in stock` : 'This item is out of stock');
+      return;
+    }
     openCart();
   };
 

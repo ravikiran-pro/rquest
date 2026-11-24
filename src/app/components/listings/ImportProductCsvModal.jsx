@@ -1,752 +1,490 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import PropTypes from 'prop-types';
-import {
-  Modal,
-  Button,
-  Upload,
-  Table,
-  message,
-  Alert,
-  Typography,
-  Flex,
-  Tag,
-  Select,
-  Tooltip,
-  Divider,
-} from 'antd';
+import { Modal, Button, Upload, Table, List, Grid, message, Alert, Typography, Tag, Select, Tooltip, Segmented } from 'antd';
 import {
   UploadOutlined,
   DownloadOutlined,
   CheckCircleOutlined,
   InfoCircleOutlined,
-  AppstoreOutlined,
+  WarningOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig, resolveShopSchema } from '../../utils';
-import { colors, radii, typography, shadows } from '../../styles/theme';
+import { shopSubCategories } from '../../utils/shopSubCategories';
+import { STOCK_MODES } from '../../utils/stock';
+import { fetchResolvedForm, apiErrorText } from '../../utils/catalogue_api';
 import {
   parseCSV,
   getCategoryCsvConfig,
   generateCategorySampleCsv,
-  CATEGORY_PRESETS,
-  getShopArchetype,
+  CSV_MAX_ROWS,
 } from '../../utils/csv_helper';
+import './listings.css';
 
 const { Text, Paragraph } = Typography;
-const { Option } = Select;
+
+const normalise = (s) => String(s || '').trim().toLowerCase();
+
+// Plain-word names for the CSV columns shown in the copy (the file itself keeps the column keys)
+const COLUMN_LABELS = {
+  sub_category: 'Sub-category',
+  stock_mode: 'Stock mode',
+  stock_qty: 'Stock count',
+  low_stock_threshold: 'Low-stock alert',
+};
+const columnLabel = (h) => COLUMN_LABELS[h] || h;
+
+/** Problems with one parsed CSV row, before it is sent: a list of messages. */
+const rowIssues = (item, { fields, subLookup }) => {
+  const issues = [];
+  const price = Number(item.price);
+  if (!(price > 0)) issues.push('Enter a price');
+  if (item.mrp !== undefined && item.mrp !== null && Number(item.mrp) > 0 && price > Number(item.mrp)) {
+    issues.push('Price is above MRP');
+  }
+  if (item.stock_mode && !STOCK_MODES.includes(item.stock_mode)) {
+    issues.push('Stock mode must be tracked, toggle or always');
+  }
+  if (item.stock_mode === 'tracked') {
+    const qty = Number(item.stock_qty);
+    if (item.stock_qty === undefined || !Number.isInteger(qty) || qty < 0) issues.push('Enter how many are in stock (0 or more)');
+  } else if (item.stock_qty !== undefined && !(Number.isInteger(Number(item.stock_qty)) && Number(item.stock_qty) >= 0)) {
+    issues.push('Stock count must be a whole number');
+  }
+  if (item.sub_category && !subLookup.has(normalise(item.sub_category))) {
+    issues.push(`"${item.sub_category}" is not one of your store's categories`);
+  }
+  // Required store fields of the chosen form (rows for another sub-category are checked by the server)
+  if (!item.sub_category) {
+    (fields || []).forEach((f) => {
+      if (!f.required || f.type === 'boolean') return;
+      const v = item.metadata?.[f.key];
+      if (v === undefined || v === null || v === '') issues.push(`${f.label || f.key} is required`);
+    });
+  }
+  return issues;
+};
 
 const ImportProductCsvModal = ({ open, onClose, shop, onSuccess }) => {
+  const subs = useMemo(() => shopSubCategories(shop), [shop]);
+  const [subId, setSubId] = useState(null);
+  const [fields, setFields] = useState([]);
+  const [formNote, setFormNote] = useState('');
   const [parsedItems, setParsedItems] = useState([]);
+  const [fileName, setFileName] = useState('');
   const [loading, setLoading] = useState(false);
-  const [categoriesList, setCategoriesList] = useState([]);
-  const [selectedArchetypeOverride, setSelectedArchetypeOverride] = useState(null);
+  const [result, setResult] = useState(null);
+  const [previewFilter, setPreviewFilter] = useState('all');
+  const screens = Grid.useBreakpoint();
+  // Under 768px the preview is a card list instead of a wide table (spec F4)
+  const isPhone = !screens.md;
 
-  // Fetch full category records (with form_schema) on open
+  // Lookup by sub-category name or key, for the sub_category column
+  const subLookup = useMemo(() => {
+    const m = new Map();
+    subs.forEach((s) => {
+      m.set(normalise(s.name), s);
+      if (s.key) m.set(normalise(s.key), s);
+    });
+    return m;
+  }, [subs]);
+
   useEffect(() => {
-    if (open) {
-      netWorkCall(apiConfig.my_categories, 'GET', null, false)
-        .then((res) => {
-          if (res?.data && Array.isArray(res.data)) {
-            setCategoriesList(res.data);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [open]);
+    if (!open) return;
+    setParsedItems([]);
+    setFileName('');
+    setResult(null);
+    setPreviewFilter('all');
+    setSubId(subs[0]?.id ?? shop?.sub_category_id ?? null);
+  }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Determine active category record
-  const activeCategory = useMemo(() => {
-    if (shop?.shopCategory?.id || shop?.category_id) {
-      const match = categoriesList.find(
-        (c) => c.id === (shop?.shopCategory?.id || shop?.category_id)
-      );
-      if (match) return match;
-    }
-    return shop?.shopCategory || null;
-  }, [shop, categoriesList]);
-
-  // The shop's sub-category (with its form) from the category tree
-  const activeSub = useMemo(() => {
-    const id = shop?.sub_category_id ?? shop?.shopSubCategory?.id;
-    if (id === null || id === undefined) return null;
-    for (const c of categoriesList) {
-      const match = (c.sub_categories || []).find((sc) => sc.id === id);
-      if (match) return match;
-    }
-    return shop?.shopSubCategory || null;
-  }, [shop, categoriesList]);
-
-  // Auto-derived shop archetype
-  const autoArchetype = useMemo(() => {
-    return getShopArchetype(shop, activeCategory);
-  }, [shop, activeCategory]);
-
-  // Active archetype (allow manual template switch if shop has multiple categories or special vertical)
-  const currentArchetype = selectedArchetypeOverride || autoArchetype;
-
-  // Active CSV configuration for current category
-  const csvConfig = useMemo(() => {
-    // If user explicitly overrode archetype, use preset directly
-    if (selectedArchetypeOverride && CATEGORY_PRESETS[selectedArchetypeOverride]) {
-      return {
-        ...CATEGORY_PRESETS[selectedArchetypeOverride],
-        categoryName: CATEGORY_PRESETS[selectedArchetypeOverride].label,
-      };
-    }
-    return getCategoryCsvConfig(shop, activeCategory, resolveShopSchema(shop, activeCategory, activeSub));
-  }, [shop, activeCategory, activeSub, selectedArchetypeOverride]);
-
-  // Reset state on open/close
+  // The form of the chosen sub-category: its keys become template columns
   useEffect(() => {
-    if (open) {
-      setParsedItems([]);
-      setSelectedArchetypeOverride(null);
-    }
-  }, [open]);
+    if (!open || !shop?.id) return undefined;
+    let cancelled = false;
+    setFormNote('');
+    fetchResolvedForm(shop.id, subId)
+      .then((data) => {
+        if (!cancelled) setFields(data.fields);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Older servers: fall back to the form the shop record carries
+        setFields(resolveShopSchema(shop));
+        setFormNote('Using the standard form for your store.');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, shop, subId]);
+
+  const csvConfig = useMemo(() => getCategoryCsvConfig(shop, shop?.shopCategory, fields), [shop, fields]);
+  const selectedSub = subs.find((s) => Number(s.id) === Number(subId)) || null;
+
+  const rows = useMemo(
+    () => parsedItems.map((item, idx) => ({ ...item, key: idx, issues: rowIssues(item, { fields, subLookup }) })),
+    [parsedItems, fields, subLookup]
+  );
+  const okRows = rows.filter((r) => r.issues.length === 0);
+  const badRows = rows.filter((r) => r.issues.length > 0);
+  const tooMany = okRows.length > CSV_MAX_ROWS;
 
   const handleDownloadSample = () => {
-    const csvContent = generateCategorySampleCsv(shop, activeCategory, resolveShopSchema(shop, activeCategory, activeSub));
+    const csvContent = generateCategorySampleCsv(shop, shop?.shopCategory, fields);
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    const sanitizedStore = (shop?.shop_name || 'store').replace(/[^a-zA-Z0-9_-]/g, '_');
-    link.setAttribute('download', `${sanitizedStore}_${csvConfig.archetype}_products_template.csv`);
+    const store = (shop?.shop_name || 'store').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const sub = (selectedSub?.name || csvConfig.archetype).replace(/[^a-zA-Z0-9_-]/g, '_');
+    link.setAttribute('download', `${store}_${sub}_template.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    message.success(`Downloaded ${csvConfig.label} sample template!`);
+    URL.revokeObjectURL(url);
   };
 
   const handleFileUpload = (file) => {
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
-        const text = e.target.result;
-        const items = parseCSV(text, resolveShopSchema(shop, activeCategory, activeSub));
+        const items = parseCSV(e.target.result, fields);
         if (items.length === 0) {
-          message.error('No valid product rows found in CSV. Please verify column headers and data.');
+          message.error('No rows with a name were found. Check the column headers.');
           return;
         }
         setParsedItems(items);
-        message.success(`Parsed ${items.length} items from CSV according to ${csvConfig.label} schema.`);
+        setFileName(file.name);
+        setResult(null);
       } catch (err) {
         console.error('CSV parse error:', err);
-        message.error('Failed to parse CSV file. Please ensure it is standard comma-separated text.');
+        message.error('Could not read this file. Save it as comma-separated CSV and try again.');
       }
     };
     reader.readAsText(file);
-    return false; // prevent automatic HTTP upload
+    return false; // no automatic upload
   };
 
   const handleImportSubmit = async () => {
-    if (!shop?.id || parsedItems.length === 0) return;
+    if (!shop?.id || okRows.length === 0 || tooMany) return;
     setLoading(true);
     try {
-      const payload = {
-        shop_id: shop.id,
-        items: parsedItems.map((item) => ({
+      const fieldKeys = fields.map((f) => f.key);
+      const items = okRows.map((item) => {
+        const formValues = {};
+        fieldKeys.forEach((k) => {
+          if (item.metadata?.[k] !== undefined && item.metadata[k] !== '') formValues[k] = item.metadata[k];
+        });
+        return {
           name: item.name,
-          price: parseFloat(item.price) || 0,
-          mrp: item.mrp ? parseFloat(item.mrp) : undefined,
+          price: Number(item.price),
+          ...(item.mrp ? { mrp: Number(item.mrp) } : {}),
           unit: item.unit || csvConfig.defaultUnit || 'piece',
-          section: item.section || item.metadata?.section || '',
-          description: item.description || '',
-          listing_type: activeSub?.listing_type || csvConfig.listingType || 'product',
-          // The rows follow the shop's sub-category form (the server picks it)
-          metadata: {
-            ...(item.metadata || {}),
-            section: item.section || item.metadata?.section || '',
-          },
-        })),
-      };
+          ...(item.description ? { description: item.description } : {}),
+          ...(item.img_url ? { img_url: item.img_url } : {}),
+          ...(item.sub_category ? { sub_category: item.sub_category } : subId ? { sub_category_id: subId } : {}),
+          ...(item.section ? { section: item.section } : {}),
+          ...(item.stock_mode ? { stock_mode: item.stock_mode } : {}),
+          ...(item.stock_qty !== undefined ? { stock_qty: Number(item.stock_qty) } : {}),
+          ...(item.low_stock_threshold !== undefined ? { low_stock_threshold: Number(item.low_stock_threshold) } : {}),
+          // Form keys go flat (spec §E2) and in metadata for servers that read it there
+          ...formValues,
+          metadata: formValues,
+        };
+      });
 
-      const res = await netWorkCall(apiConfig.listings_bulk_create, 'POST', JSON.stringify(payload));
+      const res = await netWorkCall(apiConfig.listings_bulk_create, 'POST', JSON.stringify({ shop_id: shop.id, items }), true);
       if (res?.success) {
-        const skipped = Array.isArray(res.skipped) ? res.skipped : [];
-        if (skipped.length > 0) {
-          // Some rows broke the category's form rules: say which and why
-          Modal.warning({
-            title: res.message,
-            content: (
-              <div>
-                <Table
-                  size="small"
-                  pagination={false}
-                  rowKey="row"
-                  scroll={{ x: 420, y: 260 }}
-                  dataSource={skipped.slice(0, 50)}
-                  columns={[
-                    { title: 'Row', dataIndex: 'row', width: 70 },
-                    { title: 'Name', dataIndex: 'name', width: 160, ellipsis: true, render: (v) => v || '-' },
-                    {
-                      title: 'Problem',
-                      key: 'problem',
-                      render: (_, r) => (Array.isArray(r.errors) ? r.errors.map((e) => e.message).join('. ') : ''),
-                    },
-                  ]}
-                />
-                {skipped.length > 50 && (
-                  <div style={{ marginTop: 8, fontSize: 12 }}>…and {skipped.length - 50} more rows.</div>
-                )}
-              </div>
-            ),
-          });
-        } else {
-          message.success(res.message || `Successfully imported ${parsedItems.length} items to catalog!`);
-        }
-        setParsedItems([]);
+        const sourceRows = okRows.map((r) => r.row);
+        // The server numbers rows by their place in this request; show the file line when it can be mapped
+        const fileRow = (r) => (Number.isInteger(r) && sourceRows[r - 1] ? sourceRows[r - 1] : r);
+        setResult({
+          count: Number(res.count) || (Array.isArray(res.data) ? res.data.length : 0),
+          skipped: (Array.isArray(res.skipped) ? res.skipped : []).map((s) => ({ ...s, row: fileRow(s.row) })),
+          warnings: (Array.isArray(res.warnings) ? res.warnings : []).map((w) => ({ ...w, row: fileRow(w.row) })),
+          leftOut: badRows,
+        });
         onSuccess?.();
-        onClose?.();
       } else {
-        message.error(res?.error || res?.message || 'Failed to import products.');
+        message.error(apiErrorText(res, 'Could not import the file.'));
       }
     } catch (err) {
       console.error('Bulk import error:', err);
-      message.error('An error occurred during bulk product import.');
+      message.error('Could not import the file. Check your connection and try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  // Build dynamic table columns tailored to this category
-  const dynamicColumns = useMemo(() => {
-    const baseCols = [
-      {
-        title: 'Product / Item Name',
-        dataIndex: 'name',
-        key: 'name',
-        render: (text) => (
-          <Text strong style={{ color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
-            {text}
-          </Text>
-        ),
-      },
-      {
-        title: 'Price (₹)',
-        dataIndex: 'price',
-        key: 'price',
-        width: 110,
-        render: (val, record) => (
-          <div style={{ fontFamily: typography.fontFamily.body }}>
-            <span style={{ fontWeight: 700, color: colors.primary }}>₹{val}</span>
-            {record.unit && <span style={{ color: colors.textMuted, fontSize: 11 }}> / {record.unit}</span>}
+  const columns = [
+    { title: 'Row', dataIndex: 'row', width: 60 },
+    {
+      title: 'Item',
+      dataIndex: 'name',
+      render: (text, r) => (
+        <div style={{ minWidth: 160 }}>
+          <div style={{ fontWeight: 600 }}>{text}</div>
+          <div className="ms-muted">
+            ₹{r.price}
+            {r.mrp ? ` · MRP ₹${r.mrp}` : ''}
+            {r.unit ? ` / ${r.unit}` : ''}
           </div>
+        </div>
+      ),
+    },
+    {
+      title: 'Stock',
+      key: 'stock',
+      width: 120,
+      render: (_, r) =>
+        r.stock_mode === 'tracked' ? `Count · ${r.stock_qty ?? '?'}` : r.stock_mode === 'always' ? 'Always' : r.stock_mode === 'toggle' ? 'On/Off' : 'Default',
+    },
+    { title: 'Section', dataIndex: 'section', width: 140, render: (v) => v || <span className="ms-muted">Auto</span> },
+    ...(subs.length > 1
+      ? [{ title: 'Category', dataIndex: 'sub_category', width: 130, render: (v) => v || selectedSub?.name || '-' }]
+      : []),
+    {
+      title: 'Check',
+      key: 'issues',
+      width: 220,
+      render: (_, r) =>
+        r.issues.length === 0 ? (
+          <Tag color="success" style={{ margin: 0 }}>
+            Ready
+          </Tag>
+        ) : (
+          <span style={{ color: 'var(--error-hover, #b3261e)', fontSize: 12 }}>{r.issues.join('. ')}</span>
         ),
-      },
-      {
-        title: 'MRP (₹)',
-        dataIndex: 'mrp',
-        key: 'mrp',
-        width: 90,
-        render: (val) =>
-          val ? (
-            <span style={{ textDecoration: 'line-through', color: colors.textLight }}>₹{val}</span>
-          ) : (
-            '-'
-          ),
-      },
-      {
-        title: 'Section / Shelf',
-        dataIndex: 'section',
-        key: 'section',
-        render: (val) =>
-          val ? (
-            <Tag
-              style={{
-                background: colors.surfaceContainerLow,
-                borderColor: colors.border,
-                color: colors.textMuted,
-                borderRadius: radii.xs,
-                fontWeight: 600,
-              }}
-            >
-              {val}
-            </Tag>
-          ) : (
-            <Text style={{ color: colors.textLight }}>-</Text>
-          ),
-      },
-    ];
+    },
+  ];
 
-    // Category-specific preview columns
-    if (csvConfig.archetype === 'medical') {
-      baseCols.push(
-        {
-          title: 'Dosage Form',
-          key: 'dosage_form',
-          render: (_, r) => r.metadata?.dosage_form || r.dosage_form || '-',
-        },
-        {
-          title: 'Rx Required',
-          key: 'prescription_required',
-          render: (_, r) => {
-            const rx = r.metadata?.prescription_required !== undefined
-              ? r.metadata.prescription_required
-              : r.prescription_required;
-            return rx === true || rx === 'true' ? (
-              <Tag
-                style={{
-                  fontWeight: 700,
-                  borderRadius: radii.xs,
-                  background: colors.semantic.errorLight,
-                  color: colors.semantic.error,
-                  borderColor: colors.semantic.errorBorder,
-                }}
-              >
-                Rx Required
-              </Tag>
-            ) : (
-              <Tag
-                style={{
-                  fontWeight: 600,
-                  borderRadius: radii.xs,
-                  background: colors.semantic.successLight,
-                  color: colors.semantic.successHover,
-                  borderColor: colors.semantic.successBorder,
-                }}
-              >
-                OTC
-              </Tag>
-            );
-          },
-        },
-        {
-          title: 'Expiry',
-          key: 'expiry_date',
-          render: (_, r) => r.metadata?.expiry_date || r.expiry_date || '-',
-        },
-        {
-          title: 'Composition',
-          key: 'composition',
-          ellipsis: true,
-          render: (_, r) => r.metadata?.composition || r.composition || '-',
-        }
-      );
-    } else if (csvConfig.archetype === 'food') {
-      baseCols.push(
-        {
-          title: 'Dietary',
-          key: 'food_type',
-          render: (_, r) => {
-            const ft = (r.metadata?.food_type || r.food_type || '').toLowerCase();
-            return ft === 'veg' ? (
-              <Tag
-                style={{
-                  fontWeight: 700,
-                  borderRadius: radii.xs,
-                  background: colors.semantic.successLight,
-                  color: colors.semantic.successHover,
-                  borderColor: colors.semantic.successBorder,
-                }}
-              >
-                Pure Veg
-              </Tag>
-            ) : (
-              <Tag
-                style={{
-                  fontWeight: 700,
-                  borderRadius: radii.xs,
-                  background: colors.semantic.errorLight,
-                  color: colors.semantic.error,
-                  borderColor: colors.semantic.errorBorder,
-                }}
-              >
-                Non-Veg
-              </Tag>
-            );
-          },
-        },
-        {
-          title: 'Spice',
-          key: 'spice_level',
-          render: (_, r) => r.metadata?.spice_level || r.spice_level || 'Medium',
-        },
-        {
-          title: 'Prep Time',
-          key: 'prep_time_mins',
-          render: (_, r) => {
-            const pt = r.metadata?.prep_time_mins || r.prep_time_mins;
-            return pt ? `${pt} mins` : '-';
-          },
-        }
-      );
-    } else if (csvConfig.archetype === 'service') {
-      baseCols.push(
-        {
-          title: 'Mode',
-          key: 'service_mode',
-          render: (_, r) => {
-            const sm = r.metadata?.service_mode || r.service_mode;
-            return sm === 'doorstep' ? (
-              <Tag
-                style={{
-                  borderRadius: radii.xs,
-                  fontWeight: 600,
-                  background: colors.verifiedChipBg,
-                  color: colors.verifiedChipText,
-                  borderColor: colors.verifiedChipBorder,
-                }}
-              >
-                Doorstep
-              </Tag>
-            ) : sm === 'at_center' ? (
-              <Tag
-                style={{
-                  borderRadius: radii.xs,
-                  fontWeight: 600,
-                  background: colors.primaryLight,
-                  color: colors.primary,
-                  borderColor: colors.verifiedChipBorder,
-                }}
-              >
-                At Center
-              </Tag>
-            ) : (
-              <Tag
-                style={{
-                  borderRadius: radii.xs,
-                  fontWeight: 600,
-                  background: colors.serviceChipBg,
-                  color: colors.serviceChipText,
-                  borderColor: colors.serviceChipBorder,
-                }}
-              >
-                Both
-              </Tag>
-            );
-          },
-        },
-        {
-          title: 'Duration',
-          key: 'duration_mins',
-          render: (_, r) => {
-            const d = r.metadata?.duration_mins || r.duration_mins;
-            return d ? `${d} mins` : '-';
-          },
-        }
-      );
-    } else if (csvConfig.archetype === 'rental') {
-      baseCols.push(
-        {
-          title: 'Deposit (₹)',
-          key: 'security_deposit',
-          render: (_, r) => {
-            const dep = r.metadata?.security_deposit || r.security_deposit;
-            return dep ? `₹${dep}` : '-';
-          },
-        },
-        {
-          title: 'Min Rental',
-          key: 'min_rental_days',
-          render: (_, r) => {
-            const days = r.metadata?.min_rental_days || r.min_rental_days;
-            return days ? `${days} day(s)` : '1 day';
-          },
-        }
-      );
-    } else {
-      // Retail / Grocery custom attributes
-      baseCols.push({
-        title: 'Specifications',
-        key: 'extra_specs',
-        render: (_, r) => {
-          const metaEntries = Object.entries(r.metadata || {}).filter(
-            ([k]) => k !== 'section' && k !== 'category_id' && k !== 'category_name'
-          );
-          if (metaEntries.length === 0) return <Text style={{ color: colors.textLight }}>-</Text>;
-          return (
-            <Flex wrap="wrap" gap={4}>
-              {metaEntries.slice(0, 3).map(([k, v]) => (
-                <Tag
-                  key={k}
-                  style={{
-                    fontSize: 11,
-                    margin: 0,
-                    borderRadius: radii.xs,
-                    background: colors.surfaceContainerLow,
-                    borderColor: colors.border,
-                    color: colors.textMuted,
-                  }}
-                >
-                  <strong>{k}:</strong> {String(v)}
-                </Tag>
-              ))}
-              {metaEntries.length > 3 && (
-                <Text style={{ fontSize: 11, color: colors.textLight }}>+{metaEntries.length - 3} more</Text>
-              )}
-            </Flex>
-          );
-        },
-      });
-    }
+  const previewRows = previewFilter === 'bad' ? badRows : rows;
 
-    return baseCols;
-  }, [csvConfig]);
+  const renderResult = () => (
+    <div>
+      <Alert
+        type={result.count > 0 ? 'success' : 'warning'}
+        showIcon
+        message={`${result.count} added · ${result.skipped.length + result.leftOut.length} skipped${
+          result.warnings.length ? ` · ${result.warnings.length} notes` : ''
+        }`}
+        style={{ marginBottom: 12 }}
+      />
+      {result.skipped.length + result.leftOut.length > 0 && (
+        <>
+          <Text strong>Skipped rows</Text>
+          <Table
+            size="small"
+            pagination={result.skipped.length + result.leftOut.length > 10 ? { pageSize: 10 } : false}
+            rowKey={(r, i) => `${r.row}-${i}`}
+            scroll={{ x: 420 }}
+            style={{ margin: '6px 0 14px' }}
+            dataSource={[
+              ...result.leftOut.map((r) => ({ row: r.row, name: r.name, problem: r.issues.join('. ') })),
+              ...result.skipped.map((s) => ({
+                row: s.row,
+                name: s.name,
+                problem: Array.isArray(s.errors) && s.errors.length ? s.errors.map((e) => e.message).join('. ') : s.reason || s.message || 'Not added',
+              })),
+            ]}
+            columns={[
+              { title: 'Row', dataIndex: 'row', width: 60 },
+              { title: 'Name', dataIndex: 'name', width: 180, ellipsis: true, render: (v) => v || '-' },
+              { title: 'Problem', dataIndex: 'problem' },
+            ]}
+          />
+        </>
+      )}
+      {result.warnings.length > 0 && (
+        <>
+          <Text strong>Notes</Text>
+          <ul className="ms-muted" style={{ paddingLeft: 18, margin: '6px 0 0' }}>
+            {result.warnings.slice(0, 50).map((w, i) => (
+              <li key={`${w.row}-${i}`}>
+                Row {w.row}: {w.message}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </div>
+  );
 
-  return (
-    <Modal
-      title={
-        <Flex align="center" gap={8}>
-          <AppstoreOutlined style={{ color: colors.primary, fontSize: 18 }} />
-          <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain }}>
-            Bulk Import Catalog via CSV
-          </span>
-        </Flex>
-      }
-      open={open}
-      onCancel={() => {
-        setParsedItems([]);
-        onClose?.();
-      }}
-      footer={[
+  const footer = result
+    ? [
         <Button
-          key="cancel"
-          onClick={onClose}
-          style={{
-            borderRadius: radii.md,
-            borderColor: colors.border,
-            color: colors.textMain,
-            fontFamily: typography.fontFamily.body,
+          key="again"
+          onClick={() => {
+            setResult(null);
+            setParsedItems([]);
+            setFileName('');
           }}
         >
+          Import another file
+        </Button>,
+        <Button key="done" type="primary" className="ms-btn-primary" onClick={onClose}>
+          Done
+        </Button>,
+      ]
+    : [
+        <Button key="cancel" onClick={onClose}>
           Cancel
         </Button>,
         <Button
           key="import"
           type="primary"
+          className="ms-btn-primary"
           icon={<CheckCircleOutlined />}
           loading={loading}
-          disabled={parsedItems.length === 0}
+          disabled={okRows.length === 0 || tooMany}
           onClick={handleImportSubmit}
-          style={{
-            background: parsedItems.length > 0 ? colors.primary : undefined,
-            borderColor: parsedItems.length > 0 ? colors.primary : undefined,
-            borderRadius: radii.md,
-            fontWeight: 600,
-            fontFamily: typography.fontFamily.body,
-            boxShadow: parsedItems.length > 0 ? shadows.primary : 'none',
-          }}
         >
-          Confirm & Import ({parsedItems.length})
+          Import {okRows.length} {okRows.length === 1 ? 'row' : 'rows'}
         </Button>,
-      ]}
-      width="min(840px, calc(100vw - 32px))"
-      style={{ maxWidth: 'calc(100vw - 32px)', top: 16 }}
-      styles={{ body: { maxHeight: 'max(300px, calc(100vh - 170px))', overflowY: 'auto', paddingRight: 4 } }}
-      destroyOnHidden
+      ];
+
+  return (
+    <Modal
+      title="Import products from CSV"
+      open={open}
+      onCancel={onClose}
+      footer={footer}
+      width="min(880px, calc(100vw - 24px))"
+      style={{ maxWidth: 'calc(100vw - 24px)', top: 16 }}
+      styles={{ body: { maxHeight: 'max(320px, calc(100vh - 170px))', overflowY: 'auto' } }}
+      destroyOnClose
     >
-      {/* Category Type Context Banner */}
-      <div
-        style={{
-          background: colors.surfaceContainerLow,
-          border: `1px solid ${colors.border}`,
-          borderRadius: radii.lg,
-          padding: '12px 16px',
-          marginBottom: 16,
-          fontFamily: typography.fontFamily.body,
-        }}
-      >
-        <Flex justify="space-between" align="center" wrap="wrap" gap={12}>
-          <div>
-            <Text style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted }}>
-              Store & Product Category Schema
-            </Text>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
-              <span style={{ fontSize: 16 }}>{csvConfig.icon}</span>
-              <span style={{ fontWeight: 700, fontSize: 14, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
-                {shop?.shop_name || 'Store'}
-              </span>
-              <Tag
-                style={{
-                  fontWeight: 600,
-                  fontSize: 12,
-                  borderRadius: radii.xs,
-                  margin: 0,
-                  background: colors.verifiedChipBg,
-                  color: colors.verifiedChipText,
-                  borderColor: colors.verifiedChipBorder,
+      {result ? (
+        renderResult()
+      ) : (
+        <>
+          {subs.length > 1 && (
+            <div style={{ marginBottom: 12 }}>
+              <label className="ms-field-label" htmlFor="csv-sub-select" style={{ display: 'block', marginBottom: 4 }}>
+                Template for
+              </label>
+              <Select
+                id="csv-sub-select"
+                value={subId}
+                onChange={(v) => {
+                  setSubId(v);
+                  setParsedItems([]);
                 }}
-              >
-                {csvConfig.label}
-              </Tag>
+                options={subs.map((s) => ({ value: s.id, label: s.name }))}
+                style={{ width: 260, maxWidth: '100%' }}
+              />
+              <div className="ms-muted" style={{ marginTop: 4 }}>
+                Rows without a sub_category go to {selectedSub?.name || 'this category'}.
+              </div>
             </div>
-          </div>
+          )}
 
-          {/* Template Switcher Dropdown */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <Text style={{ fontSize: 12, color: colors.textMuted }}>Template Schema:</Text>
-            <Select
-              value={currentArchetype}
-              onChange={(val) => {
-                setSelectedArchetypeOverride(val);
-                setParsedItems([]);
-              }}
-              size="middle"
-              style={{ width: 220, maxWidth: '100%' }}
-            >
-              <Option value="medical">Pharmacy & Medical</Option>
-              <Option value="food">Food & Restaurant</Option>
-              <Option value="grocery">Grocery & Staples</Option>
-              <Option value="service">Services & Repair</Option>
-              <Option value="rental">Rentals & Assets</Option>
-              <Option value="product">General Retail</Option>
-            </Select>
-          </div>
-        </Flex>
-      </div>
+          <Paragraph style={{ marginBottom: 6 }}>
+            Download the template, add one row per item (up to {CSV_MAX_ROWS}), then upload the file. Every item needs a
+            name and price. To count stock, set Stock mode to tracked and fill in Stock count (a column named &quot;stock&quot; also works).
+          </Paragraph>
+          {formNote && <div className="ms-muted" style={{ marginBottom: 6 }}>{formNote}</div>}
 
-      {/* How it works */}
-      <div style={{ marginBottom: 16, fontFamily: typography.fontFamily.body }}>
-        <Text strong style={{ display: 'block', fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginBottom: 8 }}>
-          How it works
-        </Text>
-        <Flex vertical gap={8}>
-          {[
-            `Pick the template that matches what you sell`,
-            `Download the sample CSV and add one row per item`,
-            `Upload your CSV file here`,
-            `Check the preview, then confirm the import`,
-          ].map((step, i) => (
-            <Flex key={step} gap={10} align="flex-start">
-              <span
-                style={{
-                  width: 24,
-                  height: 24,
-                  flexShrink: 0,
-                  borderRadius: '50%',
-                  background: colors.primary,
-                  color: colors.surface,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: 12,
-                  fontWeight: 700,
-                }}
-              >
-                {i + 1}
-              </span>
-              <Text style={{ fontSize: 13, color: colors.textMain, lineHeight: '24px' }}>{step}</Text>
-            </Flex>
-          ))}
-        </Flex>
-        <Paragraph style={{ marginTop: 12, marginBottom: 6, fontSize: 13, color: colors.textMuted }}>
-          Your file for <strong style={{ color: colors.textMain }}>{csvConfig.label}</strong> needs these column headers:
-        </Paragraph>
-        <div
-          style={{
-            background: colors.surfaceContainerLow,
-            padding: '8px 12px',
-            borderRadius: radii.md,
-            fontFamily: typography.fontFamily.mono,
-            fontSize: 12,
-            color: colors.textMain,
-            overflowX: 'auto',
-            whiteSpace: 'nowrap',
-            border: `1px solid ${colors.borderDark}`,
-          }}
-        >
-          {csvConfig.headers.join(', ')}
-        </div>
-      </div>
-
-      {/* Action Buttons */}
-      <Flex gap={12} style={{ marginBottom: 16 }} wrap="wrap">
-        <Upload
-          accept=".csv,text/csv"
-          beforeUpload={handleFileUpload}
-          showUploadList={false}
-        >
-          <Button
-            icon={<UploadOutlined />}
-            size="large"
+          <div
             style={{
-              fontWeight: 600,
-              borderRadius: radii.md,
-              borderColor: colors.border,
-              color: colors.textMain,
-              fontFamily: typography.fontFamily.body,
+              background: 'var(--surface-container-low, #f7f3ee)',
+              padding: '8px 12px',
+              borderRadius: 8,
+              fontFamily: 'monospace',
+              fontSize: 12,
+              overflowX: 'auto',
+              whiteSpace: 'nowrap',
+              border: '1px solid var(--border-color, #ebe7e0)',
+              marginBottom: 8,
             }}
           >
-            Select CSV File
-          </Button>
-        </Upload>
+            {csvConfig.headers.join(', ')}
+          </div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 14 }}>
+            {csvConfig.headers.map((h) => (
+              <Tooltip key={h} title={csvConfig.headerDescriptions?.[h] || h}>
+                <Tag style={{ margin: 0, cursor: 'help' }} color={h === 'name' || h === 'price' ? 'blue' : undefined}>
+                  {columnLabel(h)}
+                  {h === 'name' || h === 'price' ? ' *' : ''}
+                </Tag>
+              </Tooltip>
+            ))}
+            <Tooltip title="Hover a column name to see what it means">
+              <InfoCircleOutlined className="ms-muted" aria-label="Column help" />
+            </Tooltip>
+          </div>
 
-        <Button
-          icon={<DownloadOutlined />}
-          size="large"
-          onClick={handleDownloadSample}
-          style={{
-            color: colors.primary,
-            borderColor: colors.verifiedChipBorder,
-            background: colors.primaryLight,
-            fontWeight: 600,
-            borderRadius: radii.md,
-            fontFamily: typography.fontFamily.body,
-          }}
-        >
-          Download {csvConfig.label} Sample Template (.CSV)
-        </Button>
-      </Flex>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 14 }}>
+            <Upload accept=".csv,text/csv" beforeUpload={handleFileUpload} showUploadList={false}>
+              <Button icon={<UploadOutlined />} size="large">
+                {fileName ? 'Choose another file' : 'Choose CSV file'}
+              </Button>
+            </Upload>
+            <Button icon={<DownloadOutlined />} size="large" onClick={handleDownloadSample}>
+              Download template
+            </Button>
+          </div>
 
-      {/* Parsed Items Preview Table */}
-      {parsedItems.length > 0 && (
-        <>
-          <Alert
-            message={
-              <Flex justify="space-between" align="center" style={{ width: '100%' }}>
-                <span>
-                  <strong>{parsedItems.length}</strong> items parsed and mapped to the{' '}
-                  <strong>{csvConfig.label}</strong> schema.
-                </span>
-                <Button size="small" type="link" danger onClick={() => setParsedItems([])}>
-                  Clear File
-                </Button>
-              </Flex>
-            }
-            type="info"
-            showIcon
-            style={{ marginBottom: 12, borderRadius: radii.md }}
-          />
-          <Table
-            dataSource={parsedItems.map((it, idx) => ({ ...it, key: idx }))}
-            columns={dynamicColumns}
-            size="small"
-            pagination={{ pageSize: 5 }}
-            scroll={{ x: 'max-content' }}
-            style={{ border: `1px solid ${colors.border}`, borderRadius: radii.md }}
-          />
+          {rows.length > 0 && (
+            <>
+              <Alert
+                type={badRows.length ? 'warning' : 'info'}
+                showIcon
+                icon={badRows.length ? <WarningOutlined /> : undefined}
+                style={{ marginBottom: 10 }}
+                message={`${fileName}: ${okRows.length} ready · ${badRows.length} need fixing`}
+                description={
+                  tooMany
+                    ? `Up to ${CSV_MAX_ROWS} rows can be imported at once. Split the file and upload each part.`
+                    : badRows.length
+                    ? 'Rows that need fixing are left out. Fix them in your file and upload it again to add them.'
+                    : undefined
+                }
+              />
+              {badRows.length > 0 && (
+                <Segmented
+                  size="small"
+                  value={previewFilter}
+                  onChange={setPreviewFilter}
+                  options={[
+                    { label: `All ${rows.length}`, value: 'all' },
+                    { label: `Need fixing ${badRows.length}`, value: 'bad' },
+                  ]}
+                  style={{ marginBottom: 8 }}
+                />
+              )}
+              {isPhone ? (
+                <List
+                  size="small"
+                  dataSource={previewRows}
+                  pagination={{ pageSize: 8, showSizeChanger: false }}
+                  rowKey={(r) => r.row}
+                  renderItem={(r) => (
+                    <List.Item style={{ display: 'block', padding: '10px 0' }}>
+                      <div className="ms-muted" style={{ fontSize: 12, marginBottom: 4 }}>
+                        Row {r.row}
+                      </div>
+                      {columns.slice(1).map((c) => (
+                        <div key={c.key || c.dataIndex} style={{ marginBottom: 4 }}>
+                          <span className="ms-muted">{c.title}: </span>
+                          {c.render ? c.render(r[c.dataIndex], r) : r[c.dataIndex]}
+                        </div>
+                      ))}
+                    </List.Item>
+                  )}
+                />
+              ) : (
+                <Table
+                  dataSource={previewRows}
+                  columns={columns}
+                  size="small"
+                  pagination={{ pageSize: 8, showSizeChanger: false }}
+                  scroll={{ x: 'max-content' }}
+                />
+              )}
+            </>
+          )}
         </>
       )}
-
-      {/* Field Descriptions Tooltip Bar */}
-      <Divider style={{ margin: '12px 0', borderColor: colors.borderLight }} />
-      <div style={{ fontSize: 12, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-        <Flex align="center" gap={6} style={{ marginBottom: 4 }}>
-          <InfoCircleOutlined style={{ color: colors.primary }} />
-          <Text strong style={{ fontSize: 12, color: colors.textMain, fontFamily: typography.fontFamily.headline }}>
-            {csvConfig.label} Column Guide:
-          </Text>
-        </Flex>
-        <Flex wrap="wrap" gap={8} style={{ marginTop: 6 }}>
-          {csvConfig.headers.map((h) => (
-            <Tooltip key={h} title={csvConfig.headerDescriptions?.[h] || h}>
-              <Tag
-                style={{
-                  cursor: 'pointer',
-                  fontSize: 11,
-                  borderRadius: radii.xs,
-                  fontFamily: typography.fontFamily.mono,
-                  background: h === 'name' || h === 'price' ? colors.primaryLight : colors.surfaceContainerLow,
-                  color: h === 'name' || h === 'price' ? colors.primary : colors.textMuted,
-                  borderColor: h === 'name' || h === 'price' ? colors.verifiedChipBorder : colors.border,
-                }}
-              >
-                {h} {h === 'name' || h === 'price' ? '*' : ''}
-              </Tag>
-            </Tooltip>
-          ))}
-        </Flex>
-      </div>
     </Modal>
   );
 };

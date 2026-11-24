@@ -6,7 +6,14 @@
  *   - checking a listing's metadata against a schema (validateMetadata),
  *   - turning search filters into typed values (buildMetadataFilter).
  *
- * A field is: { key, label, type, required, placeholder, options, defaultValue, filterable }
+ * A field is: { key, label, type, required, placeholder, options, defaultValue, filterable,
+ *               source, catalog_path, statutory }
+ *   source        'store' (the shop fills it, the default) or 'catalog' (a fact owned by the
+ *                 master catalogue, read from the listing's catalog_snapshot)
+ *   catalog_path  where the value lives in a catalogue snapshot (brand, quantity_text,
+ *                 attributes.<key>, ...). On a store field it is only a prefill default.
+ *   statutory     a store override may not hide or rename it (e.g. Rx, veg marking)
+ * The three are optional and only kept when set, so older schemas compare unchanged.
  * Listing values live in shop_listings.metadata[key].
  */
 
@@ -36,6 +43,10 @@ const MAX_PLACEHOLDER = 120;
 const MAX_TEXT = 500;
 const MAX_TEXTAREA = 2000;
 const KEY_PATTERN = /^[a-z][a-z0-9_]{0,39}$/;
+const FIELD_SOURCES = ['store', 'catalog'];
+// Snapshot paths a field may read (see routes/catalog/items.js snapshotFromEnriched)
+const CATALOG_PATH_PATTERN =
+  /^(brand|manufacturer|gtin|quantity_text|net_quantity|unit|hsn_code|gst_rate|country_of_origin|attributes\.[a-z][a-z0-9_]{0,39})$/;
 
 const FORM_TEMPLATES = [
   {
@@ -45,11 +56,11 @@ const FORM_TEMPLATES = [
     description: 'Supermarkets, provision stores, fruits and vegetables',
     keywords: ['grocer', 'provision', 'supermarket', 'kirana', 'vegetable', 'fruit', 'dairy', 'milk'],
     fields: [
-      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Aashirvaad, Amul' },
-      { key: 'pack_size', label: 'Pack Size', type: 'text', placeholder: 'e.g. 1 kg, 500 ml, pack of 6' },
-      { key: 'food_type', label: 'Dietary Tag', type: 'select', options: ['veg', 'non-veg', 'vegan', 'egg'], defaultValue: 'veg', filterable: true },
-      { key: 'organic', label: 'Organic', type: 'boolean', defaultValue: false, filterable: true },
-      { key: 'shelf_life', label: 'Shelf Life', type: 'text', placeholder: 'e.g. 6 months from packing' },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Aashirvaad, Amul', source: 'catalog', catalog_path: 'brand' },
+      { key: 'pack_size', label: 'Pack Size', type: 'text', placeholder: 'e.g. 1 kg, 500 ml, pack of 6', source: 'catalog', catalog_path: 'quantity_text' },
+      { key: 'food_type', label: 'Dietary Tag', type: 'select', options: ['veg', 'non-veg', 'vegan', 'egg'], defaultValue: 'veg', filterable: true, source: 'catalog', catalog_path: 'attributes.food_type', statutory: true },
+      { key: 'organic', label: 'Organic', type: 'boolean', defaultValue: false, filterable: true, source: 'catalog', catalog_path: 'attributes.organic' },
+      { key: 'shelf_life', label: 'Shelf Life', type: 'text', placeholder: 'e.g. 6 months from packing', source: 'catalog', catalog_path: 'attributes.shelf_life' },
     ],
   },
   {
@@ -59,12 +70,15 @@ const FORM_TEMPLATES = [
     description: 'Medicines, health products and medical equipment',
     keywords: ['pharma', 'medic', 'chemist', 'drug', 'health', 'clinic'],
     fields: [
-      { key: 'dosage_form', label: 'Dosage Form', type: 'select', required: true, filterable: true, options: ['Strip / Tablets', 'Syrup / Liquid', 'Capsules', 'Injection', 'Cream / Ointment', 'Drops', 'Powder', 'Medical Equipment'] },
-      { key: 'expiry_date', label: 'Expiry Date', type: 'date', required: true },
-      { key: 'batch_no', label: 'Batch / Lot Number', type: 'text', placeholder: 'e.g. B-2024-X9' },
-      { key: 'prescription_required', label: 'Prescription Required (Rx)', type: 'boolean', defaultValue: false, filterable: true },
-      { key: 'composition', label: 'Salt / Active Chemical Composition', type: 'text', placeholder: 'e.g. Paracetamol 500mg, Phenylephrine 5mg' },
-      { key: 'schedule_drug', label: 'Schedule H / Controlled Substance', type: 'boolean', defaultValue: false },
+      { key: 'composition', label: 'Salt / Active Chemical Composition', type: 'text', placeholder: 'e.g. Paracetamol 500mg, Phenylephrine 5mg', source: 'catalog', catalog_path: 'attributes.generic' },
+      { key: 'dosage_form', label: 'Dosage Form', type: 'select', required: true, filterable: true, options: ['Strip / Tablets', 'Syrup / Liquid', 'Capsules', 'Injection', 'Cream / Ointment', 'Drops', 'Powder', 'Medical Equipment'], source: 'catalog', catalog_path: 'attributes.dosage_form' },
+      { key: 'manufacturer', label: 'Manufacturer', type: 'text', placeholder: 'e.g. Cipla, Sun Pharma', source: 'catalog', catalog_path: 'manufacturer' },
+      { key: 'pack_size', label: 'Pack', type: 'text', placeholder: 'e.g. Strip of 10, 100 ml', source: 'catalog', catalog_path: 'quantity_text' },
+      { key: 'prescription_required', label: 'Prescription Required (Rx)', type: 'boolean', defaultValue: false, filterable: true, source: 'catalog', catalog_path: 'attributes.prescription_required', statutory: true },
+      { key: 'schedule_drug', label: 'Schedule H / Controlled Substance', type: 'boolean', defaultValue: false, source: 'catalog', catalog_path: 'attributes.schedule_drug', statutory: true },
+      { key: 'batch_no', label: 'Batch / Lot Number', type: 'text', placeholder: 'e.g. B-2024-X9', source: 'store' },
+      // One expiry per listing is wrong once batches exist (LATER), so it is optional
+      { key: 'expiry_date', label: 'Expiry Date', type: 'date', source: 'store' },
     ],
   },
   {
@@ -74,7 +88,7 @@ const FORM_TEMPLATES = [
     description: 'Restaurants, cafes, tiffin centres and cloud kitchens',
     keywords: ['restaurant', 'food', 'cafe', 'hotel', 'biryani', 'biriyani', 'tiffin', 'mess', 'kitchen', 'juice', 'ice cream', 'fast food'],
     fields: [
-      { key: 'food_type', label: 'Dietary Tag', type: 'radio', options: ['veg', 'non-veg', 'vegan', 'egg'], defaultValue: 'veg', required: true, filterable: true },
+      { key: 'food_type', label: 'Dietary Tag', type: 'radio', options: ['veg', 'non-veg', 'vegan', 'egg'], defaultValue: 'veg', required: true, filterable: true, source: 'store', statutory: true },
       { key: 'prep_time_mins', label: 'Prep Time (Minutes)', type: 'number', defaultValue: 15, placeholder: '15' },
       { key: 'spice_level', label: 'Spice Level', type: 'select', options: ['Mild', 'Medium', 'Spicy', 'Extra Hot'], defaultValue: 'Medium', filterable: true },
       { key: 'portion_info', label: 'Portion / Serves', type: 'text', placeholder: 'e.g. Serves 1-2 persons' },
@@ -87,7 +101,7 @@ const FORM_TEMPLATES = [
     description: 'Bakeries, cake shops and sweet stalls',
     keywords: ['bakery', 'bake', 'cake', 'sweet', 'confection', 'dessert'],
     fields: [
-      { key: 'food_type', label: 'Dietary Tag', type: 'radio', options: ['veg', 'egg', 'eggless', 'vegan'], defaultValue: 'veg', required: true, filterable: true },
+      { key: 'food_type', label: 'Dietary Tag', type: 'radio', options: ['veg', 'egg', 'eggless', 'vegan'], defaultValue: 'veg', required: true, filterable: true, source: 'store', statutory: true },
       { key: 'weight', label: 'Weight / Size', type: 'text', placeholder: 'e.g. 500 g, 1 kg, box of 6' },
       { key: 'flavour', label: 'Flavour', type: 'text', placeholder: 'e.g. Chocolate truffle, Butterscotch' },
       { key: 'made_to_order', label: 'Made to Order', type: 'boolean', defaultValue: false, filterable: true },
@@ -105,7 +119,7 @@ const FORM_TEMPLATES = [
       { key: 'size', label: 'Size', type: 'select', options: ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'Free Size'], filterable: true },
       { key: 'colour', label: 'Colour', type: 'text', placeholder: 'e.g. Navy blue' },
       { key: 'material', label: 'Material / Fabric', type: 'text', placeholder: 'e.g. Cotton, Silk, Leather' },
-      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Levis, Bata' },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Levis, Bata', source: 'catalog', catalog_path: 'brand' },
     ],
   },
   {
@@ -115,8 +129,8 @@ const FORM_TEMPLATES = [
     description: 'Mobiles, computers, appliances and accessories',
     keywords: ['electronic', 'mobile', 'computer', 'laptop', 'appliance', 'gadget', 'phone'],
     fields: [
-      { key: 'brand', label: 'Brand / Manufacturer', type: 'text', placeholder: 'e.g. Sony, Dell, Samsung, Apple' },
-      { key: 'model_number', label: 'Model Number / Specs', type: 'text', placeholder: 'e.g. WH-1000XM5, 16GB RAM / 512GB SSD' },
+      { key: 'brand', label: 'Brand / Manufacturer', type: 'text', placeholder: 'e.g. Sony, Dell, Samsung, Apple', source: 'catalog', catalog_path: 'brand' },
+      { key: 'model_number', label: 'Model Number / Specs', type: 'text', placeholder: 'e.g. WH-1000XM5, 16GB RAM / 512GB SSD', source: 'catalog', catalog_path: 'attributes.model_number' },
       { key: 'warranty_period', label: 'Warranty (Months)', type: 'number', placeholder: '12' },
       { key: 'condition', label: 'Condition', type: 'select', options: ['Brand New Sealed', 'Open Box', 'Refurbished Certified', 'Pre-Owned'], defaultValue: 'Brand New Sealed', filterable: true },
     ],
@@ -142,7 +156,7 @@ const FORM_TEMPLATES = [
     description: 'Hardware, paints, electricals and plumbing supplies',
     keywords: ['hardware', 'paint', 'sanitary', 'cement', 'building', 'tool', 'electrical'],
     fields: [
-      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Asian Paints, Finolex' },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Asian Paints, Finolex', source: 'catalog', catalog_path: 'brand' },
       { key: 'material', label: 'Material', type: 'text', placeholder: 'e.g. Stainless steel, PVC' },
       { key: 'dimensions', label: 'Size / Dimensions', type: 'text', placeholder: 'e.g. 1 inch x 3 m' },
       { key: 'warranty_months', label: 'Warranty (Months)', type: 'number', placeholder: '12' },
@@ -168,8 +182,8 @@ const FORM_TEMPLATES = [
     description: 'Salons, spas, parlours and beauty services',
     keywords: ['salon', 'spa', 'beauty', 'parlour', 'parlor', 'massage', 'barber', 'makeup'],
     fields: [
-      { key: 'service_for', label: 'For', type: 'select', options: ['Men', 'Women', 'Kids', 'Unisex'], defaultValue: 'Unisex', filterable: true },
-      { key: 'duration_mins', label: 'Duration (Minutes)', type: 'number', defaultValue: 45 },
+      { key: 'service_for', label: 'For', type: 'select', options: ['Men', 'Women', 'Kids', 'Unisex'], defaultValue: 'Unisex', filterable: true, source: 'store', catalog_path: 'attributes.service_for' },
+      { key: 'duration_mins', label: 'Duration (Minutes)', type: 'number', defaultValue: 45, source: 'store', catalog_path: 'attributes.duration_mins' },
       { key: 'service_mode', label: 'Service Mode', type: 'select', options: ['At Salon', 'Home Visit', 'Both Available'], defaultValue: 'At Salon', filterable: true },
       { key: 'appointment_required', label: 'Appointment Required', type: 'boolean', defaultValue: false },
     ],
@@ -194,7 +208,7 @@ const FORM_TEMPLATES = [
     description: 'Book shops, stationery and school supplies',
     keywords: ['book', 'station', 'school suppl', 'xerox', 'print'],
     fields: [
-      { key: 'author_brand', label: 'Author / Brand', type: 'text', placeholder: 'e.g. R. K. Narayan, Classmate' },
+      { key: 'author_brand', label: 'Author / Brand', type: 'text', placeholder: 'e.g. R. K. Narayan, Classmate', source: 'catalog', catalog_path: 'brand' },
       { key: 'language', label: 'Language', type: 'select', options: ['English', 'Tamil', 'Hindi', 'Telugu', 'Kannada', 'Malayalam', 'Other'], filterable: true },
       { key: 'condition', label: 'Condition', type: 'select', options: ['New', 'Used - Like New', 'Used - Good'], defaultValue: 'New', filterable: true },
       { key: 'edition', label: 'Edition / Class', type: 'text', placeholder: 'e.g. 2025 edition, Class 10' },
@@ -224,7 +238,7 @@ const FORM_TEMPLATES = [
       { key: 'meat_type', label: 'Meat', type: 'select', options: ['Chicken', 'Mutton', 'Fish', 'Prawns & Seafood', 'Eggs', 'Other'], required: true, filterable: true },
       { key: 'cut', label: 'Cut', type: 'select', options: ['Whole', 'Curry Cut', 'Boneless', 'Fillet', 'Mince', 'Not Applicable'], defaultValue: 'Curry Cut', filterable: true },
       { key: 'freshness', label: 'Fresh or Frozen', type: 'radio', options: ['Fresh', 'Frozen'], defaultValue: 'Fresh', filterable: true },
-      { key: 'net_weight', label: 'Net Weight', type: 'text', placeholder: 'e.g. 500 g, 1 kg' },
+      { key: 'net_weight', label: 'Net Weight', type: 'text', placeholder: 'e.g. 500 g, 1 kg', source: 'catalog', catalog_path: 'quantity_text' },
       { key: 'halal', label: 'Halal', type: 'boolean', defaultValue: false, filterable: true },
     ],
   },
@@ -390,8 +404,8 @@ const FORM_TEMPLATES = [
     fields: [
       { key: 'pet_type', label: 'For', type: 'select', options: ['Dog', 'Cat', 'Bird', 'Fish', 'Small Pets', 'All Pets'], required: true, filterable: true },
       { key: 'life_stage', label: 'Life Stage', type: 'select', options: ['Puppy / Kitten', 'Adult', 'Senior', 'All Ages'], defaultValue: 'All Ages', filterable: true },
-      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Pedigree, Whiskas' },
-      { key: 'pack_size', label: 'Pack Size', type: 'text', placeholder: 'e.g. 1.2 kg, 400 g' },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. Pedigree, Whiskas', source: 'catalog', catalog_path: 'brand' },
+      { key: 'pack_size', label: 'Pack Size', type: 'text', placeholder: 'e.g. 1.2 kg, 400 g', source: 'catalog', catalog_path: 'quantity_text' },
     ],
   },
   {
@@ -401,7 +415,7 @@ const FORM_TEMPLATES = [
     description: 'A simple starting form for any other kind of shop',
     keywords: [],
     fields: [
-      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. brand or maker' },
+      { key: 'brand', label: 'Brand', type: 'text', placeholder: 'e.g. brand or maker', source: 'catalog', catalog_path: 'brand' },
       { key: 'variant', label: 'Variant / Size', type: 'text', placeholder: 'e.g. Large, 500 ml, Blue' },
       { key: 'condition', label: 'Condition', type: 'select', options: ['New', 'Refurbished', 'Used'], defaultValue: 'New', filterable: true },
     ],
@@ -586,6 +600,24 @@ const normalizeSchema = (input) => {
     // Free-text and numeric fields have no fixed list of values to filter by.
     field.filterable = Boolean(raw.filterable) && FILTERABLE_TYPES.includes(type);
 
+    // Ownership (optional; only kept when set so older schemas stay byte-for-byte equal)
+    if (!isEmpty(raw.source)) {
+      if (!FIELD_SOURCES.includes(raw.source)) {
+        fail(`${name}: source must be store or catalog`, key);
+      } else {
+        field.source = raw.source;
+      }
+    }
+    if (!isEmpty(raw.catalog_path)) {
+      const path = String(raw.catalog_path).trim();
+      if (!CATALOG_PATH_PATTERN.test(path)) {
+        fail(`${name}: catalog path "${path}" is not a catalogue fact (e.g. brand, quantity_text, attributes.dosage_form)`, key);
+      } else {
+        field.catalog_path = path;
+      }
+    }
+    if (raw.statutory === true || raw.statutory === 'true') field.statutory = true;
+
     schema.push(field);
   });
 
@@ -728,6 +760,30 @@ const buildMetadataFilter = (filters, schema) => {
   return { filter, errors };
 };
 
+// Which keys are catalogue facts, for forms built without explicit ownership (taxonomy
+// extra fields, admin forms saved before the field had a source). Template fields carry
+// their own props; this only fills fields that have no source yet.
+const FIELD_SOURCE_DEFAULTS = {
+  brand: { source: 'catalog', catalog_path: 'brand' },
+  pack_size: { source: 'catalog', catalog_path: 'quantity_text' },
+  composition: { source: 'catalog', catalog_path: 'attributes.generic' },
+  dosage_form: { source: 'catalog', catalog_path: 'attributes.dosage_form' },
+  manufacturer: { source: 'catalog', catalog_path: 'manufacturer' },
+  model_number: { source: 'catalog', catalog_path: 'attributes.model_number' },
+  author_brand: { source: 'catalog', catalog_path: 'brand' },
+  net_weight: { source: 'catalog', catalog_path: 'quantity_text' },
+  prescription_required: { source: 'catalog', catalog_path: 'attributes.prescription_required', statutory: true },
+  schedule_drug: { source: 'catalog', catalog_path: 'attributes.schedule_drug', statutory: true },
+};
+
+/** Fields with ownership filled in from FIELD_SOURCE_DEFAULTS where they have none. */
+const annotateFieldSources = (fields) =>
+  (Array.isArray(fields) ? fields : []).map((field) => {
+    if (!field || typeof field !== 'object' || !isEmpty(field.source)) return field;
+    const defaults = FIELD_SOURCE_DEFAULTS[field.key];
+    return defaults ? { ...field, ...defaults } : field;
+  });
+
 /** Templates as sent to the admin form builder (keywords stay server-side). */
 const listTemplates = () =>
   FORM_TEMPLATES.map(({ key, label, icon, description, fields }) => ({
@@ -740,6 +796,12 @@ const listTemplates = () =>
 
 module.exports = {
   FIELD_TYPES,
+  FIELD_SOURCES,
+  CATALOG_PATH_PATTERN,
+  FIELD_SOURCE_DEFAULTS,
+  annotateFieldSources,
+  coerceValue,
+  isEmpty,
   FILTERABLE_TYPES,
   RESERVED_KEYS,
   FORM_TEMPLATES,

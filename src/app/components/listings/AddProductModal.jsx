@@ -1,40 +1,40 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import PropTypes from 'prop-types';
 import {
-  Modal,
+  Drawer,
   Form,
-  AutoComplete,
   Input,
   InputNumber,
   Select,
-  Typography,
   Row,
   Col,
   Button,
-  Radio,
   Checkbox,
-  Switch,
-  Tag,
-  Flex,
+  Upload,
+  Alert,
+  Skeleton,
+  Grid,
+  Divider,
   message,
-  Space,
 } from 'antd';
 import {
-  AppstoreOutlined,
-  UploadOutlined,
   PlusOutlined,
-  PlusCircleOutlined,
   SaveOutlined,
-  EditOutlined,
-  SearchOutlined,
+  UploadOutlined,
+  LinkOutlined,
+  PictureOutlined,
+  DownOutlined,
+  UpOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons';
 import { netWorkCall, apiConfig } from '../../utils';
-import { subCategoryArchetype } from '../../utils/form_schema';
-import { getShopSubCategoryIds } from '../../utils/shopSubCategories';
-import { colors, radii, typography, shadows } from '../../styles/theme';
-
-const { Text } = Typography;
-const { Option } = Select;
+import { subCategoryArchetype, splitFields, prefillFromSnapshot } from '../../utils/form_schema';
+import { getShopSubCategoryIds, shopSubCategories } from '../../utils/shopSubCategories';
+import { fallbackStockMode, stockBlockError, stockPayload, DEFAULT_LOW_STOCK } from '../../utils/stock';
+import { fetchResolvedForm, uploadImage, apiErrorText, codeText } from '../../utils/catalogue_api';
+import { SchemaFieldControl, CatalogueFacts, lockedFacts } from './SchemaField';
+import { StockBlock } from './StockControl';
+import './listings.css';
 
 /**
  * Determine the shop's domain archetype based on its category or shop type
@@ -50,62 +50,14 @@ export const getShopArchetype = (shop) => {
     ' ' +
     (shop?.shopSubCategory?.name || '')
   ).toLowerCase();
-
-  if (
-    typeStr.includes('health') ||
-    typeStr.includes('med') ||
-    typeStr.includes('pharm') ||
-    typeStr.includes('clinic') ||
-    typeStr.includes('doctor')
-  ) {
-    return 'medical';
-  }
-  if (
-    typeStr.includes('restaurant') ||
-    typeStr.includes('food') ||
-    typeStr.includes('bakery') ||
-    typeStr.includes('cafe') ||
-    typeStr.includes('biri') ||
-    typeStr.includes('tiffin') ||
-    typeStr.includes('hotel') ||
-    typeStr.includes('eatery')
-  ) {
-    return 'food';
-  }
-  if (
-    typeStr.includes('electric') ||
-    typeStr.includes('hardware') ||
-    typeStr.includes('technician') ||
-    typeStr.includes('plumb') ||
-    typeStr.includes('service') ||
-    typeStr.includes('laundry') ||
-    typeStr.includes('repair') ||
-    typeStr.includes('clean') ||
-    typeStr.includes('mechanic') ||
-    typeStr.includes('contractor')
-  ) {
+  const has = (...words) => words.some((w) => typeStr.includes(w));
+  if (has('health', 'med', 'pharm', 'clinic', 'doctor')) return 'medical';
+  if (has('restaurant', 'food', 'bakery', 'cafe', 'biri', 'tiffin', 'hotel', 'eatery')) return 'food';
+  if (has('electric', 'hardware', 'technician', 'plumb', 'service', 'laundry', 'repair', 'clean', 'mechanic', 'contractor')) {
     return 'service';
   }
-  if (
-    typeStr.includes('salon') ||
-    typeStr.includes('spa') ||
-    typeStr.includes('massage') ||
-    typeStr.includes('beauty') ||
-    typeStr.includes('barber')
-  ) {
-    return 'wellness';
-  }
-  if (
-    typeStr.includes('rental') ||
-    typeStr.includes('bike') ||
-    typeStr.includes('audio') ||
-    typeStr.includes('sport') ||
-    typeStr.includes('turf') ||
-    typeStr.includes('vehicle') ||
-    typeStr.includes('car rental')
-  ) {
-    return 'rental';
-  }
+  if (has('salon', 'spa', 'massage', 'beauty', 'barber')) return 'wellness';
+  if (has('rental', 'bike', 'audio', 'sport', 'turf', 'vehicle', 'car rental')) return 'rental';
   return 'product';
 };
 
@@ -121,44 +73,57 @@ export const getListingTypeFromArchetype = (archetype) => {
 
 const TYPE_CONFIG = {
   food: {
-    label: 'Food Dish / Menu Item',
     defaultUnit: 'plate',
     unitOptions: ['plate', 'portion', 'pack', 'kg', 'piece'],
-    sectionPlaceholder: 'e.g. Biryani & Rice, Starters & Fry, Gravies, Beverages',
-    addTitle: 'Add Dish / Beverage to Menu',
+    nameLabel: 'Dish name',
+    namePlaceholder: 'e.g. Chicken dum biryani (family pack)',
+    descPlaceholder: 'Portion size, ingredients, allergens',
   },
   medical: {
-    label: 'Pharmacy & Healthcare Item',
     defaultUnit: 'strip',
     unitOptions: ['strip', 'bottle', 'piece', 'box', 'pack', 'tube'],
-    sectionPlaceholder: 'e.g. Prescription Drugs, OTC & First Aid, Baby Care, Wellness',
-    addTitle: 'Add Medicine / Healthcare Product',
+    nameLabel: 'Medicine or product name',
+    namePlaceholder: 'e.g. Paracetamol 500mg (strip of 10)',
+    descPlaceholder: 'Usage, storage, precautions',
   },
   product: {
-    label: 'Retail / Physical Product',
     defaultUnit: 'piece',
-    unitOptions: ['piece', 'kg', 'pack', 'box', 'meter', 'liter'],
-    sectionPlaceholder: 'e.g. Staples & Grains, Cooking Oils, Snacks, Dairy',
-    addTitle: 'Add Product to Store Catalog',
+    unitOptions: ['piece', 'kg', 'g', 'pack', 'box', 'litre', 'ml', 'meter', 'dozen'],
+    nameLabel: 'Product name',
+    namePlaceholder: 'e.g. India Gate basmati rice 5kg',
+    descPlaceholder: 'Size, packaging or other details',
   },
   service: {
-    label: 'Service Package / Visit',
     defaultUnit: 'visit',
     unitOptions: ['visit', 'service', 'session', 'hour'],
-    sectionPlaceholder: 'e.g. Diagnostics & Inspection, Repair, Installation',
-    addTitle: 'Add Service Package',
+    nameLabel: 'Service name',
+    namePlaceholder: 'e.g. Split AC deep cleaning',
+    descPlaceholder: 'What is included, warranty, parts',
   },
   rental: {
-    label: 'Rental Asset / Equipment',
     defaultUnit: 'day',
     unitOptions: ['day', 'hour', 'week', 'month'],
-    sectionPlaceholder: 'e.g. Bikes & Scooters, DJ & Audio Equipment, Event Lighting',
-    addTitle: 'Add Rental Asset',
+    nameLabel: 'Item for rent',
+    namePlaceholder: 'e.g. Honda Activa (per day)',
+    descPlaceholder: 'Rental terms, accessories, fuel policy',
   },
 };
 
+const configFor = (archetype) =>
+  TYPE_CONFIG[archetype === 'wellness' ? 'service' : archetype === 'grocery' ? 'product' : archetype] || TYPE_CONFIG.product;
+
+const CORE_FIELDS = ['name', 'price', 'mrp', 'unit', 'img_url', 'description'];
+const ORDER_TOGGLES = ['allow_instant_order', 'allow_enquiry'];
+
+const listingSubId = (item) => {
+  const raw = item?.sub_category_id ?? item?.metadata?.sub_category_id;
+  const n = Number.parseInt(raw, 10);
+  return Number.isInteger(n) ? n : null;
+};
+
 /**
- * Reusable Add / Edit Product Component
+ * Add or edit one listing (quick custom product, docs/catalogue/03-spec.md §F5).
+ * The form comes from GET forms/shop/:shop_id/:sub_id/resolved for the chosen sub-category.
  */
 const AddProductModal = ({
   open,
@@ -166,837 +131,710 @@ const AddProductModal = ({
   onSuccess,
   shop,
   editingItem = null,
-  width = 'min(650px, calc(100vw - 32px))',
+  width = 720,
   onOpenImportCsv = null,
+  initialName = '',
+  sections: sectionsProp = null,
+  onSectionsChanged = null,
 }) => {
   const [form] = Form.useForm();
-  const [submitting, setSubmitting] = useState(false);
-  // Master-catalog autofill (new products only)
-  const [autofillText, setAutofillText] = useState('');
-  const [autofillDebounced, setAutofillDebounced] = useState('');
-  const [autofillOptions, setAutofillOptions] = useState([]);
-  const [autofillHidden, setAutofillHidden] = useState(false);
-  const autofillSeq = useRef(0);
-  const [categoriesList, setCategoriesList] = useState([]);
-  // The sub-category this item follows: one of the shop's own sub-categories, picked per item
-  const [selectedSubId, setSelectedSubId] = useState(null);
+  const screens = Grid.useBreakpoint();
+  const isMobile = !screens.md;
+  const shopId = shop?.id;
   const shopSubIds = useMemo(() => getShopSubCategoryIds(shop), [shop]);
+  const subNames = useMemo(() => {
+    const m = new Map();
+    shopSubCategories(shop).forEach((s) => m.set(Number(s.id), s));
+    return m;
+  }, [shop]);
 
-
-  // Derive default shop archetype and category
   const storeArchetype = getShopArchetype(shop);
-  const defaultListingType =
-    shop?.shopSubCategory?.listing_type || getListingTypeFromArchetype(storeArchetype);
+  const typeConfig = configFor(storeArchetype);
+  const defaultListingType = shop?.shopSubCategory?.listing_type || getListingTypeFromArchetype(storeArchetype);
 
-  // Current active listing type
-  const [currentType, setCurrentType] = useState(defaultListingType);
+  const [subId, setSubId] = useState(null);
+  const [resolved, setResolved] = useState({ fields: [], default_stock_mode: null, listing_type: null });
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formTick, setFormTick] = useState(0);
 
-  // The category tree, with every sub-category's form
+  const [stock, setStock] = useState({ stock_mode: null });
+  const [stockError, setStockError] = useState('');
+  const stockTouched = useRef(false);
+  // Set only when the owner changes the stock block (not when the sheet opens)
+  const stockEdited = useRef(false);
+
+  const [sections, setSections] = useState([]);
+  const [sectionId, setSectionId] = useState(null);
+  const [sectionError, setSectionError] = useState('');
+  const sectionTouched = useRef(false);
+  const [newSectionName, setNewSectionName] = useState('');
+  const [creatingSection, setCreatingSection] = useState(false);
+
+  const [catalogItem, setCatalogItem] = useState(null);
+  const [suggestion, setSuggestion] = useState(null);
+  const dismissedNames = useRef(new Set());
+  const suggestSeq = useRef(0);
+
+  const [showMore, setShowMore] = useState(false);
+  const [imgMode, setImgMode] = useState('upload');
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const nameValue = Form.useWatch('name', form);
+  const imgValue = Form.useWatch('img_url', form);
+
+  const isEdit = Boolean(editingItem?.id);
+  const editSubId = isEdit ? listingSubId(editingItem) : null;
+  const listingType = resolved.listing_type || subNames.get(subId)?.listing_type || editingItem?.listing_type || defaultListingType;
+  const isCatalogueListing = Boolean(editingItem?.catalog_item_id || editingItem?.metadata?.catalog_item_id);
+
+  /* ---------- Open: reset everything for this item ---------- */
   useEffect(() => {
-    if (open) {
-      netWorkCall(apiConfig.my_categories, 'GET', null, false)
-        .then((res) => {
-          if (res?.data && Array.isArray(res.data)) {
-            setCategoriesList(res.data);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [open]);
-
-  const allSubCategories = useMemo(
-    () => categoriesList.flatMap((c) => (c.sub_categories || []).map((sc) => ({ ...sc, categoryName: c.name }))),
-    [categoriesList]
-  );
-
-  // The sub-category and category this item follows
-  const activeSub = useMemo(() => {
-    const id = selectedSubId ?? shopSubIds[0] ?? null;
-    if (id === null || id === undefined) return null;
-    return allSubCategories.find((sc) => sc.id === id) || (shop?.shopSubCategory?.id === id ? shop.shopSubCategory : null);
-  }, [selectedSubId, shopSubIds, shop, allSubCategories]);
-
-  const activeCategory = useMemo(() => {
-    const id = activeSub?.category_id ?? shop?.category_id ?? null;
-    return categoriesList.find((c) => c.id === id) || shop?.shopCategory || null;
-  }, [activeSub, shop, categoriesList]);
-
-  // Form, most specific first: the shop's own form, its sub-category's, then its category's
-  const isCustomShopForm = Boolean(shop?.form_schema && Array.isArray(shop.form_schema) && shop.form_schema.length > 0);
-  const dynamicFields = useMemo(() => {
-    if (isCustomShopForm) return shop.form_schema;
-    if (Array.isArray(activeSub?.form_schema) && activeSub.form_schema.length > 0) return activeSub.form_schema;
-    if (Array.isArray(activeCategory?.form_schema)) return activeCategory.form_schema;
-    return [];
-  }, [shop, activeSub, activeCategory, isCustomShopForm]);
-
-  // The item's sub-category is picked from the shop's own sub-categories, grouped by category.
-  // If the category tree has not loaded yet, the active one is still offered so its name shows.
-  const shopSubOptions = useMemo(() => {
-    const groups = categoriesList
-      .map((c) => ({
-        label: c.name,
-        options: (c.sub_categories || [])
-          .filter((sc) => shopSubIds.includes(sc.id))
-          .map((sc) => ({ value: sc.id, label: sc.name })),
-      }))
-      .filter((g) => g.options.length > 0);
-    if (groups.length === 0 && activeSub?.id !== undefined && activeSub?.id !== null) {
-      return [{ label: activeCategory?.name || 'Your store', options: [{ value: activeSub.id, label: activeSub.name }] }];
-    }
-    return groups;
-  }, [categoriesList, shopSubIds, activeSub, activeCategory]);
-
-  // Debounce the autofill search box
-  useEffect(() => {
-    const t = setTimeout(() => setAutofillDebounced(autofillText.trim()), 300);
-    return () => clearTimeout(t);
-  }, [autofillText]);
-
-  // Search the master catalog for new products. A failed search hides the box quietly.
-  useEffect(() => {
-    if (!open || editingItem) return;
-    if (autofillDebounced.length < 2) {
-      autofillSeq.current += 1;
-      setAutofillOptions([]);
-      return;
-    }
-    const seq = ++autofillSeq.current;
-    netWorkCall(
-      // With a shop, the search covers all of the shop's sub-categories and ranks its items first
-      `${apiConfig.catalog_search}?q=${encodeURIComponent(autofillDebounced)}&limit=8${
-        shop?.id ? `&shop_id=${encodeURIComponent(shop.id)}` : ''
-      }`,
-      'GET',
-      null,
-      true
-    )
-      .then((res) => {
-        if (seq !== autofillSeq.current) return;
-        if (!res?.success || !Array.isArray(res.data)) {
-          setAutofillHidden(true);
-          setAutofillOptions([]);
-          return;
-        }
-        setAutofillHidden(false);
-        setAutofillOptions(
-          res.data.map((item) => ({
-            value: `${item.id}`,
-            item,
-            label: (
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {item.name}
-                  {item.for_your_shop && (
-                    <Tag color="green" style={{ marginInlineStart: 6, fontSize: 11 }}>
-                      For your shop
-                    </Tag>
-                  )}
-                </div>
-                <div style={{ fontSize: 12, color: colors.textMuted }}>
-                  {[item.brand, item.quantity_label, item.category].filter(Boolean).join(' · ')}
-                </div>
-              </div>
-            ),
-          }))
-        );
-      })
-      .catch(() => {
-        if (seq !== autofillSeq.current) return;
-        setAutofillHidden(true);
-        setAutofillOptions([]);
+    if (!open) return;
+    stockTouched.current = false;
+    stockEdited.current = false;
+    sectionTouched.current = false;
+    dismissedNames.current = new Set();
+    setCatalogItem(null);
+    setSuggestion(null);
+    setShowMore(false);
+    setFormError('');
+    setStockError('');
+    setSectionError('');
+    setNewSectionName('');
+    form.resetFields();
+    if (editingItem) {
+      const sub = listingSubId(editingItem);
+      setSubId(sub !== null && shopSubIds.includes(sub) ? sub : shopSubIds[0] ?? sub ?? null);
+      setStock({
+        stock_mode: editingItem.stock_mode || fallbackStockMode(editingItem.listing_type),
+        stock_qty: editingItem.stock_qty ?? null,
+        low_stock_threshold: editingItem.low_stock_threshold ?? null,
+        is_available: editingItem.is_available !== false,
       });
-  }, [open, editingItem, autofillDebounced, shop]);
+      stockTouched.current = true;
+      setSectionId(editingItem.section_id ?? null);
+      sectionTouched.current = true;
+      setImgMode('upload');
+      form.setFieldsValue({
+        name: editingItem.name,
+        price: editingItem.price,
+        mrp: editingItem.mrp ?? null,
+        unit: editingItem.unit || typeConfig.defaultUnit,
+        img_url: editingItem.img_url || '',
+        description: editingItem.description || '',
+        metadata: {
+          ...(editingItem.metadata || {}),
+          allow_instant_order: editingItem.metadata?.allow_instant_order !== false,
+          allow_enquiry: editingItem.metadata?.allow_enquiry !== false,
+        },
+      });
+    } else {
+      setSubId(shopSubIds[0] ?? null);
+      setStock({ stock_mode: null });
+      setSectionId(null);
+      setImgMode('upload');
+      form.setFieldsValue({
+        name: initialName || '',
+        unit: typeConfig.defaultUnit,
+        metadata: { allow_instant_order: true, allow_enquiry: true },
+      });
+    }
+    // typeConfig follows the shop; shopSubIds is memoised on it
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, editingItem, shopId]);
 
-  // Prefill the fields this form has from a catalog item
-  const applyCatalogItem = (item) => {
-    const current = form.getFieldsValue(['name', 'img_url', 'description']);
-    const brandLine = [item.brand && `Brand: ${item.brand}`, item.quantity_label && `Pack: ${item.quantity_label}`]
-      .filter(Boolean)
-      .join(' · ');
-    const values = {};
-    if (item.name) values.name = item.name;
-    if (item.image_url) values.img_url = item.image_url;
-    if (brandLine && !current.description) values.description = brandLine;
+  /* ---------- The resolved form for the chosen sub-category ---------- */
+  useEffect(() => {
+    if (!open || !shopId) return undefined;
+    let cancelled = false;
+    setFormLoading(true);
+    setFormError('');
+    fetchResolvedForm(shopId, subId, { force: formTick > 0 })
+      .then((data) => {
+        if (cancelled) return;
+        setResolved(data);
+        // New items start in the sub-category's default stock mode
+        if (!stockTouched.current) {
+          const mode = data.default_stock_mode || fallbackStockMode(data.listing_type || defaultListingType);
+          setStock({
+            stock_mode: mode,
+            stock_qty: null,
+            low_stock_threshold: mode === 'tracked' ? DEFAULT_LOW_STOCK : null,
+            is_available: true,
+          });
+        }
+        // Defaults for fields the item has no value for yet
+        const current = form.getFieldValue('metadata') || {};
+        const defaults = {};
+        data.fields.forEach((f) => {
+          if (f?.key && current[f.key] === undefined && f.defaultValue !== undefined && f.defaultValue !== null) {
+            defaults[f.key] = f.defaultValue;
+          }
+        });
+        if (Object.keys(defaults).length > 0) form.setFieldsValue({ metadata: defaults });
+      })
+      .catch((res) => {
+        if (cancelled) return;
+        setResolved({ fields: [], default_stock_mode: null, listing_type: null });
+        setFormError(apiErrorText(res, 'Could not load the product form for this category.'));
+        if (!stockTouched.current) {
+          const mode = fallbackStockMode(defaultListingType);
+          setStock({ stock_mode: mode, stock_qty: null, low_stock_threshold: mode === 'tracked' ? DEFAULT_LOW_STOCK : null, is_available: true });
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setFormLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, shopId, subId, formTick]);
+
+  /* ---------- Sections for the select ---------- */
+  useEffect(() => {
+    if (!open || !shopId) return undefined;
+    if (Array.isArray(sectionsProp)) {
+      setSections(sectionsProp);
+      return undefined;
+    }
+    let cancelled = false;
+    netWorkCall(`${apiConfig.sections_manage}/${shopId}`, 'GET', null, true)
+      .then((res) => {
+        if (!cancelled && Array.isArray(res?.data)) setSections(res.data);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, shopId, sectionsProp]);
+
+  // Until the owner picks one, a new item goes to its sub-category's own section
+  const autoSection = useMemo(
+    () => sections.find((s) => s.is_auto && Number(s.sub_category_id) === Number(subId)) || null,
+    [sections, subId]
+  );
+  useEffect(() => {
+    if (!sectionTouched.current) setSectionId(autoSection ? autoSection.id : null);
+  }, [autoSection]);
+
+  /* ---------- "Found in catalogue" autofill for new items ---------- */
+  useEffect(() => {
+    if (!open || isEdit || catalogItem) return undefined;
+    const q = (nameValue || '').trim();
+    if (q.length < 3 || dismissedNames.current.has(q.toLowerCase())) {
+      setSuggestion(null);
+      return undefined;
+    }
+    const seq = ++suggestSeq.current;
+    const t = setTimeout(() => {
+      netWorkCall(`${apiConfig.catalog_search}?q=${encodeURIComponent(q)}&limit=3&shop_id=${encodeURIComponent(shopId || '')}`, 'GET', null, true)
+        .then((res) => {
+          if (seq !== suggestSeq.current) return;
+          const hit = Array.isArray(res?.data) ? res.data[0] : null;
+          setSuggestion(hit && hit.id && hit.name ? hit : null);
+        })
+        .catch(() => {
+          if (seq === suggestSeq.current) setSuggestion(null);
+        });
+    }, 400);
+    return () => clearTimeout(t);
+  }, [open, isEdit, catalogItem, nameValue, shopId]);
+
+  const acceptSuggestion = () => {
+    if (!suggestion) return;
+    const values = { name: suggestion.name };
+    if (suggestion.image_url) values.img_url = suggestion.image_url;
+    const mrp = Number(suggestion.mrp_hint ?? suggestion.mrp);
+    if (mrp > 0) {
+      values.mrp = mrp;
+      if (form.getFieldValue('price') === undefined || form.getFieldValue('price') === null) values.price = mrp;
+    }
     form.setFieldsValue(values);
-    setAutofillText('');
-    setAutofillDebounced('');
-    setAutofillOptions([]);
-    message.success('Filled from master catalog. Review the details and set your price.');
+    setCatalogItem(suggestion);
+    setSuggestion(null);
   };
 
-  // Sync form values on open/edit
-  useEffect(() => {
-    if (open) {
-      if (editingItem) {
-        const itemType = editingItem.listing_type || defaultListingType;
-        setCurrentType(itemType);
-        const itemSub = Number.parseInt(editingItem.metadata?.sub_category_id, 10);
-        setSelectedSubId(Number.isInteger(itemSub) && shopSubIds.includes(itemSub) ? itemSub : shopSubIds[0] ?? null);
+  const dismissSuggestion = () => {
+    dismissedNames.current.add((nameValue || '').trim().toLowerCase());
+    setSuggestion(null);
+  };
 
-        form.setFieldsValue({
-          ...editingItem,
-          metadata: editingItem.metadata || {},
-        });
-      } else {
-        form.resetFields();
-        setCurrentType(defaultListingType);
-        setSelectedSubId(shopSubIds[0] ?? null);
-
-        const config = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
-        form.setFieldsValue({
-          listing_type: defaultListingType,
-          unit: config.defaultUnit,
-          metadata: {
-            allow_instant_order: true,
-            allow_enquiry: true,
-            // A category form brings its own defaults; these are for the
-            // built-in fields shown when no form is configured.
-            ...(dynamicFields.length > 0
-              ? {}
-              : {
-                  food_type: 'veg',
-                  min_rental_days: 1,
-                  prep_time_mins: 15,
-                  duration_mins: 45,
-                  service_mode: 'both',
-                }),
-          },
-        });
-      }
+  /* ---------- Field groups ---------- */
+  const lockedKeys = useMemo(() => {
+    if (!isEdit) {
+      // Nothing is locked on create: the search row carries no snapshot, so the client cannot tell
+      // which catalogue fields the server will fill. Owners can supply any value the snapshot lacks.
+      return [];
     }
-  }, [open, editingItem, shop, shopSubIds, defaultListingType, storeArchetype]);
+    if (!isCatalogueListing || editSubId !== subId) return [];
+    if (Array.isArray(editingItem.locked_keys)) return editingItem.locked_keys;
+    return prefillFromSnapshot(resolved.fields, editingItem.catalog_snapshot).lockedKeys;
+  }, [isEdit, catalogItem, resolved.fields, isCatalogueListing, editSubId, subId, editingItem]);
 
-  // Show a rejected save: the server names the custom fields that need fixing
+  const groups = useMemo(() => splitFields(resolved.fields, lockedKeys), [resolved.fields, lockedKeys]);
+  const lockedFactList = useMemo(
+    () => lockedFacts(groups.locked, isEdit ? editingItem?.metadata : {}),
+    [groups.locked, isEdit, editingItem]
+  );
+
+  /* ---------- Image ---------- */
+  const handleUpload = async (file) => {
+    setUploading(true);
+    try {
+      const url = await uploadImage(file);
+      form.setFieldsValue({ img_url: url });
+    } catch (err) {
+      message.error(err?.message || 'Image upload failed');
+    } finally {
+      setUploading(false);
+    }
+    return false;
+  };
+
+  /* ---------- New section inline ---------- */
+  const createSection = async () => {
+    const name = newSectionName.trim();
+    if (!name) return;
+    setCreatingSection(true);
+    try {
+      const res = await netWorkCall(apiConfig.sections_create, 'POST', JSON.stringify({ shop_id: shopId, name }), true);
+      if (res?.success && res.data) {
+        const next = [...sections, res.data];
+        setSections(next);
+        setSectionId(res.data.id);
+        sectionTouched.current = true;
+        setNewSectionName('');
+        onSectionsChanged?.(next);
+      } else {
+        message.error(apiErrorText(res, 'Could not create the section'));
+      }
+    } catch (err) {
+      message.error('Could not create the section. Check your connection.');
+    } finally {
+      setCreatingSection(false);
+    }
+  };
+
+  /* ---------- Save ---------- */
   const showSaveError = (res, fallback) => {
     const fieldErrors = Array.isArray(res?.errors) ? res.errors.filter((e) => e?.key) : [];
-    if (fieldErrors.length > 0) {
-      form.setFields(
-        fieldErrors.map((e) => ({ name: ['metadata', e.key], errors: [e.message] }))
-      );
+    const formErrors = [];
+    fieldErrors.forEach((e) => {
+      if (e.key === 'stock_qty' || e.key === 'stock_mode') setStockError(e.message);
+      else if (e.key === 'section_id') setSectionError(e.message);
+      else if (CORE_FIELDS.includes(e.key)) formErrors.push({ name: e.key, errors: [e.message] });
+      else formErrors.push({ name: ['metadata', e.key], errors: [e.message] });
+    });
+    if (res?.code === 'price_above_mrp' || res?.error === 'price_above_mrp') {
+      formErrors.push({ name: 'price', errors: [codeText('price_above_mrp')] });
     }
-    message.error(res?.error || fallback);
+    if (res?.code === 'invalid_price') formErrors.push({ name: 'price', errors: [codeText('invalid_price')] });
+    if (res?.code === 'invalid_mrp') formErrors.push({ name: 'mrp', errors: [codeText('invalid_mrp')] });
+    if (res?.code === 'is_available_derived') setStockError(codeText('is_available_derived'));
+    if (res?.code === 'stock_qty_required') setStockError(codeText('stock_qty_required'));
+    if (res?.code === 'section_not_in_shop') setSectionError(codeText('section_not_in_shop'));
+    if (formErrors.length > 0) {
+      form.setFields(formErrors);
+      // Optional fields with errors live under "More details"
+      if (formErrors.some((f) => Array.isArray(f.name) && groups.optional.some((o) => o.key === f.name[1]))) setShowMore(true);
+    }
+    message.error(apiErrorText(res, fallback));
   };
 
   const handleFinish = async (values) => {
-    if (!shop?.id) {
+    if (!shopId) {
       message.error('No shop selected');
       return;
     }
+    const stockProblem = stockBlockError(stock);
+    if (stockProblem) {
+      setStockError(stockProblem);
+      return;
+    }
+    setStockError('');
+    setSectionError('');
+
+    const formMeta = values.metadata || {};
+    const fieldKeys = new Set(resolved.fields.map((f) => f.key));
+    const keptMeta = {};
+    Object.entries(formMeta).forEach(([key, value]) => {
+      if (fieldKeys.has(key) || ORDER_TOGGLES.includes(key)) keptMeta[key] = value;
+    });
+    // Changing sub-category drops values the new form does not have; otherwise hidden values are kept
+    const metadata = isEdit && editSubId === subId ? { ...(editingItem.metadata || {}), ...keptMeta } : keptMeta;
+    lockedKeys.forEach((key) => {
+      if (!isEdit) delete metadata[key];
+    });
+
+    // Edit: stock is sent only when the owner changed it, so a name or price edit cannot write back
+    // the count from when the sheet opened (units sold since would be lost). Quantity is also left out
+    // when only the threshold changed.
+    const stockFields = !isEdit || stockEdited.current ? stockPayload(stock) : {};
+    if (isEdit && stock.stock_mode === editingItem.stock_mode && Number(stock.stock_qty) === Number(editingItem.stock_qty)) {
+      delete stockFields.stock_qty;
+    }
+
+    const payload = {
+      shop_id: shopId,
+      name: (values.name || '').trim(),
+      price: Number(values.price),
+      mrp: values.mrp === undefined || values.mrp === null || values.mrp === '' ? null : Number(values.mrp),
+      unit: values.unit,
+      img_url: (values.img_url || '').trim(),
+      description: (values.description || '').trim(),
+      listing_type: listingType,
+      ...(subId !== null && subId !== undefined ? { sub_category_id: subId } : {}),
+      ...(sectionId !== null && sectionId !== undefined ? { section_id: sectionId } : {}),
+      ...stockFields,
+      ...(!isEdit && catalogItem?.id ? { catalog_item_id: catalogItem.id } : {}),
+      metadata,
+    };
 
     setSubmitting(true);
     try {
-      const payload = {
-        ...values,
-        shop_id: shop.id,
-        listing_type: currentType,
-        metadata: {
-          ...(editingItem?.metadata || {}),
-          ...(values.metadata || {}),
-          // The item's own sub-category when the shop sells in more than one; a single-sub-category
-          // shop lets the server fill in the ids and name
-          ...((shopSubIds.length > 1 || shop?.allow_multi_category) && activeSub
-            ? { sub_category_id: activeSub.id, category_id: activeSub.category_id }
-            : {}),
-        },
-      };
-
-      if (editingItem?.id) {
-        // Update existing listing
-        const res = await netWorkCall(
-          `${apiConfig.listings_update}/${editingItem.id}`,
-          'PUT',
-          JSON.stringify(payload)
-        );
-        if (res?.success) {
-          message.success('Listing updated successfully');
-          onSuccess?.(res.data);
-          onClose();
-        } else {
-          showSaveError(res, 'Failed to update listing');
-        }
+      const res = isEdit
+        ? await netWorkCall(`${apiConfig.listings_update}/${editingItem.id}`, 'PUT', JSON.stringify(payload), true)
+        : await netWorkCall(apiConfig.listings_create, 'POST', JSON.stringify(payload), true);
+      if (res?.success) {
+        message.success(isEdit ? 'Changes saved' : `${payload.name} added to your store`);
+        onSuccess?.(res.data);
+        onClose();
+      } else if (res?.httpStatus === 409 || res?.code === 'already_added') {
+        message.info(codeText('already_added'));
       } else {
-        // Create new listing
-        const res = await netWorkCall(
-          apiConfig.listings_create,
-          'POST',
-          JSON.stringify(payload)
-        );
-        if (res?.success) {
-          message.success('Item added to catalog');
-          onSuccess?.(res.data);
-          onClose();
-        } else {
-          showSaveError(res, 'Failed to add item');
-        }
+        showSaveError(res, isEdit ? 'Could not save your changes' : 'Could not add this item');
       }
     } catch (err) {
       console.error('Error saving listing:', err);
-      message.error('An unexpected error occurred while saving');
+      message.error('Could not save. Check your connection and try again.');
     } finally {
       setSubmitting(false);
     }
   };
 
-  const currentConfig = TYPE_CONFIG[storeArchetype] || TYPE_CONFIG.product;
-  const modalTitle = editingItem
-    ? `Edit ${editingItem.name || 'Listing'}`
-    : `Add Item — ${shop?.shop_name || 'Store'}`;
+  /* ---------- Render ---------- */
+  const unitOptions = useMemo(() => {
+    const list = [...typeConfig.unitOptions];
+    const current = editingItem?.unit;
+    if (current && !list.includes(current)) list.unshift(current);
+    return list.map((u) => ({ value: u, label: u }));
+  }, [typeConfig, editingItem]);
 
-  const categoryDisplayName =
-    activeSub?.name || activeCategory?.name || shop?.shopCategory?.name || shop?.shop_type || 'General Store';
+  const sectionOptions = sections.map((s) => ({
+    value: s.id,
+    label: s.is_auto ? `${s.name} (auto)` : s.name,
+  }));
+
+  const renderField = (field) => (
+    <Col xs={24} sm={field.type === 'textarea' ? 24 : 12} key={field.key}>
+      <Form.Item
+        name={['metadata', field.key]}
+        label={field.label}
+        htmlFor={`lc-meta-${field.key}`}
+        rules={field.required && field.type !== 'boolean' ? [{ required: true, message: `Enter ${(field.label || 'this field').toLowerCase()}` }] : []}
+      >
+        <SchemaFieldControl field={field} id={`lc-meta-${field.key}`} />
+      </Form.Item>
+    </Col>
+  );
+
+  const multiSub = shopSubIds.length > 1;
+  const title = isEdit ? `Edit ${editingItem.name || 'item'}` : 'Create custom item';
+
+  const footer = (
+    <div className="lc-sheet-footer">
+      {!isEdit && onOpenImportCsv && !isMobile && (
+        <Button
+          icon={<UploadOutlined />}
+          onClick={() => {
+            onClose();
+            onOpenImportCsv();
+          }}
+          style={{ marginInlineEnd: 'auto' }}
+        >
+          Import CSV instead
+        </Button>
+      )}
+      <Button onClick={onClose}>Cancel</Button>
+      <Button
+        type="primary"
+        icon={isEdit ? <SaveOutlined /> : <PlusOutlined />}
+        loading={submitting}
+        disabled={uploading}
+        onClick={() => form.submit()}
+        className="ms-btn-primary"
+      >
+        {isEdit ? 'Save changes' : 'Add to store'}
+      </Button>
+    </div>
+  );
 
   return (
-    <Modal
-      title={
-        <span style={{ fontFamily: typography.fontFamily.headline, fontWeight: 700, color: colors.textMain, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-          {editingItem ? <EditOutlined style={{ color: colors.primary }} /> : <PlusCircleOutlined style={{ color: colors.primary }} />}
-          {modalTitle}
-        </span>
-      }
+    <Drawer
       open={open}
-      onCancel={onClose}
-      footer={null}
-      width={width}
-      style={{ maxWidth: 'calc(100vw - 32px)', top: 16 }}
-      styles={{ body: { maxHeight: 'max(300px, calc(100vh - 150px))', overflowY: 'auto', paddingRight: 4 } }}
-      destroyOnHidden
+      onClose={onClose}
+      title={title}
+      placement={isMobile ? 'bottom' : 'right'}
+      height={isMobile ? '92%' : undefined}
+      width={isMobile ? undefined : width}
+      destroyOnClose
+      rootClassName="lc-sheet"
+      footer={footer}
     >
-      <Form
-        form={form}
-        layout="vertical"
-        onFinish={handleFinish}
-        style={{ marginTop: 8, fontFamily: typography.fontFamily.body }}
-      >
-        {/* Autofill from the master catalog (new products only) */}
-        {!editingItem && !autofillHidden && (
-          <div
-            style={{
-              background: colors.primaryLight,
-              border: `1px solid ${colors.verifiedChipBorder}`,
-              borderRadius: radii.lg,
-              padding: '10px 14px',
-              marginBottom: 16,
-            }}
-          >
-            <Text
-              strong
-              style={{ display: 'block', fontSize: 13, color: colors.textMain, fontFamily: typography.fontFamily.headline, marginBottom: 6 }}
-            >
-              Autofill from master catalog
-            </Text>
-            <AutoComplete
-              value={autofillText}
-              options={autofillOptions}
-              onChange={(v, option) => {
-                // A selection also fires onChange with the option; applyCatalogItem clears the box.
-                // Typed text comes with an empty option object ({}), not undefined.
-                if (!option?.item) setAutofillText(typeof v === 'string' ? v : '');
-              }}
-              onSelect={(_, option) => applyCatalogItem(option.item)}
-              style={{ width: '100%' }}
-              popupMatchSelectWidth
-              aria-label="Autofill from master catalog"
-            >
-              <Input
-                prefix={<SearchOutlined style={{ color: colors.textMuted }} />}
-                placeholder="Start typing a product, e.g. amul butter"
-                size="large"
-                style={{ borderRadius: radii.md }}
-              />
-            </AutoComplete>
+      <Form form={form} layout="vertical" onFinish={handleFinish} requiredMark="optional" scrollToFirstError>
+        {/* Sub-category picks the form */}
+        {multiSub && (
+          <div className="lc-sub-chips" role="radiogroup" aria-label="Category for this item">
+            {shopSubIds.map((id) => {
+              const sub = subNames.get(id);
+              const active = id === subId;
+              return (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  className={`lc-chip ${active ? 'is-active' : ''}`}
+                  onClick={() => setSubId(id)}
+                >
+                  {sub?.name || `Category ${id}`}
+                </button>
+              );
+            })}
           </div>
         )}
 
-        {/* Store Business Category Badge */}
-        <div
-          style={{
-            background: colors.surfaceContainerLow,
-            border: `1px solid ${colors.border}`,
-            borderRadius: radii.lg,
-            padding: '10px 14px',
-            marginBottom: 16,
-          }}
+        <Form.Item
+          name="name"
+          label={typeConfig.nameLabel}
+          rules={[{ required: true, whitespace: true, message: 'Enter a name' }]}
         >
-          <Flex justify="space-between" align="center" wrap="wrap" gap={8}>
-            <div>
-              <Text style={{ fontSize: 11, fontWeight: 700, textTransform: 'uppercase', color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-                Store Business Category
-              </Text>
-              <div
-                style={{
-                  fontWeight: 700,
-                  fontSize: 14,
-                  color: colors.textMain,
-                  fontFamily: typography.fontFamily.headline,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 8,
-                  marginTop: 2,
-                  flexWrap: 'wrap',
-                }}
-              >
-                <span>{categoryDisplayName}</span>
-                <Tag
-                  style={{
-                    fontSize: 11,
-                    padding: '1px 8px',
-                    borderRadius: radii.xs,
-                    margin: 0,
-                    fontWeight: 600,
-                    fontFamily: typography.fontFamily.body,
-                    background:
-                      storeArchetype === 'service' || storeArchetype === 'wellness'
-                        ? colors.serviceChipBg
-                        : colors.verifiedChipBg,
-                    borderColor:
-                      storeArchetype === 'service' || storeArchetype === 'wellness'
-                        ? colors.serviceChipBorder
-                        : colors.verifiedChipBorder,
-                    color:
-                      storeArchetype === 'service' || storeArchetype === 'wellness'
-                        ? colors.serviceChipText
-                        : colors.verifiedChipText,
-                  }}
-                >
-                  {storeArchetype === 'service' || storeArchetype === 'wellness' ? 'Service Business' : 'Product Store'}
-                </Tag>
-              </div>
+          <Input placeholder={typeConfig.namePlaceholder} maxLength={200} autoComplete="off" />
+        </Form.Item>
+
+        {suggestion && !catalogItem && (
+          <div className="lc-autofill" role="status">
+            <span>
+              Found in catalogue: <span className="lc-autofill-name">{suggestion.name}</span>
+              {[suggestion.brand, suggestion.quantity_label].filter(Boolean).length > 0 && (
+                <span className="ms-muted"> · {[suggestion.brand, suggestion.quantity_label].filter(Boolean).join(' · ')}</span>
+              )}
+            </span>
+            <span>
+              <Button size="small" type="primary" onClick={acceptSuggestion} className="ms-btn-primary">
+                Use it
+              </Button>{' '}
+              <Button size="small" type="text" onClick={dismissSuggestion}>
+                No thanks
+              </Button>
+            </span>
+          </div>
+        )}
+        {catalogItem && (
+          <Alert
+            type="info"
+            showIcon
+            style={{ marginBottom: 14 }}
+            message={`Using "${catalogItem.name}" from the catalogue`}
+            description="Brand, pack size and other facts come from the catalogue when you save. Set your price and stock."
+            action={
+              <Button size="small" type="text" onClick={() => setCatalogItem(null)}>
+                Undo
+              </Button>
+            }
+          />
+        )}
+
+        <Row gutter={12}>
+          <Col xs={12}>
+            <Form.Item
+              name="price"
+              label="Selling price (₹)"
+              dependencies={['mrp']}
+              rules={[
+                { required: true, message: 'Enter a price' },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    const mrp = getFieldValue('mrp');
+                    if (value === null || value === undefined || mrp === null || mrp === undefined || mrp === '') return Promise.resolve();
+                    return Number(value) > Number(mrp) ? Promise.reject(new Error('Price is above MRP')) : Promise.resolve();
+                  },
+                }),
+              ]}
+            >
+              <InputNumber min={0} precision={2} inputMode="decimal" placeholder="0" style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+          <Col xs={12}>
+            <Form.Item name="mrp" label="MRP (₹)">
+              <InputNumber min={0} precision={2} inputMode="decimal" placeholder="Optional" style={{ width: '100%' }} />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item name="unit" label="Sold per" rules={[{ required: true, message: 'Choose a unit' }]}>
+          <Select options={unitOptions} showSearch aria-label="Sold per" />
+        </Form.Item>
+
+        {/* Photo: upload, or a link */}
+        <Form.Item label="Photo">
+          <div className="lc-photo">
+            <div className="lc-photo-thumb" aria-hidden="true">
+              {imgValue ? <img src={imgValue} alt="" /> : <PictureOutlined />}
             </div>
-            {!editingItem && onOpenImportCsv && (
-              <Button
-                icon={<UploadOutlined />}
-                size="small"
-                onClick={() => {
-                  onClose();
-                  onOpenImportCsv();
-                }}
-                style={{
-                  borderRadius: radii.md,
-                  fontWeight: 600,
-                  fontSize: 12,
-                  borderColor: colors.primary,
-                  color: colors.primary,
-                  fontFamily: typography.fontFamily.body,
-                }}
-              >
-                Import via CSV
+            <Upload accept="image/*" showUploadList={false} beforeUpload={handleUpload}>
+              <Button icon={<UploadOutlined />} loading={uploading}>
+                {imgValue ? 'Change photo' : 'Upload photo'}
+              </Button>
+            </Upload>
+            <Button type="link" icon={<LinkOutlined />} onClick={() => setImgMode(imgMode === 'link' ? 'upload' : 'link')}>
+              {imgMode === 'link' ? 'Hide link' : 'Use link'}
+            </Button>
+            {imgValue && (
+              <Button type="text" danger size="small" onClick={() => form.setFieldsValue({ img_url: '' })}>
+                Remove
               </Button>
             )}
-          </Flex>
-          {shopSubOptions.length > 0 && (
-            <div style={{ marginTop: 10 }}>
-              <Text style={{ fontSize: 12, fontWeight: 600, color: colors.textMuted, fontFamily: typography.fontFamily.body }}>
-                This item belongs to
-              </Text>
-              <Select
-                showSearch
-                optionFilterProp="label"
-                value={activeSub?.id}
-                options={shopSubOptions}
-                onChange={(id) => setSelectedSubId(id)}
-                placeholder="Choose a sub-category for this item"
-                style={{ width: '100%', marginTop: 4 }}
-                aria-label="Sub-category for this item"
-              />
-              {shopSubIds.length > 1 && (
-                <Text style={{ display: 'block', fontSize: 12, color: colors.textMuted, marginTop: 4 }}>
-                  Only the sub-categories your store sells in are listed.
-                </Text>
-              )}
-            </div>
+          </div>
+          <Form.Item name="img_url" noStyle>
+            <Input
+              placeholder="https://…"
+              inputMode="url"
+              aria-label="Photo link"
+              style={{ marginTop: 8, display: imgMode === 'link' ? undefined : 'none' }}
+            />
+          </Form.Item>
+        </Form.Item>
+
+        {/* Stock: mandatory */}
+        <div className="lc-sheet-block">
+          <div className="lc-sheet-block-title">Stock</div>
+          {stock.stock_mode ? (
+            <StockBlock
+              value={stock}
+              onChange={(next) => {
+                stockTouched.current = true;
+                stockEdited.current = true;
+                setStock(next);
+                setStockError('');
+              }}
+              listingType={listingType}
+              modes={listingType === 'service' ? ['always', 'toggle'] : undefined}
+              error={stockError}
+              idPrefix="lc-stock"
+            />
+          ) : (
+            <Skeleton.Input active size="small" block />
           )}
         </div>
 
-        {/* Hidden field for form binding */}
-        <Form.Item name="listing_type" hidden initialValue={currentType}>
-          <Input />
-        </Form.Item>
-
-        {/* Item Name */}
-        <Form.Item
-          name="name"
-          label={
-            storeArchetype === 'food'
-              ? 'Dish / Beverage Name'
-              : storeArchetype === 'service'
-              ? 'Service Package Title'
-              : storeArchetype === 'rental'
-              ? 'Asset / Equipment Name'
-              : storeArchetype === 'medical'
-              ? 'Medicine / Healthcare Product Name'
-              : 'Product Name'
-          }
-          rules={[{ required: true, message: 'Please enter item name' }]}
-        >
-          <Input
-            placeholder={
-              storeArchetype === 'medical'
-                ? 'e.g. Paracetamol 500mg (Strip of 10 Tablets)'
-                : storeArchetype === 'food'
-                ? 'e.g. Chicken Dum Biryani (Family Pack)'
-                : storeArchetype === 'service'
-                ? 'e.g. Split AC Deep Jet Cleaning & Service'
-                : storeArchetype === 'rental'
-                ? 'e.g. Royal Enfield Hunter 350 (Daily)'
-                : 'e.g. India Gate Basmati Rice 5kg'
-            }
+        <Form.Item label="Section" validateStatus={sectionError ? 'error' : undefined} help={sectionError || undefined}>
+          <Select
+            value={sectionId ?? undefined}
+            onChange={(v) => {
+              sectionTouched.current = true;
+              setSectionId(v ?? null);
+              setSectionError('');
+            }}
+            allowClear
+            placeholder={subNames.get(subId)?.name ? `Automatic: ${subNames.get(subId).name}` : 'Automatic'}
+            options={sectionOptions}
+            aria-label="Section"
+            dropdownRender={(menu) => (
+              <>
+                {menu}
+                <Divider style={{ margin: '6px 0' }} />
+                <div style={{ display: 'flex', gap: 6, padding: '0 6px 6px' }}>
+                  <Input
+                    size="small"
+                    placeholder="New section name"
+                    value={newSectionName}
+                    maxLength={60}
+                    onChange={(e) => setNewSectionName(e.target.value)}
+                    onKeyDown={(e) => e.stopPropagation()}
+                    aria-label="New section name"
+                  />
+                  <Button size="small" icon={<PlusOutlined />} loading={creatingSection} onClick={createSection} disabled={!newSectionName.trim()}>
+                    Add
+                  </Button>
+                </div>
+              </>
+            )}
           />
         </Form.Item>
 
-        {/* Store Section / Subcategory */}
-        <Form.Item
-          name={['metadata', 'section']}
-          label="Store Section / Category Tab"
-          tooltip="Groups items neatly into menu tabs on your public storefront"
-        >
-          <Input placeholder={currentConfig.sectionPlaceholder} />
-        </Form.Item>
-
-        {/* Price & MRP */}
-        <Row gutter={[12, 12]}>
-          <Col xs={24} sm={12}>
-            <Form.Item
-              name="price"
-              label="Selling Price (₹)"
-              rules={[{ required: true, message: 'Please enter price' }]}
-            >
-              <InputNumber
-                style={{ width: '100%' }}
-                min={0}
-                placeholder="250"
-                precision={2}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              />
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item name="mrp" label="Standard Rate / MRP (₹)">
-              <InputNumber
-                style={{ width: '100%' }}
-                min={0}
-                placeholder="299"
-                precision={2}
-                formatter={(value) => `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
-                parser={(value) => value.replace(/\$\s?|(,*)/g, '')}
-              />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        {/* Unit & Image */}
-        <Row gutter={[12, 12]}>
-          <Col xs={24} sm={12}>
-            <Form.Item name="unit" label="Unit / Basis" rules={[{ required: true }]}>
-              <Select>
-                {currentConfig.unitOptions.map((opt) => (
-                  <Option key={opt} value={opt}>
-                    {opt}
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col xs={24} sm={12}>
-            <Form.Item name="img_url" label="Image URL">
-              <Input placeholder="https://images.unsplash.com/..." />
-            </Form.Item>
-          </Col>
-        </Row>
-
-        {/* ========================================================================= */}
-        {/* DYNAMIC SCHEMA FIELDS (Configured by Platform Admin for this Category)    */}
-        {/* ========================================================================= */}
-        {dynamicFields.length > 0 ? (
-          <div
-            style={{
-              background: colors.surfaceContainerLow,
-              padding: '14px 16px',
-              borderRadius: radii.lg,
-              border: `1px solid ${colors.border}`,
-              marginBottom: 16,
-            }}
-          >
-            <Flex align="center" gap={6} style={{ marginBottom: 12 }}>
-              <AppstoreOutlined style={{ color: colors.primary }} />
-              <Text
-                strong
-                style={{
-                  fontSize: 13,
-                  color: colors.textMain,
-                  fontFamily: typography.fontFamily.headline,
-                }}
-              >
-                {isCustomShopForm ? `${shop?.shop_name || 'Store'} Custom Specifications` : `${categoryDisplayName} Specifications`}
-              </Text>
-            </Flex>
-
-            <Row gutter={[12, 0]}>
-              {dynamicFields.map((field) => {
-                const rules = field.required
-                  ? [{ required: true, message: `Please provide ${field.label}` }]
-                  : [];
-
-                return (
-                  <Col
-                    xs={24}
-                    sm={field.type === 'textarea' ? 24 : 12}
-                    key={field.key}
-                  >
-                    {field.type === 'select' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                        initialValue={field.defaultValue || (field.options?.[0] || undefined)}
-                      >
-                        <Select placeholder={`Select ${field.label}`}>
-                          {field.options?.map((opt) => (
-                            <Option key={opt} value={opt}>
-                              {opt}
-                            </Option>
-                          ))}
-                        </Select>
-                      </Form.Item>
-                    )}
-
-                    {field.type === 'radio' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                        initialValue={field.defaultValue || field.options?.[0]}
-                      >
-                        <Radio.Group>
-                          {field.options?.map((opt) => (
-                            <Radio.Button key={opt} value={opt}>
-                              {opt}
-                            </Radio.Button>
-                          ))}
-                        </Radio.Group>
-                      </Form.Item>
-                    )}
-
-                    {field.type === 'boolean' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        valuePropName="checked"
-                        initialValue={Boolean(field.defaultValue)}
-                      >
-                        <Switch checkedChildren="Yes" unCheckedChildren="No" />
-                      </Form.Item>
-                    )}
-
-                    {field.type === 'number' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                        initialValue={field.defaultValue}
-                      >
-                        <InputNumber
-                          style={{ width: '100%' }}
-                          placeholder={field.placeholder || `Enter ${field.label}`}
-                        />
-                      </Form.Item>
-                    )}
-
-                    {field.type === 'date' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                      >
-                        <Input type="date" style={{ width: '100%' }} />
-                      </Form.Item>
-                    )}
-
-                    {field.type === 'textarea' && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                      >
-                        <Input.TextArea
-                          rows={2}
-                          placeholder={field.placeholder || `Enter ${field.label}`}
-                        />
-                      </Form.Item>
-                    )}
-
-                    {(!field.type || field.type === 'text') && (
-                      <Form.Item
-                        name={['metadata', field.key]}
-                        label={field.label}
-                        rules={rules}
-                      >
-                        <Input
-                          placeholder={field.placeholder || `Enter ${field.label}`}
-                        />
-                      </Form.Item>
-                    )}
-                  </Col>
-                );
-              })}
-            </Row>
-          </div>
+        {/* Form fields for the sub-category */}
+        {formLoading ? (
+          <Skeleton active paragraph={{ rows: 3 }} title={false} />
         ) : (
-          /* Backward-compatibility fallback for classic types when schema not yet generated */
           <>
-            {currentType === 'food' && (
-              <Row gutter={[12, 12]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'food_type']} label="Dietary Tag" initialValue="veg">
-                    <Radio.Group>
-                      <Radio.Button value="veg">Pure Veg</Radio.Button>
-                      <Radio.Button value="non-veg">Non-Veg</Radio.Button>
-                    </Radio.Group>
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'prep_time_mins']} label="Prep Time (Mins)" initialValue={15}>
-                    <InputNumber style={{ width: '100%' }} min={5} step={5} />
-                  </Form.Item>
-                </Col>
-              </Row>
+            {formError && (
+              <Alert
+                type="warning"
+                showIcon
+                style={{ marginBottom: 14 }}
+                message={formError}
+                description="You can still save the basics. Details can be added later."
+                action={
+                  <Button size="small" icon={<ReloadOutlined />} onClick={() => setFormTick((n) => n + 1)}>
+                    Retry
+                  </Button>
+                }
+              />
             )}
 
-            {currentType === 'rental' && (
-              <Row gutter={[12, 12]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'security_deposit']} label="Refundable Deposit (₹)">
-                    <InputNumber style={{ width: '100%' }} min={0} placeholder="1000" />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'min_rental_days']} label="Min Rental Period (Days)" initialValue={1}>
-                    <InputNumber style={{ width: '100%' }} min={1} />
-                  </Form.Item>
-                </Col>
-              </Row>
+            {groups.locked.length > 0 && (
+              <div className="lc-sheet-block">
+                <div className="lc-sheet-block-title">From catalogue</div>
+                {lockedFactList.length > 0 ? (
+                  <CatalogueFacts facts={lockedFactList} tag />
+                ) : (
+                  <CatalogueFacts facts={groups.locked.map((f) => ({ label: f.label, value: 'from catalogue' }))} tag />
+                )}
+              </div>
             )}
 
-            {currentType === 'service' && (
-              <Row gutter={[12, 12]}>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'duration_mins']} label="Typical Duration (Mins)" initialValue={45}>
-                    <InputNumber style={{ width: '100%' }} min={15} step={15} />
-                  </Form.Item>
-                </Col>
-                <Col xs={24} sm={12}>
-                  <Form.Item name={['metadata', 'service_mode']} label="Service Mode" initialValue="both">
-                    <Select>
-                      <Option value="both">Both Available</Option>
-                      <Option value="doorstep">Doorstep / Home Visit</Option>
-                      <Option value="at_center">At Center / Shop</Option>
-                    </Select>
-                  </Form.Item>
-                </Col>
-              </Row>
+            {groups.required.length > 0 && <Row gutter={12}>{groups.required.map(renderField)}</Row>}
+
+            {groups.optional.length > 0 && (
+              <>
+                <Button
+                  type="link"
+                  icon={showMore ? <UpOutlined /> : <DownOutlined />}
+                  onClick={() => setShowMore((v) => !v)}
+                  aria-expanded={showMore}
+                  style={{ padding: 0, marginBottom: 10 }}
+                >
+                  {showMore ? 'Fewer details' : `More details (${groups.optional.length})`}
+                </Button>
+                {/* Kept mounted so values survive collapsing */}
+                <div style={{ display: showMore ? undefined : 'none' }}>
+                  <Row gutter={12}>{groups.optional.map(renderField)}</Row>
+                </div>
+              </>
             )}
           </>
         )}
 
-        {/* Description / Scope */}
-        <Form.Item name="description" label="Description / Details">
-          <Input.TextArea
-            rows={2}
-            placeholder={
-              storeArchetype === 'medical'
-                ? 'Usage directions, storage instructions, precautions...'
-                : storeArchetype === 'food'
-                ? 'Portion size, ingredients, allergen info...'
-                : storeArchetype === 'service'
-                ? 'Scope of service, warranty, parts included...'
-                : storeArchetype === 'rental'
-                ? 'Rental terms, included accessories, fuel policy...'
-                : 'Specifications, brand, volume or packaging details...'
-            }
-          />
+        <Form.Item name="description" label="Description">
+          <Input.TextArea autoSize={{ minRows: 2, maxRows: 5 }} placeholder={typeConfig.descPlaceholder} maxLength={2000} />
         </Form.Item>
 
-        {/* Customer Interaction Settings */}
-        <div
-          style={{
-            background: colors.surfaceContainerLow,
-            border: `1px solid ${colors.border}`,
-            padding: '10px 14px',
-            borderRadius: radii.md,
-            marginBottom: 16,
-          }}
-        >
-          <Text
-            strong
-            style={{
-              fontSize: 13,
-              display: 'block',
-              marginBottom: 6,
-              color: colors.textMain,
-              fontFamily: typography.fontFamily.headline,
-            }}
-          >
-            Customer Ordering &amp; Enquiry Settings:
-          </Text>
-          <Space direction="vertical">
-            <Form.Item
-              name={['metadata', 'allow_instant_order']}
-              valuePropName="checked"
-              initialValue={true}
-              noStyle
-            >
-              <Checkbox>Allow Direct Ordering / Cart Checkout</Checkbox>
-            </Form.Item>
-            <Form.Item
-              name={['metadata', 'allow_enquiry']}
-              valuePropName="checked"
-              initialValue={true}
-              noStyle
-            >
-              <Checkbox>Allow Direct Chat Enquiry / Quote Request</Checkbox>
-            </Form.Item>
-          </Space>
+        <div className="lc-sheet-block">
+          <div className="lc-sheet-block-title">Customers can</div>
+          <Form.Item name={['metadata', 'allow_instant_order']} valuePropName="checked" noStyle>
+            <Checkbox>Order directly</Checkbox>
+          </Form.Item>
+          <br />
+          <Form.Item name={['metadata', 'allow_enquiry']} valuePropName="checked" noStyle>
+            <Checkbox>Ask a question or request a quote</Checkbox>
+          </Form.Item>
         </div>
-
-        {/* Submit Buttons (sticky at the bottom of the scrolling body so they stay reachable on phones) */}
-        <Flex
-          justify="end"
-          gap={10}
-          wrap="wrap"
-          style={{ position: 'sticky', bottom: -10, background: colors.surface, padding: '10px 0 2px', zIndex: 2 }}
-        >
-          <Button
-            onClick={onClose}
-            style={{
-              borderRadius: radii.md,
-              borderColor: colors.border,
-              color: colors.textMain,
-              fontWeight: 600,
-              fontFamily: typography.fontFamily.body,
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="primary"
-            htmlType="submit"
-            icon={editingItem ? <SaveOutlined /> : <PlusOutlined />}
-            loading={submitting}
-            style={{
-              fontWeight: 700,
-              background: colors.primary,
-              borderColor: colors.primary,
-              borderRadius: radii.md,
-              boxShadow: shadows.primary,
-              fontFamily: typography.fontFamily.body,
-            }}
-          >
-            {editingItem ? 'Save Changes' : 'Add to Store Catalog'}
-          </Button>
-        </Flex>
       </Form>
-    </Modal>
+    </Drawer>
   );
 };
 
@@ -1008,6 +846,9 @@ AddProductModal.propTypes = {
   shop: PropTypes.object,
   editingItem: PropTypes.object,
   width: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
+  initialName: PropTypes.string,
+  sections: PropTypes.array,
+  onSectionsChanged: PropTypes.func,
 };
 
 export default AddProductModal;

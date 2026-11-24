@@ -481,6 +481,18 @@ export const getShopArchetype = (shop, category) => {
   return 'product';
 };
 
+// Columns every template starts with, in this order
+export const CORE_CSV_COLUMNS = ['name', 'price', 'mrp', 'unit', 'sub_category', 'section'];
+export const STOCK_CSV_COLUMNS = ['stock_mode', 'stock_qty', 'low_stock_threshold'];
+export const CSV_MAX_ROWS = 500;
+const STOCK_CSV_DESCRIPTIONS = {
+  sub_category: "Your store's category for this row, by name (leave empty for your main one)",
+  section: 'Shelf or menu section. A new name creates the section',
+  stock_mode: 'Stock mode: tracked (count stock), toggle (on/off) or always (always available)',
+  stock_qty: 'Stock count: units in stock. Required when Stock mode is tracked (you can also use a "stock" column)',
+  low_stock_threshold: 'Low-stock alert: show "Low stock" at or under this count (optional, default 5)',
+};
+
 /**
  * Retrieve the active CSV configuration tailored for a shop and category
  */
@@ -496,8 +508,11 @@ export const getCategoryCsvConfig = (shop, category, customSchema = null) => {
       ? category.form_schema
       : []);
 
-  let headers = [...basePreset.headers];
-  const headerDescriptions = { ...basePreset.headerDescriptions };
+  // Core columns first (spec §F4): name, price, mrp, unit, sub_category, section, stock columns
+  const presetExtras = basePreset.headers.filter((h) => !CORE_CSV_COLUMNS.includes(h) && !STOCK_CSV_COLUMNS.includes(h));
+  let headers = [...CORE_CSV_COLUMNS, ...STOCK_CSV_COLUMNS, ...presetExtras];
+  const headerDescriptions = { ...basePreset.headerDescriptions, ...STOCK_CSV_DESCRIPTIONS };
+  const sampleStockMode = archetype === 'service' ? 'always' : archetype === 'food' || archetype === 'rental' ? 'toggle' : 'tracked';
 
   // Append any extra dynamic schema keys not yet present in standard headers
   if (Array.isArray(schemaFields) && schemaFields.length > 0) {
@@ -512,8 +527,14 @@ export const getCategoryCsvConfig = (shop, category, customSchema = null) => {
   }
 
   // Generate customized sample rows that include any extra dynamic keys
-  const sampleRows = basePreset.sampleRows.map((row) => {
-    const fullRow = { ...row };
+  const sampleRows = basePreset.sampleRows.map((row, idx) => {
+    const fullRow = {
+      ...row,
+      sub_category: shop?.shopSubCategory?.name || '',
+      stock_mode: sampleStockMode,
+      stock_qty: sampleStockMode === 'tracked' ? String(20 + idx * 5) : '',
+      low_stock_threshold: sampleStockMode === 'tracked' ? '5' : '',
+    };
     if (Array.isArray(schemaFields)) {
       schemaFields.forEach((f) => {
         if (f && f.key && fullRow[f.key] === undefined) {
@@ -588,7 +609,9 @@ export const parseCSV = (csvText, schemaFields = []) => {
 
   // Parse header row
   const rawHeaders = lines[0].split(',').map((h) => h.trim().replace(/^["']|["']$/g, ''));
-  const cleanHeaders = rawHeaders.map((h) => h.toLowerCase().replace(/[\s\-_]+/g, '_'));
+  const normalisedHeaders = rawHeaders.map((h) => h.toLowerCase().replace(/[\s\-_]+/g, '_'));
+  // A plain "stock" column is read as the stock count, unless the file already has "stock_qty"
+  const cleanHeaders = normalisedHeaders.map((h) => (h === 'stock' && !normalisedHeaders.includes('stock_qty') ? 'stock_qty' : h));
 
   const standardKeys = [
     'name',
@@ -600,6 +623,10 @@ export const parseCSV = (csvText, schemaFields = []) => {
     'img_url',
     'listing_type',
     'is_available',
+    'sub_category',
+    'stock_mode',
+    'stock_qty',
+    'low_stock_threshold',
   ];
 
   const fieldTypes = {};
@@ -659,6 +686,11 @@ export const parseCSV = (csvText, schemaFields = []) => {
         } else if (header === 'mrp') {
           const num = parseFloat(val.replace(/[₹$,]/g, ''));
           itemObj.mrp = isNaN(num) ? undefined : num;
+        } else if (header === 'stock_qty' || header === 'low_stock_threshold') {
+          // Kept as typed when it is not a number, so the preview can flag it
+          itemObj[header] = val === '' ? undefined : Number.isFinite(Number(val)) ? Number(val) : val;
+        } else if (header === 'stock_mode') {
+          itemObj.stock_mode = lower || undefined;
         } else {
           itemObj[header] = val;
         }
@@ -669,11 +701,10 @@ export const parseCSV = (csvText, schemaFields = []) => {
     });
 
     if (itemObj.name) {
-      if (itemObj.section && !metadata.section) {
-        metadata.section = itemObj.section;
-      }
+      // row is the line number in the file (header = 1), the same numbering the server reports
       results.push({
         ...itemObj,
+        row: i + 1,
         metadata,
       });
     }

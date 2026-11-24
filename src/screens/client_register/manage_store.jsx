@@ -5,7 +5,6 @@ import {
   Tabs,
   Button,
   Table,
-  Switch,
   Input,
   InputNumber,
   Select,
@@ -23,7 +22,6 @@ import {
   Dropdown,
   Modal,
   Segmented,
-  Empty,
   Skeleton,
   Tooltip,
 } from 'antd';
@@ -43,17 +41,13 @@ import {
   UserOutlined,
   CopyOutlined,
   ToolOutlined,
-  PlusOutlined,
   SyncOutlined,
   QrcodeOutlined,
   WalletOutlined,
   MoreOutlined,
   SearchOutlined,
   AppstoreOutlined,
-  AppstoreAddOutlined,
   BarsOutlined,
-  UploadOutlined,
-  PictureOutlined,
   StopOutlined,
   ReloadOutlined,
   InboxOutlined,
@@ -67,12 +61,15 @@ import ChatIcon from '../../app/components/common/ChatIcon';
 import { shopSubCategories } from '../../app/utils/shopSubCategories';
 import { netWorkCall, apiConfig } from '../../app/utils';
 import { subCategoryArchetype } from '../../app/utils/form_schema';
-import { useHistory } from 'react-router-dom';
-import {
-  AddProductModal,
-  ImportProductCsvModal,
-  CatalogPickerModal,
-} from '../../app/components/listings';
+import { useHistory, useLocation } from 'react-router-dom';
+import { AddProductModal, ImportProductCsvModal } from '../../app/components/listings';
+import ProductsTab from './manage_store/ProductsTab';
+import InventoryTab from './manage_store/InventoryTab';
+import SectionsManager from './manage_store/SectionsManager';
+import AddProductsHub, { useCatalogueStatus } from './manage_store/AddProductsHub';
+import CataloguePicker from './manage_store/CataloguePicker';
+import FormSettings from './manage_store/FormSettings';
+import useShopSections from './manage_store/useShopSections';
 import { useChatStore } from '../../app/services';
 import { colors } from '../../app/styles/theme';
 import './client_register.css';
@@ -315,16 +312,6 @@ const getStoreArchetype = (shop) => {
   return 'product';
 };
 
-const ARCHETYPE_LISTING_TYPE = {
-  product: 'product',
-  food: 'food',
-  service: 'service',
-  wellness: 'service',
-  rental: 'rental',
-};
-
-const LISTING_TYPE_LABEL = { product: 'Product', food: 'Food', service: 'Service', rental: 'Rental' };
-
 /* ------------------------------------------------------------------ */
 /* Small presentational pieces                                         */
 /* ------------------------------------------------------------------ */
@@ -360,91 +347,9 @@ const OrderTypeChip = ({ type }) => {
 
 OrderTypeChip.propTypes = { type: PropTypes.string };
 
-const ListingThumb = ({ src, alt, className }) => {
-  const [failed, setFailed] = useState(false);
-  useEffect(() => setFailed(false), [src]);
-  return (
-    <div className={`ms-thumb ${className || ''}`}>
-      {src && !failed ? (
-        <img src={src} alt={alt || ''} loading="lazy" onError={() => setFailed(true)} />
-      ) : (
-        <span className="ms-thumb-fallback" aria-hidden="true">
-          <PictureOutlined />
-        </span>
-      )}
-    </div>
-  );
-};
-
-ListingThumb.propTypes = {
-  src: PropTypes.string,
-  alt: PropTypes.string,
-  className: PropTypes.string,
-};
-
-const ListingMetaTags = ({ item, defaultType }) => {
-  const meta = item.metadata || {};
-  const tags = [];
-  if (item.listing_type && item.listing_type !== defaultType) {
-    tags.push(
-      <span key="type" className="ms-mini-tag ms-mini-tag--type">
-        {LISTING_TYPE_LABEL[item.listing_type] || item.listing_type}
-      </span>
-    );
-  }
-  if (meta.food_type) {
-    const veg = meta.food_type === 'veg';
-    tags.push(
-      <span key="food" className={`ms-mini-tag ${veg ? 'ms-mini-tag--veg' : 'ms-mini-tag--nonveg'}`}>
-        <span className="ms-food-dot" aria-hidden="true" />
-        {veg ? 'Veg' : 'Non-veg'}
-      </span>
-    );
-  }
-  if (meta.section) {
-    tags.push(
-      <span key="section" className="ms-mini-tag">
-        {meta.section}
-      </span>
-    );
-  }
-  if (item.metadata?.catalog_item_id) {
-    tags.push(
-      <span key="master" className="ms-mini-tag ms-mini-tag--master">
-        Catalog
-      </span>
-    );
-  }
-  if (tags.length === 0) return null;
-  return <div className="ms-mini-tags">{tags}</div>;
-};
-
-ListingMetaTags.propTypes = {
-  item: PropTypes.object.isRequired,
-  defaultType: PropTypes.string,
-};
-
-const ListingPrice = ({ item }) => {
-  const price = Number(item.price) || 0;
-  const mrp = Number(item.mrp) || 0;
-  const discount = mrp > price && price > 0 ? Math.round((1 - price / mrp) * 100) : 0;
-  return (
-    <div className="ms-item-price-row">
-      <span className="ms-price">{formatINR(price)}</span>
-      {item.unit && <span className="ms-unit">/ {item.unit}</span>}
-      {mrp > price && <span className="ms-mrp">{formatINR(mrp)}</span>}
-      {discount > 0 && <span className="ms-discount">{discount}% off</span>}
-    </div>
-  );
-};
-
-ListingPrice.propTypes = { item: PropTypes.object.isRequired };
-
 /* ------------------------------------------------------------------ */
 /* ManageStore                                                         */
 /* ------------------------------------------------------------------ */
-
-const PAGE_SIZE = 24;
 
 const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) => {
   const history = useHistory();
@@ -465,23 +370,24 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
   // Ignore responses that arrive after the owner switched to another outlet
   const shopIdRef = useRef(shopId);
   shopIdRef.current = shopId;
+  const location = useLocation();
+  const sectionsState = useShopSections(shopId);
+  const catalogueStatus = useCatalogueStatus(shopId);
 
-  /* ---------------- Listings ---------------- */
-  const [listings, setListings] = useState([]);
-  const [listingsLoading, setListingsLoading] = useState(false);
-  const [listingsError, setListingsError] = useState('');
-  const [listingsLoaded, setListingsLoaded] = useState(false);
+  /* ---------------- Catalogue (products, inventory, sections) ---------------- */
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
+  const [customInitialName, setCustomInitialName] = useState('');
   const [isImportCsvOpen, setIsImportCsvOpen] = useState(false);
-  const [isCatalogPickerOpen, setIsCatalogPickerOpen] = useState(false);
-  const [pendingListingIds, setPendingListingIds] = useState({});
-  const [catalogSearch, setCatalogSearch] = useState('');
-  const [stockFilter, setStockFilter] = useState('all');
-  const [sectionFilter, setSectionFilter] = useState('all');
-  const [catalogSort, setCatalogSort] = useState('default');
-  const [viewMode, setViewMode] = useState('grid');
-  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [isHubOpen, setIsHubOpen] = useState(false);
+  const [isPickerOpen, setIsPickerOpen] = useState(false);
+  const [isFormSettingsOpen, setIsFormSettingsOpen] = useState(false);
+  // Shop-wide counts from listings/manage, reported by the Products and Inventory tabs
+  const [catalogSummary, setCatalogSummary] = useState(null);
+  // Bumped after any save elsewhere so the open tab reloads quietly
+  const [catalogRefreshKey, setCatalogRefreshKey] = useState(0);
+  const [productsStockFilter, setProductsStockFilter] = useState('');
+  const [inventoryFilter, setInventoryFilter] = useState('');
 
   /* ---------------- Orders ---------------- */
   const [orders, setOrders] = useState([]);
@@ -526,7 +432,6 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
   const storeArchetype = useMemo(() => getStoreArchetype(currentShop), [currentShop]);
   const isServiceStore = storeArchetype === 'service' || storeArchetype === 'wellness';
   const isFoodStore = storeArchetype === 'food';
-  const defaultListingType = ARCHETYPE_LISTING_TYPE[storeArchetype];
   const showQuotesTab = isServiceStore || storeArchetype === 'rental' || quotes.length > 0;
   const availableLabels = isServiceStore
     ? { on: 'Available', off: 'Unavailable' }
@@ -535,30 +440,6 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
     : { on: 'In stock', off: 'Out of stock' };
 
   /* ---------------- Data fetching ---------------- */
-
-  const fetchListings = async ({ silent = false } = {}) => {
-    const requestId = shopId;
-    if (!requestId) return;
-    if (!silent) setListingsLoading(true);
-    setListingsError('');
-    try {
-      const res = await netWorkCall(`${apiConfig.listings_by_shop}/${requestId}`, 'GET', null, false);
-      if (shopIdRef.current !== requestId) return;
-      if (Array.isArray(res?.data)) {
-        setListings(res.data);
-      } else {
-        setListingsError(res?.error || 'Could not load your catalog.');
-      }
-    } catch (err) {
-      console.error(err);
-      if (shopIdRef.current === requestId) setListingsError('Could not load your catalog. Check your connection.');
-    } finally {
-      if (shopIdRef.current === requestId) {
-        setListingsLoading(false);
-        setListingsLoaded(true);
-      }
-    }
-  };
 
   const fetchOrders = async ({ silent = false } = {}) => {
     const requestId = shopId;
@@ -607,18 +488,13 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
 
   // New outlet: clear the previous outlet's data and filters, then load
   useEffect(() => {
-    setListings([]);
     setOrders([]);
     setQuotes([]);
-    setListingsLoaded(false);
     setOrdersLoaded(false);
-    setCatalogSearch('');
-    setStockFilter('all');
-    setSectionFilter('all');
+    setCatalogSummary(null);
     setOrderSearch('');
     setSelectedOrderId(null);
     setIsOrderDrawerOpen(false);
-    fetchListings();
     fetchOrders();
     fetchQuotes();
   }, [shopId]);
@@ -628,109 +504,42 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
     if (activeTab === 'quotes' && !showQuotesTab) setActiveTab('catalog');
   }, [activeTab, showQuotesTab]);
 
+  // On phones the tab bar scrolls sideways; bring the selected tab into view
   useEffect(() => {
-    setVisibleCount(PAGE_SIZE);
-  }, [catalogSearch, stockFilter, sectionFilter, catalogSort, shopId]);
+    const activeEl = document.querySelector('.ms-tabs .ant-tabs-tab-active');
+    if (activeEl && activeEl.scrollIntoView) activeEl.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [activeTab]);
+
+  // ?add=catalogue (the old /store-catalogue link) opens the picker once, then leaves the URL clean
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('add') !== 'catalogue' || !shopId) return;
+    setActiveTab('catalog');
+    setIsPickerOpen(true);
+    params.delete('add');
+    const search = params.toString();
+    history.replace({ pathname: location.pathname, search: search ? `?${search}` : '', hash: location.hash });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shopId]);
 
   /* ---------------- Listing actions ---------------- */
 
-  const handleOpenAddModal = () => {
+  const openCustomItem = (name = '') => {
     setEditingItem(null);
+    setCustomInitialName(typeof name === 'string' ? name : '');
     setIsAddModalOpen(true);
   };
 
   const handleOpenEditModal = (record) => {
     setEditingItem(record);
+    setCustomInitialName('');
     setIsAddModalOpen(true);
   };
 
-  const setListingPending = (id, pending) =>
-    setPendingListingIds((prev) => {
-      const next = { ...prev };
-      if (pending) next[id] = true;
-      else delete next[id];
-      return next;
-    });
-
-  // Optimistic availability toggle, rolled back if the server refuses it
-  const handleToggleAvailable = async (item, checked) => {
-    setListingPending(item.id, true);
-    setListings((prev) => prev.map((i) => (i.id === item.id ? { ...i, is_available: checked } : i)));
-    try {
-      const res = await netWorkCall(
-        `${apiConfig.listings_update}/${item.id}`,
-        'PUT',
-        JSON.stringify({ is_available: checked }),
-        true
-      );
-      if (!res?.success) throw new Error(res?.error || 'Update failed');
-      message.success(`${item.name} is now ${(checked ? availableLabels.on : availableLabels.off).toLowerCase()}`);
-    } catch (err) {
-      console.error(err);
-      setListings((prev) => prev.map((i) => (i.id === item.id ? { ...i, is_available: !checked } : i)));
-      message.error(err?.message && err.message !== 'Failed to fetch' ? err.message : 'Could not update availability');
-    } finally {
-      setListingPending(item.id, false);
-    }
-  };
-
-  const handleDeleteListing = async (item) => {
-    setListingPending(item.id, true);
-    try {
-      const res = await netWorkCall(`${apiConfig.listings_delete}/${item.id}`, 'DELETE', null, true);
-      if (!res?.success) throw new Error(res?.error || 'Delete failed');
-      setListings((prev) => prev.filter((i) => i.id !== item.id));
-      message.success(`${item.name} removed from your catalog`);
-      onRefreshShop?.();
-    } catch (err) {
-      console.error(err);
-      message.error(err?.message && err.message !== 'Failed to fetch' ? err.message : 'Could not delete this item');
-    } finally {
-      setListingPending(item.id, false);
-    }
-  };
-
-  const confirmDeleteListing = (item) => {
-    modal.confirm({
-      title: `Delete "${item.name}"?`,
-      content: 'It will be removed from your storefront. This cannot be undone.',
-      okText: 'Delete',
-      okButtonProps: { danger: true },
-      cancelText: 'Keep',
-      centered: true,
-      onOk: () => handleDeleteListing(item),
-    });
-  };
-
-  const listingMenu = (item) => ({
-    items: [
-      { key: 'edit', icon: <EditOutlined />, label: 'Edit details' },
-      {
-        key: 'toggle',
-        icon: item.is_available ? <StopOutlined /> : <CheckCircleOutlined />,
-        label: `Mark as ${(item.is_available ? availableLabels.off : availableLabels.on).toLowerCase()}`,
-        disabled: !!pendingListingIds[item.id],
-      },
-      { type: 'divider' },
-      { key: 'delete', icon: <DeleteOutlined />, label: 'Delete', danger: true },
-    ],
-    onClick: ({ key, domEvent }) => {
-      domEvent?.stopPropagation?.();
-      if (key === 'edit') handleOpenEditModal(item);
-      if (key === 'toggle') handleToggleAvailable(item, !item.is_available);
-      if (key === 'delete') confirmDeleteListing(item);
-    },
-  });
-
-  // After add / edit / import: show the saved row right away, then resync
-  const handleListingSaved = (saved) => {
-    if (saved && saved.id) {
-      setListings((prev) => {
-        const exists = prev.some((i) => i.id === saved.id);
-        return exists ? prev.map((i) => (i.id === saved.id ? { ...i, ...saved } : i)) : [saved, ...prev];
-      });
-    }
-    fetchListings({ silent: true });
+  // After add / edit / import / publish: reload the open tab, the sections (counts) and the outlet
+  const handleCatalogChanged = ({ sections: sectionsChanged = true } = {}) => {
+    setCatalogRefreshKey((k) => k + 1);
+    if (sectionsChanged) sectionsState.reload({ silent: true });
     onRefreshShop?.();
   };
 
@@ -954,38 +763,13 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
 
   /* ---------------- Derived data ---------------- */
 
-  const listingStats = useMemo(() => {
-    const total = listings.length;
-    const inStock = listings.filter((l) => l.is_available).length;
-    return { total, inStock, outOfStock: total - inStock };
-  }, [listings]);
-
-  const sections = useMemo(() => {
-    const set = new Set();
-    listings.forEach((l) => l.metadata?.section && set.add(String(l.metadata.section)));
-    return [...set].sort((a, b) => a.localeCompare(b));
-  }, [listings]);
-
-  const filteredListings = useMemo(() => {
-    const q = catalogSearch.trim().toLowerCase();
-    let list = listings.filter((l) => {
-      if (stockFilter === 'in' && !l.is_available) return false;
-      if (stockFilter === 'out' && l.is_available) return false;
-      if (sectionFilter !== 'all' && String(l.metadata?.section || '') !== sectionFilter) return false;
-      if (!q) return true;
-      return (
-        (l.name || '').toLowerCase().includes(q) ||
-        (l.description || '').toLowerCase().includes(q) ||
-        String(l.metadata?.section || '').toLowerCase().includes(q)
-      );
-    });
-    if (catalogSort === 'name') list = [...list].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    if (catalogSort === 'price_asc') list = [...list].sort((a, b) => (Number(a.price) || 0) - (Number(b.price) || 0));
-    if (catalogSort === 'price_desc') list = [...list].sort((a, b) => (Number(b.price) || 0) - (Number(a.price) || 0));
-    if (catalogSort === 'newest')
-      list = [...list].sort((a, b) => (toDate(b.createdAt)?.getTime() || 0) - (toDate(a.createdAt)?.getTime() || 0));
-    return list;
-  }, [listings, catalogSearch, stockFilter, sectionFilter, catalogSort]);
+  const listingStats = {
+    total: catalogSummary?.total ?? 0,
+    inStock: catalogSummary?.in_stock ?? 0,
+    outOfStock: catalogSummary?.out ?? 0,
+    low: catalogSummary?.low ?? 0,
+  };
+  const listingsLoaded = Boolean(catalogSummary);
 
   const orderStats = useMemo(() => {
     const fresh = orders.filter((o) => NEW_ORDER_STATUSES.includes(o.status)).length;
@@ -1031,7 +815,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
 
   /* ---------------- Labels ---------------- */
 
-  const catalogTabText = isServiceStore ? 'Services' : isFoodStore ? 'Menu' : 'Catalog';
+  const catalogTabText = isServiceStore ? 'Services' : isFoodStore ? 'Menu' : 'Products';
   const ordersTabText = isServiceStore ? 'Bookings' : 'Orders';
   const catalogTitle = isServiceStore ? 'Services & rate card' : isFoodStore ? 'Menu & dishes' : 'Products & stock';
   const catalogDesc = isServiceStore
@@ -1039,334 +823,18 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
     : isFoodStore
     ? 'Dishes and drinks customers can order for pickup or delivery.'
     : 'Products, prices and stock your local customers see on your storefront.';
-  const addItemButtonLabel = isServiceStore ? 'Add service' : isFoodStore ? 'Add dish' : 'Add product';
   const itemNoun = isServiceStore ? 'service' : isFoodStore ? 'dish' : 'product';
   const ordersTitle = isServiceStore ? 'Service bookings' : 'Customer orders';
   const ordersDesc = isServiceStore
     ? 'Bookings placed directly with your business. Move each one forward as you work on it.'
     : 'Orders placed directly with your store. Tap an order for the full bill and tracker.';
 
-  const effectiveView = isPhone ? 'list' : viewMode;
-  const isCatalogLoading = listingsLoading && !listingsLoaded;
-
-  /* ---------------- Render: catalog ---------------- */
-
-  const renderStockToggle = (item, compact = false) => (
-    <label className={`ms-stock-toggle ${compact ? 'is-compact' : ''}`}>
-      <Switch
-        size="small"
-        checked={!!item.is_available}
-        loading={!!pendingListingIds[item.id]}
-        onChange={(checked) => handleToggleAvailable(item, checked)}
-        aria-label={`${item.name}: ${item.is_available ? availableLabels.on : availableLabels.off}`}
-      />
-      <span className={item.is_available ? 'is-on' : 'is-off'}>
-        {item.is_available ? availableLabels.on : availableLabels.off}
-      </span>
-    </label>
-  );
-
-  const renderListingCard = (item) => (
-    <div key={item.id} className={`ms-item-card ${item.is_available ? '' : 'is-off'}`}>
-      <div className="ms-item-card-media">
-        <ListingThumb src={item.img_url} alt={item.name} className="ms-thumb--card" />
-        {!item.is_available && <span className="ms-item-badge-off">{availableLabels.off}</span>}
-        <Dropdown menu={listingMenu(item)} trigger={['click']} placement="bottomRight">
-          <Button
-            className="ms-item-menu-btn"
-            shape="circle"
-            icon={<MoreOutlined />}
-            aria-label={`More actions for ${item.name}`}
-          />
-        </Dropdown>
-      </div>
-      <div className="ms-item-card-body">
-        <div className="ms-item-name" title={item.name}>
-          {item.name}
-        </div>
-        <ListingMetaTags item={item} defaultType={defaultListingType} />
-        <ListingPrice item={item} />
-      </div>
-      <div className="ms-item-card-footer">
-        {renderStockToggle(item)}
-        <Button
-          icon={<EditOutlined />}
-          className="ms-item-edit-btn"
-          onClick={() => handleOpenEditModal(item)}
-          aria-label={`Edit ${item.name}`}
-          title="Edit details"
-        />
-
-      </div>
-    </div>
-  );
-
-  const renderListingRow = (item) => (
-    <div key={item.id} className={`ms-item-row ${item.is_available ? '' : 'is-off'}`}>
-      <button
-        type="button"
-        className="ms-item-row-thumb-btn"
-        onClick={() => handleOpenEditModal(item)}
-        aria-label={`Edit ${item.name}`}
-      >
-        <ListingThumb src={item.img_url} alt="" className="ms-thumb--row" />
-      </button>
-      <div className="ms-item-row-main">
-        <div className="ms-item-row-top">
-          <div className="ms-item-name" title={item.name}>
-            {item.name}
-          </div>
-          <Dropdown menu={listingMenu(item)} trigger={['click']} placement="bottomRight">
-            <Button
-              type="text"
-              className="ms-icon-btn"
-              icon={<MoreOutlined />}
-              aria-label={`More actions for ${item.name}`}
-            />
-          </Dropdown>
-        </div>
-        <ListingPrice item={item} />
-        <div className="ms-item-row-bottom">
-          <ListingMetaTags item={item} defaultType={defaultListingType} />
-          {renderStockToggle(item, true)}
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderCatalogSkeleton = () =>
-    effectiveView === 'grid' ? (
-      <div className="ms-item-grid">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <div key={i} className="ms-item-card ms-item-card--skeleton">
-            <div className="ms-item-card-media">
-              <Skeleton.Node active className="ms-skeleton-media">
-                <span />
-              </Skeleton.Node>
-            </div>
-            <div className="ms-item-card-body">
-              <Skeleton active title={{ width: '80%' }} paragraph={{ rows: 2, width: ['40%', '55%'] }} />
-            </div>
-          </div>
-        ))}
-      </div>
-    ) : (
-      <div className="ms-item-list">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="ms-item-row">
-            <Skeleton active avatar={{ shape: 'square', size: 64 }} title={{ width: '70%' }} paragraph={{ rows: 2, width: ['35%', '60%'] }} />
-          </div>
-        ))}
-      </div>
-    );
-
-  const catalogActions = (
-    <div className="ms-toolbar-actions">
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        onClick={handleOpenAddModal}
-        className="ms-btn-primary ms-toolbar-primary"
-      >
-        {addItemButtonLabel}
-      </Button>
-      {!isServiceStore && (
-        <Button
-          icon={<AppstoreAddOutlined />}
-          onClick={() => history.push(`/store-catalogue?shop_id=${shopId}`)}
-          className="ms-toolbar-secondary"
-          title="Add from master catalog"
-        >
-          {screens.sm ? 'Add from master catalog' : 'Master catalog'}
-        </Button>
-      )}
-      <Button icon={<UploadOutlined />} onClick={() => setIsImportCsvOpen(true)} className="ms-toolbar-secondary">
-        Import CSV
-      </Button>
-    </div>
-  );
-
-  const renderCatalogBody = () => {
-    if (isCatalogLoading) return renderCatalogSkeleton();
-
-    if (listingsError && listings.length === 0) {
-      return (
-        <div className="ms-state">
-          <Alert
-            type="error"
-            showIcon
-            message="Your catalog didn't load"
-            description={listingsError}
-            action={
-              <Button size="small" icon={<ReloadOutlined />} onClick={() => fetchListings()}>
-                Retry
-              </Button>
-            }
-          />
-        </div>
-      );
-    }
-
-    if (listings.length === 0) {
-      return (
-        <div className="ms-empty">
-          <span className="ms-empty-icon" aria-hidden="true">
-            <InboxOutlined />
-          </span>
-          <div className="ms-empty-title">Your {catalogTabText.toLowerCase()} is empty</div>
-          <div className="ms-empty-text">
-            Add your first {itemNoun} so customers nearby can find and order it.
-            {!isServiceStore && ' Pick ready-made items from the master catalog or upload a CSV to add many at once.'}
-          </div>
-          <div className="ms-empty-actions">
-            <Button type="primary" icon={<PlusOutlined />} onClick={handleOpenAddModal} className="ms-btn-primary">
-              {addItemButtonLabel}
-            </Button>
-            {!isServiceStore && (
-              <Button icon={<AppstoreAddOutlined />} onClick={() => history.push(`/store-catalogue?shop_id=${shopId}`)}>
-                Add from master catalog
-              </Button>
-            )}
-            <Button icon={<UploadOutlined />} onClick={() => setIsImportCsvOpen(true)}>
-              Import CSV
-            </Button>
-          </div>
-        </div>
-      );
-    }
-
-    if (filteredListings.length === 0) {
-      return (
-        <div className="ms-empty ms-empty--compact">
-          <Empty
-            image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description={`No ${itemNoun === 'dish' ? 'dishes' : `${itemNoun}s`} match these filters`}
-          >
-            <Button
-              onClick={() => {
-                setCatalogSearch('');
-                setStockFilter('all');
-                setSectionFilter('all');
-              }}
-            >
-              Clear filters
-            </Button>
-          </Empty>
-        </div>
-      );
-    }
-
-    const visible = filteredListings.slice(0, visibleCount);
-    return (
-      <>
-        {effectiveView === 'grid' ? (
-          <div className="ms-item-grid">{visible.map(renderListingCard)}</div>
-        ) : (
-          <div className="ms-item-list">{visible.map(renderListingRow)}</div>
-        )}
-        <div className="ms-list-footer">
-          <Text className="ms-muted">
-            Showing {visible.length} of {filteredListings.length}
-          </Text>
-          {filteredListings.length > visible.length && (
-            <Button onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}>Show more</Button>
-          )}
-        </div>
-      </>
-    );
+  const catalogLabels = {
+    title: catalogTitle,
+    desc: catalogDesc,
+    tabText: catalogTabText,
+    itemPlural: itemNoun === 'dish' ? 'dishes' : `${itemNoun}s`,
   };
-
-  const catalogTab = (
-    <div className="ms-tab-pane">
-      <div className="ms-toolbar">
-        <div className="ms-toolbar-text">
-          <Title level={5} className="ms-section-title">
-            {catalogTitle}
-          </Title>
-          <Text className="ms-section-desc">{catalogDesc}</Text>
-        </div>
-        {catalogActions}
-      </div>
-
-      {listings.length > 0 && (
-        <div className="ms-filterbar">
-          <Input
-            allowClear
-            prefix={<SearchOutlined className="ms-muted" />}
-            placeholder={`Search ${catalogTabText.toLowerCase()}`}
-            value={catalogSearch}
-            onChange={(e) => setCatalogSearch(e.target.value)}
-            className="ms-filter-search"
-            aria-label={`Search ${catalogTabText.toLowerCase()}`}
-          />
-          <div className="ms-filter-scroll">
-            <Segmented
-              value={stockFilter}
-              onChange={setStockFilter}
-              options={[
-                { label: `All ${listingStats.total}`, value: 'all' },
-                { label: `${availableLabels.on} ${listingStats.inStock}`, value: 'in' },
-                { label: `${availableLabels.off} ${listingStats.outOfStock}`, value: 'out' },
-              ]}
-            />
-          </div>
-          <div className="ms-filter-selects">
-            {sections.length > 1 && (
-              <Select
-                value={sectionFilter}
-                onChange={setSectionFilter}
-                className="ms-filter-select"
-                popupMatchSelectWidth={false}
-                aria-label="Filter by section"
-                options={[{ label: 'All sections', value: 'all' }, ...sections.map((s) => ({ label: s, value: s }))]}
-              />
-            )}
-            <Select
-              value={catalogSort}
-              onChange={setCatalogSort}
-              className="ms-filter-select"
-              popupMatchSelectWidth={false}
-              aria-label="Sort items"
-              options={[
-                { label: 'Sort: Default', value: 'default' },
-                { label: 'Newest first', value: 'newest' },
-                { label: 'Name A–Z', value: 'name' },
-                { label: 'Price: low to high', value: 'price_asc' },
-                { label: 'Price: high to low', value: 'price_desc' },
-              ]}
-            />
-            {!isPhone && (
-              <Segmented
-                value={viewMode}
-                onChange={setViewMode}
-                className="ms-view-toggle"
-                options={[
-                  { value: 'grid', icon: <AppstoreOutlined />, title: 'Grid view' },
-                  { value: 'list', icon: <BarsOutlined />, title: 'List view' },
-                ]}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {listingsError && listings.length > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          className="ms-inline-alert"
-          message="Showing the last loaded catalog. Refresh failed."
-          action={
-            <Button size="small" onClick={() => fetchListings({ silent: true })}>
-              Retry
-            </Button>
-          }
-        />
-      )}
-
-      {renderCatalogBody()}
-    </div>
-  );
 
   /* ---------------- Render: orders ---------------- */
 
@@ -1990,6 +1458,18 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
               {bannerFailed && <div className="ms-field-error">This image link doesn&apos;t load. Check the URL.</div>}
             </div>
 
+            <div className="ms-panel">
+              <div className="mc-settings-forms">
+                <div>
+                  <div className="ms-panel-title">Product forms</div>
+                  <div className="ms-muted">Choose which details you fill in for each category, and add your own fields.</div>
+                </div>
+                <Button icon={<SettingOutlined />} onClick={() => setIsFormSettingsOpen(true)}>
+                  Edit product forms
+                </Button>
+              </div>
+            </div>
+
             <div className="ms-panel ms-mode">
               <div className="ms-mode-head">
                 {isServiceStore ? <ToolOutlined /> : <ShopOutlined />}
@@ -2033,11 +1513,68 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
     </span>
   );
 
+  const subCategoryList = shopSubCategories(currentShop);
+
   const tabItems = [
     {
       key: 'catalog',
       label: tabLabel(<AppstoreOutlined />, catalogTabText, listingsLoaded ? listingStats.total : null),
-      children: catalogTab,
+      children: (
+        <ProductsTab
+          shop={currentShop}
+          sections={sectionsState.sections}
+          subCategories={subCategoryList}
+          active={activeTab === 'catalog'}
+          isPhone={isPhone}
+          labels={catalogLabels}
+          catalogue={catalogueStatus}
+          initialStockFilter={productsStockFilter}
+          refreshKey={catalogRefreshKey}
+          onSummary={setCatalogSummary}
+          onOpenHub={() => setIsHubOpen(true)}
+          onOpenPicker={() => setIsPickerOpen(true)}
+          onCreateCustom={() => openCustomItem()}
+          onImportCsv={() => setIsImportCsvOpen(true)}
+          onEdit={handleOpenEditModal}
+          onChanged={(opts) => {
+            if (opts?.sections) sectionsState.reload({ silent: true });
+            onRefreshShop?.();
+          }}
+        />
+      ),
+    },
+    {
+      key: 'inventory',
+      label: tabLabel(
+        <InboxOutlined />,
+        'Inventory',
+        listingsLoaded && listingStats.low + listingStats.outOfStock > 0 ? listingStats.low + listingStats.outOfStock : null,
+        listingStats.low > 0
+      ),
+      children: (
+        <InventoryTab
+          shop={currentShop}
+          sections={sectionsState.sections}
+          active={activeTab === 'inventory'}
+          isPhone={isPhone}
+          initialFilter={inventoryFilter}
+          refreshKey={catalogRefreshKey}
+          onSummary={setCatalogSummary}
+        />
+      ),
+    },
+    {
+      key: 'sections',
+      label: tabLabel(<BarsOutlined />, 'Sections', sectionsState.loaded ? sectionsState.sections.length : null),
+      children: (
+        <SectionsManager
+          shop={currentShop}
+          sectionsState={sectionsState}
+          onChanged={(opts) => {
+            if (opts?.listings) setCatalogRefreshKey((k) => k + 1);
+          }}
+        />
+      ),
     },
     {
       key: 'orders',
@@ -2071,7 +1608,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       sub: listingsLoaded ? `${listingStats.inStock} ${availableLabels.on.toLowerCase()}` : '',
       onClick: () => {
         setActiveTab('catalog');
-        setStockFilter('all');
+        setProductsStockFilter('all');
       },
     },
     {
@@ -2079,11 +1616,11 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       icon: <StopOutlined />,
       value: statValue(listingsLoaded, listingStats.outOfStock),
       label: availableLabels.off,
-      sub: listingStats.outOfStock > 0 ? 'Tap to review' : 'All good',
+      sub: listingStats.outOfStock > 0 ? 'Tap to review' : listingStats.low > 0 ? `${listingStats.low} running low` : 'All good',
       tone: listingStats.outOfStock > 0 ? 'warn' : '',
       onClick: () => {
-        setActiveTab('catalog');
-        setStockFilter('out');
+        setActiveTab('inventory');
+        setInventoryFilter(listingStats.outOfStock === 0 && listingStats.low > 0 ? 'low' : 'out');
       },
     },
     {
@@ -2250,17 +1787,20 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
         />
       </Card>
 
-      {/* Add / edit listing */}
+      {/* Add / edit one listing */}
       <AddProductModal
         open={isAddModalOpen}
         onClose={() => {
           setIsAddModalOpen(false);
           setEditingItem(null);
         }}
-        onSuccess={handleListingSaved}
+        onSuccess={() => handleCatalogChanged()}
         onOpenImportCsv={() => setIsImportCsvOpen(true)}
         shop={currentShop}
         editingItem={editingItem}
+        initialName={customInitialName}
+        sections={sectionsState.loaded ? sectionsState.sections : null}
+        onSectionsChanged={(next) => sectionsState.setSections(next)}
       />
 
       {/* Bulk CSV import */}
@@ -2268,18 +1808,38 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
         open={isImportCsvOpen}
         onClose={() => setIsImportCsvOpen(false)}
         shop={currentShop}
-        onSuccess={() => handleListingSaved()}
+        onSuccess={() => handleCatalogChanged()}
       />
 
-      {/* Pick items from the shared master catalog (product stores only) */}
-      {!isServiceStore && (
-        <CatalogPickerModal
-          open={isCatalogPickerOpen}
-          shopId={shopId}
-          onClose={() => setIsCatalogPickerOpen(false)}
-          onImported={(listing) => handleListingSaved(listing)}
+      {/* Three ways to add products */}
+      <AddProductsHub
+        open={isHubOpen}
+        onClose={() => setIsHubOpen(false)}
+        catalogue={catalogueStatus}
+        subNames={subCategoryList.map((s) => s.name)}
+        onSearchCatalogue={() => setIsPickerOpen(true)}
+        onCreateCustom={() => openCustomItem()}
+        onImportCsv={() => setIsImportCsvOpen(true)}
+      />
+
+      {/* Tick catalogue items, price them, publish */}
+      {shopId && (
+        <CataloguePicker
+          open={isPickerOpen}
+          onClose={() => setIsPickerOpen(false)}
+          shop={currentShop}
+          sections={sectionsState.sections}
+          subCategories={subCategoryList}
+          onCreateCustom={(name) => {
+            setIsPickerOpen(false);
+            openCustomItem(name);
+          }}
+          onPublished={() => handleCatalogChanged()}
         />
       )}
+
+      {/* Per sub-category product form settings */}
+      <FormSettings open={isFormSettingsOpen} onClose={() => setIsFormSettingsOpen(false)} shop={currentShop} />
 
       {/* Revise a quote estimate */}
       <Modal
