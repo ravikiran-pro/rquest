@@ -774,8 +774,8 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 837  ·  sub
 | fruits_vegetables | 24 | 11 | sold_by | country_of_origin, produce_type, sold_by, organic |
 | dairy | 39 | 19 | pack_size | expiry_date, brand, pack_size, fat_content |
 | meat_fish | 30 | 15 | cut, net_weight | expiry_date, meat_type, cut, net_weight, freshness |
-| bakery | 32 | 17 | weight, flavour | food_type, ingredients, allergens, expiry_date, weight, flavour |
-| sweet_shop | 27 | 17 | weight | food_type, ingredients, allergens, shelf_life_days, weight |
+| bakery | 32 | 16 | weight, flavour | food_type, allergens, expiry_date, ingredients, weight, flavour |
+| sweet_shop | 27 | 16 | weight | food_type, allergens, shelf_life_days, ingredients, weight |
 | dry_fruits_spices | 39 | 19 | pack_size, grade | expiry_date, brand, product_form, pack_size, grade |
 | organic_store | 37 | 19 | pack_size | expiry_date, brand, pack_size, organic_certification |
 | flour_mill | 30 | 18 | pack_size, grind_texture | expiry_date, grain_type, pack_size, grind_texture |

@@ -69,8 +69,13 @@ const toField = (key, def, row) => {
   }
   const out = { key, label, ...field };
   if (out.placeholder === undefined) delete out.placeholder;
-  if ((row.level === 'statutory' || row.level === 'required') && row.form_required !== false) out.required = true;
-  if (row.level === 'statutory') out.statutory = true;
+  // Enforced only where the law requires it on the listing. A researched "required" (key
+  // detail) field is shown and counted by needs-details, but never blocks a save, so a form
+  // update cannot lock existing listings. Conditional rules (form_required false) are neither.
+  if (row.level === 'statutory' && row.form_required !== false) {
+    out.required = true;
+    out.statutory = true;
+  }
   if (row.filterable && FILTERABLE_TYPES.includes(out.type)) out.filterable = true;
   if (row.owner === 'catalog') {
     const known = FIELD_SOURCE_DEFAULTS[key];
@@ -106,7 +111,8 @@ const basicFormFields = (sub, legacyFields = []) => {
       if (!researched) return null;
       const old = legacy.get(key);
       if (!old) return researched;
-      const merged = { ...old, required: researched.required || undefined, statutory: researched.statutory || undefined };
+      // A field the old template already required stays required
+      const merged = { ...old, required: old.required || researched.required || undefined, statutory: researched.statutory || undefined };
       if (researched.source === 'catalog') {
         merged.source = 'catalog';
         merged.catalog_path = old.catalog_path || researched.catalog_path;

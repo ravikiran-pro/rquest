@@ -380,8 +380,8 @@ CREATE TABLE catalog.attribute_sets (
   CONSTRAINT attribute_set_axis_per_variant CHECK (axis_order IS NULL OR per_variant)
 );
 CREATE INDEX attribute_sets_attribute_idx ON catalog.attribute_sets (attribute_key);
-CREATE UNIQUE INDEX attribute_sets_axis_order_uniq ON catalog.attribute_sets (node_id, axis_order)
-  WHERE axis_order IS NOT NULL AND is_active;
+-- One axis per position is guaranteed by the attribute-sets transform (positions come from
+-- an ordered list). Not a unique index: a reload that swaps two axes would collide mid-upsert.
 
 -- A product sold in several variants (sizes, colours, pack sizes…). Each SKU is one item.
 CREATE TABLE catalog.item_families (

@@ -13734,9 +13734,9 @@
    ],
    "basic_form": [
     "food_type",
-    "ingredients",
     "allergens",
     "expiry_date",
+    "ingredients",
     "weight",
     "flavour"
    ],
@@ -13820,7 +13820,7 @@
     },
     {
      "key": "ingredients",
-     "level": "statutory",
+     "level": "recommended",
      "owner": "store",
      "per_variant": false,
      "filterable": false
@@ -13976,9 +13976,9 @@
    ],
    "basic_form": [
     "food_type",
-    "ingredients",
     "allergens",
     "shelf_life_days",
+    "ingredients",
     "weight"
    ],
    "attributes": [
@@ -14061,7 +14061,7 @@
     },
     {
      "key": "ingredients",
-     "level": "statutory",
+     "level": "recommended",
      "owner": "store",
      "per_variant": false,
      "filterable": false

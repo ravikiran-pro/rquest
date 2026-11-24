@@ -1547,9 +1547,9 @@
   "variant_notes": "Cakes: weight (0.5/1/2 kg) × Egg/Eggless, then flavour if one listing covers several. Packed bread/biscuits use pack_size with GTIN/MRP instead.",
   "basic_form": [
    "food_type",
-   "ingredients",
    "allergens",
    "expiry_date",
+   "ingredients",
    "weight",
    "flavour"
   ],
@@ -1645,7 +1645,7 @@
    },
    {
     "key": "ingredients",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
@@ -1824,9 +1824,9 @@
   "variant_notes": "Priced per weight (250 g / 500 g / 1 kg); boxes sold pre-packed carry their own MRP and net quantity.",
   "basic_form": [
    "food_type",
-   "ingredients",
    "allergens",
    "shelf_life_days",
+   "ingredients",
    "weight"
   ],
   "basic_form_reason": "Statutory best-before input + the ghee question buyers ask",
@@ -1921,7 +1921,7 @@
    },
    {
     "key": "ingredients",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
