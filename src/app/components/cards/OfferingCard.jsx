@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Typography, Flex, Grid } from 'antd';
 import {
@@ -12,6 +12,8 @@ import {
 import { colors, radii } from '../../styles';
 import { formatDistance } from '../../utils';
 import CardMedia from './CardMedia';
+import VariantPicker from '../listings/VariantPicker';
+import { hasVariants, defaultVariant, findVariant } from '../../utils/variants';
 
 const { Text } = Typography;
 
@@ -245,6 +247,15 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
   const screens = Grid.useBreakpoint();
   const isMobile = !screens.md;
 
+  // Products with variants: option pickers choose the variant whose price is shown and ordered
+  const variantMode = hasVariants(item);
+  const [selection, setSelection] = useState(() => (variantMode ? defaultVariant(item)?.option_values || null : null));
+  const variant = variantMode ? findVariant(item, selection) : null;
+  const shownPrice = variant ? variant.price : item.price;
+  const picker = variantMode ? (
+    <VariantPicker listing={item} selection={selection} onChange={(next) => setSelection(next)} />
+  ) : null;
+
   const shop = item.shop || {};
   const distanceStr = formatDistance(shop.distance) || 'Nearby';
   const areaStr = shop.area || shop.shop_name || 'Neighborhood';
@@ -271,7 +282,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
     const mobileStatus = resolveMobileStatus(item);
     const fulfillmentText = resolveFulfillmentText(item);
     const actionBtn = resolveActionBtn(item);
-    const strikePrice = item.price ? Math.round(parseFloat(item.price) * 1.08) : null;
+    const strikePrice = shownPrice ? Math.round(parseFloat(shownPrice) * 1.08) : null;
 
     return (
       <div
@@ -362,12 +373,14 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
               {item.name}
             </div>
 
+            {picker}
+
             {/* Price & Assurance Tag */}
             <Flex align="center" gap={8} wrap="wrap">
               <span style={{ fontSize: 16, fontWeight: 800, color: colors.textMain }}>
-                ₹{item.price}
+                ₹{shownPrice}
               </span>
-              {strikePrice && strikePrice > item.price && (
+              {strikePrice && strikePrice > shownPrice && (
                 <span
                   style={{
                     fontSize: 12,
@@ -433,7 +446,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
             type="button"
             onClick={(e) => {
               e.stopPropagation();
-              onOrder?.(item);
+              onOrder?.(item, variant);
             }}
             style={{
               background: colors.primary,
@@ -588,6 +601,8 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
           {item.name}
         </Text>
 
+        {picker}
+
         {/* Live Status Badge */}
         <div
           style={{
@@ -657,7 +672,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
           </span>
           <Flex align="baseline" gap={4}>
             <span style={{ fontSize: 17, fontWeight: 800, color: colors.textMain }}>
-              ₹{item.price}
+              ₹{shownPrice}
             </span>
             {item.unit && (
               <span style={{ fontSize: 10.5, color: colors.textLight }}>/{item.unit}</span>
@@ -668,7 +683,7 @@ const OfferingCard = ({ item, onOrder, onClick }) => {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            onOrder?.(item);
+            onOrder?.(item, variant);
           }}
           style={{
             background: colors.primary,

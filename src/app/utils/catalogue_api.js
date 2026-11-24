@@ -81,6 +81,8 @@ export const fetchResolvedForm = (shopId, subId, { force = false } = {}) => {
           fields: Array.isArray(res.data.fields) ? res.data.fields : [],
           default_stock_mode: res.data.default_stock_mode || null,
           listing_type: res.data.listing_type || null,
+          // [{ key, label, values, open_values }]: options this sub-category's products vary by
+          variant_axes: Array.isArray(res.data.variant_axes) ? res.data.variant_axes : [],
         };
       }
       resolvedCache.delete(key);

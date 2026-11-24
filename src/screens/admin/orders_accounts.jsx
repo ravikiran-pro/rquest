@@ -47,6 +47,7 @@ import {
 } from '@ant-design/icons';
 import ChatIcon from '../../app/components/common/ChatIcon';
 import { apiConfig, netWorkCall } from '../../app/utils';
+import { lineName } from '../../app/utils/variants';
 import { useChatStore } from '../../app/services';
 import { colors, radii, typography } from '../../app/styles/theme';
 
@@ -800,7 +801,7 @@ const AdminOrdersAccounts = () => {
       const rows = filteredOrders.map((ord) => {
         const m = getOrderMoney(ord);
         const itemsBreakdown = (ord.items || [])
-          .map((it) => `${it.quantity ?? 1}x ${it.item_name || 'Item'} (@₹${toNum(it.unit_price).toFixed(2)})`)
+          .map((it) => `${it.quantity ?? 1}x ${lineName(it)} (@₹${toNum(it.unit_price).toFixed(2)})`)
           .join('; ');
         const d = toDate(ord.createdAt);
         return [
@@ -957,7 +958,7 @@ const AdminOrdersAccounts = () => {
                 key={it.id || idx}
                 style={{ fontSize: 12, color: colors.textMuted, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
               >
-                {it.quantity ?? 1}× {it.item_name || 'Item'}
+                {it.quantity ?? 1}× {lineName(it)}
               </div>
             ))}
             {items.length > 2 && <div style={{ fontSize: 11, color: colors.textLight }}>+{items.length - 2} more</div>}
@@ -1043,7 +1044,7 @@ const AdminOrdersAccounts = () => {
     const isCancelled = ord.status === 'cancelled';
     const itemsText = items
       .slice(0, 2)
-      .map((it) => `${it.quantity ?? 1}× ${it.item_name || 'Item'}`)
+      .map((it) => `${it.quantity ?? 1}× ${lineName(it)}`)
       .join(', ');
     const label = { fontSize: 11, color: colors.textLight, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' };
     return (
@@ -1321,7 +1322,7 @@ const AdminOrdersAccounts = () => {
               style={{ padding: '8px 0', borderBottom: idx !== items.length - 1 ? `1px dashed ${colors.border}` : 'none' }}
             >
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontWeight: 600, color: colors.textMain, wordBreak: 'break-word' }}>{it.item_name || 'Item'}</div>
+                <div style={{ fontWeight: 600, color: colors.textMain, wordBreak: 'break-word' }}>{lineName(it)}</div>
                 <div style={{ ...numStyle, fontSize: 12, color: colors.textMuted }}>
                   {it.quantity ?? 1} × {formatINR(it.unit_price)}
                 </div>

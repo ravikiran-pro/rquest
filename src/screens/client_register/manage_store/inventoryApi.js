@@ -39,6 +39,21 @@ export const buildStockUpdates = (items, direction, qty) => {
   const updates = [];
   let unchanged = 0;
   items.forEach((item) => {
+    // Listings with variants: one update per variant (the count lives there)
+    if (Array.isArray(item.variant_axes) && item.variant_axes.length && Array.isArray(item.variants)) {
+      if (item.stock_mode === 'always' || !item.variants.length) {
+        unchanged += 1;
+      } else if (item.stock_mode === 'tracked') {
+        if (direction === 'out') item.variants.forEach((v) => updates.push({ id: item.id, variant_id: v.id, stock_qty: 0 }));
+        else if (qty !== null && qty !== undefined) {
+          const n = Math.max(0, Math.trunc(Number(qty)));
+          item.variants.forEach((v) => updates.push({ id: item.id, variant_id: v.id, stock_qty: n }));
+        } else unchanged += 1;
+      } else {
+        item.variants.forEach((v) => updates.push({ id: item.id, variant_id: v.id, is_available: direction === 'in' }));
+      }
+      return;
+    }
     if (item.stock_mode === 'tracked') {
       if (direction === 'out') updates.push({ id: item.id, stock_qty: 0 });
       else if (qty !== null && qty !== undefined) updates.push({ id: item.id, stock_qty: Math.max(0, Math.trunc(Number(qty))) });
