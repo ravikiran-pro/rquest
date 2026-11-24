@@ -70,7 +70,7 @@ const FORM_TEMPLATES = [
     description: 'Medicines, health products and medical equipment',
     keywords: ['pharma', 'medic', 'chemist', 'drug', 'health', 'clinic'],
     fields: [
-      { key: 'composition', label: 'Salt / Active Chemical Composition', type: 'text', placeholder: 'e.g. Paracetamol 500mg, Phenylephrine 5mg', source: 'catalog', catalog_path: 'attributes.generic' },
+      { key: 'composition', label: 'Salt / Active Chemical Composition', type: 'text', placeholder: 'e.g. Paracetamol 500mg, Phenylephrine 5mg', source: 'catalog', catalog_path: 'attributes.composition' },
       { key: 'dosage_form', label: 'Dosage Form', type: 'select', required: true, filterable: true, options: ['Strip / Tablets', 'Syrup / Liquid', 'Capsules', 'Injection', 'Cream / Ointment', 'Drops', 'Powder', 'Medical Equipment'], source: 'catalog', catalog_path: 'attributes.dosage_form' },
       { key: 'manufacturer', label: 'Manufacturer', type: 'text', placeholder: 'e.g. Cipla, Sun Pharma', source: 'catalog', catalog_path: 'manufacturer' },
       { key: 'pack_size', label: 'Pack', type: 'text', placeholder: 'e.g. Strip of 10, 100 ml', source: 'catalog', catalog_path: 'quantity_text' },
@@ -766,7 +766,7 @@ const buildMetadataFilter = (filters, schema) => {
 const FIELD_SOURCE_DEFAULTS = {
   brand: { source: 'catalog', catalog_path: 'brand' },
   pack_size: { source: 'catalog', catalog_path: 'quantity_text' },
-  composition: { source: 'catalog', catalog_path: 'attributes.generic' },
+  composition: { source: 'catalog', catalog_path: 'attributes.composition' },
   dosage_form: { source: 'catalog', catalog_path: 'attributes.dosage_form' },
   manufacturer: { source: 'catalog', catalog_path: 'manufacturer' },
   model_number: { source: 'catalog', catalog_path: 'attributes.model_number' },

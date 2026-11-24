@@ -1,0 +1,13 @@
+{
+  "_comment": "Merge policy applied by build.js on top of the research. shop_level: recorded once on the shop profile (shop-wide default), never in a listing form. form_optional: shown in the basic form but not enforced, because the rule applies only to some items (perishables, mutual-fund distributors, overseas recruitment).",
+  "shop_level": [
+    "return_policy",
+    "price_breakup_charges"
+  ],
+  "form_optional": [
+    "expiry_date",
+    "best_before_date",
+    "amfi_arn",
+    "emigration_rc_number"
+  ]
+}

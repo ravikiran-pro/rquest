@@ -10,6 +10,7 @@
  *   node cli.js extract <source>             download into the cache only (no database)
  *   node cli.js run-all [flags]              every source in dependency order, then dedupe
  *   node cli.js dedupe                       queue probable duplicate items for review
+ *   node cli.js families [--dry-run]         group pack-size variants into item_families
  *   node cli.js merge <keep_id> <drop_id>    mark drop as a duplicate of keep (rejected)
  *   node cli.js verify <item_id>             mark an item verified (sources won't change it)
  *   node cli.js status                       last runs, catalog health, open review items
@@ -27,6 +28,7 @@ const { connect } = require('./lib/db');
 const { migrate } = require('./db/schema');
 const { runSource } = require('./lib/run');
 const { findDuplicates, mergeItems, setItemStatus } = require('./lib/dedupe');
+const { buildFamilies } = require('./lib/families');
 const { SOURCES, getSource } = require('./sources');
 
 const withClient = async (fn) => {
@@ -153,7 +155,10 @@ async function cmdRunAll(flags) {
   for (const name of Object.keys(SOURCES)) {
     await runSource(getSource(name), flags);
   }
-  if (!flags.dryRun) await withClient((c) => findDuplicates(c));
+  if (!flags.dryRun) {
+    await withClient((c) => findDuplicates(c));
+    await withClient((c) => buildFamilies(c));
+  }
 }
 
 async function main() {
@@ -170,6 +175,8 @@ async function main() {
       return cmdRunAll(flags);
     case 'dedupe':
       return withClient((c) => findDuplicates(c));
+    case 'families':
+      return withClient((c) => buildFamilies(c, { dryRun: flags.dryRun }));
     case 'merge': {
       const [keep, drop] = positional;
       if (!keep || !drop)

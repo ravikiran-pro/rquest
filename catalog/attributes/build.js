@@ -39,6 +39,19 @@ const COLUMNS = new Set([
   'stock_mode', 'low_stock_threshold', 'listing_type', 'section', 'category', 'sub_category',
 ]);
 
+// Where a rule applies, from R5's description tags: [LISTING] shown on the online listing,
+// [LABEL-ONLY] on the pack, [INVOICE-ONLY] on the bill, [PREMISES] at the shop; "store profile"
+// means it is collected once per shop, not per listing.
+const displayScope = (description) => {
+  const d = String(description || '');
+  const tags = (d.match(/^\[([^\]]+)\]/) || [])[1] || '';
+  return {
+    listing: /LISTING/i.test(tags),
+    shopLevel: /store profile/i.test(tags),
+    tagged: Boolean(tags),
+  };
+};
+
 const canon = (key) => {
   let k = String(key || '').trim();
   const seen = new Set();
@@ -143,8 +156,58 @@ for (const file of files) {
   }
 }
 
+// ── Reviewed fixes (attributes/fixes.json, written by the critic review) ─────────────────
+//   definitions: { key: { type?, unit_family?, default_unit?, values?, open_values?, label? } }
+//   sub_categories: { sub: { basic_form?, variant_axes?, add?: [row], remove?: [key], set?: { key: {level?, owner?} } } }
+const FIXES_FILE = path.join(ROOT, 'fixes.json');
+const FIXES = fs.existsSync(FIXES_FILE) ? JSON.parse(fs.readFileSync(FIXES_FILE, 'utf8')) : {};
+for (const [rawKey, patch] of Object.entries(FIXES.definitions || {})) {
+  const key = canon(rawKey);
+  if (!defs[key]) {
+    if (!patch.type || !patch.label) {
+      errors.push(`fixes.json: definition "${key}" is new but has no type/label`);
+      continue;
+    }
+    defs[key] = { values: [], open_values: false, sources: [], unit_family: null, default_unit: null, description: null, shopify_handle: null, ondc_attribute: null, ...patch };
+    defOrigin[key] = 'fixes';
+    continue;
+  }
+  Object.assign(defs[key], patch);
+}
+for (const [sub, f] of Object.entries(FIXES.sub_categories || {})) {
+  const entry = sets[sub];
+  if (!entry) {
+    errors.push(`fixes.json: unknown sub-category "${sub}"`);
+    continue;
+  }
+  for (const k of f.remove || []) entry.attributes.delete(canon(k));
+  for (const row of f.add || []) entry.attributes.set(canon(row.key), { per_variant: false, filterable: false, ...row, key: canon(row.key) });
+  for (const [k, p] of Object.entries(f.set || {})) {
+    const row = entry.attributes.get(canon(k));
+    if (row) Object.assign(row, p);
+    else errors.push(`fixes.json: ${sub}.${k} is not in the set`);
+  }
+  if (Array.isArray(f.basic_form)) entry.basic_form = f.basic_form.map(canon);
+  if (Array.isArray(f.variant_axes)) entry.variant_axes = f.variant_axes.map(canon);
+}
+// measure needs a unit family, enums need values (or open values)
+for (const [k, d] of Object.entries(defs)) {
+  if (d.type === 'measure' && !d.unit_family) errors.push(`attribute "${k}": measure without unit_family`);
+  if (d.type !== 'measure' && d.unit_family) d.unit_family = null;
+  if ((d.type === 'enum' || d.type === 'multi_enum') && !(d.values || []).length && !d.open_values) d.open_values = true;
+}
+
 // ── Validate and finalise ─────────────────────────────────────────────────────────────
 const subKeys = SUBS.map((s) => s.key);
+// Shop-profile attributes are recorded once per shop: out of every listing set
+const POLICY_FILE = path.join(ROOT, 'policy.json');
+const POLICY = fs.existsSync(POLICY_FILE) ? JSON.parse(fs.readFileSync(POLICY_FILE, 'utf8')) : {};
+const shopLevel = new Set([
+  ...Object.entries(defs).filter(([, d]) => displayScope(d.description).shopLevel).map(([k]) => k),
+  ...(POLICY.shop_level || []).map(canon).filter((k) => defs[k]),
+]);
+const shopAttributes = {};
+const formOptional = new Set((POLICY.form_optional || []).map(canon));
 const outSets = {};
 const coverage = [];
 for (const key of subKeys) {
@@ -153,20 +216,34 @@ for (const key of subKeys) {
     errors.push(`sub-category "${key}" has no research`);
     continue;
   }
-  const attrs = [...s.attributes.values()];
+  for (const [k, a] of s.attributes) {
+    if (!shopLevel.has(k)) continue;
+    const row = (shopAttributes[k] = shopAttributes[k] || { level: a.level, sub_categories: [] });
+    if ((LEVEL_RANK[a.level] || 0) > (LEVEL_RANK[row.level] || 0)) row.level = a.level;
+    row.sub_categories.push(key);
+  }
+  const attrs = [...s.attributes.values()].filter((a) => !shopLevel.has(a.key));
   for (const a of attrs) {
     if (!defs[a.key]) errors.push(`${key}: attribute "${a.key}" is not defined`);
     if (!LEVEL_RANK[a.level]) errors.push(`${key}.${a.key}: bad level "${a.level}"`);
     if (!['catalog', 'store'].includes(a.owner)) errors.push(`${key}.${a.key}: bad owner "${a.owner}"`);
   }
-  let axes = (s.variant_axes || []).filter((k) => s.attributes.has(k));
+  let axes = (s.variant_axes || []).filter((k) => s.attributes.has(k) && !shopLevel.has(k));
   for (const k of s.variant_axes || []) if (!s.attributes.has(k)) errors.push(`${key}: variant axis "${k}" not in its attribute set`);
   if (axes.length > MAX_AXES) {
     warnings.push(`${key}: ${axes.length} variant axes, kept the first ${MAX_AXES}`);
     axes = axes.slice(0, MAX_AXES);
   }
-  const statutoryStore = attrs.filter((a) => a.level === 'statutory' && a.owner === 'store').map((a) => a.key);
-  const basicIn = (s.basic_form || []).filter((k) => s.attributes.has(k));
+  // Forced into the basic form: statutory, filled by the store, and shown on the listing (an
+  // untagged statutory attribute counts as shown, the cautious reading)
+  const statutoryStore = attrs
+    .filter((a) => a.level === 'statutory' && a.owner === 'store')
+    .filter((a) => {
+      const scope = displayScope(defs[a.key] && defs[a.key].description);
+      return !scope.tagged || scope.listing;
+    })
+    .map((a) => a.key);
+  const basicIn = (s.basic_form || []).filter((k) => s.attributes.has(k) && !shopLevel.has(k));
   for (const k of s.basic_form || []) if (!s.attributes.has(k)) errors.push(`${key}: basic field "${k}" not in its attribute set`);
   if (!s.basic_form) errors.push(`${key}: no basic_form from its category agent`);
   // Statutory store fields first, then the agent's picks, capped
@@ -191,6 +268,8 @@ for (const key of subKeys) {
       owner: a.owner,
       per_variant: axes.includes(a.key) || Boolean(a.per_variant),
       filterable: Boolean(a.filterable),
+      // Applies to some items only: shown, never enforced (policy.json form_optional)
+      ...(formOptional.has(a.key) ? { form_required: false } : {}),
       note: a.note || null,
     })),
   };
@@ -216,13 +295,14 @@ for (const [k, d] of Object.entries(defs)) (byLabel[norm(d.label)] = byLabel[nor
 const nearDupes = Object.entries(byLabel).filter(([, ks]) => ks.length > 1);
 
 // Only keep definitions that some set uses
-const used = new Set(Object.values(outSets).flatMap((s) => s.attributes.map((a) => a.key)));
+const used = new Set([...Object.values(outSets).flatMap((s) => s.attributes.map((a) => a.key)), ...Object.keys(shopAttributes)]);
 const outDefs = Object.fromEntries(Object.entries(defs).filter(([k]) => used.has(k)).sort(([a], [b]) => a.localeCompare(b)));
 
 fs.mkdirSync(SEED_DIR, { recursive: true });
 fs.mkdirSync(path.dirname(REPORT), { recursive: true });
 fs.writeFileSync(path.join(SEED_DIR, 'definitions.json'), JSON.stringify(outDefs, null, 1) + '\n');
 fs.writeFileSync(path.join(SEED_DIR, 'sets.json'), JSON.stringify(outSets, null, 1) + '\n');
+fs.writeFileSync(path.join(SEED_DIR, 'shop_attributes.json'), JSON.stringify(shopAttributes, null, 1) + '\n');
 
 // App export: field definitions the app can render, per sub-category
 const appExport = {
@@ -230,8 +310,10 @@ const appExport = {
   definitions: Object.fromEntries(
     Object.entries(outDefs).map(([k, d]) => [k, { label: d.label, type: d.type, unit_family: d.unit_family, default_unit: d.default_unit, values: d.values, open_values: d.open_values, description: d.description }])
   ),
+  // Recorded once per shop (store profile), with the sub-categories each applies to
+  shop_attributes: shopAttributes,
   sub_categories: Object.fromEntries(
-    Object.entries(outSets).map(([k, s]) => [k, { variant_axes: s.variant_axes, basic_form: s.basic_form, attributes: s.attributes.map(({ key, level, owner, per_variant, filterable }) => ({ key, level, owner, per_variant, filterable })) }])
+    Object.entries(outSets).map(([k, s]) => [k, { variant_axes: s.variant_axes, basic_form: s.basic_form, attributes: s.attributes.map(({ key, level, owner, per_variant, filterable, form_required }) => ({ key, level, owner, per_variant, filterable, ...(form_required === false ? { form_required } : {}) })) }])
   ),
 };
 fs.writeFileSync(APP_EXPORT, JSON.stringify(appExport, null, 1) + '\n');
@@ -240,6 +322,9 @@ const lines = [
   '# Attribute build report',
   '',
   `Files: ${files.join(', ') || 'none'}  ·  attributes: ${Object.keys(outDefs).length}  ·  sub-categories: ${Object.keys(outSets).length}/${subKeys.length}  ·  set rows: ${Object.values(outSets).reduce((n, s) => n + s.attributes.length, 0)}`,
+  '',
+  `## Shop-profile attributes (${Object.keys(shopAttributes).length}) — out of listing forms`,
+  ...Object.entries(shopAttributes).map(([k, r]) => `- ${k} (${r.level}, ${r.sub_categories.length} sub-categories)`),
   '',
   `## Errors (${errors.length})`,
   ...errors.map((e) => `- ${e}`),

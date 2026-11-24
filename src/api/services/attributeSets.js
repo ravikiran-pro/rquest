@@ -69,7 +69,7 @@ const toField = (key, def, row) => {
   }
   const out = { key, label, ...field };
   if (out.placeholder === undefined) delete out.placeholder;
-  if (row.level === 'statutory' || row.level === 'required') out.required = true;
+  if ((row.level === 'statutory' || row.level === 'required') && row.form_required !== false) out.required = true;
   if (row.level === 'statutory') out.statutory = true;
   if (row.filterable && FILTERABLE_TYPES.includes(out.type)) out.filterable = true;
   if (row.owner === 'catalog') {
