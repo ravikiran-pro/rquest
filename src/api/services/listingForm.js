@@ -13,6 +13,7 @@
  */
 const { categories, sub_categories, shop_form_overrides } = require('../models');
 const { resolveListingSchema } = require('./formOverrides');
+const attributeSets = require('./attributeSets');
 const { subCategoryIdsByShop } = require('./shopSubCategories');
 
 const toId = (value) => {
@@ -50,15 +51,24 @@ const loadListingContext = async (shop, metadata, { subCategoryId, transaction }
           transaction,
         })
       : null;
+  const baseForm = Array.isArray(subCategory?.form_schema) && subCategory.form_schema.length
+    ? subCategory.form_schema
+    : category?.form_schema || [];
+  // Researched attributes this store may switch on (not already in the base form)
+  const available = subCategory
+    ? attributeSets.enableableFields(subCategory.key, (baseForm || []).map((f) => f && f.key))
+    : [];
   const { schema, base, source } = resolveListingSchema({
     override: override ? override.overrides : null,
     shopForm: shop?.form_schema,
     subForm: subCategory?.form_schema,
     categoryForm: category?.form_schema,
+    available,
   });
   return {
     schema,
     base,
+    available,
     schemaSource: source,
     subCategory,
     category,

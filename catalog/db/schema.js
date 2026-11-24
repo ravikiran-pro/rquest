@@ -337,6 +337,79 @@ LEFT JOIN LATERAL catalog.default_hsn(i.taxonomy_node_id) dh ON i.hsn_code IS NU
 LEFT JOIN LATERAL catalog.gst_rate(coalesce(i.hsn_code, dh.hsn_code)) r ON true;
 `,
   },
+  {
+    version: 4,
+    name: 'attributes: definitions, per-shop-type attribute sets, item families and variants',
+    get sql() {
+      return `
+-- Every attribute the catalogue knows, defined once (seeds/attributes, source attribute-sets).
+CREATE TABLE catalog.attribute_definitions (
+  key            text PRIMARY KEY CHECK (key ~ '^[a-z][a-z0-9_]{0,39}$'),
+  label          text NOT NULL CHECK (length(btrim(label)) > 0),
+  type           text NOT NULL CHECK (type IN ('text', 'textarea', 'number', 'boolean', 'date', 'enum', 'multi_enum', 'measure')),
+  unit_family    text CHECK (unit_family IN ('mass', 'volume', 'length', 'area', 'power', 'energy', 'data', 'duration', 'count', 'temperature', 'currency', 'percent')),
+  default_unit   text,
+  "values"       jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof("values") = 'array'),
+  open_values    boolean NOT NULL DEFAULT false,
+  description    text,
+  shopify_handle text,
+  ondc_attribute text,
+  sources        jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(sources) = 'array'),
+  source         text NOT NULL,
+  ${TRACKING},
+  CONSTRAINT attribute_measure_unit CHECK ((type = 'measure') = (unit_family IS NOT NULL)),
+  CONSTRAINT attribute_enum_values CHECK (type NOT IN ('enum', 'multi_enum') OR jsonb_array_length("values") > 0 OR open_values)
+);
+
+-- What a kind of shop (shop_type node = app sub-category) records about what it sells.
+CREATE TABLE catalog.attribute_sets (
+  node_id       text NOT NULL REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  attribute_key text NOT NULL REFERENCES catalog.attribute_definitions(key) DEFERRABLE INITIALLY DEFERRED,
+  level         text NOT NULL CHECK (level IN ('statutory', 'required', 'recommended', 'optional')),
+  owner         text NOT NULL CHECK (owner IN ('catalog', 'store')),
+  per_variant   boolean NOT NULL DEFAULT false,
+  filterable    boolean NOT NULL DEFAULT false,
+  axis_order    smallint CHECK (axis_order BETWEEN 1 AND 5),
+  in_basic_form boolean NOT NULL DEFAULT false,
+  sort_order    integer NOT NULL DEFAULT 0,
+  note          text,
+  source        text NOT NULL,
+  ${TRACKING},
+  PRIMARY KEY (node_id, attribute_key),
+  -- A variant axis always differs per SKU
+  CONSTRAINT attribute_set_axis_per_variant CHECK (axis_order IS NULL OR per_variant)
+);
+CREATE INDEX attribute_sets_attribute_idx ON catalog.attribute_sets (attribute_key);
+CREATE UNIQUE INDEX attribute_sets_axis_order_uniq ON catalog.attribute_sets (node_id, axis_order)
+  WHERE axis_order IS NOT NULL AND is_active;
+
+-- A product sold in several variants (sizes, colours, pack sizes…). Each SKU is one item.
+CREATE TABLE catalog.item_families (
+  id               text PRIMARY KEY CHECK (id ~ '^fam:[0-9a-f]{20}$'),
+  name             text NOT NULL CHECK (length(btrim(name)) > 0),
+  brand_key        text REFERENCES catalog.brands(brand_key) DEFERRABLE INITIALLY DEFERRED,
+  taxonomy_node_id text REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  variant_axes     jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(variant_axes) = 'array'),
+  attributes       jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(attributes) = 'object'),
+  source           text NOT NULL,
+  ${TRACKING}
+);
+CREATE INDEX item_families_name_trgm ON catalog.item_families USING gin (name gin_trgm_ops);
+
+ALTER TABLE catalog.items
+  ADD COLUMN family_id      text REFERENCES catalog.item_families(id) DEFERRABLE INITIALLY DEFERRED,
+  ADD COLUMN variant_values jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(variant_values) = 'object'),
+  ADD CONSTRAINT items_variant_needs_family CHECK (family_id IS NOT NULL OR variant_values = '{}'::jsonb);
+CREATE INDEX items_family_idx ON catalog.items (family_id);
+CREATE UNIQUE INDEX items_family_variant_uniq ON catalog.items (family_id, variant_values)
+  WHERE family_id IS NOT NULL;
+
+-- i.* was expanded when the view was created: rebuild it so it carries the new columns.
+DROP VIEW catalog.items_enriched;
+${MIGRATIONS[2].sql.slice(MIGRATIONS[2].sql.indexOf('CREATE VIEW catalog.items_enriched'))}
+`;
+    },
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

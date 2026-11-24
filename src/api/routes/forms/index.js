@@ -2,15 +2,18 @@
  * Store listing forms (/api/v1/forms): each shop may adjust the form of each of its
  * sub-categories (shop_form_overrides; rules in services/formOverrides.js). Owner or admin.
  *
- *   GET    /shop/:shop_id                         every sub-category's base, override, resolved
+ *   GET    /shop/:shop_id                         every sub-category's base, override, resolved,
+ *                                                 available (attributes it can enable), variant_axes
  *   GET    /shop/:shop_id/:sub_category_id/resolved
- *   PUT    /shop/:shop_id/:sub_category_id        { fields, custom_fields } → save the override
+ *   PUT    /shop/:shop_id/:sub_category_id        { fields, custom_fields, enabled_attributes }
+ *                                                 → save the override
  *   DELETE /shop/:shop_id/:sub_category_id        reset to the default form
  */
 const express = require('express');
 const { shops, categories, shop_form_overrides } = require('../../models');
 const { authMiddleware, isAdminReq } = require('../../auth');
 const { normalizeOverride, layerSchema } = require('../../services/formOverrides');
+const attributeSets = require('../../services/attributeSets');
 const { defaultStockMode } = require('../../services/stock');
 const { loadListingContext, listingTypeFor } = require('../../services/listingForm');
 const { subCategoriesForShop } = require('../../services/shopSubCategories');
@@ -68,7 +71,13 @@ async function ownedShopSub(req, res) {
 const withFlags = (ctx) => (ctx.schemaSource === 'override' ? ctx.schema : layerSchema(ctx.schema, null));
 
 const overrideDoc = (row) =>
-  row ? { fields: row.overrides?.fields || {}, custom_fields: row.overrides?.custom_fields || [] } : null;
+  row
+    ? {
+        fields: row.overrides?.fields || {},
+        custom_fields: row.overrides?.custom_fields || [],
+        enabled_attributes: row.overrides?.enabled_attributes || [],
+      }
+    : null;
 
 const hasShopForm = (shop) => Array.isArray(shop.form_schema) && shop.form_schema.length > 0;
 
@@ -86,6 +95,9 @@ router.get(
         base: ctx.base,
         override: overrideDoc(ctx.override),
         resolved: withFlags(ctx),
+        // Researched catalogue attributes the store can switch on (enabled_attributes)
+        available: ctx.available,
+        variant_axes: attributeSets.variantAxes(sub.key),
         legacy_shop_form: hasShopForm(shop),
       });
     }
@@ -119,8 +131,13 @@ router.put(
     const ctx = await loadListingContext(found.shop, {}, { subCategoryId: found.sub.id });
     const body = req.body || {};
     const { override, errors } = normalizeOverride(
-      { fields: body.fields ?? {}, custom_fields: body.custom_fields ?? [] },
-      ctx.base
+      {
+        fields: body.fields ?? {},
+        custom_fields: body.custom_fields ?? [],
+        enabled_attributes: body.enabled_attributes ?? [],
+      },
+      ctx.base,
+      ctx.available
     );
     if (errors.length) {
       return fail(res, 400, errors.map((e) => e.message).join('. '), 'invalid', { errors });
@@ -141,7 +158,7 @@ router.put(
         updated_by: req.headers.user_id || null,
       });
     }
-    res.json({ success: true, data: { override, resolved: layerSchema(ctx.base, override) } });
+    res.json({ success: true, data: { override, resolved: layerSchema(ctx.base, override, ctx.available) } });
   })
 );
 
