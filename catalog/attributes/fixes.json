@@ -1,0 +1,1282 @@
+{
+ "_comment": "Critic review V1 (2026-11-24). Applied by build.js after the research merge and aliases. See build/review.md for the reasons.",
+ "definitions": {
+  "colour": {
+   "type": "enum",
+   "open_values": true
+  },
+  "material": {
+   "type": "enum",
+   "open_values": true,
+   "values": [
+    "Cotton",
+    "Polyester",
+    "Leather",
+    "Synthetic Leather (PU)",
+    "Canvas",
+    "Rubber",
+    "EVA",
+    "Mesh",
+    "Metal",
+    "Plastic",
+    "Wood",
+    "Glass",
+    "Stainless Steel",
+    "Mild Steel",
+    "Cast Iron",
+    "Aluminium",
+    "Brass",
+    "Copper",
+    "Zinc Alloy",
+    "PVC",
+    "UPVC",
+    "CPVC",
+    "HDPE",
+    "PPR",
+    "GI (Galvanised Iron)",
+    "Ceramic",
+    "Vitreous China",
+    "Solid Wood",
+    "Sheesham Wood",
+    "Teak Wood",
+    "Mango Wood",
+    "Engineered Wood",
+    "Plywood",
+    "MDF",
+    "HDHMR",
+    "Particle Board",
+    "Cane / Rattan",
+    "Bamboo",
+    "Fabric",
+    "Jute",
+    "Wool",
+    "Terracotta / Clay",
+    "Granite",
+    "Marble",
+    "Plush",
+    "Paper / Cardboard",
+    "Foam",
+    "Steel",
+    "Other"
+   ]
+  },
+  "delivery_area": {
+   "type": "enum",
+   "open_values": true
+  },
+  "fragrance": {
+   "type": "enum",
+   "open_values": true
+  },
+  "flavour": {
+   "type": "enum",
+   "open_values": true,
+   "values": [
+    "Plain / Unflavoured",
+    "Classic Salted",
+    "Masala",
+    "Chocolate",
+    "Vanilla",
+    "Strawberry",
+    "Mango",
+    "Butterscotch",
+    "Kesar Pista",
+    "Elaichi",
+    "Rose",
+    "Lemon",
+    "Orange",
+    "Mint",
+    "Coffee",
+    "Tomato",
+    "Chicken",
+    "Chicken & Rice",
+    "Fish",
+    "Tuna",
+    "Mutton / Lamb",
+    "Egg",
+    "Milk",
+    "Vegetarian",
+    "Mixed"
+   ]
+  },
+  "licence_class": {
+   "type": "enum"
+  },
+  "guard_type": {
+   "type": "enum"
+  },
+  "food_type": {
+   "values": [
+    "veg",
+    "non-veg",
+    "egg",
+    "vegan"
+   ],
+   "open_values": false
+  },
+  "gst_rate": {
+   "values": [
+    "0%",
+    "0.25%",
+    "3%",
+    "5%",
+    "12%",
+    "18%",
+    "28%",
+    "40%"
+   ]
+  },
+  "plan_period": {
+   "values": [
+    "Per Meal",
+    "Per Session",
+    "Per Hour",
+    "Per Day",
+    "Weekly",
+    "Monthly",
+    "Quarterly",
+    "Half-Yearly",
+    "Yearly",
+    "7 Days",
+    "28 Days",
+    "56 Days",
+    "84 Days",
+    "One Time",
+    "Per Term",
+    "Full Course",
+    "AMC (3 Visits/Year)",
+    "AMC (4 Visits/Year)"
+   ]
+  },
+  "pricing_unit": {
+   "values": [
+    "Per Consultation",
+    "Per Session",
+    "Per Tooth",
+    "Per Arch",
+    "Per Visit",
+    "Per Day",
+    "Per Package",
+    "Per Test",
+    "Per Piece",
+    "Per kg",
+    "Per Set",
+    "Per Pair",
+    "Per Hour",
+    "Per Job",
+    "Per Point",
+    "Per Sq Ft",
+    "Per Running Ft",
+    "Per BHK",
+    "Per Km",
+    "Per Trip",
+    "Per Night",
+    "Per Person",
+    "Per kWh",
+    "Per Litre",
+    "% of Project Cost",
+    "Fixed Price",
+    "Per Page",
+    "Per 100 Pieces",
+    "Per Month",
+    "Per Filing / Return",
+    "Per Case / Matter",
+    "Per Person per Month",
+    "Per Plate",
+    "Quote on Request"
+   ]
+  },
+  "sold_by": {
+   "values": [
+    "Per kg",
+    "Per 500 g",
+    "Per 250 g",
+    "Per 100 g",
+    "Per Piece",
+    "Per Bunch",
+    "Per Dozen",
+    "Per Litre",
+    "Per Pack",
+    "Per Metre",
+    "Per Set",
+    "Per Box",
+    "Per Bag",
+    "Per Tonne",
+    "Per Coil",
+    "Per Sq Ft",
+    "Per Sheet",
+    "Per Running Ft",
+    "Per Cft",
+    "Per Brass",
+    "Per Truck Load",
+    "Per Muzham (Cubit)",
+    "Per Arrangement"
+   ]
+  },
+  "size": {
+   "values": [
+    "XXS",
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL",
+    "3XL",
+    "4XL",
+    "5XL",
+    "Free Size",
+    "26",
+    "28",
+    "30",
+    "32",
+    "34",
+    "36",
+    "38",
+    "40",
+    "42",
+    "44",
+    "IND-3",
+    "IND-4",
+    "IND-5",
+    "IND-6",
+    "IND-7",
+    "IND-8",
+    "IND-9",
+    "IND-10",
+    "IND-11",
+    "IND-12",
+    "Paediatric",
+    "Adult",
+    "Single",
+    "Double",
+    "Queen",
+    "King",
+    "Window (5 ft)",
+    "Door (7 ft)",
+    "Long Door (9 ft)",
+    "Size 3",
+    "Size 4",
+    "Size 5",
+    "Size 6",
+    "Harrow",
+    "Short Handle (SH)",
+    "Long Handle (LH)",
+    "1/2",
+    "3/4",
+    "Full Size"
+   ]
+  },
+  "amenities": {
+   "values": [
+    "ICU",
+    "NICU",
+    "Operation Theatre",
+    "Pharmacy",
+    "Laboratory",
+    "Radiology",
+    "Ambulance",
+    "Blood Bank",
+    "Dialysis",
+    "Wheelchair Access",
+    "Parking",
+    "Air Conditioned",
+    "Lockers",
+    "Showers",
+    "Steam / Sauna",
+    "Lift",
+    "Power Backup",
+    "24×7 Water",
+    "Security / Gated",
+    "CCTV",
+    "Gym",
+    "Swimming Pool",
+    "Clubhouse",
+    "Park",
+    "Wi-Fi",
+    "TV",
+    "Geyser / Hot Water",
+    "Washing Machine",
+    "Fridge",
+    "RO Water",
+    "Housekeeping",
+    "Laundry",
+    "Restaurant",
+    "Room Service",
+    "Kitchen Access",
+    "Drinking Water",
+    "Washrooms",
+    "Changing Room",
+    "Cafeteria",
+    "First Aid",
+    "Stage",
+    "Dining Hall",
+    "Kitchen",
+    "Bridal / Green Room",
+    "Guest Rooms",
+    "Valet",
+    "Library",
+    "Playground",
+    "Smart Classroom"
+   ]
+  },
+  "allergens": {
+   "values": [
+    "Cereals containing Gluten",
+    "Crustaceans",
+    "Milk",
+    "Eggs",
+    "Fish",
+    "Peanuts",
+    "Tree Nuts",
+    "Soy",
+    "Sulphites (≥10 mg/kg)",
+    "Sesame",
+    "Mustard",
+    "None declared"
+   ]
+  },
+  "bee_star_rating": {
+   "values": [
+    "1 Star",
+    "2 Star",
+    "3 Star",
+    "4 Star",
+    "5 Star",
+    "Not Rated"
+   ]
+  },
+  "frame_shape": {
+   "values": [
+    "Rectangle",
+    "Square",
+    "Round",
+    "Oval",
+    "Cat Eye",
+    "Aviator",
+    "Wayfarer",
+    "Hexagonal",
+    "Clubmaster",
+    "Oversized",
+    "Sports"
+   ]
+  },
+  "condition": {
+   "values": [
+    "New",
+    "Open Box",
+    "Refurbished",
+    "Used - Like New",
+    "Used - Good",
+    "Used - Fair",
+    "Retreaded"
+   ]
+  },
+  "gender": {
+   "values": [
+    "Men",
+    "Women",
+    "Unisex",
+    "Kids",
+    "Boys",
+    "Girls",
+    "Infant",
+    "Co-ed",
+    "Separate Batches"
+   ]
+  },
+  "age_group": {
+   "values": [
+    "Infant",
+    "Child",
+    "Adult",
+    "Senior",
+    "All Ages",
+    "0-3 Months",
+    "3-6 Months",
+    "6-12 Months",
+    "12-18 Months",
+    "18-24 Months",
+    "0-12 Months",
+    "1-3 Years",
+    "2-3 Years",
+    "3-4 Years",
+    "3-5 Years",
+    "4-5 Years",
+    "5-6 Years",
+    "5-8 Years",
+    "6-7 Years",
+    "7-8 Years",
+    "8-9 Years",
+    "8-12 Years",
+    "9-10 Years",
+    "10-12 Years",
+    "12-14 Years",
+    "14-16 Years",
+    "14+ Years"
+   ]
+  },
+  "vehicle_type": {
+   "values": [
+    "2-Wheeler (Bike/Scooter)",
+    "3-Wheeler (Auto)",
+    "4-Wheeler (Car/SUV)",
+    "Car (Hatchback / Sedan)",
+    "SUV / MUV",
+    "Tempo Traveller",
+    "Tempo / Mini Truck",
+    "Truck (14–32 ft)",
+    "Container",
+    "Bus / Van",
+    "Commercial / Truck",
+    "Tractor",
+    "Bicycle",
+    "Universal",
+    "Not Applicable"
+   ]
+  },
+  "mode": {
+   "values": [
+    "At Centre",
+    "Online",
+    "Hybrid",
+    "Home Tuition",
+    "At Home (Trainer Visits)",
+    "Outdoor / Park",
+    "Home Pickup"
+   ]
+  },
+  "country_of_origin": {
+   "values": [
+    "India",
+    "China",
+    "Vietnam",
+    "Thailand",
+    "USA",
+    "Japan",
+    "South Korea",
+    "Taiwan",
+    "Germany",
+    "Italy",
+    "France",
+    "Spain",
+    "United Kingdom",
+    "Turkey",
+    "UAE",
+    "Iran",
+    "Afghanistan",
+    "Sri Lanka",
+    "Bangladesh",
+    "Nepal",
+    "Malaysia",
+    "Indonesia",
+    "Australia",
+    "New Zealand",
+    "Other"
+   ]
+  },
+  "finish": {
+   "values": [
+    "Matte",
+    "Satin",
+    "Glossy",
+    "Dewy",
+    "Natural",
+    "Shimmer",
+    "Metallic",
+    "Creme",
+    "Luminous",
+    "Satin / Eggshell",
+    "Silk / Soft Sheen",
+    "High Gloss",
+    "Polished",
+    "Honed",
+    "Rustic",
+    "Textured",
+    "Chrome Plated",
+    "Brushed Nickel",
+    "Matte Black",
+    "Antique Brass",
+    "Rose Gold",
+    "Powder Coated",
+    "Galvanised",
+    "Natural Wood",
+    "Walnut",
+    "Honey Oak",
+    "Teak",
+    "Wenge",
+    "Laminate",
+    "Acrylic",
+    "PU Lacquer",
+    "Membrane",
+    "Veneer"
+   ]
+  },
+  "power_source": {
+   "values": [
+    "Mains (AC)",
+    "Rechargeable Battery",
+    "Replaceable Battery (AA/AAA)",
+    "Solar",
+    "USB Powered",
+    "Petrol",
+    "Gas (LPG / PNG)",
+    "Pneumatic",
+    "Manual / Non-electric"
+   ]
+  },
+  "purity": {
+   "values": [
+    "9K (375)",
+    "14K (585)",
+    "18K (750)",
+    "20K (833)",
+    "22K (916)",
+    "23K (958)",
+    "24K (995)",
+    "24K (999)",
+    "Silver 800",
+    "Silver 835",
+    "Silver 900",
+    "Silver 925",
+    "Silver 970",
+    "Silver 990",
+    "Silver 999",
+    "Platinum 950",
+    "Not Applicable"
+   ]
+  },
+  "shift": {
+   "values": [
+    "Per Visit",
+    "4 Hours",
+    "8 Hours",
+    "12 Hours – Day",
+    "12 Hours – Night",
+    "24 Hours (Live-in)",
+    "Event-based"
+   ]
+  },
+  "parts_type": {
+   "values": [
+    "Original / OEM",
+    "OEM-Equivalent / Aftermarket",
+    "Compatible",
+    "Refurbished",
+    "Customer Supplied"
+   ]
+  },
+  "consultation_mode": {
+   "values": [
+    "In Clinic",
+    "Home Visit",
+    "Online / Video",
+    "Audio Call",
+    "Chat"
+   ]
+  },
+  "delivery_slot": {
+   "values": [
+    "Early Morning (5–8 am)",
+    "Morning (8–11 am)",
+    "Afternoon (11 am–3 pm)",
+    "Evening (3–7 pm)",
+    "Night (7–10 pm)",
+    "Midnight",
+    "Fixed Time"
+   ]
+  },
+  "print_type": {
+   "label": "Print Type",
+   "values": [
+    "Black & White",
+    "Colour",
+    "Flex / Banner",
+    "Vinyl / Sticker",
+    "Offset",
+    "Digital",
+    "Screen Printing",
+    "Sublimation (Mug / T-shirt)",
+    "Visiting Cards",
+    "Wedding Cards",
+    "Large Format",
+    "3D Printing",
+    "Scanning",
+    "Lamination",
+    "Binding"
+   ]
+  },
+  "indoor_outdoor": {
+   "values": [
+    "Indoor",
+    "Outdoor",
+    "Indoor & Outdoor"
+   ]
+  },
+  "level": {
+   "values": [
+    "Beginner",
+    "Intermediate",
+    "Advanced",
+    "All Levels",
+    "Pre-Primary (LKG / UKG)",
+    "Primary (Class 1–5)",
+    "Middle (Class 6–8)",
+    "Secondary (Class 9–10)",
+    "Higher Secondary (Class 11–12)",
+    "Undergraduate",
+    "Postgraduate",
+    "Diploma / Certificate"
+   ]
+  },
+  "coverage_area": {
+   "label": "Mehendi Coverage"
+  },
+  "coverage_sqft": {
+   "label": "Coverage (sq ft per unit)",
+   "type": "measure",
+   "unit_family": "area",
+   "default_unit": "sq ft",
+   "open_values": true,
+   "description": "Area covered per unit sold: paint per litre per coat, tiles per box, sheets per piece",
+   "sources": [
+    {
+     "kind": "shopify",
+     "ref": "Shopify product taxonomy, Hardware (ha) category attributes (coverage)",
+     "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/ha_hardware.yml",
+     "verified": true
+    },
+    {
+     "kind": "industry",
+     "ref": "Split from R3 'coverage' (measure, sq ft) by review V1: the merged key 'coverage' kept the makeup enum (Sheer/Full)",
+     "url": null,
+     "verified": true
+    }
+   ]
+  },
+  "generic_medicine": {
+   "label": "Generic Medicine",
+   "type": "boolean",
+   "description": "Sold under its generic name (e.g. Jan Aushadhi) rather than a brand",
+   "sources": [
+    {
+     "kind": "regulator",
+     "ref": "PMBJP Jan Aushadhi product list (local snapshot catalog/snapshots/jan-aushadhi, flag generic_medicine)",
+     "url": null,
+     "verified": true
+    },
+    {
+     "kind": "industry",
+     "ref": "Split by review V1: R1 'generic' (boolean) collided with R5 'generic' (common name, text) via alias generic_name",
+     "url": null,
+     "verified": true
+    }
+   ]
+  }
+ },
+ "sub_categories": {
+  "bakery": {
+   "variant_axes": [
+    "weight",
+    "flavour"
+   ],
+   "basic_form": [
+    "food_type",
+    "ingredients",
+    "allergens",
+    "expiry_date",
+    "weight",
+    "flavour"
+   ],
+   "set": {
+    "nutrition_info": {
+     "level": "recommended"
+    },
+    "storage_instructions": {
+     "level": "recommended"
+    }
+   }
+  },
+  "sweet_shop": {
+   "basic_form": [
+    "food_type",
+    "ingredients",
+    "allergens",
+    "shelf_life_days",
+    "weight"
+   ],
+   "set": {
+    "nutrition_info": {
+     "level": "recommended"
+    },
+    "storage_instructions": {
+     "level": "recommended"
+    },
+    "expiry_date": {
+     "level": "recommended"
+    }
+   }
+  },
+  "restaurant": {
+   "basic_form": [
+    "food_type",
+    "course",
+    "spice_level",
+    "allergens",
+    "portion_size"
+   ],
+   "remove": [
+    "generic"
+   ],
+   "set": {
+    "calorie_kcal_per_serving": {
+     "level": "recommended"
+    },
+    "portion_info": {
+     "level": "recommended"
+    }
+   }
+  },
+  "fast_food": {
+   "basic_form": [
+    "food_type",
+    "course",
+    "allergens",
+    "portion_size"
+   ],
+   "remove": [
+    "generic"
+   ],
+   "set": {
+    "calorie_kcal_per_serving": {
+     "level": "recommended"
+    },
+    "portion_info": {
+     "level": "recommended"
+    }
+   }
+  },
+  "cafe": {
+   "basic_form": [
+    "food_type",
+    "course",
+    "allergens",
+    "portion_size"
+   ],
+   "remove": [
+    "generic"
+   ],
+   "set": {
+    "calorie_kcal_per_serving": {
+     "level": "recommended"
+    },
+    "portion_info": {
+     "level": "recommended"
+    }
+   }
+  },
+  "ice_cream_juice": {
+   "basic_form": [
+    "food_type",
+    "frozen_dessert_type",
+    "flavour",
+    "allergens",
+    "expiry_date",
+    "portion_size"
+   ],
+   "set": {
+    "calorie_kcal_per_serving": {
+     "level": "recommended"
+    },
+    "portion_info": {
+     "level": "recommended"
+    }
+   }
+  },
+  "home_kitchen": {
+   "basic_form": [
+    "food_type",
+    "meal_slot",
+    "cuisine",
+    "allergens",
+    "plan_period",
+    "portion_size"
+   ],
+   "set": {
+    "calorie_kcal_per_serving": {
+     "level": "recommended"
+    },
+    "portion_info": {
+     "level": "recommended"
+    }
+   }
+  },
+  "catering": {
+   "basic_form": [
+    "food_type",
+    "cuisine",
+    "min_order_plates",
+    "service_style",
+    "allergens",
+    "variant"
+   ]
+  },
+  "paan_shop": {
+   "basic_form": [
+    "paan_type",
+    "tobacco_product",
+    "age_restricted",
+    "expiry_date",
+    "variant"
+   ]
+  },
+  "dry_fruits_spices": {
+   "basic_form": [
+    "brand",
+    "product_form",
+    "expiry_date",
+    "pack_size",
+    "grade"
+   ]
+  },
+  "pharmacy": {
+   "add": [
+    {
+     "key": "generic_medicine",
+     "level": "optional",
+     "owner": "catalog",
+     "filterable": true
+    }
+   ]
+  },
+  "home_nursing": {
+   "basic_form": [
+    "care_services",
+    "service_area",
+    "background_verified",
+    "caregiver_type",
+    "shift",
+    "plan_period"
+   ]
+  },
+  "kids_baby": {
+   "variant_axes": [
+    "size",
+    "colour",
+    "pack_count"
+   ],
+   "basic_form": [
+    "expiry_date",
+    "product_type",
+    "age_group",
+    "gender",
+    "size",
+    "colour"
+   ]
+  },
+  "beauty_parlour": {
+   "add": [
+    {
+     "key": "package",
+     "level": "optional",
+     "owner": "store",
+     "per_variant": true
+    }
+   ],
+   "variant_axes": [
+    "service_for",
+    "package"
+   ]
+  },
+  "tailor": {
+   "variant_axes": [
+    "delivery_speed"
+   ]
+  },
+  "electronics_store": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "model_number",
+    "screen_size",
+    "colour"
+   ]
+  },
+  "home_appliances": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "model_number",
+    "warranty_period"
+   ],
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "capacity_litres",
+    "load_capacity_kg",
+    "cooling_capacity"
+   ]
+  },
+  "inverter_battery": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "model_number",
+    "warranty_period"
+   ]
+  },
+  "electronics_others": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "model_number"
+   ]
+  },
+  "home_others": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "material",
+    "variant",
+    "colour"
+   ]
+  },
+  "lifestyle_others": {
+   "basic_form": [
+    "brand",
+    "material",
+    "condition",
+    "size",
+    "colour"
+   ]
+  },
+  "variety_store": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "material",
+    "colour",
+    "size",
+    "pack_size"
+   ],
+   "variant_axes": [
+    "colour",
+    "size",
+    "pack_size"
+   ]
+  },
+  "auto_parts": {
+   "add": [
+    {
+     "key": "parts_type",
+     "level": "recommended",
+     "owner": "catalog",
+     "filterable": true
+    }
+   ],
+   "basic_form": [
+    "product_type",
+    "vehicle_type",
+    "compatibility",
+    "brand"
+   ],
+   "variant_axes": [
+    "net_quantity",
+    "viscosity_grade",
+    "size"
+   ]
+  },
+  "tiles_plywood": {
+   "basic_form": [
+    "product_type",
+    "brand",
+    "sold_by",
+    "dimensions",
+    "thickness",
+    "finish"
+   ],
+   "remove": [
+    "coverage"
+   ],
+   "add": [
+    {
+     "key": "coverage_sqft",
+     "level": "recommended",
+     "owner": "catalog",
+     "per_variant": true
+    }
+   ],
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "dimensions",
+    "thickness",
+    "finish"
+   ]
+  },
+  "paints": {
+   "remove": [
+    "coverage"
+   ],
+   "add": [
+    {
+     "key": "coverage_sqft",
+     "level": "recommended",
+     "owner": "catalog"
+    }
+   ]
+  },
+  "stationery": {
+   "variant_axes": [
+    "ink_colour",
+    "paper_size",
+    "page_count"
+   ],
+   "basic_form": [
+    "stationery_type",
+    "brand",
+    "ink_colour",
+    "paper_size",
+    "page_count"
+   ]
+  },
+  "interior_design": {
+   "remove": [
+    "warranty_period"
+   ],
+   "basic_form": [
+    "service_type",
+    "bedrooms",
+    "package",
+    "pricing_unit",
+    "delivery_days",
+    "warranty_days"
+   ],
+   "variant_axes": [
+    "service_type",
+    "bedrooms",
+    "package"
+   ]
+  },
+  "vehicle_repair": {
+   "remove": [
+    "warranty_period"
+   ]
+  },
+  "construction_contractor": {
+   "set": {
+    "rera_project_registration_no": {
+     "level": "optional"
+    }
+   },
+   "basic_form": [
+    "service_type",
+    "package",
+    "pricing_unit",
+    "materials_included",
+    "experience_years"
+   ]
+  },
+  "real_estate": {
+   "basic_form": [
+    "rera_project_registration_no",
+    "deal_type",
+    "property_type",
+    "bedrooms",
+    "locality"
+   ]
+  },
+  "cleaning_pest_control": {
+   "basic_form": [
+    "service_type",
+    "bedrooms",
+    "plan_period",
+    "warranty_days",
+    "service_area",
+    "duration_mins"
+   ]
+  },
+  "wedding_venue": {
+   "remove": [
+    "capacity"
+   ],
+   "basic_form": [
+    "venue_type",
+    "guest_capacity",
+    "air_conditioned",
+    "slot",
+    "booking_unit"
+   ]
+  },
+  "insurance_finance": {
+   "set": {
+    "irdai_registration_no": {
+     "level": "recommended"
+    }
+   },
+   "basic_form": [
+    "finance_product",
+    "intermediary_type",
+    "operator"
+   ]
+  },
+  "staffing_security": {
+   "basic_form": [
+    "staffing_service_type",
+    "pricing_unit",
+    "police_verified",
+    "guard_type",
+    "shift"
+   ]
+  },
+  "marketing_design": {
+   "basic_form": [
+    "marketing_service_type",
+    "platform",
+    "turnaround",
+    "package",
+    "plan_period"
+   ]
+  },
+  "wholesale": {
+   "basic_form": [
+    "expiry_date",
+    "brand",
+    "variant",
+    "min_order_qty",
+    "pack_size",
+    "units_per_case"
+   ]
+  },
+  "clothing": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   }
+  },
+  "fabric": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   }
+  },
+  "bags_accessories": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   }
+  },
+  "fashion_others": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   }
+  },
+  "hardware_store": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "size",
+    "length",
+    "diameter"
+   ]
+  },
+  "plumbing_sanitary": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "pipe_size",
+    "pressure_rating",
+    "length"
+   ]
+  },
+  "building_materials": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "grade",
+    "diameter",
+    "net_quantity"
+   ]
+  },
+  "furniture": {
+   "set": {
+    "dimensions": {
+     "level": "recommended"
+    }
+   },
+   "variant_axes": [
+    "bed_size",
+    "seating_capacity",
+    "colour"
+   ]
+  },
+  "computers": {
+   "variant_axes": [
+    "processor",
+    "ram",
+    "storage"
+   ]
+  },
+  "electrical_supplies": {
+   "variant_axes": [
+    "conductor_size",
+    "length",
+    "colour"
+   ]
+  },
+  "kitchenware": {
+   "variant_axes": [
+    "volume_capacity",
+    "diameter",
+    "pack_size"
+   ]
+  },
+  "tyres": {
+   "variant_axes": [
+    "tyre_size",
+    "tube_type",
+    "load_index"
+   ]
+  },
+  "vehicle_dealer": {
+   "variant_axes": [
+    "variant",
+    "colour",
+    "fuel_type"
+   ]
+  },
+  "taxi_auto": {
+   "variant_axes": [
+    "vehicle_type",
+    "trip_type",
+    "air_conditioned"
+   ]
+  },
+  "books": {
+   "variant_axes": [
+    "binding",
+    "edition"
+   ]
+  }
+ }
+}

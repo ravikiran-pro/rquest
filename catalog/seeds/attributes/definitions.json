@@ -394,25 +394,6 @@
   "unit_family": null,
   "default_unit": "%",
   "values": [],
-  "open_values": false,
-  "description": "Share of price to be paid at booking",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "marketplace",
-    "ref": "WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session",
-    "url": "https://www.wedmegood.com/",
-    "verified": false
-   }
-  ]
- },
- "advance_payment_percent": {
-  "label": "Advance Payment (%)",
-  "type": "number",
-  "unit_family": null,
-  "default_unit": "%",
-  "values": [],
   "open_values": true,
   "description": "Share of bill payable at booking",
   "shopify_handle": null,
@@ -423,6 +404,12 @@
     "ref": "Rquest current form field (inputs/sub_categories.json current_form_fields / existing_field_keys.json)",
     "url": "https://github.com/ravikiran-pro/rquest",
     "verified": true
+   },
+   {
+    "kind": "marketplace",
+    "ref": "WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session",
+    "url": "https://www.wedmegood.com/",
+    "verified": false
    }
   ]
  },
@@ -480,24 +467,23 @@
    "6-12 Months",
    "12-18 Months",
    "18-24 Months",
+   "0-12 Months",
+   "1-3 Years",
    "2-3 Years",
    "3-4 Years",
+   "3-5 Years",
    "4-5 Years",
    "5-6 Years",
+   "5-8 Years",
    "6-7 Years",
    "7-8 Years",
    "8-9 Years",
+   "8-12 Years",
    "9-10 Years",
    "10-12 Years",
    "12-14 Years",
    "14-16 Years",
-   "0-12 Months",
-   "1-3 Years",
-   "3-5 Years",
-   "5-8 Years",
-   "8-12 Years",
-   "14+ Years",
-   "Adults"
+   "14+ Years"
   ],
   "open_values": true,
   "description": "Who it is meant for",
@@ -642,24 +628,18 @@
   "unit_family": null,
   "default_unit": null,
   "values": [
-   "Gluten (cereals)",
-   "Crustacean",
-   "Milk",
-   "Egg",
-   "Fish",
-   "Peanut",
-   "Tree nuts",
-   "Soy",
-   "Sulphite (>=10 mg/kg)",
-   "None declared",
    "Cereals containing Gluten",
    "Crustaceans",
+   "Milk",
    "Eggs",
+   "Fish",
    "Peanuts",
    "Tree Nuts",
-   "Sulphites",
+   "Soy",
+   "Sulphites (≥10 mg/kg)",
    "Sesame",
-   "Mustard"
+   "Mustard",
+   "None declared"
   ],
   "open_values": true,
   "description": "[LISTING] Allergen declaration, FSS L&D reg.5(14) (packaged food; online before sale). For food-service menus reg.9 (text not fully confirmed). Live catalogue key.",
@@ -751,11 +731,9 @@
    "Restaurant",
    "Room Service",
    "Kitchen Access",
-   "Air Conditioning",
    "Drinking Water",
    "Washrooms",
    "Changing Room",
-   "Shower",
    "Cafeteria",
    "First Aid",
    "Stage",
@@ -1684,7 +1662,10 @@
    "LiFePO4",
    "Alkaline",
    "Zinc-Carbon",
-   "NiMH"
+   "NiMH",
+   "Lead Acid (Flooded)",
+   "EFB",
+   "AGM"
   ],
   "open_values": true,
   "description": "Battery construction / chemistry",
@@ -1701,6 +1682,12 @@
     "kind": "law",
     "ref": "Battery Waste Management Rules 2022: batteries marked with crossed-out wheeled bin symbol; producer EPR registration",
     "url": "https://thc.nic.in/Central%20Governmental%20Rules/Battery%20Waste%20Management%20Rules,%202022.pdf",
+    "verified": true
+   },
+   {
+    "kind": "shopify",
+    "ref": "Shopify product taxonomy, Vehicles & Parts (vp) category attributes",
+    "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/vp_vehicles_parts.yml",
     "verified": true
    }
   ]
@@ -1759,31 +1746,6 @@
     "ref": "Headphone/laptop listings",
     "url": null,
     "verified": false
-   }
-  ]
- },
- "battery_type": {
-  "label": "Battery Type",
-  "type": "enum",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [
-   "Lead Acid (Flooded)",
-   "SMF / VRLA",
-   "EFB",
-   "AGM",
-   "Lithium-ion"
-  ],
-  "open_values": false,
-  "description": "Starter / auxiliary battery chemistry",
-  "shopify_handle": "battery_type",
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "shopify",
-    "ref": "Shopify product taxonomy, Vehicles & Parts (vp) category attributes",
-    "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/vp_vehicles_parts.yml",
-    "verified": true
    }
   ]
  },
@@ -1903,7 +1865,6 @@
    "3 Star",
    "4 Star",
    "5 Star",
-   "Not rated",
    "Not Rated"
   ],
   "open_values": false,
@@ -2030,6 +1991,18 @@
     "ref": "Electronics and IT Goods (Requirement of Compulsory Registration) Order 2021 (supersedes 2012 Order) - BIS Scheme-II; label \"Self Declaration - Conforming to IS xxxx:yyyy, R-xxxxxxxx\"",
     "url": "https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-ii-registration-scheme",
     "verified": true
+   },
+   {
+    "kind": "bis",
+    "ref": "Electronics and IT Goods (Requirements for Compulsory Registration) Order 2021, S.O. 1248(E) dated 18 Mar 2021: notified goods must be BIS-registered and bear the Standard Mark with registration number (R-number)",
+    "url": "https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-ii-registration-scheme",
+    "verified": true
+   },
+   {
+    "kind": "regulator",
+    "ref": "MeitY/STPI surveillance of electronics & IT products under CRO 2021 (by BIS R-number)",
+    "url": "https://stpi.in/en/cro",
+    "verified": true
    }
   ]
  },
@@ -2115,87 +2088,6 @@
     "kind": "bis",
     "ref": "BIS: 10 steps for BIS toy certification (licence CM/L number, IS 9873 / IS 15644)",
     "url": "https://www.bis.gov.in/wp-content/uploads/2020/10/10-steps-for-BIS-toy-certification.pdf",
-    "verified": false
-   }
-  ]
- },
- "bis_registration_number": {
-  "label": "BIS Registration No. (R-number)",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "BIS CRS registration number shown with the Standard Mark on notified electronics (phones, laptops, chargers, power banks, LED TVs, CCTV, batteries...)",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "bis",
-    "ref": "Electronics and IT Goods (Requirements for Compulsory Registration) Order 2021, S.O. 1248(E) dated 18 Mar 2021: notified goods must be BIS-registered and bear the Standard Mark with registration number (R-number)",
-    "url": "https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-ii-registration-scheme",
-    "verified": true
-   },
-   {
-    "kind": "regulator",
-    "ref": "MeitY/STPI surveillance of electronics & IT products under CRO 2021 (by BIS R-number)",
-    "url": "https://stpi.in/en/cro",
-    "verified": true
-   }
-  ]
- },
- "bis_standard": {
-  "label": "Indian Standard (IS No.)",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "Indian Standard the product is certified to, e.g. IS 269, IS 1786, IS 694, IS 15633",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "bis",
-    "ref": "BIS Products under Compulsory Certification, Scheme-I (ISI mark) list incl. Cement (QC) Order 2003 S.O.191(E) and Electrical Wires, Cables, Appliances & Protection Devices & Accessories (QC) Order 2003 S.O.189(E)",
-    "url": "https://www.bis.gov.in/scheme-i-mark-scheme/",
-    "verified": true
-   },
-   {
-    "kind": "bis",
-    "ref": "Ministry of Steel parliamentary reply: steel QCOs cover 66 steel products incl. IS 1786 high-strength deformed bars (TMT)",
-    "url": "https://steel.gov.in/sites/default/files/2025-04/lu1212.pdf",
-    "verified": true
-   },
-   {
-    "kind": "bis",
-    "ref": "BIS product manual IS 15633 (passenger car tyres) under Pneumatic Tyres & Tubes QCO — ISI mark mandatory",
-    "url": "https://bis.gov.in/wp-content/uploads/2019/03/PM-IS-15633-Final.pdf",
-    "verified": true
-   }
-  ]
- },
- "bis_standard_mark": {
-  "label": "BIS Standard (ISI) Mark",
-  "type": "boolean",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "Product bears the BIS Standard Mark required by an applicable Quality Control Order",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "bis",
-    "ref": "Footwear made from Leather and other Materials (QC) Order 2024 S.O. 1421(E) and Footwear made from All Rubber and all Polymeric Material (QC) Order 2024 S.O. 1422(E), 15 Mar 2024: BIS Standard Mark compulsory from 1 Aug 2024 (MSE extensions apply)",
-    "url": "https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/footwear-qcos-all-you-need-to-know/",
-    "verified": true
-   },
-   {
-    "kind": "bis",
-    "ref": "Toys (Quality Control) Order 2020: BIS Standard Mark mandatory for toys (IS 9873 / IS 15644)",
-    "url": "https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/toys-quality-control-order/",
     "verified": false
    }
   ]
@@ -3602,20 +3494,7 @@
     "ref": "Architects Act 1972 s.37: prohibition against use of the title \"architect\" by persons not registered with Council of Architecture",
     "url": "https://www.indiacode.nic.in/bitstream/123456789/1690/1/A1972-20.pdf",
     "verified": true
-   }
-  ]
- },
- "coa_registration_number": {
-  "label": "Council of Architecture Reg. No.",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "CoA registration of the architect (required to use the title \"architect\")",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
+   },
    {
     "kind": "law",
     "ref": "Architects Act 1972, s.37: only registered architects (Council of Architecture) may use the title \"architect\"",
@@ -3741,7 +3620,7 @@
  },
  "colour": {
   "label": "Colour",
-  "type": "text",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -4123,18 +4002,12 @@
   "default_unit": null,
   "values": [
    "New",
-   "Refurbished",
-   "Used",
-   "Brand New Sealed",
    "Open Box",
-   "Refurbished Certified",
-   "Pre-Owned",
-   "Brand New OEM",
-   "Aftermarket New",
-   "Retreaded",
+   "Refurbished",
    "Used - Like New",
    "Used - Good",
-   "Used - Fair"
+   "Used - Fair",
+   "Retreaded"
   ],
   "open_values": false,
   "description": "Condition of the item",
@@ -4420,8 +4293,7 @@
    "Home Visit",
    "Online / Video",
    "Audio Call",
-   "Chat",
-   "In Clinic and Online"
+   "Chat"
   ],
   "open_values": false,
   "description": "How the service is delivered; fees often differ per mode",
@@ -4796,25 +4668,24 @@
    "USA",
    "Japan",
    "South Korea",
+   "Taiwan",
    "Germany",
    "Italy",
+   "France",
+   "Spain",
    "United Kingdom",
+   "Turkey",
    "UAE",
+   "Iran",
+   "Afghanistan",
    "Sri Lanka",
    "Bangladesh",
    "Nepal",
-   "Other",
-   "Afghanistan",
-   "Iran",
+   "Malaysia",
+   "Indonesia",
    "Australia",
    "New Zealand",
-   "Indonesia",
-   "Taiwan",
-   "France",
-   "UK",
-   "Spain",
-   "Malaysia",
-   "Turkey"
+   "Other"
   ],
   "open_values": true,
   "description": "[LISTING] Country of origin/manufacture/assembly. LM(PC) r.6(1) for imported packages, shown online via r.6(10); CP(E-Com) r.6(5)(d) for all goods sold on a marketplace; LM(PC) r.6(10A) (2026) requires a searchable/sortable origin filter for imported products -> filterable.",
@@ -5117,7 +4988,7 @@
   ]
  },
  "coverage_area": {
-  "label": "Coverage",
+  "label": "Mehendi Coverage",
   "type": "enum",
   "unit_family": null,
   "default_unit": null,
@@ -5139,6 +5010,31 @@
     "verified": false
    }
   ]
+ },
+ "coverage_sqft": {
+  "values": [],
+  "open_values": true,
+  "sources": [
+   {
+    "kind": "shopify",
+    "ref": "Shopify product taxonomy, Hardware (ha) category attributes (coverage)",
+    "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/ha_hardware.yml",
+    "verified": true
+   },
+   {
+    "kind": "industry",
+    "ref": "Split from R3 'coverage' (measure, sq ft) by review V1: the merged key 'coverage' kept the makeup enum (Sheer/Full)",
+    "url": null,
+    "verified": true
+   }
+  ],
+  "unit_family": "area",
+  "default_unit": "sq ft",
+  "description": "Area covered per unit sold: paint per litre per coat, tiles per box, sheets per piece",
+  "shopify_handle": null,
+  "ondc_attribute": null,
+  "label": "Coverage (sq ft per unit)",
+  "type": "measure"
  },
  "credit_terms": {
   "label": "Payment / Credit Terms",
@@ -5568,7 +5464,7 @@
  },
  "delivery_area": {
   "label": "Delivers To",
-  "type": "text",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -5691,14 +5587,10 @@
   "default_unit": null,
   "values": [
    "Early Morning (5–8 am)",
-   "Morning",
-   "Afternoon",
-   "Evening",
-   "Night",
-   "Morning (7-11)",
-   "Afternoon (11-3)",
-   "Evening (3-7)",
-   "Night (7-10)",
+   "Morning (8–11 am)",
+   "Afternoon (11 am–3 pm)",
+   "Evening (3–7 pm)",
+   "Night (7–10 pm)",
    "Midnight",
    "Fixed Time"
   ],
@@ -7934,10 +7826,8 @@
    "Metallic",
    "Creme",
    "Luminous",
-   "Matt",
    "Satin / Eggshell",
    "Silk / Soft Sheen",
-   "Gloss",
    "High Gloss",
    "Polished",
    "Honed",
@@ -8109,10 +7999,26 @@
  },
  "flavour": {
   "label": "Flavour",
-  "type": "text",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
+   "Plain / Unflavoured",
+   "Classic Salted",
+   "Masala",
+   "Chocolate",
+   "Vanilla",
+   "Strawberry",
+   "Mango",
+   "Butterscotch",
+   "Kesar Pista",
+   "Elaichi",
+   "Rose",
+   "Lemon",
+   "Orange",
+   "Mint",
+   "Coffee",
+   "Tomato",
    "Chicken",
    "Chicken & Rice",
    "Fish",
@@ -8321,11 +8227,8 @@
   "values": [
    "veg",
    "non-veg",
-   "vegan",
    "egg",
-   "Veg",
-   "Non-Veg",
-   "Egg"
+   "vegan"
   ],
   "open_values": false,
   "description": "[LISTING] Green dot (veg) / brown triangle (non-veg) declaration. FSS L&D reg.5 for packaged food (shown online before sale, reg.4(5)); menus of food service establishments reg.9 (text not fully confirmed). \"vegan\"/\"egg\" are platform values, not legal marks: egg-containing food is legally non-veg. Existing key.",
@@ -8500,7 +8403,7 @@
  },
  "fragrance": {
   "label": "Fragrance / Scent",
-  "type": "text",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -8646,7 +8549,6 @@
    "Wayfarer",
    "Hexagonal",
    "Clubmaster",
-   "Cat-Eye",
    "Oversized",
    "Sports"
   ],
@@ -9056,36 +8958,6 @@
    }
   ]
  },
- "garment_for": {
-  "label": "For",
-  "type": "enum",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [
-   "Men",
-   "Women",
-   "Kids",
-   "Unisex"
-  ],
-  "open_values": false,
-  "description": "Whose garments are stitched/altered",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "industry",
-    "ref": "Rquest existing form field key (catalog/attributes/inputs/existing_field_keys.json)",
-    "url": null,
-    "verified": true
-   },
-   {
-    "kind": "marketplace",
-    "ref": "Indian service marketplaces (Urban Company, Justdial) booking/listing fields",
-    "url": null,
-    "verified": false
-   }
-  ]
- },
  "garment_length": {
   "label": "Length",
   "type": "enum",
@@ -9233,15 +9105,11 @@
    "Women",
    "Unisex",
    "Kids",
-   "Separate Batches",
    "Boys",
    "Girls",
    "Infant",
-   "Boys / Men",
-   "Girls / Women",
-   "Co-living (Any)",
    "Co-ed",
-   "Everyone"
+   "Separate Batches"
   ],
   "open_values": false,
   "description": "Intended wearer",
@@ -9376,6 +9244,31 @@
     "verified": true
    }
   ]
+ },
+ "generic_medicine": {
+  "values": [],
+  "open_values": false,
+  "sources": [
+   {
+    "kind": "regulator",
+    "ref": "PMBJP Jan Aushadhi product list (local snapshot catalog/snapshots/jan-aushadhi, flag generic_medicine)",
+    "url": null,
+    "verified": true
+   },
+   {
+    "kind": "industry",
+    "ref": "Split by review V1: R1 'generic' (boolean) collided with R5 'generic' (common name, text) via alias generic_name",
+    "url": null,
+    "verified": true
+   }
+  ],
+  "unit_family": null,
+  "default_unit": null,
+  "description": "Sold under its generic name (e.g. Jan Aushadhi) rather than a brand",
+  "shopify_handle": null,
+  "ondc_attribute": null,
+  "label": "Generic Medicine",
+  "type": "boolean"
  },
  "genre": {
   "label": "Genre",
@@ -9856,17 +9749,13 @@
   "default_unit": "%",
   "values": [
    "0%",
+   "0.25%",
+   "3%",
    "5%",
    "12%",
    "18%",
    "28%",
-   "40%",
-   "0",
-   "5",
-   "12",
-   "18",
-   "28",
-   "40"
+   "40%"
   ],
   "open_values": true,
   "description": "Applicable GST slab for the item",
@@ -10000,7 +9889,7 @@
  },
  "guard_type": {
   "label": "Staff Category",
-  "type": "multi_enum",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -10689,20 +10578,7 @@
     "ref": "Chartered Accountants Act 1949 s.6: certificate of practice from ICAI Council required to practise",
     "url": "https://www.thc.nic.in/Central%20Governmental%20Acts/Chartered%20Accountants%20Act,%201949.pdf",
     "verified": true
-   }
-  ]
- },
- "icai_membership_number": {
-  "label": "ICAI Membership No.",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": false,
-  "description": "ICAI membership number of the CA",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
+   },
    {
     "kind": "regulator",
     "ref": "ICAI Council guidelines under Clauses (6)/(7) Part I First Schedule, Chartered Accountants Act 1949: member/firm websites may show name, membership no./FRN, services; fees charged and client names may not be given",
@@ -10990,13 +10866,19 @@
   "values": [
    "Indoor",
    "Outdoor",
-   "Both"
+   "Indoor & Outdoor"
   ],
   "open_values": false,
-  "description": "Covered or open",
-  "shopify_handle": null,
+  "description": "Placement",
+  "shopify_handle": "surveillance-camera-mounting-type",
   "ondc_attribute": null,
   "sources": [
+   {
+    "kind": "shopify",
+    "ref": "Shopify product taxonomy attribute 'surveillance-camera-mounting-type' (Surveillance Cameras)",
+    "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/attributes.yml",
+    "verified": true
+   },
    {
     "kind": "marketplace",
     "ref": "WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session",
@@ -11565,25 +11447,6 @@
    }
   ]
  },
- "irdai_licence_number": {
-  "label": "IRDAI Licence / Agency Code",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": false,
-  "description": "Insurance agent licence / agency code / broker or corporate-agent registration",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "regulator",
-    "ref": "Insurance Act 1938 s.42 (licence to act as insurance agent) and IRDAI (Appointment of Insurance Agents) Regulations 2016 — insurer allots agency code number",
-    "url": "https://financialservices.gov.in/beta/sites/default/files/2024-11/IRDAI%20(APPOINTMENT%20OF%20INSURANCE%20AGENTS)%20REGULATIONS,%202016.pdf",
-    "verified": true
-   }
-  ]
- },
  "irdai_registration_no": {
   "label": "IRDAI Registration / Licence No.",
   "type": "text",
@@ -11600,6 +11463,12 @@
     "ref": "IRDAI (Insurance Advertisements and Disclosure) Regulations 2021: advertisements to carry registered name, IRDAI registration number (regulations reported since replaced)",
     "url": "https://financialservices.gov.in/beta/sites/default/files/2022-12/70.%20IRDAI%20Insurance%20Advertisements%20and%20Disclosure%20Regulations%202021_0.pdf",
     "verified": false
+   },
+   {
+    "kind": "regulator",
+    "ref": "Insurance Act 1938 s.42 (licence to act as insurance agent) and IRDAI (Appointment of Insurance Agents) Regulations 2016 — insurer allots agency code number",
+    "url": "https://financialservices.gov.in/beta/sites/default/files/2024-11/IRDAI%20(APPOINTMENT%20OF%20INSURANCE%20AGENTS)%20REGULATIONS,%202016.pdf",
+    "verified": true
    }
   ]
  },
@@ -11624,6 +11493,24 @@
     "kind": "bis",
     "ref": "Electronics and IT Goods (Requirement of Compulsory Registration) Order 2021 (supersedes 2012 Order) - BIS Scheme-II; label \"Self Declaration - Conforming to IS xxxx:yyyy, R-xxxxxxxx\"",
     "url": "https://www.bis.gov.in/product-certification/products-under-compulsory-certification/scheme-ii-registration-scheme",
+    "verified": true
+   },
+   {
+    "kind": "bis",
+    "ref": "BIS Products under Compulsory Certification, Scheme-I (ISI mark) list incl. Cement (QC) Order 2003 S.O.191(E) and Electrical Wires, Cables, Appliances & Protection Devices & Accessories (QC) Order 2003 S.O.189(E)",
+    "url": "https://www.bis.gov.in/scheme-i-mark-scheme/",
+    "verified": true
+   },
+   {
+    "kind": "bis",
+    "ref": "Ministry of Steel parliamentary reply: steel QCOs cover 66 steel products incl. IS 1786 high-strength deformed bars (TMT)",
+    "url": "https://steel.gov.in/sites/default/files/2025-04/lu1212.pdf",
+    "verified": true
+   },
+   {
+    "kind": "bis",
+    "ref": "BIS product manual IS 15633 (passenger car tyres) under Pneumatic Tyres & Tubes QCO — ISI mark mandatory",
+    "url": "https://bis.gov.in/wp-content/uploads/2019/03/PM-IS-15633-Final.pdf",
     "verified": true
    }
   ]
@@ -11654,16 +11541,28 @@
   ]
  },
  "isi_marked": {
-  "label": "BIS / ISI Certified",
+  "label": "BIS Standard (ISI) Mark",
   "type": "boolean",
   "unit_family": null,
   "default_unit": null,
   "values": [],
   "open_values": true,
-  "description": "Product carries BIS Standard Mark (ISI) or CRS registration",
+  "description": "Product bears the BIS Standard Mark required by an applicable Quality Control Order",
   "shopify_handle": null,
   "ondc_attribute": null,
   "sources": [
+   {
+    "kind": "bis",
+    "ref": "Footwear made from Leather and other Materials (QC) Order 2024 S.O. 1421(E) and Footwear made from All Rubber and all Polymeric Material (QC) Order 2024 S.O. 1422(E), 15 Mar 2024: BIS Standard Mark compulsory from 1 Aug 2024 (MSE extensions apply)",
+    "url": "https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/footwear-qcos-all-you-need-to-know/",
+    "verified": true
+   },
+   {
+    "kind": "bis",
+    "ref": "Toys (Quality Control) Order 2020: BIS Standard Mark mandatory for toys (IS 9873 / IS 15644)",
+    "url": "https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/toys-quality-control-order/",
+    "verified": false
+   },
    {
     "kind": "bis",
     "ref": "BIS Products under Compulsory Certification, Scheme-I (ISI mark) list incl. Cement (QC) Order 2003 S.O.191(E) and Electrical Wires, Cables, Appliances & Protection Devices & Accessories (QC) Order 2003 S.O.189(E)",
@@ -12336,7 +12235,15 @@
    "Beginner",
    "Intermediate",
    "Advanced",
-   "All Levels"
+   "All Levels",
+   "Pre-Primary (LKG / UKG)",
+   "Primary (Class 1–5)",
+   "Middle (Class 6–8)",
+   "Secondary (Class 9–10)",
+   "Higher Secondary (Class 11–12)",
+   "Undergraduate",
+   "Postgraduate",
+   "Diploma / Certificate"
   ],
   "open_values": true,
   "description": "Difficulty level",
@@ -12389,7 +12296,7 @@
  },
  "licence_class": {
   "label": "Licence Class",
-  "type": "multi_enum",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -12957,49 +12864,6 @@
    }
   ]
  },
- "manufacture_date": {
-  "label": "Month & Year of Manufacture / Import",
-  "type": "date",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "Month and year in which the commodity was manufactured, packed or imported",
-  "shopify_handle": null,
-  "ondc_attribute": "month_year_of_manufacture_packing_import",
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations (manufacturer/packer/importer name & address, country of origin for imports, common/generic name, net quantity, month & year of manufacture/import, retail sale price, consumer care) and r.6(10) display of these declarations by e-commerce entities",
-    "url": "https://www.khaitanco.com/sites/default/files/2026-03/Legal%20Metrology%20%28Packaged%20Commodities%29%20Rules%202011.pdf",
-    "verified": true
-   },
-   {
-    "kind": "ondc",
-    "ref": "ONDC retail @ondc/org/statutory_reqs_packaged_commodities (manufacturer_or_packer_name/address, common_or_generic_name_of_commodity, net_quantity_or_measure_of_commodity_in_pkg, month_year_of_manufacture_packing_import)",
-    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/notes/on_search/on_search_Fashion.yaml",
-    "verified": true
-   },
-   {
-    "kind": "law",
-    "ref": "Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) declarations on every package: name & address of manufacturer/packer/importer, common or generic name, net quantity, month & year of manufacture/packing/import, retail sale price (MRP), consumer care details",
-    "url": "https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf",
-    "verified": true
-   },
-   {
-    "kind": "law",
-    "ref": "Legal Metrology (Packaged Commodities) Amendment Rules 2017: e-commerce entity must display r.6(1) declarations online (reported as r.6(10)); online display reportedly excludes date of manufacture/packing — sub-rule number and exception not confirmed against the gazette",
-    "url": "https://www.lkslaw.com/insights/articles/aiming-greater-transparency-on-sale-of-packaged-commodity-online",
-    "verified": false
-   },
-   {
-    "kind": "ondc",
-    "ref": "ONDC Retail API 1.2.5, item \"@ondc/org/statutory_reqs_packaged_commodities\" (manufacturer_or_packer_name/address, common_or_generic_name, net_quantity_or_measure_of_commodity_in_pkg, month_year_of_manufacture_packing_import) and \"@ondc/org/contact_details_consumer_care\"",
-    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/beckn_yaml.yaml",
-    "verified": true
-   }
-  ]
- },
  "manufacture_month_year": {
   "label": "Month & Year of Manufacture / Packing / Import",
   "type": "text",
@@ -13044,6 +12908,36 @@
    {
     "kind": "ondc",
     "ref": "ONDC RET B2C spec (draft-b2c-1.2.5), Item \"@ondc/org/statutory_reqs_packaged_commodities\" (manufacturer_or_packer_name/address, common_or_generic_name_of_commodity, net_quantity_or_measure_of_commodity_in_pkg, month_year_of_manufacture_packing_import, mfg_license_no, multiple_products_name_number_or_qty, expiry_date, imported_product_country_of_origin)",
+    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/beckn_yaml.yaml",
+    "verified": true
+   },
+   {
+    "kind": "law",
+    "ref": "Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations (manufacturer/packer/importer name & address, country of origin for imports, common/generic name, net quantity, month & year of manufacture/import, retail sale price, consumer care) and r.6(10) display of these declarations by e-commerce entities",
+    "url": "https://www.khaitanco.com/sites/default/files/2026-03/Legal%20Metrology%20%28Packaged%20Commodities%29%20Rules%202011.pdf",
+    "verified": true
+   },
+   {
+    "kind": "ondc",
+    "ref": "ONDC retail @ondc/org/statutory_reqs_packaged_commodities (manufacturer_or_packer_name/address, common_or_generic_name_of_commodity, net_quantity_or_measure_of_commodity_in_pkg, month_year_of_manufacture_packing_import)",
+    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/notes/on_search/on_search_Fashion.yaml",
+    "verified": true
+   },
+   {
+    "kind": "law",
+    "ref": "Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) declarations on every package: name & address of manufacturer/packer/importer, common or generic name, net quantity, month & year of manufacture/packing/import, retail sale price (MRP), consumer care details",
+    "url": "https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf",
+    "verified": true
+   },
+   {
+    "kind": "law",
+    "ref": "Legal Metrology (Packaged Commodities) Amendment Rules 2017: e-commerce entity must display r.6(1) declarations online (reported as r.6(10)); online display reportedly excludes date of manufacture/packing — sub-rule number and exception not confirmed against the gazette",
+    "url": "https://www.lkslaw.com/insights/articles/aiming-greater-transparency-on-sale-of-packaged-commodity-online",
+    "verified": false
+   },
+   {
+    "kind": "ondc",
+    "ref": "ONDC Retail API 1.2.5, item \"@ondc/org/statutory_reqs_packaged_commodities\" (manufacturer_or_packer_name/address, common_or_generic_name, net_quantity_or_measure_of_commodity_in_pkg, month_year_of_manufacture_packing_import) and \"@ondc/org/contact_details_consumer_care\"",
     "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/beckn_yaml.yaml",
     "verified": true
    },
@@ -13286,7 +13180,7 @@
  },
  "material": {
   "label": "Material",
-  "type": "text",
+  "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
@@ -13303,7 +13197,6 @@
    "Wood",
    "Glass",
    "Stainless Steel",
-   "Other",
    "Mild Steel",
    "Cast Iron",
    "Aluminium",
@@ -13330,7 +13223,6 @@
    "Cane / Rattan",
    "Bamboo",
    "Fabric",
-   "Leatherette",
    "Jute",
    "Wool",
    "Terracotta / Clay",
@@ -13339,7 +13231,8 @@
    "Plush",
    "Paper / Cardboard",
    "Foam",
-   "Steel"
+   "Steel",
+   "Other"
   ],
   "open_values": true,
   "description": "Main material (e.g. Nitrile, Latex, Aluminium, Zirconia)",
@@ -14126,13 +14019,12 @@
   "default_unit": null,
   "values": [
    "At Centre",
-   "Online / Live",
-   "At Home (Trainer Visits)",
-   "Outdoor / Park",
-   "Home Pickup",
    "Online",
    "Hybrid",
-   "Home Tuition"
+   "Home Tuition",
+   "At Home (Trainer Visits)",
+   "Outdoor / Park",
+   "Home Pickup"
   ],
   "open_values": false,
   "description": "Where classes happen",
@@ -14264,29 +14156,6 @@
     "kind": "shopify",
     "ref": "Shopify product taxonomy, Hardware (ha) category attributes",
     "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/ha_hardware.yml",
-    "verified": true
-   }
-  ]
- },
- "mounting": {
-  "label": "Indoor / Outdoor",
-  "type": "enum",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [
-   "Indoor",
-   "Outdoor",
-   "Indoor & Outdoor"
-  ],
-  "open_values": false,
-  "description": "Placement",
-  "shopify_handle": "surveillance-camera-mounting-type",
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "shopify",
-    "ref": "Shopify product taxonomy attribute 'surveillance-camera-mounting-type' (Surveillance Cameras)",
-    "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/attributes.yml",
     "verified": true
    }
   ]
@@ -14682,25 +14551,6 @@
     "ref": "Shopify product taxonomy, Home & Garden (hg) category attributes",
     "url": "https://github.com/Shopify/product-taxonomy/blob/main/data/categories/hg_home_garden.yml",
     "verified": true
-   }
-  ]
- },
- "nurse_registration_no": {
-  "label": "Nursing Council Registration No.",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "State Nursing Council registration of the nurse",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "Indian Nursing Council Act 1947 / State Nursing Council registration of nurses (ANM/GNM/B.Sc) – not confirmed in this research",
-    "url": null,
-    "verified": false
    }
   ]
  },
@@ -15380,7 +15230,7 @@
   ]
  },
  "package": {
-  "label": "Package / Plan",
+  "label": "Package",
   "type": "enum",
   "unit_family": null,
   "default_unit": null,
@@ -15388,13 +15238,21 @@
    "Basic",
    "Standard",
    "Premium",
+   "Luxury",
+   "Comprehensive",
    "Custom"
   ],
   "open_values": true,
-  "description": "Named package tier (each has its own price)",
+  "description": "Service or construction package tier",
   "shopify_handle": null,
   "ondc_attribute": null,
   "sources": [
+   {
+    "kind": "marketplace",
+    "ref": "Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned",
+    "url": "https://www.urbancompany.com/",
+    "verified": false
+   },
    {
     "kind": "marketplace",
     "ref": "Urban Company service listings (packages, duration, inclusions, cancellation/reschedule) — not fetched in this session",
@@ -15444,31 +15302,6 @@
     "ref": "Tata 1mg Labs test/package page: tests included count, sample type, fasting preparation, earliest reports in N hours, home sample collection",
     "url": "https://www.1mg.com/labs/test/master-health-checkup-silver-41870",
     "verified": true
-   }
-  ]
- },
- "package_tier": {
-  "label": "Package",
-  "type": "enum",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [
-   "Basic",
-   "Standard",
-   "Premium",
-   "Luxury",
-   "Comprehensive"
-  ],
-  "open_values": true,
-  "description": "Service or construction package tier",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "marketplace",
-    "ref": "Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned",
-    "url": "https://www.urbancompany.com/",
-    "verified": false
    }
   ]
  },
@@ -15891,11 +15724,9 @@
   "default_unit": null,
   "values": [
    "Original / OEM",
-   "OEM-Grade Compatible",
+   "OEM-Equivalent / Aftermarket",
    "Compatible",
    "Refurbished",
-   "Genuine OEM",
-   "OEM-Equivalent / Aftermarket",
    "Customer Supplied"
   ],
   "open_values": false,
@@ -16569,30 +16400,22 @@
   "values": [
    "Per Meal",
    "Per Session",
+   "Per Hour",
    "Per Day",
    "Weekly",
    "Monthly",
    "Quarterly",
    "Half-Yearly",
    "Yearly",
-   "1 Day",
    "7 Days",
    "28 Days",
    "56 Days",
    "84 Days",
-   "1 Month",
-   "3 Months",
-   "6 Months",
-   "12 Months",
    "One Time",
-   "Hourly",
-   "Daily",
-   "AMC (3 Visits/Year)",
-   "AMC (4 Visits/Year)",
-   "Half-yearly",
    "Per Term",
    "Full Course",
-   "One-time"
+   "AMC (3 Visits/Year)",
+   "AMC (4 Visits/Year)"
   ],
   "open_values": true,
   "description": "Billing/plan period; each period is a SKU",
@@ -17120,26 +16943,15 @@
   "unit_family": null,
   "default_unit": null,
   "values": [
-   "Battery",
-   "Rechargeable",
    "Mains (AC)",
-   "Manual / None",
-   "Corded Electric",
    "Rechargeable Battery",
-   "Replaceable Battery",
+   "Replaceable Battery (AA/AAA)",
    "Solar",
    "USB Powered",
-   "Gas",
-   "Manual",
-   "Battery (Cordless)",
-   "Pneumatic",
    "Petrol",
-   "LPG",
-   "PNG",
-   "Non-electric",
-   "Battery (AA/AAA)",
-   "Electric (Mains)",
-   "USB"
+   "Gas (LPG / PNG)",
+   "Pneumatic",
+   "Manual / Non-electric"
   ],
   "open_values": true,
   "description": "Power source of the device",
@@ -17187,31 +16999,6 @@
     "ref": "Toys (Quality Control) Order 2020 (DPIIT, under s.16 BIS Act 2016; in force 1 Jan 2021): toys for children up to 14 years must conform to IS 9873 (Parts 1,2,3,4,7,9) / IS 15644 (electric toys) and bear the ISI Standard Mark under a BIS licence",
     "url": "https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/toys-quality-control-order/",
     "verified": true
-   }
-  ]
- },
- "power_watts": {
-  "label": "Power Consumption / Output",
-  "type": "measure",
-  "unit_family": "power",
-  "default_unit": "W",
-  "values": [],
-  "open_values": true,
-  "description": "Rated power (appliance input, speaker output)",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "ondc",
-    "ref": "ONDC RET15 on_search example, item attribute / statutory field 'special_feature'",
-    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/examples/B2C-Scenarios/on_search/01_on_search_Appliances.yaml",
-    "verified": true
-   },
-   {
-    "kind": "marketplace",
-    "ref": "Appliance spec sheets",
-    "url": null,
-    "verified": false
    }
   ]
  },
@@ -17356,6 +17143,18 @@
     "kind": "regulator",
     "ref": "NMC Registered Medical Practitioner (Professional Conduct) Regulations 2023 – held in abeyance by NMC notice of 23 Aug 2023",
     "url": "https://www.nmc.org.in/rules-regulations/national-medical-commission-registered-medical-practitioner-professional-conduct-regulations-2023-reg/",
+    "verified": true
+   },
+   {
+    "kind": "law",
+    "ref": "Indian Nursing Council Act 1947 / State Nursing Council registration of nurses (ANM/GNM/B.Sc) – not confirmed in this research",
+    "url": null,
+    "verified": false
+   },
+   {
+    "kind": "law",
+    "ref": "Indian Veterinary Council Act 1984, s.30 — only a registered veterinary practitioner (State/Indian Veterinary Practitioners Register) may practise veterinary medicine / sign veterinary certificates",
+    "url": "https://animalhusbandry.punjab.gov.in/pages/ivca.htm",
     "verified": true
    }
   ]
@@ -17644,7 +17443,6 @@
    "Per Set",
    "Per Pair",
    "Per Hour",
-   "Package",
    "Per Job",
    "Per Point",
    "Per Sq Ft",
@@ -17654,10 +17452,8 @@
    "Per Trip",
    "Per Night",
    "Per Person",
-   "Per Kg",
    "Per kWh",
    "Per Litre",
-   "Lump Sum",
    "% of Project Cost",
    "Fixed Price",
    "Per Page",
@@ -17768,14 +17564,13 @@
   ]
  },
  "print_type": {
-  "label": "Print Colour",
+  "label": "Print Type",
   "type": "enum",
   "unit_family": null,
   "default_unit": null,
   "values": [
-   "Monochrome",
-   "Colour",
    "Black & White",
+   "Colour",
    "Flex / Banner",
    "Vinyl / Sticker",
    "Offset",
@@ -18424,6 +18219,7 @@
   "unit_family": null,
   "default_unit": null,
   "values": [
+   "9K (375)",
    "14K (585)",
    "18K (750)",
    "20K (833)",
@@ -18438,9 +18234,6 @@
    "Silver 970",
    "Silver 990",
    "Silver 999",
-   "9K (375)",
-   "Silver 958",
-   "Silver 925 (Sterling)",
    "Platinum 950",
    "Not Applicable"
   ],
@@ -18689,20 +18482,7 @@
     "ref": "RBI Act 1934 s.45-IA: no NBFI business without RBI certificate of registration (RBI FAQ)",
     "url": "https://rbi.org.in/scriptS/FAQDisplay.aspx?Id=92",
     "verified": true
-   }
-  ]
- },
- "rbi_registration_number": {
-  "label": "RBI CoR No. (NBFC)",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": false,
-  "description": "RBI certificate of registration number of the NBFC",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
+   },
    {
     "kind": "regulator",
     "ref": "RBI Act 1934 s.45-IA — no NBFC may carry on business without RBI Certificate of Registration; chit companies under Chit Funds Act 1982 are not NBFCs (RBI NBFC FAQ)",
@@ -19111,31 +18891,6 @@
    }
   ]
  },
- "rera_project_number": {
-  "label": "RERA Project Registration No.",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": true,
-  "description": "State RERA registration number of the project (with authority website)",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "Real Estate (Regulation and Development) Act 2016 — s.3 project registration, s.9/s.10 agent registration & registration number on every sale facilitated, s.11(2) advertisements must show RERA website & project registration number",
-    "url": "https://www.indiacode.nic.in/bitstream/123456789/19012/1/reraact.pdf",
-    "verified": true
-   },
-   {
-    "kind": "regulator",
-    "ref": "AP RERA advertisement guidelines (registration number on every advertisement)",
-    "url": "https://rera.ap.gov.in/RERA/Views/AdvertisementGuidelines.aspx",
-    "verified": true
-   }
-  ]
- },
  "rera_project_registration_no": {
   "label": "RERA Project Registration No.",
   "type": "text",
@@ -19158,6 +18913,18 @@
     "ref": "AP RERA advertisement guidelines (state example of registration number in advertisements)",
     "url": "https://rera.ap.gov.in/RERA/Views/AdvertisementGuidelines.aspx",
     "verified": false
+   },
+   {
+    "kind": "law",
+    "ref": "Real Estate (Regulation and Development) Act 2016 — s.3 project registration, s.9/s.10 agent registration & registration number on every sale facilitated, s.11(2) advertisements must show RERA website & project registration number",
+    "url": "https://www.indiacode.nic.in/bitstream/123456789/19012/1/reraact.pdf",
+    "verified": true
+   },
+   {
+    "kind": "regulator",
+    "ref": "AP RERA advertisement guidelines (registration number on every advertisement)",
+    "url": "https://rera.ap.gov.in/RERA/Views/AdvertisementGuidelines.aspx",
+    "verified": true
    }
   ]
  },
@@ -20062,6 +19829,12 @@
     "ref": "Urban Company salon for women/men",
     "url": null,
     "verified": false
+   },
+   {
+    "kind": "marketplace",
+    "ref": "Indian service marketplaces (Urban Company, Justdial) booking/listing fields",
+    "url": null,
+    "verified": false
    }
   ]
  },
@@ -20192,25 +19965,6 @@
     "ref": "Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned",
     "url": "https://www.urbancompany.com/",
     "verified": false
-   }
-  ]
- },
- "serving_size": {
-  "label": "Serving Size",
-  "type": "measure",
-  "unit_family": "mass",
-  "default_unit": "g",
-  "values": [],
-  "open_values": true,
-  "description": "Serving size (g or ml) the calorie value refers to",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "FSS (Labelling and Display) Regulations 2020, reg.9(1): food service establishments with Central licence or outlets at 10+ locations must show calorific value (kcal per serving and serving size) on menus; reg.9 also covers allergen info and veg/non-veg logo on menus (exact 9(2) wording not confirmed)",
-    "url": "https://fssai.gov.in/upload/uploadfiles/files/FAQ-%20Display%20of%20Information.pdf",
-    "verified": true
    }
   ]
  },
@@ -20553,9 +20307,6 @@
    "12 Hours – Day",
    "12 Hours – Night",
    "24 Hours (Live-in)",
-   "8-hour",
-   "12-hour",
-   "24x7",
    "Event-based"
   ],
   "open_values": true,
@@ -20645,16 +20396,13 @@
   "unit_family": null,
   "default_unit": null,
   "values": [
+   "XXS",
    "XS",
    "S",
    "M",
    "L",
    "XL",
    "XXL",
-   "Universal / Free Size",
-   "Paediatric",
-   "Adult",
-   "XXS",
    "3XL",
    "4XL",
    "5XL",
@@ -20679,6 +20427,8 @@
    "IND-10",
    "IND-11",
    "IND-12",
+   "Paediatric",
+   "Adult",
    "Single",
    "Double",
    "Queen",
@@ -21153,6 +20903,7 @@
    "Per kg",
    "Per 500 g",
    "Per 250 g",
+   "Per 100 g",
    "Per Piece",
    "Per Bunch",
    "Per Dozen",
@@ -21162,7 +20913,6 @@
    "Per Set",
    "Per Box",
    "Per Bag",
-   "Per Kg",
    "Per Tonne",
    "Per Coil",
    "Per Sq Ft",
@@ -21172,7 +20922,6 @@
    "Per Brass",
    "Per Truck Load",
    "Per Muzham (Cubit)",
-   "Per 100 g",
    "Per Arrangement"
   ],
   "open_values": true,
@@ -24135,25 +23884,6 @@
    }
   ]
  },
- "vci_registration_number": {
-  "label": "Veterinary Registration No.",
-  "type": "text",
-  "unit_family": null,
-  "default_unit": null,
-  "values": [],
-  "open_values": false,
-  "description": "Registration number on the State/Indian Veterinary Practitioners Register",
-  "shopify_handle": null,
-  "ondc_attribute": null,
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "Indian Veterinary Council Act 1984, s.30 — only a registered veterinary practitioner (State/Indian Veterinary Practitioners Register) may practise veterinary medicine / sign veterinary certificates",
-    "url": "https://animalhusbandry.punjab.gov.in/pages/ivca.htm",
-    "verified": true
-   }
-  ]
- },
  "veg_only": {
   "label": "Veg Food Only",
   "type": "boolean",
@@ -24305,12 +24035,6 @@
    "2-Wheeler (Bike/Scooter)",
    "3-Wheeler (Auto)",
    "4-Wheeler (Car/SUV)",
-   "Commercial / Truck",
-   "Tractor",
-   "Bicycle",
-   "Universal",
-   "Bike",
-   "Auto",
    "Car (Hatchback / Sedan)",
    "SUV / MUV",
    "Tempo Traveller",
@@ -24318,6 +24042,10 @@
    "Truck (14–32 ft)",
    "Container",
    "Bus / Van",
+   "Commercial / Truck",
+   "Tractor",
+   "Bicycle",
+   "Universal",
    "Not Applicable"
   ],
   "open_values": true,
@@ -24666,21 +24394,39 @@
    }
   ]
  },
- "warranty_months": {
-  "label": "Warranty (Months)",
-  "type": "number",
-  "unit_family": null,
+ "warranty_period": {
+  "label": "Warranty / Guarantee",
+  "type": "measure",
+  "unit_family": "duration",
   "default_unit": "month",
   "values": [],
   "open_values": true,
-  "description": "Manufacturer warranty",
+  "description": "[LISTING] Guarantee/warranty offered (period, by whom: manufacturer/seller). CP(E-Com) r.6(5)(i) \"any relevant guarantees or warranties\"; declare 0 / \"No warranty\" if none. Existing key (alias warranty_months).",
   "shopify_handle": null,
   "ondc_attribute": "warranty",
   "sources": [
    {
+    "kind": "law",
+    "ref": "Consumer Protection (E-Commerce) Rules 2020, r.6(5): marketplace seller must provide for display: total price with break-up, mandatory notices incl. expiry date, country of origin, grievance officer, importer details, return/refund/exchange terms, warranties",
+    "url": "https://www.consumerprotection.in/rule-6-duties-of-sellers-on-marketplace/",
+    "verified": true
+   },
+   {
     "kind": "industry",
     "ref": "Rquest current form field (inputs/sub_categories.json current_form_fields / existing_field_keys.json)",
     "url": "https://github.com/ravikiran-pro/rquest",
+    "verified": true
+   },
+   {
+    "kind": "ondc",
+    "ref": "ONDC RET14 on_search example, item.tags.attribute 'warranty'",
+    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/examples/B2C-Scenarios/on_search/08_on_search_electronics_bpp_collecting.yaml",
+    "verified": true
+   },
+   {
+    "kind": "ondc",
+    "ref": "ONDC RET12 fashion catalogue attributes, attribute 'warranty'",
+    "url": "https://github.com/ONDC-Official/protocol-network-extension/blob/main/enums/retail/fashion/fashion_catalogs_with_attributes.json",
     "verified": true
    },
    {
@@ -24706,37 +24452,6 @@
     "ref": "Amazon.in category refinements (brand, age, binding, language, pack size …) — not fetched in this session",
     "url": "https://www.amazon.in/",
     "verified": false
-   }
-  ]
- },
- "warranty_period": {
-  "label": "Warranty / Guarantee",
-  "type": "measure",
-  "unit_family": "duration",
-  "default_unit": "month",
-  "values": [],
-  "open_values": true,
-  "description": "[LISTING] Guarantee/warranty offered (period, by whom: manufacturer/seller). CP(E-Com) r.6(5)(i) \"any relevant guarantees or warranties\"; declare 0 / \"No warranty\" if none. Existing key (alias warranty_months).",
-  "shopify_handle": null,
-  "ondc_attribute": "warranty",
-  "sources": [
-   {
-    "kind": "law",
-    "ref": "Consumer Protection (E-Commerce) Rules 2020, r.6(5): marketplace seller must provide for display: total price with break-up, mandatory notices incl. expiry date, country of origin, grievance officer, importer details, return/refund/exchange terms, warranties",
-    "url": "https://www.consumerprotection.in/rule-6-duties-of-sellers-on-marketplace/",
-    "verified": true
-   },
-   {
-    "kind": "ondc",
-    "ref": "ONDC RET14 on_search example, item.tags.attribute 'warranty'",
-    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/examples/B2C-Scenarios/on_search/08_on_search_electronics_bpp_collecting.yaml",
-    "verified": true
-   },
-   {
-    "kind": "ondc",
-    "ref": "ONDC RET12 fashion catalogue attributes, attribute 'warranty'",
-    "url": "https://github.com/ONDC-Official/protocol-network-extension/blob/main/enums/retail/fashion/fashion_catalogs_with_attributes.json",
-    "verified": true
    }
   ]
  },
@@ -24916,16 +24631,28 @@
   ]
  },
  "wattage": {
-  "label": "Wattage",
+  "label": "Power Consumption / Output",
   "type": "measure",
   "unit_family": "power",
   "default_unit": "W",
   "values": [],
   "open_values": true,
-  "description": "Rated power consumption / output",
+  "description": "Rated power (appliance input, speaker output)",
   "shopify_handle": null,
   "ondc_attribute": null,
   "sources": [
+   {
+    "kind": "ondc",
+    "ref": "ONDC RET15 on_search example, item attribute / statutory field 'special_feature'",
+    "url": "https://github.com/ONDC-Official/ONDC-RET-Specifications/blob/draft-b2c-1.2.5/api/components/examples/B2C-Scenarios/on_search/01_on_search_Appliances.yaml",
+    "verified": true
+   },
+   {
+    "kind": "marketplace",
+    "ref": "Appliance spec sheets",
+    "url": null,
+    "verified": false
+   },
    {
     "kind": "shopify",
     "ref": "Shopify product taxonomy, Home & Garden (hg) category attributes",

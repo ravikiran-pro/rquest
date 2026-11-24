@@ -116,6 +116,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -486,6 +487,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -1063,6 +1065,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -1539,7 +1542,6 @@
   "applies_to": "food",
   "variant_axes": [
    "weight",
-   "food_type",
    "flavour"
   ],
   "variant_notes": "Cakes: weight (0.5/1/2 kg) × Egg/Eggless, then flavour if one listing covers several. Packed bread/biscuits use pack_size with GTIN/MRP instead.",
@@ -1547,9 +1549,9 @@
    "food_type",
    "ingredients",
    "allergens",
-   "nutrition_info",
-   "storage_instructions",
-   "expiry_date"
+   "expiry_date",
+   "weight",
+   "flavour"
   ],
   "basic_form_reason": "Veg/egg mark plus the three choices buyers make for cakes",
   "attributes": [
@@ -1655,11 +1657,12 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Gluten, milk, eggs, nuts are common"
    },
    {
     "key": "nutrition_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
@@ -1675,7 +1678,7 @@
    },
    {
     "key": "storage_instructions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": true,
@@ -1823,10 +1826,8 @@
    "food_type",
    "ingredients",
    "allergens",
-   "nutrition_info",
-   "storage_instructions",
-   "expiry_date",
-   "shelf_life_days"
+   "shelf_life_days",
+   "weight"
   ],
   "basic_form_reason": "Statutory best-before input + the ghee question buyers ask",
   "attributes": [
@@ -1932,11 +1933,12 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Nuts, milk, gluten"
    },
    {
     "key": "nutrition_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
@@ -1952,7 +1954,7 @@
    },
    {
     "key": "storage_instructions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": true,
@@ -1969,7 +1971,7 @@
    },
    {
     "key": "expiry_date",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
@@ -2059,8 +2061,9 @@
   "variant_notes": "Pack size has its own MRP/GTIN; loose stock uses sold_by. Grade can be a second axis for loose nuts.",
   "basic_form": [
    "expiry_date",
-   "pack_size",
+   "brand",
    "product_form",
+   "pack_size",
    "grade"
   ],
   "basic_form_reason": "Loose-first trade: form and grade matter more than brand",
@@ -2167,6 +2170,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -2496,6 +2500,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -2810,6 +2815,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": null
    },
    {
@@ -3195,8 +3201,9 @@
   "basic_form": [
    "expiry_date",
    "age_restricted",
-   "variant",
-   "tobacco_product"
+   "paan_type",
+   "tobacco_product",
+   "variant"
   ],
   "basic_form_reason": "Variant + the tobacco flag that gates age checks",
   "attributes": [
@@ -3302,6 +3309,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": null
    },
    {
@@ -3419,10 +3427,9 @@
   "variant_notes": "Portions (Half/Full, Regular/Large) are SKUs with their own price; add-ons and spice choice are customisations, not axes. Calories/serves are per portion.",
   "basic_form": [
    "food_type",
-   "calorie_kcal_per_serving",
-   "portion_info",
    "allergens",
    "course",
+   "spice_level",
    "portion_size"
   ],
   "basic_form_reason": "Veg mark is statutory; course + portion + spice are the menu essentials",
@@ -3437,7 +3444,7 @@
    },
    {
     "key": "calorie_kcal_per_serving",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3445,7 +3452,7 @@
    },
    {
     "key": "portion_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3457,15 +3464,8 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
-   },
-   {
-    "key": "generic",
-    "level": "statutory",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "LM(PC) r.26(b): restaurant-packed fast food exempt; only resold pre-packed items (bottled drinks, chips) carry LM(PC) declarations"
    },
    {
     "key": "hsn_code",
@@ -3530,14 +3530,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "serving_size",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Needed alongside calories"
    },
    {
     "key": "ingredients",
@@ -3589,8 +3581,6 @@
   "variant_notes": "Regular/Medium/Large (pizza 7\"/10\"/12\", burger single/double) are SKUs; toppings via addon_groups.",
   "basic_form": [
    "food_type",
-   "calorie_kcal_per_serving",
-   "portion_info",
    "allergens",
    "course",
    "portion_size"
@@ -3607,7 +3597,7 @@
    },
    {
     "key": "calorie_kcal_per_serving",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3615,7 +3605,7 @@
    },
    {
     "key": "portion_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3627,15 +3617,8 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
-   },
-   {
-    "key": "generic",
-    "level": "statutory",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "LM(PC) r.26(b): restaurant-packed fast food exempt; only resold pre-packed items (bottled drinks, chips) carry LM(PC) declarations"
    },
    {
     "key": "hsn_code",
@@ -3702,14 +3685,6 @@
     "note": null
    },
    {
-    "key": "serving_size",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Needed alongside calories"
-   },
-   {
     "key": "ingredients",
     "level": "optional",
     "owner": "store",
@@ -3759,8 +3734,6 @@
   "variant_notes": "Cup size (Small/Regular/Large) is the axis; milk and sugar options are customisations.",
   "basic_form": [
    "food_type",
-   "calorie_kcal_per_serving",
-   "portion_info",
    "allergens",
    "course",
    "portion_size"
@@ -3777,7 +3750,7 @@
    },
    {
     "key": "calorie_kcal_per_serving",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3785,7 +3758,7 @@
    },
    {
     "key": "portion_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3797,15 +3770,8 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
-   },
-   {
-    "key": "generic",
-    "level": "statutory",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "LM(PC) r.26(b): restaurant-packed fast food exempt; only resold pre-packed items (bottled drinks, chips) carry LM(PC) declarations"
    },
    {
     "key": "hsn_code",
@@ -3862,14 +3828,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "serving_size",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Needed alongside calories"
    },
    {
     "key": "ingredients",
@@ -3961,10 +3919,10 @@
   "variant_notes": "Scoops/cup/tub sizes or glass sizes are SKUs; packaged tubs from brands use pack_size + GTIN + MRP.",
   "basic_form": [
    "food_type",
-   "calorie_kcal_per_serving",
-   "portion_info",
    "allergens",
    "expiry_date",
+   "frozen_dessert_type",
+   "flavour",
    "portion_size"
   ],
   "basic_form_reason": "Flavour and size are the choice; veg/egg mark statutory",
@@ -3979,7 +3937,7 @@
    },
    {
     "key": "calorie_kcal_per_serving",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3987,7 +3945,7 @@
    },
    {
     "key": "portion_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -3999,6 +3957,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
    },
    {
@@ -4139,14 +4098,6 @@
     "note": "Jain / Satvik / Vegan / No onion-garlic flags buyers filter on"
    },
    {
-    "key": "serving_size",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Needed alongside calories"
-   },
-   {
     "key": "ingredients",
     "level": "optional",
     "owner": "store",
@@ -4261,11 +4212,11 @@
   "variant_notes": "Plan (per meal / weekly / monthly) × meal size are SKUs; meal slot is a multi-select on the plan, not an axis.",
   "basic_form": [
    "food_type",
-   "calorie_kcal_per_serving",
-   "portion_info",
    "allergens",
+   "meal_slot",
+   "cuisine",
    "plan_period",
-   "meal_slot"
+   "portion_size"
   ],
   "basic_form_reason": "What you get, when, and for how long",
   "attributes": [
@@ -4279,7 +4230,7 @@
    },
    {
     "key": "calorie_kcal_per_serving",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": true,
     "filterable": false,
@@ -4287,7 +4238,7 @@
    },
    {
     "key": "portion_info",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
@@ -4299,6 +4250,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
    },
    {
@@ -4450,8 +4402,8 @@
    "allergens",
    "cuisine",
    "min_order_plates",
-   "advance_booking_days",
-   "service_style"
+   "service_style",
+   "variant"
   ],
   "basic_form_reason": "Enough to quote a per-plate order",
   "attributes": [
@@ -4469,6 +4421,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "menu allergen info (reg.9, not confirmed)"
    },
    {
@@ -4600,7 +4553,7 @@
     "note": null
    },
    {
-    "key": "advance_payment_percent",
+    "key": "advance_payment",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -4741,6 +4694,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "Allergen declaration for pre-packaged food (FSS L&D Regs 2020)"
    },
    {
@@ -5201,6 +5155,14 @@
     "per_variant": true,
     "filterable": false,
     "note": null
+   },
+   {
+    "key": "generic_medicine",
+    "level": "optional",
+    "owner": "catalog",
+    "per_variant": false,
+    "filterable": true,
+    "note": null
    }
   ]
  },
@@ -5404,14 +5366,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "Strips, cuffs, filters"
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    },
    {
     "key": "age_group",
@@ -5702,14 +5656,6 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
-    "note": null
-   },
-   {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
     "note": null
    },
    {
@@ -7005,10 +6951,12 @@
   ],
   "variant_notes": "Price = caregiver type × shift × billing period (per day / weekly / monthly).",
   "basic_form": [
+   "care_services",
+   "service_area",
+   "background_verified",
    "caregiver_type",
    "shift",
-   "plan_period",
-   "service_area"
+   "plan_period"
   ],
   "basic_form_reason": "Who, how long per day, billing plan, where",
   "attributes": [
@@ -7099,14 +7047,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "nurse_registration_no",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Nursing Council registration for nurses – unverified"
    },
    {
     "key": "background_verified",
@@ -7586,13 +7526,13 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -7823,14 +7763,6 @@
     "note": "Style / article number"
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
@@ -7939,7 +7871,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -8136,7 +8068,7 @@
     "note": null
    },
    {
-    "key": "bis_standard_mark",
+    "key": "isi_marked",
     "level": "recommended",
     "owner": "catalog",
     "per_variant": false,
@@ -8158,14 +8090,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -8276,13 +8200,13 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -8495,14 +8419,6 @@
     "per_variant": true,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -8840,13 +8756,13 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -9085,20 +9001,12 @@
     "note": null
    },
    {
-    "key": "bis_registration_number",
+    "key": "bis_crs_registration_no",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
     "filterable": false,
     "note": "Smart watches fall under CRS (R-number marked on product)"
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -9121,9 +9029,9 @@
  "kids_baby": {
   "applies_to": "product",
   "variant_axes": [
-   "age_group",
    "size",
-   "colour"
+   "colour",
+   "pack_count"
   ],
   "variant_notes": "Kidswear varies by age-size and colour; diapers by size and pack count (each pack count has its own MRP and GTIN). Baby food is RET10/food scope and should use the food attribute set.",
   "basic_form": [
@@ -9131,6 +9039,7 @@
    "product_type",
    "age_group",
    "gender",
+   "size",
    "colour"
   ],
   "basic_form_reason": "Parents shop by product type, child's age and gender; colour picks the SKU.",
@@ -9211,7 +9120,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -9237,6 +9146,7 @@
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": null
    },
    {
@@ -9457,7 +9367,7 @@
     "note": "Toys"
    },
    {
-    "key": "bis_standard_mark",
+    "key": "isi_marked",
     "level": "recommended",
     "owner": "catalog",
     "per_variant": false,
@@ -9495,14 +9405,6 @@
     "per_variant": true,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -9614,7 +9516,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -9696,14 +9598,6 @@
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
     "filterable": false,
     "note": null
    },
@@ -9994,7 +9888,7 @@
   "applies_to": "service",
   "variant_axes": [
    "service_for",
-   "package_includes"
+   "package"
   ],
   "variant_notes": "Variants are mostly product tier (e.g. regular vs premium wax/facial brand) and full vs half (arms/legs); model as service options with own price.",
   "basic_form": [
@@ -10073,7 +9967,7 @@
     "key": "package_includes",
     "level": "optional",
     "owner": "store",
-    "per_variant": true,
+    "per_variant": false,
     "filterable": false,
     "note": null
    },
@@ -10132,6 +10026,14 @@
     "per_variant": false,
     "filterable": false,
     "note": "Facials by skin type"
+   },
+   {
+    "key": "package",
+    "level": "optional",
+    "owner": "store",
+    "per_variant": true,
+    "filterable": false,
+    "note": null
    }
   ]
  },
@@ -10315,13 +10217,12 @@
  "tailor": {
   "applies_to": "service",
   "variant_axes": [
-   "delivery_speed",
-   "lining_included"
+   "delivery_speed"
   ],
   "variant_notes": "Same stitching job priced by turnaround (standard/express) and by finish (simple, lined, padded, designer).",
   "basic_form": [
    "service_type",
-   "garment_for",
+   "service_for",
    "delivery_days",
    "service_mode"
   ],
@@ -10344,7 +10245,7 @@
     "note": "Blouse stitching, kurta/suit stitching, shirt/pant stitching, alteration, fall & pico, embroidery, uniform, lehenga stitching"
    },
    {
-    "key": "garment_for",
+    "key": "service_for",
     "level": "required",
     "owner": "store",
     "per_variant": false,
@@ -10653,13 +10554,13 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -10803,14 +10704,6 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
@@ -10921,7 +10814,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -11182,28 +11075,12 @@
     "note": null
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Phones, chargers, power banks, smart watches are CRS-notified; R-number must be on the product"
-   },
-   {
     "key": "warranty_type",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -11234,7 +11111,8 @@
    "product_type",
    "brand",
    "model_number",
-   "condition"
+   "screen_size",
+   "colour"
   ],
   "basic_form_reason": "Type, brand and model identify the product; condition matters for open-box/used.",
   "attributes": [
@@ -11314,7 +11192,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -11503,7 +11381,7 @@
     "note": null
    },
    {
-    "key": "power_watts",
+    "key": "wattage",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -11551,14 +11429,6 @@
     "note": null
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "LED TVs, audio/video equipment, set-top boxes are CRS-notified"
-   },
-   {
     "key": "special_feature",
     "level": "optional",
     "owner": "catalog",
@@ -11597,14 +11467,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -11717,7 +11579,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -11978,14 +11840,6 @@
     "note": null
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Laptops, desktops, monitors, printers, keyboards, adapters are CRS-notified"
-   },
-   {
     "key": "bee_star_rating",
     "level": "optional",
     "owner": "catalog",
@@ -12018,14 +11872,6 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
@@ -12055,8 +11901,7 @@
    "product_type",
    "brand",
    "model_number",
-   "warranty_period",
-   "condition"
+   "warranty_period"
   ],
   "basic_form_reason": "Type, brand and model identify the appliance (capacity and star rating come from the model); warranty and condition differ per shop.",
   "attributes": [
@@ -12136,7 +11981,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -12174,7 +12019,7 @@
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -12341,7 +12186,7 @@
     "note": null
    },
    {
-    "key": "power_watts",
+    "key": "wattage",
     "level": "recommended",
     "owner": "catalog",
     "per_variant": false,
@@ -12421,7 +12266,7 @@
     "note": null
    },
    {
-    "key": "bis_standard_mark",
+    "key": "isi_marked",
     "level": "recommended",
     "owner": "catalog",
     "per_variant": false,
@@ -12443,14 +12288,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -12482,8 +12319,7 @@
    "product_type",
    "brand",
    "model_number",
-   "warranty_period",
-   "condition"
+   "warranty_period"
   ],
   "basic_form_reason": "Type, brand and model carry the capacity specs; warranty is the main decision point for batteries.",
   "attributes": [
@@ -12563,7 +12399,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -12744,14 +12580,6 @@
     "note": "BWMR: producer EPR registration (QR on battery per 2025 amendment, unverified)"
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Lithium cells/packs, UPS/inverters and solar PV modules are under BIS CRS"
-   },
-   {
     "key": "bee_star_rating",
     "level": "optional",
     "owner": "catalog",
@@ -12760,7 +12588,7 @@
     "note": "Grid-connected solar inverters reported in 2026 BEE mandatory list (unverified)"
    },
    {
-    "key": "power_watts",
+    "key": "wattage",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -12774,14 +12602,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -12893,7 +12713,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -13010,7 +12830,7 @@
     "note": null
    },
    {
-    "key": "mounting",
+    "key": "indoor_outdoor",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -13082,28 +12902,12 @@
     "note": null
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "CCTV cameras/DVR/NVR are CRS-notified"
-   },
-   {
     "key": "warranty_type",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -13144,6 +12948,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "declare workmanship warranty if offered"
    },
    {
@@ -13422,8 +13227,7 @@
   "basic_form": [
    "product_type",
    "brand",
-   "model_number",
-   "condition"
+   "model_number"
   ],
   "basic_form_reason": "Type, brand, model and condition are the minimum for any electronics listing.",
   "attributes": [
@@ -13503,7 +13307,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -13596,7 +13400,7 @@
     "note": null
    },
    {
-    "key": "power_watts",
+    "key": "wattage",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -13668,14 +13472,6 @@
     "note": "Statutory only if the product type is BEE-notified"
    },
    {
-    "key": "bis_registration_number",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "If CRS-notified"
-   },
-   {
     "key": "colour_code",
     "level": "optional",
     "owner": "catalog",
@@ -13690,14 +13486,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package by LM r.6(1); whether it must be shown online is unconfirmed (see open_questions)"
    },
    {
     "key": "gtin",
@@ -13809,7 +13597,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -13831,7 +13619,7 @@
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -14022,28 +13810,12 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "isi_marked",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -14148,7 +13920,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -14377,36 +14149,12 @@
     "note": "Wires/cables (IS 694), switches (IS 3854), MCBs (IS 8828) under Electrical QCO 2003; LED lamps under CRS (IS 16102)"
    },
    {
-    "key": "bis_standard",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "sold_by",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": "Per coil / per metre / per piece"
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -14510,7 +14258,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -14532,7 +14280,7 @@
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -14691,22 +14439,6 @@
     "note": "Vitreous sanitaryware under Ceramic Tiles, Sanitary Wares & Laboratory Wares QCO 2023; pipe/tap QCO coverage not confirmed"
    },
    {
-    "key": "bis_standard",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "installation_included",
     "level": "optional",
     "owner": "store",
@@ -14721,14 +14453,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -14834,7 +14558,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -14928,14 +14652,6 @@
     "note": null
    },
    {
-    "key": "coverage",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "sq ft per litre per coat"
-   },
-   {
     "key": "drying_time",
     "level": "optional",
     "owner": "catalog",
@@ -14968,7 +14684,7 @@
     "note": null
    },
    {
-    "key": "warranty_months",
+    "key": "warranty_period",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -15000,20 +14716,20 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
     "note": "Separate barcode per pack size / colour SKU"
+   },
+   {
+    "key": "coverage_sqft",
+    "level": "recommended",
+    "owner": "catalog",
+    "per_variant": false,
+    "filterable": false,
+    "note": null
    }
   ]
  },
@@ -15131,7 +14847,7 @@
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -15202,22 +14918,6 @@
     "note": "Cement under Cement (QC) Order 2003; TMT bars IS 1786 under Steel QCO"
    },
    {
-    "key": "bis_standard",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "IS 269 (OPC), IS 1489 (PPC), IS 455 (PSC), IS 1786 (TMT)"
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Week/month of packing matters for cement strength"
-   },
-   {
     "key": "batch_no",
     "level": "optional",
     "owner": "store",
@@ -15264,14 +14964,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    }
   ]
  },
@@ -15285,10 +14977,11 @@
   "variant_notes": "Tiles: size × finish × design; plywood: thickness × grade (8×4 sheet). Price per sq ft and per box/sheet; separate MRP per SKU.",
   "basic_form": [
    "product_type",
+   "brand",
+   "sold_by",
    "dimensions",
    "thickness",
-   "finish",
-   "sold_by"
+   "finish"
   ],
   "basic_form_reason": "Size, thickness and finish are how tiles and boards are chosen; selling unit avoids per-sq-ft vs per-box confusion.",
   "attributes": [
@@ -15368,7 +15061,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -15390,7 +15083,7 @@
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": true,
@@ -15517,28 +15210,12 @@
     "note": null
    },
    {
-    "key": "coverage",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": "sq ft per box"
-   },
-   {
     "key": "isi_marked",
     "level": "statutory",
     "owner": "catalog",
     "per_variant": false,
     "filterable": true,
     "note": "Ceramic/vitrified tiles under Ceramic Tiles QCO 2023 (IS 15622/IS 13630); plywood IS 303 under Plywood QCO 2024 (implementation date unconfirmed)"
-   },
-   {
-    "key": "bis_standard",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    },
    {
     "key": "batch_no",
@@ -15557,7 +15234,7 @@
     "note": "Per sq ft, per box, per sheet, per running ft"
    },
    {
-    "key": "warranty_months",
+    "key": "warranty_period",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -15573,20 +15250,20 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
     "note": "Separate barcode per pack size / colour SKU"
+   },
+   {
+    "key": "coverage_sqft",
+    "level": "recommended",
+    "owner": "catalog",
+    "per_variant": true,
+    "filterable": false,
+    "note": null
    }
   ]
  },
@@ -15682,13 +15359,13 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
    {
     "key": "dimensions",
-    "level": "statutory",
+    "level": "recommended",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
@@ -15863,14 +15540,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "care_instructions",
     "level": "optional",
     "owner": "catalog",
@@ -15893,14 +15562,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -16004,7 +15665,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -16185,14 +15846,6 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
@@ -16294,7 +15947,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -16483,36 +16136,12 @@
     "note": "Domestic pressure cookers (IS 2347) and LPG stoves under mandatory BIS certification; stainless/aluminium utensils QCO status to confirm"
    },
    {
-    "key": "bis_standard",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "sold_by",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": "Per piece / per set / per kg"
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -16786,7 +16415,10 @@
   "variant_notes": "Mostly single-price items; colour/size variants share price, pack sizes differ in MRP.",
   "basic_form": [
    "product_type",
-   "variant",
+   "brand",
+   "material",
+   "colour",
+   "size",
    "pack_size"
   ],
   "basic_form_reason": "Variety stores stock thousands of cheap items; type + variant + pack is enough to list fast.",
@@ -16867,7 +16499,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -16958,14 +16590,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -17216,14 +16840,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "LPG cylinders (IS 3196) and LPG stoves under mandatory BIS certification"
-   },
-   {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    }
   ]
  },
@@ -17248,6 +16864,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "declare if offered"
    },
    {
@@ -17395,14 +17012,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -17425,7 +17034,8 @@
    "service_type",
    "bedrooms",
    "plan_period",
-   "service_area"
+   "service_area",
+   "duration_mins"
   ],
   "basic_form_reason": "Cleaning and pest quotes are priced by job, BHK and plan; area decides reach.",
   "attributes": [
@@ -17435,6 +17045,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": true,
+    "form_required": false,
     "note": "declare if offered"
    },
    {
@@ -17590,14 +17201,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -17612,32 +17215,26 @@
   "variant_axes": [
    "service_type",
    "bedrooms",
-   "package_tier"
+   "package"
   ],
   "variant_notes": "Quotes vary by scope × home size × material/finish tier.",
   "basic_form": [
    "warranty_days",
    "service_type",
+   "bedrooms",
+   "package",
    "pricing_unit",
-   "delivery_days",
-   "warranty_months"
+   "delivery_days"
   ],
   "basic_form_reason": "Customers compare scope, rate basis, delivery time and warranty first.",
   "attributes": [
-   {
-    "key": "coa_registration_no",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "only if the professional is described as an architect"
-   },
    {
     "key": "warranty_days",
     "level": "statutory",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
+    "form_required": false,
     "note": "declare if offered"
    },
    {
@@ -17705,7 +17302,7 @@
     "note": "Per sq ft, per running ft, per BHK package, lump sum"
    },
    {
-    "key": "package_tier",
+    "key": "package",
     "level": "optional",
     "owner": "store",
     "per_variant": true,
@@ -17745,14 +17342,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": true,
-    "note": null
-   },
-   {
     "key": "experience_years",
     "level": "optional",
     "owner": "store",
@@ -17767,14 +17356,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "coa_registration_number",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Only if the firm uses the title \"architect\" (Architects Act s.37)"
    },
    {
     "key": "payment_terms",
@@ -17809,14 +17390,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -17830,12 +17403,12 @@
   "applies_to": "service",
   "variant_axes": [
    "service_type",
-   "package_tier"
+   "package"
   ],
   "variant_notes": "Construction quoted per sq ft by package tier; design services lump sum or % of cost.",
   "basic_form": [
-   "rera_project_registration_no",
    "service_type",
+   "package",
    "pricing_unit",
    "materials_included",
    "experience_years"
@@ -17843,19 +17416,12 @@
   "basic_form_reason": "Customers need what you build, how you charge, whether materials are included and track record.",
   "attributes": [
    {
-    "key": "coa_registration_no",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "architects"
-   },
-   {
     "key": "rera_project_registration_no",
-    "level": "statutory",
+    "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
+    "form_required": false,
     "note": "builders advertising units in a registrable project"
    },
    {
@@ -17891,7 +17457,7 @@
     "note": "Per sq ft built-up, lump sum, % of project cost, per visit"
    },
    {
-    "key": "package_tier",
+    "key": "package",
     "level": "recommended",
     "owner": "store",
     "per_variant": true,
@@ -17923,7 +17489,7 @@
     "note": null
    },
    {
-    "key": "warranty_months",
+    "key": "warranty_period",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -17945,14 +17511,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "B.Arch / B.E. Civil / licensed surveyor"
-   },
-   {
-    "key": "coa_registration_number",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Statutory if the firm calls itself \"architect\" (Architects Act 1972 s.37)"
    },
    {
     "key": "licence_number",
@@ -18011,14 +17569,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -18037,8 +17587,7 @@
    "deal_type",
    "property_type",
    "bedrooms",
-   "locality",
-   "area_sqft"
+   "locality"
   ],
   "basic_form_reason": "Buyers filter by deal, type, BHK, locality and size; the RERA agent number lives on the shop profile.",
   "attributes": [
@@ -18047,7 +17596,8 @@
     "level": "statutory",
     "owner": "store",
     "per_variant": false,
-    "filterable": false,
+    "filterable": true,
+    "form_required": false,
     "note": "per property in a registered project"
    },
    {
@@ -18233,14 +17783,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "rera_project_number",
-    "level": "statutory",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": true,
-    "note": "Projects that must register under RERA s.3: advertisements must show project registration number & RERA website (s.11(2)); agents may not facilitate sale of unregistered projects"
    }
   ]
  },
@@ -18613,14 +18155,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -18640,8 +18174,9 @@
   "basic_form": [
    "product_type",
    "brand",
+   "material",
    "variant",
-   "condition"
+   "colour"
   ],
   "basic_form_reason": "Catch-all: identify item, brand, variant and condition.",
   "attributes": [
@@ -18721,7 +18256,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -18798,28 +18333,12 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "service_area",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": "If a service business uses this bucket"
-   },
-   {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
    },
    {
     "key": "gtin",
@@ -18843,8 +18362,7 @@
    "product_type",
    "vehicle_type",
    "compatibility",
-   "brand",
-   "condition"
+   "brand"
   ],
   "basic_form_reason": "A part is useless unless it fits: type, vehicle, compatible models; brand and OEM/aftermarket set price.",
   "attributes": [
@@ -18924,7 +18442,7 @@
     "key": "manufacture_month_year",
     "level": "statutory",
     "owner": "store",
-    "per_variant": false,
+    "per_variant": true,
     "filterable": false,
     "note": "label-only; exempt online (r.6(10)); per batch"
    },
@@ -19065,7 +18583,7 @@
     "note": null
    },
    {
-    "key": "battery_type",
+    "key": "battery_chemistry",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -19105,14 +18623,6 @@
     "note": "Two-wheeler helmets (IS 4151) under mandatory BIS certification; other parts per QCO"
    },
    {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "installation_included",
     "level": "optional",
     "owner": "store",
@@ -19129,20 +18639,20 @@
     "note": null
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": true,
-    "filterable": false,
-    "note": "Required on the package; online display reportedly exempt — keep per stock lot"
-   },
-   {
     "key": "gtin",
     "level": "optional",
     "owner": "catalog",
     "per_variant": true,
     "filterable": false,
     "note": "Separate barcode per pack size / colour SKU"
+   },
+   {
+    "key": "parts_type",
+    "level": "recommended",
+    "owner": "catalog",
+    "per_variant": false,
+    "filterable": true,
+    "note": null
    }
   ]
  },
@@ -19388,14 +18898,6 @@
     "note": "New / retreaded / used"
    },
    {
-    "key": "manufacture_date",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Week/year moulded on sidewall (4-digit code)"
-   },
-   {
     "key": "isi_marked",
     "level": "statutory",
     "owner": "catalog",
@@ -19410,14 +18912,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "AIS-142 rolling resistance / wet grip / noise"
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    },
    {
     "key": "installation_included",
@@ -19457,7 +18951,7 @@
   "applies_to": "service",
   "variant_axes": [
    "vehicle_type",
-   "package_tier"
+   "package"
   ],
   "variant_notes": "Service packages priced by vehicle class/size and tier.",
   "basic_form": [
@@ -19475,6 +18969,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": false,
+    "form_required": false,
     "note": "declare if offered"
    },
    {
@@ -19510,7 +19005,7 @@
     "note": "Makes/models serviced"
    },
    {
-    "key": "package_tier",
+    "key": "package",
     "level": "recommended",
     "owner": "store",
     "per_variant": true,
@@ -19574,14 +19069,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "Parts warranty"
-   },
-   {
     "key": "cashless_insurance",
     "level": "optional",
     "owner": "store",
@@ -19615,14 +19102,6 @@
    },
    {
     "key": "timings",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -19720,7 +19199,7 @@
     "note": "Daily/monthly car cleaning subscriptions"
    },
    {
-    "key": "warranty_months",
+    "key": "warranty_period",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -19769,14 +19248,6 @@
    },
    {
     "key": "timings",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -19976,14 +19447,6 @@
     "per_variant": false,
     "filterable": true,
     "note": "Free air, drinking water, toilets, convenience store, ATM"
-   },
-   {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    }
   ]
  },
@@ -20253,14 +19716,6 @@
     "note": "New: ex-showroom vs on-road"
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "finance_available",
     "level": "optional",
     "owner": "store",
@@ -20519,14 +19974,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -20761,14 +20208,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -20947,14 +20386,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -21118,14 +20549,6 @@
    },
    {
     "key": "timings",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -21336,14 +20759,6 @@
    },
    {
     "key": "timings",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -21592,14 +21007,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "State tourism / homestay / B&B registration where the state requires it"
-   },
-   {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    }
   ]
  },
@@ -21773,14 +21180,6 @@
    },
    {
     "key": "timings",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
     "level": "optional",
     "owner": "store",
     "per_variant": false,
@@ -21963,14 +21362,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "pricing_unit",
     "level": "optional",
     "owner": "store",
@@ -22019,14 +21410,6 @@
     "note": null
    },
    {
-    "key": "gst_invoice",
-    "level": "optional",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "cancellation_policy",
     "level": "optional",
     "owner": "store",
@@ -22039,16 +21422,17 @@
  "stationery": {
   "applies_to": "product",
   "variant_axes": [
-   "colour",
    "ink_colour",
-   "paper_size"
+   "paper_size",
+   "page_count"
   ],
   "variant_notes": "Notebooks vary by size, ruling and page count (each its own MRP/GTIN); pens by ink colour and pack count (net_quantity per variant). MRP is printed per pack variant.",
   "basic_form": [
    "stationery_type",
    "brand",
-   "colour",
-   "paper_size"
+   "ink_colour",
+   "paper_size",
+   "page_count"
   ],
   "basic_form_reason": "Type plus brand identify the item; colour and size are the commonest SKU splits. LM declarations are catalog-owned so they come from the product record, not the shop.",
   "attributes": [
@@ -22273,7 +21657,6 @@
  "books": {
   "applies_to": "product",
   "variant_axes": [
-   "language",
    "binding",
    "edition"
   ],
@@ -22791,14 +22174,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "condition",
     "level": "optional",
     "owner": "store",
@@ -23098,14 +22473,6 @@
    },
    {
     "key": "model_number",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "warranty_months",
     "level": "optional",
     "owner": "catalog",
     "per_variant": false,
@@ -24074,7 +23441,7 @@
    "vet_service_type",
    "pet_type",
    "consultation_mode",
-   "vci_registration_number"
+   "practitioner_registration_no"
   ],
   "basic_form_reason": "Service, animal and mode define the listing; the vet's registration number is needed for any clinical service (leave blank for grooming-only shops).",
   "attributes": [
@@ -24133,14 +23500,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "BVSc & AH / MVSc"
-   },
-   {
-    "key": "vci_registration_number",
-    "level": "required",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "IVC Act 1984 s.30: only registered veterinary practitioners may practise; required for clinical services, not grooming/boarding"
    },
    {
     "key": "specialty",
@@ -24486,14 +23845,6 @@
     "per_variant": true,
     "filterable": false,
     "note": "separate GTIN per pack variant"
-   },
-   {
-    "key": "warranty_months",
-    "level": "recommended",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
    },
    {
     "key": "condition",
@@ -25533,9 +24884,10 @@
   "variant_notes": "Halls are priced per slot (morning/evening/full day), with muhurtham/peak-season dates costlier; per-plate prices are separate.",
   "basic_form": [
    "venue_type",
-   "capacity",
+   "guest_capacity",
    "air_conditioned",
-   "slot"
+   "slot",
+   "booking_unit"
   ],
   "basic_form_reason": "Type, seated capacity and AC are the first filters; slot defines the bookable unit.",
   "attributes": [
@@ -25554,14 +24906,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "capacity",
-    "level": "required",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": true,
-    "note": "seated"
    },
    {
     "key": "guest_capacity",
@@ -26087,8 +25431,10 @@
   "variant_notes": "Generic fallback: size and colour if applicable; otherwise a free-text variant.",
   "basic_form": [
    "brand",
-   "variant",
-   "condition"
+   "material",
+   "condition",
+   "size",
+   "colour"
   ],
   "basic_form_reason": "Keeps the current fallback form; LM declarations are catalog-owned.",
   "attributes": [
@@ -26253,14 +25599,6 @@
     "note": null
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "age_group",
     "level": "optional",
     "owner": "catalog",
@@ -26413,14 +25751,6 @@
     "per_variant": false,
     "filterable": false,
     "note": null
-   },
-   {
-    "key": "gst_invoice",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": true,
-    "note": null
    }
   ]
  },
@@ -26531,14 +25861,6 @@
   "basic_form_reason": "Service and type of professional (CA vs tax practitioner) matter most; mode tells online vs office.",
   "attributes": [
    {
-    "key": "icai_membership_no",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "chartered accountants (audit/attestation)"
-   },
-   {
     "key": "hsn_code",
     "level": "statutory",
     "owner": "catalog",
@@ -26561,14 +25883,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "icai_membership_number",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "CAs; ICAI website guidelines permit membership no./FRN"
    },
    {
     "key": "firm_registration_number",
@@ -26806,22 +26120,12 @@
   "variant_axes": [],
   "variant_notes": "Advisory/agency services; no variants. Product terms live with the insurer/lender.",
   "basic_form": [
-   "irdai_registration_no",
-   "sebi_registration_no",
-   "amfi_arn",
    "finance_product",
-   "intermediary_type"
+   "intermediary_type",
+   "operator"
   ],
   "basic_form_reason": "Products and the regulatory capacity tell buyers what they are dealing with; ARN is shown only when the seller distributes mutual funds.",
   "attributes": [
-   {
-    "key": "irdai_registration_no",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "insurance agents/brokers/POSP"
-   },
    {
     "key": "rbi_registration_no",
     "level": "statutory",
@@ -26829,14 +26133,6 @@
     "per_variant": false,
     "filterable": false,
     "note": "NBFC itself, or lender name/CoR for loan agents/DSA/BC"
-   },
-   {
-    "key": "sebi_registration_no",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "investment advisers, brokers, MF distributors (AMFI ARN - not covered)"
    },
    {
     "key": "hsn_code",
@@ -26869,31 +26165,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "irdai_licence_number",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "insurance agents/brokers/POSP: licence or agency code"
-   },
-   {
-    "key": "amfi_arn",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "form_required": false,
-    "note": "mutual fund distributors only: ARN must appear on communications (AMFI/SEBI 2026) — conditional, unverified"
-   },
-   {
-    "key": "rbi_registration_number",
-    "level": "recommended",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "note": "NBFCs: s.45-IA RBI Act CoR"
    },
    {
     "key": "chit_registration_number",
@@ -27029,6 +26300,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": false,
+    "form_required": false,
     "note": "free support period"
    },
    {
@@ -27114,6 +26386,8 @@
   "variant_notes": "Social-media/SEO work sold as monthly plans in tiers; design work as packages with revision counts.",
   "basic_form": [
    "marketing_service_type",
+   "platform",
+   "turnaround",
    "package",
    "plan_period"
   ],
@@ -27241,9 +26515,11 @@
   ],
   "variant_notes": "Manpower is priced by staff category (unarmed/armed/supervisor) and shift length (8/12-hour).",
   "basic_form": [
-   "emigration_rc_number",
    "staffing_service_type",
-   "pricing_unit"
+   "pricing_unit",
+   "police_verified",
+   "guard_type",
+   "shift"
   ],
   "basic_form_reason": "Service and pricing basis define the offer; licence numbers are shown conditionally (security / overseas recruitment).",
   "attributes": [
@@ -27262,15 +26538,6 @@
     "per_variant": false,
     "filterable": true,
     "note": null
-   },
-   {
-    "key": "emigration_rc_number",
-    "level": "statutory",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": false,
-    "form_required": false,
-    "note": "overseas recruitment only: MEA requires RC number in advertisements (conditional)"
    },
    {
     "key": "contract_labour_licence_number",
@@ -27366,6 +26633,7 @@
     "owner": "store",
     "per_variant": false,
     "filterable": false,
+    "form_required": false,
     "note": "replacement guarantee for placements"
    }
   ]
@@ -27382,7 +26650,8 @@
    "brand",
    "variant",
    "min_order_qty",
-   "gst_invoice"
+   "pack_size",
+   "units_per_case"
   ],
   "basic_form_reason": "Keeps current fields: what is sold, the minimum order and whether a GST invoice is issued.",
   "attributes": [
@@ -27570,14 +26839,6 @@
     "per_variant": true,
     "filterable": false,
     "note": "ONDC price_slab"
-   },
-   {
-    "key": "gst_invoice",
-    "level": "required",
-    "owner": "store",
-    "per_variant": false,
-    "filterable": true,
-    "note": null
    },
    {
     "key": "gst_rate",
@@ -27941,25 +27202,9 @@
     "note": "machines"
    },
    {
-    "key": "warranty_months",
-    "level": "optional",
-    "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
     "key": "packaging_type",
     "level": "optional",
     "owner": "catalog",
-    "per_variant": false,
-    "filterable": false,
-    "note": null
-   },
-   {
-    "key": "gst_invoice",
-    "level": "recommended",
-    "owner": "store",
     "per_variant": false,
     "filterable": false,
     "note": null

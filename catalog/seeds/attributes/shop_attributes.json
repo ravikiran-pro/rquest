@@ -811,11 +811,43 @@
    "jewellery"
   ]
  },
+ "gst_invoice": {
+  "level": "required",
+  "sub_categories": [
+   "building_materials",
+   "home_repair",
+   "cleaning_pest_control",
+   "interior_design",
+   "construction_contractor",
+   "equipment_rental",
+   "vehicle_repair",
+   "car_wash",
+   "fuel_station",
+   "vehicle_rental",
+   "taxi_auto",
+   "packers_movers",
+   "courier",
+   "travel_agency",
+   "hotel_lodge",
+   "driving_school",
+   "vehicles_others",
+   "printing",
+   "wholesale",
+   "manufacturing"
+  ]
+ },
  "agri_input_dealer_licence_no": {
   "level": "statutory",
   "sub_categories": [
    "garden_nursery",
    "wholesale"
+  ]
+ },
+ "coa_registration_no": {
+  "level": "statutory",
+  "sub_categories": [
+   "interior_design",
+   "construction_contractor"
   ]
  },
  "rera_agent_registration_no": {
@@ -856,7 +888,37 @@
    "tuition"
   ]
  },
+ "icai_membership_no": {
+  "level": "statutory",
+  "sub_categories": [
+   "accountant_tax"
+  ]
+ },
+ "irdai_registration_no": {
+  "level": "recommended",
+  "sub_categories": [
+   "insurance_finance"
+  ]
+ },
+ "sebi_registration_no": {
+  "level": "statutory",
+  "sub_categories": [
+   "insurance_finance"
+  ]
+ },
+ "amfi_arn": {
+  "level": "statutory",
+  "sub_categories": [
+   "insurance_finance"
+  ]
+ },
  "psara_licence_no": {
+  "level": "statutory",
+  "sub_categories": [
+   "staffing_security"
+  ]
+ },
+ "emigration_rc_number": {
   "level": "statutory",
   "sub_categories": [
    "staffing_security"

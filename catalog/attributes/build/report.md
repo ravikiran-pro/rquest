@@ -1,8 +1,8 @@
 # Attribute build report
 
-Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub-categories: 118/118  ·  set rows: 3253
+Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 837  ·  sub-categories: 118/118  ·  set rows: 3155
 
-## Shop-profile attributes (20) — out of listing forms
+## Shop-profile attributes (27) — out of listing forms
 - seller_fssai_licence_no (statutory, 26 sub-categories)
 - seller_legal_name_address (statutory, 118 sub-categories)
 - seller_grievance_officer (statutory, 118 sub-categories)
@@ -15,23 +15,33 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - clinical_establishment_reg_no (statutory, 8 sub-categories)
 - pcpndt_registration_no (statutory, 3 sub-categories)
 - bis_jeweller_registration_no (statutory, 1 sub-categories)
+- gst_invoice (required, 20 sub-categories)
 - agri_input_dealer_licence_no (statutory, 2 sub-categories)
+- coa_registration_no (statutory, 2 sub-categories)
 - rera_agent_registration_no (statutory, 1 sub-categories)
 - rto_dealer_authorisation_no (statutory, 1 sub-categories)
 - common_carrier_registration_no (statutory, 2 sub-categories)
 - driving_school_licence_no (statutory, 1 sub-categories)
 - pet_shop_registration_no (statutory, 2 sub-categories)
 - coaching_registration_no (statutory, 1 sub-categories)
+- icai_membership_no (statutory, 1 sub-categories)
+- irdai_registration_no (recommended, 1 sub-categories)
+- sebi_registration_no (statutory, 1 sub-categories)
+- amfi_arn (statutory, 1 sub-categories)
 - psara_licence_no (statutory, 1 sub-categories)
+- emigration_rc_number (statutory, 1 sub-categories)
 
 ## Errors (0)
 
-## Warnings (87)
+## Warnings (67)
 - type conflict "manufacture_month_year": R5=text, R1=date (kept text)
 - type conflict "storage_instructions": R5=textarea, R1=enum (kept textarea)
+- type conflict "portion_info": R5=text, R1=measure (kept text)
 - type conflict "composition": R5=textarea, R1=text (kept textarea)
 - type conflict "generic": R5=text, R1=boolean (kept text)
+- type conflict "warranty_period": R5=measure, R1=number (kept measure)
 - type conflict "manufacturer": R5=text, R2=textarea (kept text)
+- type conflict "manufacture_month_year": R5=text, R2=date (kept text)
 - type conflict "consumer_care_details": R5=textarea, R2=text (kept textarea)
 - type conflict "colour": R1=text, R2=enum (kept text)
 - type conflict "material": R1=text, R2=enum (kept text)
@@ -51,6 +61,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - type conflict "delivery_area": R1=text, R3=enum (kept text)
 - type conflict "duration_mins": R1=number, R3=measure (kept number)
 - type conflict "experience_years": R1=number, R3=measure (kept number)
+- type conflict "manufacture_month_year": R5=text, R3=date (kept text)
 - type conflict "manufacturer": R5=text, R3=textarea (kept text)
 - type conflict "material": R1=text, R3=enum (kept text)
 - type conflict "min_order_qty": R2=text, R3=number (kept text)
@@ -63,13 +74,13 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - type conflict "visiting_charge": R1=number, R3=measure (kept number)
 - type conflict "voltage": R2=number, R3=measure (kept number)
 - type conflict "warranty_days": R5=number, R3=measure (kept number)
-- type conflict "warranty_months": R1=number, R3=measure (kept number)
 - type conflict "weight": R1=text, R3=measure (kept text)
 - type conflict "manufacturer": R5=text, R4=textarea (kept text)
 - type conflict "manufacture_month_year": R5=text, R4=date (kept text)
 - type conflict "colour": R1=text, R4=enum (kept text)
 - type conflict "material": R1=text, R4=enum (kept text)
 - type conflict "weight": R1=text, R4=measure (kept text)
+- type conflict "warranty_period": R5=measure, R4=number (kept measure)
 - type conflict "delivery_days": R2=measure, R4=number (kept measure)
 - type conflict "piece_count": R1=text, R4=number (kept text)
 - type conflict "frame_size": R1=enum, R4=text (kept enum)
@@ -90,46 +101,16 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - type conflict "print_type": R2=enum, R4=multi_enum (kept enum)
 - type conflict "min_order_qty": R2=text, R4=measure (kept text)
 - type conflict "grade": R1=enum, R4=text (kept enum)
-- bakery: basic form trimmed from 9 to 6
-- sweet_shop: basic form trimmed from 9 to 7
-- restaurant: basic form trimmed from 7 to 6
-- fast_food: basic form trimmed from 7 to 6
-- ice_cream_juice: basic form trimmed from 7 to 6
-- home_kitchen: basic form trimmed from 7 to 6
-- kids_baby: 4 variant axes, kept the first 3
-- computers: 4 variant axes, kept the first 3
-- home_appliances: 5 variant axes, kept the first 3
-- hardware_store: 5 variant axes, kept the first 3
-- electrical_supplies: 8 variant axes, kept the first 3
-- plumbing_sanitary: 5 variant axes, kept the first 3
-- building_materials: 4 variant axes, kept the first 3
-- tiles_plywood: 4 variant axes, kept the first 3
-- furniture: 5 variant axes, kept the first 3
-- kitchenware: 5 variant axes, kept the first 3
-- variety_store: 4 variant axes, kept the first 3
-- interior_design: 5 variant axes, kept the first 3
-- auto_parts: 4 variant axes, kept the first 3
-- tyres: 4 variant axes, kept the first 3
-- vehicle_dealer: 4 variant axes, kept the first 3
-- taxi_auto: 4 variant axes, kept the first 3
-- stationery: 5 variant axes, kept the first 3
-- books: 4 variant axes, kept the first 3
 
-## Possible duplicate keys (18) — add to aliases.json
-- "indian standard is": is_standard_no, bis_standard
-- "rera project registration": rera_project_registration_no, rera_project_number
+## Possible duplicate keys (12) — add to aliases.json
 - "form": product_form, formulation
-- "advance payment": advance_payment_percent, advance_payment
 - "compatible with": compatibility, compatible_stove_type
-- "for": gender, service_for, garment_for
+- "for": gender, service_for
 - "activities": activities, activity
 - "product type": product_type, pet_product_type
 - "length": garment_length, length
 - "style": jewellery_style, style
 - "finish": finish, print_finish
-- "coverage": coverage, coverage_area
-- "battery type": battery_chemistry, battery_type
-- "indoor outdoor": mounting, indoor_outdoor
 - "vehicle": vehicle_class, vehicle_type
 - "item type": sports_item_type, stationery_type, pooja_item_type
 - "format": book_format, play_format
@@ -144,6 +125,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - generic: Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations on every retail package (manufacturer/packer/importer name and address, common or generic name, net quantity, month and year of manufacture/packing/import, retail sale price, consumer-care details). Clause letters not confirmed from gazette text. https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf
 - net_quantity: Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations on every retail package (manufacturer/packer/importer name and address, common or generic name, net quantity, month and year of manufacture/packing/import, retail sale price, consumer-care details). Clause letters not confirmed from gazette text. https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf
 - unit_sale_price: LM(PC) Rules 2011 r.6(1) unit sale price declaration (inserted by LM(PC) Amendment Rules 2022; exact clause letter not confirmed) https://consumeraffairs.nic.in/organisation-and-units/division/legal-metrology/updated-package-commodity-rule
+- manufacture_month_year: Legal Metrology (Packaged Commodities) Amendment Rules 2017: e-commerce entity must display r.6(1) declarations online (reported as r.6(10)); online display reportedly excludes date of manufacture/packing — sub-rule number and exception not confirmed against the gazette https://www.lkslaw.com/insights/articles/aiming-greater-transparency-on-sale-of-packaged-commodity-online
 - manufacture_month_year: Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations on every retail package (manufacturer/packer/importer name and address, common or generic name, net quantity, month and year of manufacture/packing/import, retail sale price, consumer-care details). Clause letters not confirmed from gazette text. https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf
 - consumer_care_details: Legal Metrology (Packaged Commodities) Rules 2011, r.6(1) mandatory declarations on every retail package (manufacturer/packer/importer name and address, common or generic name, net quantity, month and year of manufacture/packing/import, retail sale price, consumer-care details). Clause letters not confirmed from gazette text. https://legalmetrology.nagaland.gov.in/documents/11/9_The_Legal_Metrology_Package_Commodities_Rules_2011.pdf
 - dimensions: LM(PC) Rules 2011 r.6(1) / Schedules: dimensions/size declaration for commodities where relevant (exact clause not confirmed) https://consumeraffairs.nic.in/organisation-and-units/division/legal-metrology/updated-package-commodity-rule
@@ -154,6 +136,8 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - batch_no: Cosmetics Rules 2020, r.34 labelling of cosmetics (name, manufacturer & address, ingredients, net content, batch, date of manufacture, use-before date, manufacturing licence no. where required); import registration (Form COS-1/COS-2) https://cdsco.gov.in/opencms/resources/UploadCDSCOWeb/2022/cos_rules/Cosmetics%20Rules%202020.pdf
 - batch_no: Drugs and Cosmetics Rules 1945, r.96: label particulars (proper name, net content, active ingredient content, batch no., mfg licence no., mfg and expiry dates, manufacturer name/address) – clause list not confirmed in this research https://cdsco.gov.in/opencms/opencms/en/Acts-and-rules/Drugs-Rules/
 - batch_no: Common Indian trade practice for this kind of shop (no single primary source)
+- warranty_period: IndiaMART building-material/hardware listing specs (grade, size, brand, packaging size, minimum order quantity) https://www.indiamart.com/
+- warranty_period: Amazon.in category refinements (brand, age, binding, language, pack size …) — not fetched in this session https://www.amazon.in/
 - warranty_days: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - warranty_days: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - warranty_days: Urban Company service listings (packages, duration, inclusions, cancellation/reschedule) — not fetched in this session https://www.urbancompany.com/
@@ -178,6 +162,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - bee_star_rating: BEE (Appliance Labelling) Regulations 2025 (notified 10 Jul 2025): revised label incl. QR code https://www.business-standard.com/india-news/appliance-labels-india-qr-code-star-rating-origin-bee-2025-rules-125071800380_1.html
 - tobacco_product: Cigarettes and Other Tobacco Products Act 2003: no sale to persons under 18 or within 100 m/yards of educational institutions; pictorial health warnings (section numbers s.6 / s.7 not confirmed from primary text) https://en.wikipedia.org/wiki/Cigarettes_and_Other_Tobacco_Products_Act
 - practitioner_registration_no: NMC Registered Medical Practitioner (Professional Conduct) Regulations 2023 - unique registration ID on prescriptions; reported held in abeyance 23-08-2023 https://www.nmc.org.in/rules-regulations/national-medical-commission-registered-medical-practitioner-professional-conduct-regulations-2023-reg/
+- practitioner_registration_no: Indian Nursing Council Act 1947 / State Nursing Council registration of nurses (ANM/GNM/B.Sc) – not confirmed in this research
 - clinical_establishment_reg_no: Clinical Establishments (Registration and Regulation) Act 2010: registration of clinical establishments (adopting States/UTs; others have own Acts e.g. state nursing-home Acts) https://clinicalestablishments.mohfw.gov.in/sites/default/files/2025-12/Minutes_of_16th_meeting%20%281%29.pdf
 - pcpndt_registration_no: PC&PNDT Rules (India Code notification) https://www.indiacode.nic.in/bitstream/123456789/13676/1/pcnpndtnotification.pdf
 - pcpndt_registration_no: PC&PNDT Act 1994 and Rules 1996: registration of ultrasound/imaging centres; display of registration certificate and bilingual board that sex determination is not done (rule number not confirmed) https://dhsr.hp.gov.in/Files/PC-PNDT%20RULES%20-1996_0.pdf
@@ -226,6 +211,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - at_your_venue: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - setup_included: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - setup_included: Common Indian trade practice for this kind of shop (no single primary source)
+- advance_payment: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - cancellation_policy: Service booking platforms
 - cancellation_policy: Hotel/travel OTAs (MakeMyTrip, Goibibo, OYO) filters: room type, meal plan, free cancellation, couple friendly, local ID accepted, star category, amenities, check-in/out https://www.makemytrip.com/
 - cancellation_policy: Urban Company service listings (packages, duration, inclusions, cancellation/reschedule) — not fetched in this session https://www.urbancompany.com/
@@ -236,8 +222,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - age_group: Flipkart toys store filters (age, type, brand, character) — not fetched in this session https://flipkart.com/toys-online-store
 - device_type: Urban Company / brand service categories
 - model_number: Amazon.in category refinements (brand, age, binding, language, pack size …) — not fetched in this session https://www.amazon.in/
-- warranty_months: IndiaMART building-material/hardware listing specs (grade, size, brand, packaging size, minimum order quantity) https://www.indiamart.com/
-- warranty_months: Amazon.in category refinements (brand, age, binding, language, pack size …) — not fetched in this session https://www.amazon.in/
 - frame_size: Amazon.in category refinements (brand, age, binding, language, pack size …) — not fetched in this session https://www.amazon.in/
 - gender: NoBroker rental filters (preferred tenant Family/Bachelors/Company, BHK, furnishing, price, area) — via third-party scraper documentation https://apify.com/solidcode/nobroker-scraper
 - gender: Common Indian trade practice for this kind of shop (no single primary source)
@@ -284,7 +268,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - security_deposit: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - security_deposit: NoBroker rental filters (preferred tenant Family/Bachelors/Company, BHK, furnishing, price, area) — via third-party scraper documentation https://apify.com/solidcode/nobroker-scraper
 - security_deposit: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
-- nurse_registration_no: Indian Nursing Council Act 1947 / State Nursing Council registration of nurses (ANM/GNM/B.Sc) – not confirmed in this research
 - demo_class: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - demo_class: Common Indian trade practice for this kind of shop (no single primary source)
 - batch_size: Common Indian trade practice for this kind of shop (no single primary source)
@@ -293,7 +276,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - mode: Common Indian trade practice for this kind of shop (no single primary source)
 - air_conditioned: Hotel/travel OTAs (MakeMyTrip, Goibibo, OYO) filters: room type, meal plan, free cancellation, couple friendly, local ID accepted, star category, amenities, check-in/out https://www.makemytrip.com/
 - air_conditioned: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
-- manufacture_date: Legal Metrology (Packaged Commodities) Amendment Rules 2017: e-commerce entity must display r.6(1) declarations online (reported as r.6(10)); online display reportedly excludes date of manufacture/packing — sub-rule number and exception not confirmed against the gazette https://www.lkslaw.com/insights/articles/aiming-greater-transparency-on-sale-of-packaged-commodity-online
 - gst_rate: CGST Rules 2017, r.46 — tax invoice particulars incl. HSN/SAC code, rate of tax (not confirmed from primary text)
 - warranty_type: Amazon.in / Flipkart / Croma listing 'warranty type' field
 - warranty_terms: Battery/appliance listings on Amazon.in, Croma (free replacement + pro-rata; compressor warranty)
@@ -305,7 +287,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - weave: Geographical Indications of Goods (Registration and Protection) Act 1999 - registered GI textiles (e.g. Kanchipuram silk, Banarasi brocade)
 - silk_mark: Silk Mark (Silk Mark Organisation of India, Central Silk Board) voluntary pure-silk label
 - handloom_mark: India Handloom Brand / Handloom Mark (Ministry of Textiles) voluntary label
-- bis_standard_mark: Toys (Quality Control) Order 2020: BIS Standard Mark mandatory for toys (IS 9873 / IS 15644) https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/toys-quality-control-order/
+- isi_marked: Toys (Quality Control) Order 2020: BIS Standard Mark mandatory for toys (IS 9873 / IS 15644) https://www.services.bis.gov.in/php/BIS_2.0/BISBlog/toys-quality-control-order/
 - weight_grams: BIS (Hallmarking) Regulations 2018: invoice of hallmarked jewellery to show net weight, purity (carat & fineness) and hallmarking charges separately
 - net_metal_weight: BIS (Hallmarking) Regulations 2018: invoice of hallmarked jewellery to show net weight, purity (carat & fineness) and hallmarking charges separately
 - net_metal_weight: Tanishq/CaratLane/Kalyan PDPs show gross vs net weight
@@ -330,6 +312,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - service_type: Urban Company / Justdial service menus
 - service_type: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - service_for: Urban Company salon for women/men
+- service_for: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - duration_hours: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - duration_hours: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - service_mode: Urban Company/Justdial at-home vs at-salon
@@ -344,7 +327,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - mehendi_style: Mehendi artist listings
 - coverage_area: Mehendi artist price by coverage
 - organic_henna: Mehendi artist listings
-- garment_for: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - delivery_days: Indian service marketplaces (Urban Company, Justdial) booking/listing fields
 - delivery_days: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - delivery_speed: Tailor/laundry express charges
@@ -384,7 +366,7 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - charging_wattage: Phone spec sheets
 - imei: Pre-owned phone listings (Cashify) show IMEI-verified units
 - battery_health: Refurbished phone listings (Cashify, Amazon Renewed)
-- power_watts: Appliance spec sheets
+- wattage: Appliance spec sheets
 - voltage: Appliance/battery spec sheets
 - hdmi_ports: Flipkart TV filters
 - battery_life: Headphone/laptop listings
@@ -412,6 +394,8 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - old_battery_exchange: Battery dealer exchange offers
 - channels: DVR/NVR listings 4/8/16 channel
 - max_storage: DVR/Wi-Fi camera listings
+- indoor_outdoor: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
+- indoor_outdoor: Playo venue booking (sport, slot, duration, amenities, price per slot) — not fetched in this session https://playo.co/
 - accident_free: Indian vehicle marketplaces (CarDekho, Cars24, OLX, BikeDekho) listing fields: make, model, variant, year, km, fuel, transmission, owners, RTO, insurance https://www.cardekho.com/
 - advance_booking_hours: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - advance_booking_hours: Hotel/travel OTAs (MakeMyTrip, Goibibo, OYO) filters: room type, meal plan, free cancellation, couple friendly, local ID accepted, star category, amenities, check-in/out https://www.makemytrip.com/
@@ -489,7 +473,9 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - occupancy_type: NoBroker rental filters (preferred tenant Family/Bachelors/Company, BHK, furnishing, price, area) — via third-party scraper documentation https://apify.com/solidcode/nobroker-scraper
 - occupancy_type: Hotel/travel OTAs (MakeMyTrip, Goibibo, OYO) filters: room type, meal plan, free cancellation, couple friendly, local ID accepted, star category, amenities, check-in/out https://www.makemytrip.com/
 - ownership_type: Indian property portals (99acres, MagicBricks, NoBroker, Housing.com) listing/filter fields: BHK, carpet/built-up area, furnishing, construction status, facing, floor, parking, preferred tenant, RERA status https://www.99acres.com/
-- package_tier: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
+- package: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
+- package: Urban Company service listings (packages, duration, inclusions, cancellation/reschedule) — not fetched in this session https://www.urbancompany.com/
+- package: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - packing_type: Home-service marketplaces (Urban Company, Justdial) listing fields: service type, BHK-based pricing, visit charge, duration, service warranty, professionals assigned https://www.urbancompany.com/
 - parking: Indian property portals (99acres, MagicBricks, NoBroker, Housing.com) listing/filter fields: BHK, carpet/built-up area, furnishing, construction status, facing, floor, parking, preferred tenant, RERA status https://www.99acres.com/
 - parking: Hotel/travel OTAs (MakeMyTrip, Goibibo, OYO) filters: room type, meal plan, free cancellation, couple friendly, local ID accepted, star category, amenities, check-in/out https://www.makemytrip.com/
@@ -572,9 +558,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - awb_registration_number: Prevention of Cruelty to Animals (Pet Shop) Rules 2018 — registration of pet shops with State Animal Welfare Board (not confirmed from primary text)
 - travel_charge: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - travel_charge: Common Indian trade practice for this kind of shop (no single primary source)
-- package: Urban Company service listings (packages, duration, inclusions, cancellation/reschedule) — not fetched in this session https://www.urbancompany.com/
-- package: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
-- advance_payment: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - deliverables: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - portfolio_url: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - client_type: JustDial service listings (experience, timings, services offered, languages, verification) — not fetched in this session https://www.justdial.com/
@@ -605,8 +588,6 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 - venue_type: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - venue_type: Playo venue booking (sport, slot, duration, amenities, price per slot) — not fetched in this session https://playo.co/
 - venue_type: BookMyShow listings (format, language, certificate, seat class, showtime, duration) — not fetched in this session https://in.bookmyshow.com/
-- indoor_outdoor: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
-- indoor_outdoor: Playo venue booking (sport, slot, duration, amenities, price per slot) — not fetched in this session https://playo.co/
 - dining_capacity: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - room_count: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
 - parking_capacity: WedMeGood venue/vendor filters (capacity, space type, price per plate veg/non-veg, rooms, catering policy, packages) — not fetched in this session https://www.wedmegood.com/
@@ -793,116 +774,116 @@ Files: R5.json, R1.json, R2.json, R3.json, R4.json  ·  attributes: 854  ·  sub
 | fruits_vegetables | 24 | 11 | sold_by | country_of_origin, produce_type, sold_by, organic |
 | dairy | 39 | 19 | pack_size | expiry_date, brand, pack_size, fat_content |
 | meat_fish | 30 | 15 | cut, net_weight | expiry_date, meat_type, cut, net_weight, freshness |
-| bakery | 32 | 19 | weight, food_type, flavour | food_type, ingredients, allergens, nutrition_info, storage_instructions, expiry_date |
-| sweet_shop | 27 | 20 | weight | food_type, ingredients, allergens, nutrition_info, storage_instructions, expiry_date, shelf_life_days |
-| dry_fruits_spices | 39 | 19 | pack_size, grade | expiry_date, pack_size, product_form, grade |
+| bakery | 32 | 17 | weight, flavour | food_type, ingredients, allergens, expiry_date, weight, flavour |
+| sweet_shop | 27 | 17 | weight | food_type, ingredients, allergens, shelf_life_days, weight |
+| dry_fruits_spices | 39 | 19 | pack_size, grade | expiry_date, brand, product_form, pack_size, grade |
 | organic_store | 37 | 19 | pack_size | expiry_date, brand, pack_size, organic_certification |
 | flour_mill | 30 | 18 | pack_size, grind_texture | expiry_date, grain_type, pack_size, grind_texture |
 | drinking_water | 27 | 19 | container, pack_size | expiry_date, water_type, container, pack_size, deposit_amount |
-| paan_shop | 26 | 20 | variant | expiry_date, age_restricted, variant, tobacco_product |
-| restaurant | 19 | 6 | portion_size | food_type, calorie_kcal_per_serving, portion_info, allergens, course, portion_size |
-| fast_food | 19 | 6 | portion_size | food_type, calorie_kcal_per_serving, portion_info, allergens, course, portion_size |
-| cafe | 23 | 6 | portion_size | food_type, calorie_kcal_per_serving, portion_info, allergens, course, portion_size |
-| ice_cream_juice | 35 | 17 | portion_size | food_type, calorie_kcal_per_serving, portion_info, allergens, expiry_date, portion_size |
-| home_kitchen | 21 | 5 | plan_period, portion_size | food_type, calorie_kcal_per_serving, portion_info, allergens, plan_period, meal_slot |
-| catering | 21 | 3 | variant | food_type, allergens, cuisine, min_order_plates, advance_booking_days, service_style |
+| paan_shop | 26 | 20 | variant | expiry_date, age_restricted, paan_type, tobacco_product, variant |
+| restaurant | 17 | 3 | portion_size | food_type, allergens, course, spice_level, portion_size |
+| fast_food | 17 | 3 | portion_size | food_type, allergens, course, portion_size |
+| cafe | 21 | 3 | portion_size | food_type, allergens, course, portion_size |
+| ice_cream_juice | 34 | 15 | portion_size | food_type, allergens, expiry_date, frozen_dessert_type, flavour, portion_size |
+| home_kitchen | 21 | 3 | plan_period, portion_size | food_type, allergens, meal_slot, cuisine, plan_period, portion_size |
+| catering | 21 | 3 | variant | food_type, allergens, cuisine, min_order_plates, service_style, variant |
 | food_others | 36 | 19 | pack_size | expiry_date, brand, pack_size, food_type |
-| pharmacy | 32 | 19 | pack_size | expiry_date, composition, dosage_form, pack_size, prescription_required |
-| medical_supply | 28 | 11 | size, pack_size | expiry_date, device_type, brand, size, pack_size |
-| optician | 35 | 15 | colour, frame_size | expiry_date, lens_type, frame_material, gender, colour |
+| pharmacy | 33 | 19 | pack_size | expiry_date, composition, dosage_form, pack_size, prescription_required |
+| medical_supply | 27 | 11 | size, pack_size | expiry_date, device_type, brand, size, pack_size |
+| optician | 34 | 15 | colour, frame_size | expiry_date, lens_type, frame_material, gender, colour |
 | clinic | 22 | 2 | consultation_mode | practitioner, practitioner_registration_no, specialty, consultation_mode, timings |
 | hospital | 29 | 2 | room_type | specialty, room_type, insurance_cashless, emergency_24x7 |
 | dental | 24 | 2 | material | practitioner, practitioner_registration_no, treatments, pricing_unit |
 | diagnostic_lab | 24 | 2 | — | test_category, sample_type, home_sample_collection, report_time, fasting_required |
 | physiotherapy | 21 | 2 | consultation_mode, session_count | consultation_mode, practitioner, duration_mins, session_count |
 | ayush | 24 | 2 | consultation_mode, session_count | system_of_medicine, practitioner, consultation_mode, duration_mins |
-| home_nursing | 18 | 2 | caregiver_type, shift, plan_period | caregiver_type, shift, plan_period, service_area |
+| home_nursing | 17 | 2 | caregiver_type, shift, plan_period | care_services, service_area, background_verified, caregiver_type, shift, plan_period |
 | gym_fitness | 17 | 1 | plan_period | plan_period, activities, gender, timings |
 | health_others | 21 | 2 | consultation_mode | consultation_mode, specialty, duration_mins, appointment_required |
-| clothing | 42 | 14 | size, colour | gender, product_type, size, colour, fabric |
-| footwear | 40 | 13 | size, colour | gender, product_type, size, colour |
-| fabric | 40 | 13 | colour, fabric_length | product_type, fabric, colour, fabric_length |
+| clothing | 41 | 13 | size, colour | gender, product_type, size, colour, fabric |
+| footwear | 39 | 13 | size, colour | gender, product_type, size, colour |
+| fabric | 39 | 12 | colour, fabric_length | product_type, fabric, colour, fabric_length |
 | jewellery | 26 | 5 | purity, size, weight_grams | metal, purity, weight_grams, hallmarked, making_charges |
-| bags_accessories | 44 | 13 | colour, size | product_type, gender, colour, material |
-| kids_baby | 48 | 22 | age_group, size, colour | expiry_date, product_type, age_group, gender, colour |
-| cosmetics | 39 | 15 | shade, net_quantity | expiry_date, brand, product_type, shade, net_quantity |
+| bags_accessories | 43 | 12 | colour, size | product_type, gender, colour, material |
+| kids_baby | 47 | 22 | size, colour, pack_count | expiry_date, product_type, age_group, gender, size, colour |
+| cosmetics | 38 | 15 | shade, net_quantity | expiry_date, brand, product_type, shade, net_quantity |
 | salon | 15 | 1 | service_for, hair_length | service_type, service_for, duration_mins, service_mode |
-| beauty_parlour | 16 | 1 | service_for, package_includes | service_type, service_for, duration_mins, service_mode |
+| beauty_parlour | 17 | 1 | service_for, package | service_type, service_for, duration_mins, service_mode |
 | makeup_artist | 20 | 1 | service_type, coverage_area | service_type, service_mode, duration_hours, advance_booking_days |
-| tailor | 15 | 1 | delivery_speed, lining_included | service_type, garment_for, delivery_days, service_mode |
+| tailor | 15 | 1 | delivery_speed | service_type, service_for, delivery_days, service_mode |
 | laundry | 12 | 1 | garment_type, delivery_speed | service_type, pricing_unit, turnaround, pickup_drop |
-| fashion_others | 31 | 13 | size, colour | product_type, gender, size, colour |
-| mobile_phones | 47 | 14 | ram, storage, colour | brand, model_number, ram, storage, condition |
-| electronics_store | 48 | 15 | screen_size, colour | product_type, brand, model_number, condition |
-| computers | 50 | 14 | processor, ram, storage | product_type, brand, model_number, ram, storage |
-| home_appliances | 51 | 17 | capacity_litres, load_capacity_kg, cooling_capacity | product_type, brand, model_number, warranty_period, condition |
-| inverter_battery | 39 | 14 | battery_ah, va_rating, panel_wattage | product_type, brand, model_number, warranty_period, condition |
-| cctv_security | 38 | 14 | camera_resolution, channels | product_type, brand, camera_resolution, installation_included, warranty_period |
+| fashion_others | 30 | 12 | size, colour | product_type, gender, size, colour |
+| mobile_phones | 45 | 14 | ram, storage, colour | brand, model_number, ram, storage, condition |
+| electronics_store | 46 | 15 | screen_size, colour | product_type, brand, model_number, screen_size, colour |
+| computers | 48 | 14 | processor, ram, storage | product_type, brand, model_number, ram, storage |
+| home_appliances | 50 | 16 | capacity_litres, load_capacity_kg, cooling_capacity | product_type, brand, model_number, warranty_period |
+| inverter_battery | 37 | 14 | battery_ah, va_rating, panel_wattage | product_type, brand, model_number, warranty_period |
+| cctv_security | 36 | 14 | camera_resolution, channels | product_type, brand, camera_resolution, installation_included, warranty_period |
 | electronics_repair | 17 | 2 | parts_type | warranty_days, device_type, service_type, visiting_charge, service_mode |
 | telecom_recharge | 15 | 1 | plan_period, speed_mbps | service_type, operator, service_mode, turnaround |
-| electronics_others | 36 | 15 | colour | product_type, brand, model_number, condition |
-| hardware_store | 40 | 15 | size, length, diameter | product_type, brand, size, material |
-| electrical_supplies | 43 | 17 | conductor_size, length, colour | product_type, brand, conductor_size, wattage, current_rating |
-| plumbing_sanitary | 38 | 15 | pipe_size, pressure_rating, length | product_type, brand, material, pipe_size |
-| paints | 32 | 14 | net_quantity, colour, finish | expiry_date, brand, product_type, net_quantity, finish, colour |
-| building_materials | 30 | 15 | grade, diameter, net_quantity | product_type, brand, grade, sold_by |
-| tiles_plywood | 37 | 15 | dimensions, thickness, finish | product_type, dimensions, thickness, finish, sold_by |
-| furniture | 38 | 14 | bed_size, seating_capacity, colour | product_type, material, dimensions, condition |
-| home_decor | 34 | 12 | size, colour, pack_size | product_type, material, size, colour |
-| kitchenware | 38 | 15 | volume_capacity, diameter, pack_size | product_type, brand, material, volume_capacity |
+| electronics_others | 34 | 15 | colour | product_type, brand, model_number |
+| hardware_store | 38 | 14 | size, length, diameter | product_type, brand, size, material |
+| electrical_supplies | 40 | 17 | conductor_size, length, colour | product_type, brand, conductor_size, wattage, current_rating |
+| plumbing_sanitary | 35 | 14 | pipe_size, pressure_rating, length | product_type, brand, material, pipe_size |
+| paints | 31 | 14 | net_quantity, colour, finish | expiry_date, brand, product_type, net_quantity, finish, colour |
+| building_materials | 27 | 14 | grade, diameter, net_quantity | product_type, brand, grade, sold_by |
+| tiles_plywood | 35 | 14 | dimensions, thickness, finish | product_type, brand, sold_by, dimensions, thickness, finish |
+| furniture | 36 | 13 | bed_size, seating_capacity, colour | product_type, material, dimensions, condition |
+| home_decor | 33 | 12 | size, colour, pack_size | product_type, material, size, colour |
+| kitchenware | 35 | 15 | volume_capacity, diameter, pack_size | product_type, brand, material, volume_capacity |
 | garden_nursery | 29 | 12 | pot_size, plant_height, net_quantity | expiry_date, product_type, plant_name, pot_size, sunlight |
-| variety_store | 23 | 12 | colour, size, pack_size | product_type, variant, pack_size |
-| lpg_gas | 29 | 15 | cylinder_size, connection_type, burner_count | product_type, operator, cylinder_size, connection_type |
-| home_repair | 21 | 2 | service_type, bedrooms | warranty_days, service_type, visiting_charge, service_area |
-| cleaning_pest_control | 22 | 2 | service_type, bedrooms, plan_period | warranty_days, service_type, bedrooms, plan_period, service_area |
-| interior_design | 25 | 3 | service_type, bedrooms, package_tier | warranty_days, service_type, pricing_unit, delivery_days, warranty_months |
-| construction_contractor | 23 | 3 | service_type, package_tier | rera_project_registration_no, service_type, pricing_unit, materials_included, experience_years |
-| real_estate | 25 | 3 | — | rera_project_registration_no, deal_type, property_type, bedrooms, locality, area_sqft |
+| variety_store | 22 | 12 | colour, size, pack_size | product_type, brand, material, colour, size, pack_size |
+| lpg_gas | 28 | 15 | cylinder_size, connection_type, burner_count | product_type, operator, cylinder_size, connection_type |
+| home_repair | 20 | 2 | service_type, bedrooms | warranty_days, service_type, visiting_charge, service_area |
+| cleaning_pest_control | 21 | 2 | service_type, bedrooms, plan_period | warranty_days, service_type, bedrooms, plan_period, service_area, duration_mins |
+| interior_design | 21 | 2 | service_type, bedrooms, package | warranty_days, service_type, bedrooms, package, pricing_unit, delivery_days |
+| construction_contractor | 20 | 1 | service_type, package | service_type, package, pricing_unit, materials_included, experience_years |
+| real_estate | 24 | 2 | — | rera_project_registration_no, deal_type, property_type, bedrooms, locality |
 | house_rental | 23 | 1 | occupancy_type, meals_included | property_type, bedrooms, occupancy_type, locality, security_deposit |
-| equipment_rental | 21 | 1 | plan_period | product_type, plan_period, security_deposit, min_rental_days |
-| home_others | 23 | 12 | variant, colour | product_type, brand, variant, condition |
-| auto_parts | 37 | 15 | net_quantity, viscosity_grade, size | product_type, vehicle_type, compatibility, brand, condition |
-| tyres | 36 | 15 | tyre_size, tube_type, load_index | vehicle_type, tyre_size, brand, tube_type, condition |
-| vehicle_repair | 21 | 2 | vehicle_type, package_tier | warranty_days, service_type, vehicle_type, compatibility, pickup_drop |
-| car_wash | 17 | 1 | service_type, vehicle_body_type, plan_period | service_type, vehicle_body_type, service_mode, duration_mins |
-| fuel_station | 22 | 11 | fuel_type, fuel_grade, charger_power | fuel_type, brand, pricing_unit, timings |
-| vehicle_dealer | 35 | 5 | variant, colour, fuel_type | brand, vehicle_model, condition, model_year, km_driven |
-| vehicle_rental | 29 | 3 | plan_period, km_limit | vehicle_class, vehicle_model, plan_period, km_limit, security_deposit |
-| taxi_auto | 28 | 3 | vehicle_type, trip_type, air_conditioned | service_type, vehicle_type, trip_type, pricing_unit |
-| packers_movers | 21 | 2 | trip_type, bedrooms, vehicle_type | service_type, trip_type, bedrooms, packing_type |
-| courier | 20 | 2 | delivery_area, weight_slab, turnaround | service_type, delivery_area, weight_slab, pickup_drop |
-| travel_agency | 25 | 2 | hotel_category, occupancy_type, departure_dates | service_type, destination, trip_duration, pricing_unit |
-| hotel_lodge | 28 | 1 | room_type, meals_included, air_conditioned | stay_type, room_type, max_guests, meals_included, check_in_time |
-| driving_school | 22 | 1 | licence_class, transmission, session_count | licence_class, transmission, course_duration, licence_assistance |
-| vehicles_others | 28 | 12 | vehicle_type | service_type, vehicle_type, pricing_unit |
-| stationery | 27 | 12 | colour, ink_colour, paper_size | stationery_type, brand, colour, paper_size |
-| books | 28 | 12 | language, binding, edition | isbn, author_brand, language, condition |
-| toys | 35 | 14 | colour, size | toy_type, age_group, brand |
-| sports | 37 | 13 | size, weight, colour | sport, sports_item_type, brand, size |
+| equipment_rental | 20 | 1 | plan_period | product_type, plan_period, security_deposit, min_rental_days |
+| home_others | 21 | 12 | variant, colour | product_type, brand, material, variant, colour |
+| auto_parts | 36 | 15 | net_quantity, viscosity_grade, size | product_type, vehicle_type, compatibility, brand |
+| tyres | 34 | 15 | tyre_size, tube_type, load_index | vehicle_type, tyre_size, brand, tube_type, condition |
+| vehicle_repair | 19 | 2 | vehicle_type, package | warranty_days, service_type, vehicle_type, compatibility, pickup_drop |
+| car_wash | 16 | 1 | service_type, vehicle_body_type, plan_period | service_type, vehicle_body_type, service_mode, duration_mins |
+| fuel_station | 21 | 11 | fuel_type, fuel_grade, charger_power | fuel_type, brand, pricing_unit, timings |
+| vehicle_dealer | 34 | 5 | variant, colour, fuel_type | brand, vehicle_model, condition, model_year, km_driven |
+| vehicle_rental | 28 | 3 | plan_period, km_limit | vehicle_class, vehicle_model, plan_period, km_limit, security_deposit |
+| taxi_auto | 27 | 3 | vehicle_type, trip_type, air_conditioned | service_type, vehicle_type, trip_type, pricing_unit |
+| packers_movers | 20 | 2 | trip_type, bedrooms, vehicle_type | service_type, trip_type, bedrooms, packing_type |
+| courier | 19 | 2 | delivery_area, weight_slab, turnaround | service_type, delivery_area, weight_slab, pickup_drop |
+| travel_agency | 24 | 2 | hotel_category, occupancy_type, departure_dates | service_type, destination, trip_duration, pricing_unit |
+| hotel_lodge | 27 | 1 | room_type, meals_included, air_conditioned | stay_type, room_type, max_guests, meals_included, check_in_time |
+| driving_school | 21 | 1 | licence_class, transmission, session_count | licence_class, transmission, course_duration, licence_assistance |
+| vehicles_others | 26 | 12 | vehicle_type | service_type, vehicle_type, pricing_unit |
+| stationery | 27 | 12 | ink_colour, paper_size, page_count | stationery_type, brand, ink_colour, paper_size, page_count |
+| books | 28 | 12 | binding, edition | isbn, author_brand, language, condition |
+| toys | 34 | 14 | colour, size | toy_type, age_group, brand |
+| sports | 36 | 13 | size, weight, colour | sport, sports_item_type, brand, size |
 | gifts | 27 | 12 | dimensions, colour | gift_type, occasion, personalisation |
 | florist | 22 | 11 | stem_count, colour | arrangement, flower_type, sold_by |
 | pooja_store | 27 | 12 | fragrance, pack_size, dimensions | pooja_item_type, brand, material |
 | pet_shop | 33 | 12 | pack_size, flavour, size | expiry_date, pet_type, pet_product_type, brand, pack_size |
-| vet_pet_care | 23 | 2 | package, breed_size | vet_service_type, pet_type, consultation_mode, vci_registration_number |
-| musical_instruments | 28 | 12 | size, pitch_scale, colour | instrument_type, brand, condition |
+| vet_pet_care | 22 | 2 | package, breed_size | vet_service_type, pet_type, consultation_mode, practitioner_registration_no |
+| musical_instruments | 27 | 12 | size, pitch_scale, colour | instrument_type, brand, condition |
 | tuition | 22 | 1 | plan_period, mode | subject, level, mode, plan_period |
 | hobby_classes | 21 | 1 | plan_period, sessions_per_week | subject, mode, age_group, plan_period |
 | school_college | 18 | 1 | level, plan_period | institution_type, board, level, gender |
 | photo_studio | 18 | 1 | package | photo_service_type, event_type, package |
 | event_planner | 17 | 1 | package | event_service_type, event_type, package |
 | tent_sound_rental | 19 | 1 | area_sqft, power_rating, booking_unit | rental_item_type, booking_unit, setup_included, security_deposit |
-| wedding_venue | 24 | 1 | slot, booking_unit | venue_type, capacity, air_conditioned, slot |
+| wedding_venue | 23 | 1 | slot, booking_unit | venue_type, guest_capacity, air_conditioned, slot, booking_unit |
 | sports_venue | 21 | 1 | play_format, slot | sport, venue_type, slot, duration_mins |
 | entertainment_venue | 18 | 1 | ticket_type, seat_class | venue_type, ticket_type, timings |
-| lifestyle_others | 23 | 12 | size, colour | brand, variant, condition |
-| printing | 16 | 1 | print_type, paper_size, print_sides | print_type, paper_size, pricing_unit, turnaround |
+| lifestyle_others | 22 | 12 | size, colour | brand, material, condition, size, colour |
+| printing | 15 | 1 | print_type, paper_size, print_sides | print_type, paper_size, pricing_unit, turnaround |
 | online_services | 10 | 1 | — | esevai_service, turnaround, govt_fee_included |
-| accountant_tax | 16 | 2 | plan_period | tax_service, professional_type, service_mode |
+| accountant_tax | 14 | 1 | plan_period | tax_service, professional_type, service_mode |
 | legal | 16 | 2 | — | bar_council_enrolment_no, professional_type, practice_area |
-| insurance_finance | 17 | 5 | — | irdai_registration_no, sebi_registration_no, amfi_arn, finance_product, intermediary_type |
+| insurance_finance | 12 | 2 | — | finance_product, intermediary_type, operator |
 | it_services | 17 | 1 | package, plan_period | it_service_type, package, turnaround |
-| marketing_design | 14 | 1 | package, plan_period | marketing_service_type, package, plan_period |
-| staffing_security | 15 | 2 | guard_type, shift | emigration_rc_number, staffing_service_type, pricing_unit |
-| wholesale | 34 | 15 | pack_size, units_per_case | expiry_date, brand, variant, min_order_qty, gst_invoice |
-| manufacturing | 40 | 15 | dimensions, grade | material, dimensions, min_order_qty, custom_orders |
+| marketing_design | 14 | 1 | package, plan_period | marketing_service_type, platform, turnaround, package, plan_period |
+| staffing_security | 14 | 1 | guard_type, shift | staffing_service_type, pricing_unit, police_verified, guard_type, shift |
+| wholesale | 33 | 15 | pack_size, units_per_case | expiry_date, brand, variant, min_order_qty, pack_size, units_per_case |
+| manufacturing | 38 | 15 | dimensions, grade | material, dimensions, min_order_qty, custom_orders |
 | business_others | 10 | 1 | — | service_mode, turnaround, pricing_unit |
