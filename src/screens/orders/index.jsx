@@ -42,6 +42,7 @@ import {
 } from '@ant-design/icons';
 import ChatIcon from '../../app/components/common/ChatIcon';
 import { netWorkCall, apiConfig, checkUserRole } from '../../app/utils';
+import { lineName } from '../../app/utils/variants';
 import { useGlobalStore, useChatStore } from '../../app/services';
 import { colors, typography, radii, shadows } from '../../app/styles/theme';
 import { useHistory } from 'react-router-dom';
@@ -925,7 +926,7 @@ const OrdersScreen = () => {
                             >
                               {it.quantity}x
                             </span>
-                            <span style={{ fontWeight: 600 }}>{it.item_name}</span>
+                            <span style={{ fontWeight: 600 }}>{lineName(it)}</span>
                           </div>
                           <span style={{ fontWeight: 700, color: colors.textMain }}>
                             ₹{it.subtotal ? it.subtotal.toFixed(2) : (it.unit_price * it.quantity).toFixed(2)}
@@ -1368,7 +1369,7 @@ const OrdersScreen = () => {
                                   padding: '3px 0',
                                 }}
                               >
-                                <span>{it.quantity}x {it.item_name}</span>
+                                <span>{it.quantity}x {lineName(it)}</span>
                                 <span style={{ fontWeight: 700 }}>₹{it.subtotal?.toFixed(2)}</span>
                               </div>
                             ))}
@@ -1453,7 +1454,7 @@ const OrdersScreen = () => {
                               {totalItemQty} {totalItemQty === 1 ? 'item' : 'items'}:
                             </strong>{' '}
                             {items.length > 0
-                              ? items.map((it) => `${it.item_name} (x${it.quantity})`).join(', ')
+                              ? items.map((it) => `${lineName(it)} (x${it.quantity})`).join(', ')
                               : 'Order placed with merchant'}
                           </div>
 
@@ -1559,7 +1560,7 @@ const OrdersScreen = () => {
                       ? new Date(ord.createdAt).toLocaleDateString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                       : 'Recent';
                     const items = ord.items || [];
-                    const itemsSummary = items.map((i) => `${i.item_name} (x${i.quantity})`).join(', ') || 'Local Store Items';
+                    const itemsSummary = items.map((i) => `${lineName(i)} (x${i.quantity})`).join(', ') || 'Local Store Items';
 
                     return (
                       <div

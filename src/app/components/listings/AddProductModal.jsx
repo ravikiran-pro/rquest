@@ -15,6 +15,7 @@ import {
   Skeleton,
   Grid,
   Divider,
+  Switch,
   message,
 } from 'antd';
 import {
@@ -34,6 +35,7 @@ import { fallbackStockMode, stockBlockError, stockPayload, DEFAULT_LOW_STOCK } f
 import { fetchResolvedForm, uploadImage, apiErrorText, codeText } from '../../utils/catalogue_api';
 import { SchemaFieldControl, CatalogueFacts, lockedFacts } from './SchemaField';
 import { StockBlock } from './StockControl';
+import VariantEditor, { variantStateFromListing, variantStateError, variantPayload } from './VariantEditor';
 import './listings.css';
 
 /**
@@ -153,13 +155,18 @@ const AddProductModal = ({
   const defaultListingType = shop?.shopSubCategory?.listing_type || getListingTypeFromArchetype(storeArchetype);
 
   const [subId, setSubId] = useState(null);
-  const [resolved, setResolved] = useState({ fields: [], default_stock_mode: null, listing_type: null });
+  const [resolved, setResolved] = useState({ fields: [], default_stock_mode: null, listing_type: null, variant_axes: [] });
   const [formLoading, setFormLoading] = useState(false);
   const [formError, setFormError] = useState('');
   const [formTick, setFormTick] = useState(0);
 
   const [stock, setStock] = useState({ stock_mode: null });
   const [stockError, setStockError] = useState('');
+
+  // Variants: options (size, colour…) with a price / stock row per combination
+  const [variantsOn, setVariantsOn] = useState(false);
+  const [variantState, setVariantState] = useState({ axes: [], rows: [] });
+  const [variantError, setVariantError] = useState('');
   const stockTouched = useRef(false);
   // Set only when the owner changes the stock block (not when the sheet opens)
   const stockEdited = useRef(false);
@@ -203,7 +210,11 @@ const AddProductModal = ({
     setStockError('');
     setSectionError('');
     setNewSectionName('');
+    setVariantError('');
     form.resetFields();
+    const storedVariants = variantStateFromListing(editingItem);
+    setVariantsOn(storedVariants.axes.length > 0);
+    setVariantState(storedVariants);
     if (editingItem) {
       const sub = listingSubId(editingItem);
       setSubId(sub !== null && shopSubIds.includes(sub) ? sub : shopSubIds[0] ?? sub ?? null);
@@ -277,7 +288,7 @@ const AddProductModal = ({
       })
       .catch((res) => {
         if (cancelled) return;
-        setResolved({ fields: [], default_stock_mode: null, listing_type: null });
+        setResolved({ fields: [], default_stock_mode: null, listing_type: null, variant_axes: [] });
         setFormError(apiErrorText(res, 'Could not load the product form for this category.'));
         if (!stockTouched.current) {
           const mode = fallbackStockMode(defaultListingType);
@@ -423,7 +434,8 @@ const AddProductModal = ({
     const fieldErrors = Array.isArray(res?.errors) ? res.errors.filter((e) => e?.key) : [];
     const formErrors = [];
     fieldErrors.forEach((e) => {
-      if (e.key === 'stock_qty' || e.key === 'stock_mode') setStockError(e.message);
+      if (e.key === 'variant_axes' || String(e.key).startsWith('variants')) setVariantError(e.message);
+      else if (e.key === 'stock_qty' || e.key === 'stock_mode') setStockError(e.message);
       else if (e.key === 'section_id') setSectionError(e.message);
       else if (CORE_FIELDS.includes(e.key)) formErrors.push({ name: e.key, errors: [e.message] });
       else formErrors.push({ name: ['metadata', e.key], errors: [e.message] });
@@ -449,13 +461,20 @@ const AddProductModal = ({
       message.error('No shop selected');
       return;
     }
-    const stockProblem = stockBlockError(stock);
+    // With variants the quantity is per variant: only the mode and alert level are checked here
+    const stockProblem = stockBlockError(variantsOn ? { ...stock, stock_qty: 0 } : stock);
     if (stockProblem) {
       setStockError(stockProblem);
       return;
     }
+    const variantProblem = variantsOn ? variantStateError(variantState, stock.stock_mode) : null;
+    if (variantProblem) {
+      setVariantError(variantProblem);
+      return;
+    }
     setStockError('');
     setSectionError('');
+    setVariantError('');
 
     const formMeta = values.metadata || {};
     const fieldKeys = new Set(resolved.fields.map((f) => f.key));
@@ -476,12 +495,33 @@ const AddProductModal = ({
     if (isEdit && stock.stock_mode === editingItem.stock_mode && Number(stock.stock_qty) === Number(editingItem.stock_qty)) {
       delete stockFields.stock_qty;
     }
+    const wasVariant = Array.isArray(editingItem?.variant_axes) && editingItem.variant_axes.length > 0;
+    // Variants carry price and stock: the listing sends only the mode and alert level
+    let priceFields;
+    let variantFields = {};
+    if (variantsOn) {
+      delete stockFields.stock_qty;
+      delete stockFields.is_available;
+      if (stock.stock_mode) stockFields.stock_mode = stock.stock_mode;
+      priceFields = {};
+      variantFields = variantPayload(variantState, stock.stock_mode);
+    } else {
+      priceFields = {
+        price: Number(values.price),
+        mrp: values.mrp === undefined || values.mrp === null || values.mrp === '' ? null : Number(values.mrp),
+      };
+      if (wasVariant) {
+        // Back to a single price: the count is entered again for the whole item
+        variantFields = { variant_axes: [] };
+        Object.assign(stockFields, stockPayload(stock));
+      }
+    }
 
     const payload = {
       shop_id: shopId,
       name: (values.name || '').trim(),
-      price: Number(values.price),
-      mrp: values.mrp === undefined || values.mrp === null || values.mrp === '' ? null : Number(values.mrp),
+      ...priceFields,
+      ...variantFields,
       unit: values.unit,
       img_url: (values.img_url || '').trim(),
       description: (values.description || '').trim(),
@@ -648,16 +688,60 @@ const AddProductModal = ({
           />
         )}
 
-        <Row gutter={12}>
+        {/* Options: a product sold in several sizes / colours / packs */}
+        <div className="lc-sheet-block">
+          <label className="lc-stock-switch" style={{ marginBottom: variantsOn ? 10 : 0 }}>
+            <Switch
+              checked={variantsOn}
+              onChange={(checked) => {
+                setVariantsOn(checked);
+                setVariantError('');
+                if (checked && !variantState.axes.length) {
+                  const first = resolved.variant_axes?.[0];
+                  setVariantState({
+                    axes: [first ? { key: first.key, label: first.label, values: [] } : { key: '', label: '', values: [] }],
+                    rows: [],
+                  });
+                }
+                if (!checked && isEdit && (form.getFieldValue('price') === undefined || form.getFieldValue('price') === null)) {
+                  form.setFieldsValue({ price: editingItem.price, mrp: editingItem.mrp ?? null });
+                }
+              }}
+              aria-label="This item comes in options"
+            />
+            <span>
+              {variantsOn ? 'Comes in options' : 'Comes in options (size, colour, pack…)'}
+              {resolved.variant_axes?.length > 0 && !variantsOn && (
+                <span className="ms-muted"> · {resolved.variant_axes.map((a) => a.label).join(', ')}</span>
+              )}
+            </span>
+          </label>
+          {variantsOn && (
+            <VariantEditor
+              value={variantState}
+              onChange={(next) => {
+                setVariantState(next);
+                setVariantError('');
+              }}
+              axisDefs={resolved.variant_axes || []}
+              stockMode={stock.stock_mode}
+              listingType={listingType}
+              error={variantError}
+            />
+          )}
+        </div>
+
+        <Row gutter={12} style={variantsOn ? { display: 'none' } : undefined}>
           <Col xs={12}>
             <Form.Item
               name="price"
               label="Selling price (₹)"
               dependencies={['mrp']}
               rules={[
-                { required: true, message: 'Enter a price' },
+                { required: !variantsOn, message: 'Enter a price' },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
+                    if (variantsOn) return Promise.resolve();
                     const mrp = getFieldValue('mrp');
                     if (value === null || value === undefined || mrp === null || mrp === undefined || mrp === '') return Promise.resolve();
                     return Number(value) > Number(mrp) ? Promise.reject(new Error('Price is above MRP')) : Promise.resolve();
@@ -725,6 +809,7 @@ const AddProductModal = ({
               modes={listingType === 'service' ? ['always', 'toggle'] : undefined}
               error={stockError}
               idPrefix="lc-stock"
+              perVariant={variantsOn}
             />
           ) : (
             <Skeleton.Input active size="small" block />

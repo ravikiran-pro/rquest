@@ -41,6 +41,7 @@ import { useHistory } from 'react-router-dom';
 import Routes from '../../routes/routes';
 import { AddressModal, AddressOption, getFormattedAddress } from '../profile';
 import { setCartReturn, takeReopenCartFlag } from '../../utils/returnTo';
+import { lineKeyOf } from '../../utils/variants';
 import './cart.css';
 
 const PREBUILT_QUERIES = [
@@ -341,6 +342,7 @@ const CartScreen = () => {
         notes: notes,
         items: cart.items.map((i) => ({
           listing_id: i.listing_id,
+          ...(i.variant_id ? { variant_id: i.variant_id } : {}),
           item_name: i.item_name,
           unit_price: i.unit_price,
           quantity: i.quantity,
@@ -360,6 +362,13 @@ const CartScreen = () => {
           n > 0
             ? `${n} ${n === 1 ? 'item' : 'items'} went out of stock. Update your cart to continue.`
             : 'Some items went out of stock. Update your cart to continue.';
+        setLiveMessage(text);
+        message.warning(text);
+        setTimeout(() => itemsHeadingRef.current?.focus(), 0);
+      } else if (res?.code === 'variant_required' || res?.code === 'variant_not_found') {
+        // The product's options changed since it was added: the line has to be removed and re-added
+        markStockIssues([{ listing_id: res.listing_id, variant_id: res.variant_id || null, available: 0 }]);
+        const text = res.error || 'An item in your cart changed. Update your cart to continue.';
         setLiveMessage(text);
         message.warning(text);
         setTimeout(() => itemsHeadingRef.current?.focus(), 0);
@@ -413,7 +422,9 @@ const CartScreen = () => {
 
     setQuerySending(queryText === customQueryText ? 'custom' : queryText);
     try {
-      const itemsSummary = cart.items.map((i) => `${i.quantity}x ${i.item_name}`).join(', ');
+      const itemsSummary = cart.items
+        .map((i) => `${i.quantity}x ${i.item_name}${i.variant_label ? ` (${i.variant_label})` : ''}`)
+        .join(', ');
       const messageContent = itemsSummary
         ? `Customer Pre-order Inquiry regarding [${itemsSummary}]:\n\n"${queryText.trim()}"`
         : `Customer Pre-order Inquiry:\n\n"${queryText.trim()}"`;
@@ -466,7 +477,7 @@ const CartScreen = () => {
   };
 
   const handleRemoveItem = (item) => {
-    removeItem(item.listing_id);
+    removeItem(lineKeyOf(item));
     setLiveMessage(`${item.item_name} removed from your cart`);
     // The removed row (and its focused button) is gone: move focus to a stable heading
     setTimeout(() => itemsHeadingRef.current?.focus(), 0);
@@ -630,7 +641,7 @@ const CartScreen = () => {
       )}
 
       {cart.items.map((item) => (
-        <div key={item.listing_id} className="rq-cart-item">
+        <div key={lineKeyOf(item)} className="rq-cart-item">
           {item.img_url ? (
             <img src={item.img_url} alt={item.item_name} className="rq-cart-item-thumb" />
           ) : (
@@ -643,6 +654,7 @@ const CartScreen = () => {
             <div className="rq-cart-item-name" title={item.item_name}>
               {item.item_name}
             </div>
+            {item.variant_label && <div className="rq-cart-item-variant">{item.variant_label}</div>}
             <div className="rq-cart-item-price">
               ₹{item.unit_price}
               {item.unit ? ` / ${item.unit}` : ''}
@@ -660,7 +672,7 @@ const CartScreen = () => {
             <Button
               type="text"
               icon={<MinusOutlined />}
-              onClick={() => updateQuantity(item.listing_id, -1)}
+              onClick={() => updateQuantity(lineKeyOf(item), -1)}
               disabled={item.quantity <= 1}
               aria-label={`Decrease quantity of ${item.item_name}`}
             />
@@ -670,7 +682,7 @@ const CartScreen = () => {
             <Button
               type="text"
               icon={<PlusOutlined />}
-              onClick={() => updateQuantity(item.listing_id, 1)}
+              onClick={() => updateQuantity(lineKeyOf(item), 1)}
               disabled={
                 (item.max_qty !== null && item.max_qty !== undefined && item.quantity >= item.max_qty) ||
                 Boolean(item.stock_issue)

@@ -1,0 +1,486 @@
+/**
+ * Listing variants (catalog/attributes/DESIGN.md §4).
+ *
+ * A listing with a non-empty `variant_axes` (e.g. ["size", "colour"]) sells one row of
+ * listing_variants per option combination. Each variant has its own price, MRP, SKU and
+ * stock; the listing's stock_mode applies to all of them:
+ *   tracked  every variant counts units (stock_qty, whole number >= 0); available = qty > 0
+ *   toggle   every variant has the owner's on/off switch; stock_qty NULL
+ *   always   every variant is available; stock_qty NULL
+ *
+ * The listing keeps denormalised copies for search, sort and the existing stock filters
+ * (written by the server only, never taken from clients):
+ *   price / mrp    of the cheapest available variant (the cheapest of all when none is)
+ *   is_available   any variant available
+ *   stock_qty      tracked: the sum of the variants' units; otherwise NULL
+ *
+ * Listings with variant_axes = [] are "simple" and never touch this module's rules.
+ *
+ * Pure parsing and summary helpers first; database helpers (load, save, refresh) at the end.
+ */
+const { QueryTypes, Op } = require('sequelize');
+
+const AXIS_KEY_RE = /^[a-z][a-z0-9_]{0,39}$/;
+const MAX_AXES = 3;
+const MAX_VARIANTS = 100;
+const MAX_VALUE_LENGTH = 60;
+const MAX_SKU_LENGTH = 64;
+const MAX_PRICE = 1e9;
+const MAX_STOCK_QTY = 1e9;
+const DEFAULT_LOW_STOCK_THRESHOLD = 5;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+const isBlank = (v) => v === undefined || v === null || (typeof v === 'string' && v.trim() === '');
+const isPlainObject = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+const plainOf = (row) => (row && typeof row.get === 'function' ? row.get({ plain: true }) : { ...row });
+
+const fail = (code, error, errors) => ({ status: 400, code, error, ...(errors ? { errors } : {}) });
+
+/** The listing's axes as an array of keys ([] for simple listings and bad data). */
+const axesOf = (listing) => (Array.isArray(listing?.variant_axes) ? listing.variant_axes.filter((k) => typeof k === 'string') : []);
+const hasVariants = (listing) => axesOf(listing).length > 0;
+
+/* ─────────────────────────── attribute dictionary (optional) ─────────────────────────── */
+
+let dictionaryCache;
+/**
+ * Map(key → { key, label, type, values, open_values }) from src/api/data/attributeDictionary.json
+ * (exported by the attribute build, DESIGN.md §2). Empty when the file is not there yet.
+ * Accepts an array of definitions, an object keyed by attribute key, or { attributes: [...] }.
+ */
+function attributeDictionary() {
+  if (dictionaryCache !== undefined) return dictionaryCache;
+  dictionaryCache = new Map();
+  let raw;
+  try {
+    raw = require('../data/attributeDictionary.json'); // eslint-disable-line global-require
+  } catch (err) {
+    return dictionaryCache;
+  }
+  const list = Array.isArray(raw)
+    ? raw
+    : Array.isArray(raw?.attributes)
+      ? raw.attributes
+      : isPlainObject(raw?.attributes)
+        ? Object.entries(raw.attributes).map(([key, def]) => ({ key, ...def }))
+        : isPlainObject(raw)
+          ? Object.entries(raw).map(([key, def]) => (isPlainObject(def) ? { key, ...def } : null))
+          : [];
+  for (const def of list) {
+    if (def && typeof def.key === 'string') dictionaryCache.set(def.key, def);
+  }
+  return dictionaryCache;
+}
+
+const humanise = (key) => String(key).replace(/_/g, ' ').replace(/^\w/, (c) => c.toUpperCase());
+const enumValueOf = (v) => (isPlainObject(v) ? v.value ?? v.key ?? v.label : v);
+const enumLabelOf = (v) => (isPlainObject(v) ? v.label ?? v.value ?? v.key : v);
+
+/** [{ key, label, type, values: [{ value, label }], open_values }] for axis keys (UI hints). */
+function axisDefinitions(keys) {
+  const dict = attributeDictionary();
+  return (keys || []).map((key) => {
+    const def = dict.get(key) || {};
+    const values = Array.isArray(def.values)
+      ? def.values.map((v) => ({ value: String(enumValueOf(v)), label: String(enumLabelOf(v)) })).filter((v) => v.value)
+      : [];
+    return {
+      key,
+      label: def.label || humanise(key),
+      type: def.type || 'text',
+      values,
+      open_values: def.open_values !== false || values.length === 0,
+    };
+  });
+}
+
+/** The value as stored: an enum axis maps to the dictionary spelling; null when not allowed. */
+function canonicalAxisValue(key, value) {
+  const def = attributeDictionary().get(key);
+  if (!def || !['enum', 'multi_enum'].includes(def.type) || def.open_values || !Array.isArray(def.values) || !def.values.length) {
+    return value;
+  }
+  const hit = def.values.map((v) => String(enumValueOf(v))).find((v) => v.toLowerCase() === value.toLowerCase());
+  return hit === undefined ? null : hit;
+}
+
+/* ─────────────────────────────────── axes ─────────────────────────────────── */
+
+/** Axis keys a sub-category allows ([] = not set yet: any well-formed key is allowed). */
+function allowedAxesFor(subCategory) {
+  const raw = subCategory && (typeof subCategory.get === 'function' ? subCategory.get('variant_axes') : subCategory.variant_axes);
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((a) => (typeof a === 'string' ? a : isPlainObject(a) ? a.key : null))
+    .filter((k) => typeof k === 'string' && AXIS_KEY_RE.test(k));
+}
+
+/**
+ * Checked axis list.
+ *   allowed       allowedAxesFor(sub-category); [] allows any key matching AXIS_KEY_RE
+ *   grandfathered axes the listing already uses (still accepted when the sub-category's list
+ *                 was filled after they were chosen)
+ * Returns { axes } or an error.
+ */
+function parseVariantAxes(raw, { allowed = [], grandfathered = [] } = {}) {
+  if (raw === null || raw === undefined) return { axes: [] };
+  if (!Array.isArray(raw)) return fail('invalid_variant_axes', 'variant_axes must be a list of attribute keys', [{ key: 'variant_axes', message: 'variant_axes must be a list' }]);
+  const axes = [];
+  for (const item of raw) {
+    const key = typeof item === 'string' ? item.trim() : '';
+    if (!AXIS_KEY_RE.test(key)) {
+      const message = `"${String(item)}" is not a valid option name (lower-case letters, digits and _)`;
+      return fail('invalid_variant_axes', message, [{ key: 'variant_axes', message }]);
+    }
+    if (axes.includes(key)) {
+      const message = `Option "${key}" is listed twice`;
+      return fail('invalid_variant_axes', message, [{ key: 'variant_axes', message }]);
+    }
+    if (allowed.length && !allowed.includes(key) && !grandfathered.includes(key)) {
+      const message = `This category cannot vary by "${key}". Allowed: ${allowed.join(', ')}`;
+      return fail('variant_axis_not_allowed', message, [{ key: 'variant_axes', message }]);
+    }
+    axes.push(key);
+  }
+  if (axes.length > MAX_AXES) {
+    const message = `A product can vary by at most ${MAX_AXES} options`;
+    return fail('invalid_variant_axes', message, [{ key: 'variant_axes', message }]);
+  }
+  return { axes };
+}
+
+/** "M / Navy": the option values in axis order. */
+function variantLabel(axes, optionValues) {
+  const values = isPlainObject(optionValues) ? optionValues : {};
+  return (axes && axes.length ? axes : Object.keys(values))
+    .map((k) => values[k])
+    .filter((v) => !isBlank(v))
+    .map(String)
+    .join(' / ');
+}
+
+/** Case-insensitive identity of a combination, for duplicate checks and matching. */
+const optionKey = (axes, optionValues) =>
+  axes.map((k) => String((optionValues || {})[k] ?? '').trim().toLowerCase()).join('\u0001');
+
+/* ─────────────────────────────────── variants ─────────────────────────────────── */
+
+const money = (raw) => {
+  if (isBlank(raw)) return { value: null };
+  if (typeof raw === 'boolean') return { error: true };
+  const n = typeof raw === 'number' ? raw : Number(String(raw).trim());
+  if (!Number.isFinite(n) || n < 0 || n > MAX_PRICE) return { error: true };
+  return { value: n };
+};
+
+const wholeNumber = (raw) => {
+  if (isBlank(raw)) return { value: null };
+  if (typeof raw === 'boolean') return { error: true };
+  const text = String(raw).trim();
+  if (!/^\d+$/.test(text)) return { error: true };
+  const n = Number(text);
+  if (!Number.isSafeInteger(n) || n > MAX_STOCK_QTY) return { error: true };
+  return { value: n };
+};
+
+const flag = (raw) => {
+  if (raw === undefined || raw === null || raw === '') return undefined;
+  if (typeof raw === 'boolean') return raw;
+  const text = String(raw).trim().toLowerCase();
+  if (['true', '1', 'yes', 'on'].includes(text)) return true;
+  if (['false', '0', 'no', 'off'].includes(text)) return false;
+  return null;
+};
+
+/**
+ * The stock mode a new variant listing starts with: the explicit mode, else the default;
+ * a tracked default falls back to toggle unless every variant sends a quantity (a default
+ * never invents stock, as for simple listings).
+ */
+function variantStockMode({ explicitMode, defaultMode = 'toggle', rawVariants = [] }) {
+  if (explicitMode) return explicitMode;
+  if (defaultMode === 'tracked') {
+    const allCounted = rawVariants.length > 0 && rawVariants.every((v) => isPlainObject(v) && !isBlank(v.stock_qty));
+    return allCounted ? 'tracked' : 'toggle';
+  }
+  return defaultMode;
+}
+
+/**
+ * Checked variants for a full replace.
+ *   raw        the request's variants: [{ id?, option_values, price, mrp?, sku?, stock_qty?,
+ *              low_stock_threshold?, is_available?, img_url?, catalog_item_id? }]
+ *   axes       the listing's axes (non-empty)
+ *   stockMode  the listing's stock mode after this write
+ *   existing   the listing's stored variants (plain), matched by id or option_values
+ * A matched tracked variant without stock_qty keeps its stored count (so an edit that does
+ * not touch stock never writes back a stale quantity).
+ * Returns { rows: [{ id (existing id or null), option_values, ... , position }] } or an error.
+ */
+function parseVariants(raw, { axes, stockMode, existing = [] }) {
+  if (!Array.isArray(raw) || raw.length === 0) {
+    return fail('variants_required', 'Add at least one variant', [{ key: 'variants', message: 'Add at least one variant' }]);
+  }
+  if (raw.length > MAX_VARIANTS) {
+    const message = `A product can have at most ${MAX_VARIANTS} variants`;
+    return fail('too_many_variants', message, [{ key: 'variants', message }]);
+  }
+  const byId = new Map(existing.map((v) => [v.id, v]));
+  const byOptions = new Map(existing.map((v) => [optionKey(axes, v.option_values), v]));
+  const claimed = new Set();
+  const seen = new Map();
+  const rows = [];
+
+  for (const [index, item] of raw.entries()) {
+    const at = (field) => `variants[${index}].${field}`;
+    const bad = (code, field, message) => fail(code, message, [{ key: at(field), message, index }]);
+    if (!isPlainObject(item)) return bad('invalid_variant', 'option_values', `Variant ${index + 1} is not valid`);
+
+    // Options: exactly the listing's axes, each a non-empty value
+    const src = isPlainObject(item.option_values) ? item.option_values : null;
+    if (!src) return bad('invalid_variant', 'option_values', `Variant ${index + 1} needs its option values`);
+    const extra = Object.keys(src).filter((k) => !axes.includes(k));
+    if (extra.length) return bad('invalid_variant', 'option_values', `Variant ${index + 1} has an unknown option "${extra[0]}"`);
+    const optionValues = {};
+    for (const axis of axes) {
+      const value = isBlank(src[axis]) ? '' : String(src[axis]).trim();
+      if (!value) return bad('variant_option_missing', 'option_values', `Variant ${index + 1} needs a value for ${humanise(axis).toLowerCase()}`);
+      if (value.length > MAX_VALUE_LENGTH) {
+        return bad('invalid_variant', 'option_values', `Option values can be at most ${MAX_VALUE_LENGTH} characters`);
+      }
+      const canonical = canonicalAxisValue(axis, value);
+      if (canonical === null) {
+        return bad('variant_value_not_allowed', 'option_values', `"${value}" is not a ${humanise(axis).toLowerCase()} this category allows`);
+      }
+      optionValues[axis] = canonical;
+    }
+    const key = optionKey(axes, optionValues);
+    if (seen.has(key)) {
+      return bad('duplicate_variant', 'option_values', `Variants ${seen.get(key) + 1} and ${index + 1} have the same options (${variantLabel(axes, optionValues)})`);
+    }
+    seen.set(key, index);
+
+    // Which stored variant this is
+    let match = null;
+    if (!isBlank(item.id)) {
+      match = UUID_RE.test(String(item.id)) ? byId.get(String(item.id)) : null;
+      if (!match) return bad('variant_not_found', 'id', `Variant ${index + 1} is not one of this product's variants`);
+    } else {
+      const candidate = byOptions.get(key);
+      if (candidate && !claimed.has(candidate.id)) match = candidate;
+    }
+    if (match) {
+      if (claimed.has(match.id)) return bad('duplicate_variant', 'id', `Variant ${index + 1} is sent twice`);
+      claimed.add(match.id);
+    }
+
+    // Price (> 0) and MRP (>= price when set)
+    const price = money(item.price);
+    if (price.error || price.value === null || price.value <= 0) {
+      return bad('invalid_price', 'price', `Enter a price above 0 for ${variantLabel(axes, optionValues)}`);
+    }
+    const mrp = money(item.mrp);
+    if (mrp.error) return bad('invalid_mrp', 'mrp', `MRP of ${variantLabel(axes, optionValues)} must be a number of 0 or more`);
+    if (mrp.value !== null && mrp.value > 0 && price.value > mrp.value) {
+      return bad('price_above_mrp', 'price', `Price of ${variantLabel(axes, optionValues)} cannot be more than its MRP`);
+    }
+
+    const sku = isBlank(item.sku) ? null : String(item.sku).trim();
+    if (sku && sku.length > MAX_SKU_LENGTH) return bad('invalid_variant', 'sku', `SKU can be at most ${MAX_SKU_LENGTH} characters`);
+
+    const threshold = wholeNumber(item.low_stock_threshold);
+    if (threshold.error) return bad('invalid', 'low_stock_threshold', 'Low-stock alert must be a whole number of 0 or more');
+
+    // Stock under the listing's mode
+    let stockQty = null;
+    let available = true;
+    if (stockMode === 'tracked') {
+      const qty = wholeNumber(item.stock_qty);
+      if (qty.error) return bad('invalid', 'stock_qty', 'Stock quantity must be a whole number of 0 or more');
+      stockQty = qty.value;
+      if (stockQty === null && match && match.stock_qty !== null && match.stock_qty !== undefined) stockQty = Number(match.stock_qty);
+      if (stockQty === null) {
+        return bad('stock_qty_required', 'stock_qty', `Enter the stock quantity for ${variantLabel(axes, optionValues)}`);
+      }
+      available = stockQty > 0;
+    } else if (stockMode === 'toggle') {
+      const f = flag(item.is_available);
+      if (f === null) return bad('invalid', 'is_available', 'is_available must be true or false');
+      available = f !== undefined ? f : match ? match.is_available !== false : true;
+    }
+
+    rows.push({
+      id: match ? match.id : null,
+      option_values: optionValues,
+      sku,
+      price: price.value,
+      mrp: mrp.value,
+      stock_qty: stockQty,
+      low_stock_threshold: threshold.value,
+      is_available: available,
+      catalog_item_id: isBlank(item.catalog_item_id) ? (match ? match.catalog_item_id ?? null : null) : String(item.catalog_item_id).trim(),
+      img_url: isBlank(item.img_url) ? null : String(item.img_url).trim(),
+      position: index,
+    });
+  }
+  return { rows };
+}
+
+/** The variant to show first / price the listing by: cheapest available, else cheapest. */
+function leadVariant(variants) {
+  const list = [...(variants || [])];
+  list.sort(
+    (a, b) =>
+      Number(b.is_available !== false) - Number(a.is_available !== false) ||
+      Number(a.price) - Number(b.price) ||
+      (a.position || 0) - (b.position || 0)
+  );
+  return list[0] || null;
+}
+
+/** The listing's denormalised columns for a set of variants under a stock mode. */
+function summariseVariants(variants, stockMode) {
+  const lead = leadVariant(variants);
+  return {
+    price: lead ? Number(lead.price) : 0,
+    mrp: lead && lead.mrp !== null && lead.mrp !== undefined ? Number(lead.mrp) : null,
+    is_available: (variants || []).some((v) => v.is_available !== false),
+    stock_qty: stockMode === 'tracked' ? (variants || []).reduce((sum, v) => sum + (Number(v.stock_qty) || 0), 0) : null,
+  };
+}
+
+/** 'in_stock' | 'low' | 'out' for a variant under its listing's mode. */
+function variantStockState(variant, listing) {
+  const mode = listing?.stock_mode || 'toggle';
+  if (mode === 'tracked') {
+    const qty = Number(variant.stock_qty) || 0;
+    if (qty <= 0) return 'out';
+    const raw = variant.low_stock_threshold ?? listing?.low_stock_threshold;
+    const threshold = raw === null || raw === undefined ? DEFAULT_LOW_STOCK_THRESHOLD : Number(raw);
+    return qty <= threshold ? 'low' : 'in_stock';
+  }
+  if (mode === 'always') return 'in_stock';
+  return variant.is_available === false ? 'out' : 'in_stock';
+}
+
+/** Variant JSON: the row plus label and stock_state. */
+function serializeVariant(variant, listing) {
+  const plain = plainOf(variant);
+  plain.label = variantLabel(axesOf(listing), plain.option_values);
+  plain.stock_state = variantStockState(plain, listing);
+  return plain;
+}
+
+/* ─────────────────────────────────── database ─────────────────────────────────── */
+
+const models = () => require('../models'); // eslint-disable-line global-require
+
+/** Map(listing_id → [plain variant] sorted by position) for the variant listings among `listings`. */
+async function loadVariants(listings, { transaction } = {}) {
+  const ids = [...new Set((listings || []).filter(hasVariants).map((l) => l.id).filter(Boolean))];
+  const out = new Map();
+  if (!ids.length) return out;
+  const { listing_variants } = models();
+  const rows = await listing_variants.findAll({
+    where: { listing_id: ids },
+    order: [
+      ['listing_id', 'ASC'],
+      ['position', 'ASC'],
+      ['createdAt', 'ASC'],
+    ],
+    transaction,
+  });
+  for (const row of rows) {
+    const plain = row.get({ plain: true });
+    if (!out.has(plain.listing_id)) out.set(plain.listing_id, []);
+    out.get(plain.listing_id).push(plain);
+  }
+  return out;
+}
+
+/**
+ * Full replace of a listing's variants with parsed rows (parseVariants): stored variants not
+ * in `rows` are deleted (order lines keep their label; their variant_id becomes NULL), matched
+ * ones updated, the rest created. Must run inside the listing write's transaction.
+ */
+async function saveVariants(listingId, rows, { transaction } = {}) {
+  const { listing_variants } = models();
+  const keepIds = rows.filter((r) => r.id).map((r) => r.id);
+  await listing_variants.destroy({
+    where: keepIds.length
+      ? { listing_id: listingId, id: { [Op.notIn]: keepIds } }
+      : { listing_id: listingId },
+    transaction,
+  });
+  // Updated rows first move to a placeholder option set, so two variants can swap options
+  // without tripping the (listing_id, option_values) unique index
+  if (keepIds.length > 1) {
+    await listing_variants.sequelize.query(
+      `UPDATE listing_variants SET option_values = jsonb_build_object('__swap', id::text)
+        WHERE listing_id = :listingId AND id IN (:ids)`,
+      { replacements: { listingId, ids: keepIds }, transaction }
+    );
+  }
+  const now = new Date();
+  for (const row of rows) {
+    const { id, ...values } = row;
+    if (id) {
+      await listing_variants.update({ ...values, updatedAt: now }, { where: { id, listing_id: listingId }, transaction });
+    }
+  }
+  const fresh = rows.filter((r) => !r.id).map(({ id, ...values }) => ({ ...values, listing_id: listingId })); // eslint-disable-line no-unused-vars
+  if (fresh.length) await listing_variants.bulkCreate(fresh, { transaction });
+}
+
+/**
+ * Re-derives the denormalised listing columns from the stored variants (after an order,
+ * a cancel or an inventory change touched variant stock). Simple listings are skipped.
+ */
+async function refreshListingsFromVariants(listingIds, { transaction } = {}) {
+  const ids = [...new Set((listingIds || []).filter(Boolean))];
+  if (!ids.length) return;
+  const { sequelize } = models();
+  await sequelize.query(
+    `UPDATE shop_listings l SET
+        price = c.price,
+        mrp = c.mrp,
+        is_available = c.any_available,
+        stock_qty = CASE WHEN l.stock_mode = 'tracked' THEN c.total ELSE NULL END,
+        "updatedAt" = now()
+       FROM (
+         SELECT listing_id,
+                (array_agg(price ORDER BY is_available DESC, price ASC, position ASC))[1] AS price,
+                (array_agg(mrp ORDER BY is_available DESC, price ASC, position ASC))[1] AS mrp,
+                bool_or(is_available) AS any_available,
+                COALESCE(sum(stock_qty), 0)::int AS total
+           FROM listing_variants
+          WHERE listing_id IN (:ids)
+          GROUP BY listing_id
+       ) c
+      WHERE l.id = c.listing_id AND jsonb_array_length(COALESCE(l.variant_axes, '[]'::jsonb)) > 0`,
+    { replacements: { ids }, transaction, type: QueryTypes.UPDATE }
+  );
+}
+
+module.exports = {
+  AXIS_KEY_RE,
+  MAX_AXES,
+  MAX_VARIANTS,
+  axesOf,
+  hasVariants,
+  attributeDictionary,
+  axisDefinitions,
+  allowedAxesFor,
+  parseVariantAxes,
+  variantLabel,
+  optionKey,
+  variantStockMode,
+  parseVariants,
+  leadVariant,
+  summariseVariants,
+  variantStockState,
+  serializeVariant,
+  loadVariants,
+  saveVariants,
+  refreshListingsFromVariants,
+};

@@ -8,6 +8,8 @@ import { availabilityLabels, STOCK_MODE_SHORT, DEFAULT_LOW_STOCK } from '../../.
 import useShopListings from './useShopListings';
 import { ListingThumb, StockPill, sectionName } from './ListingBits';
 import { patchInventory, buildStockUpdates } from './inventoryApi';
+import VariantStockRows from './VariantStockRows';
+import { hasVariants } from '../../../app/utils/variants';
 import './manage_store_catalog.css';
 
 const { Title, Text } = Typography;
@@ -254,7 +256,8 @@ const InventoryTab = ({ shop, sections, active, isPhone, initialFilter, refreshK
       return;
     }
     askQuantity(`Set quantity for ${counted.length} ${counted.length === 1 ? 'item' : 'items'}`, 'Set quantity', (qty) =>
-      runBulk(counted.map((i) => ({ id: i.id, stock_qty: qty })), 'qty', selectedItems.length - counted.length)
+      // Variant listings get one update per variant
+      runBulk(buildStockUpdates(counted, 'in', qty).updates, 'qty', selectedItems.length - counted.length)
     );
   };
 
@@ -283,6 +286,11 @@ const InventoryTab = ({ shop, sections, active, isPhone, initialFilter, refreshK
   ];
 
   const renderControl = (item) => {
+    // Variants: the count / switch of each option is in the rows under the item
+    if (hasVariants(item)) {
+      if (item.stock_mode === 'always') return <span className="mc-pill mc-pill--always">Always</span>;
+      return <span className="ms-muted">{item.variants.length} options</span>;
+    }
     if (item.stock_mode === 'tracked') {
       const draft = drafts[item.id];
       return (
@@ -316,7 +324,10 @@ const InventoryTab = ({ shop, sections, active, isPhone, initialFilter, refreshK
   const renderRow = (item) => {
     const secName = sectionName(sections, item.section_id);
     return (
-      <div key={item.id} className={`mc-inv-row ${selected.has(item.id) ? 'is-selected' : ''}`}>
+      <div
+        key={item.id}
+        className={`mc-inv-row ${selected.has(item.id) ? 'is-selected' : ''} ${hasVariants(item) ? 'has-variants' : ''}`}
+      >
         <Checkbox
           checked={selected.has(item.id)}
           onChange={(e) =>
@@ -342,6 +353,9 @@ const InventoryTab = ({ shop, sections, active, isPhone, initialFilter, refreshK
           </div>
         </div>
         <div className="mc-inv-control">{renderControl(item)}</div>
+        {hasVariants(item) && (
+          <VariantStockRows item={item} isPhone={isPhone} save={(update, rollback) => saveRow(item, update, rollback)} />
+        )}
       </div>
     );
   };

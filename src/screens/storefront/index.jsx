@@ -47,6 +47,8 @@ import {
 } from '../../app/utils';
 import { useGlobalStore, useChatStore, useCartStore } from '../../app/services';
 import { isSellable, maxOrderQty, availabilityLabels, lowStockHint } from '../../app/utils/stock';
+import { hasVariants, defaultVariant, findVariant, variantAsStock, cartLineKey, lineKeyOf } from '../../app/utils/variants';
+import VariantPicker from '../../app/components/listings/VariantPicker';
 import { useStorefront } from './useStorefrontSections';
 import SectionChips from './SectionChips';
 import SectionBlock from './SectionBlock';
@@ -67,6 +69,8 @@ const StorefrontScreen = () => {
   const { cart, addItem, updateQuantity, openCart } = useCartStore((state) => state);
 
   const [shop, setShop] = useState(null);
+  // Chosen options per listing with variants: { [listing_id]: { axis: value } }
+  const [variantPicks, setVariantPicks] = useState({});
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -261,14 +265,21 @@ const StorefrontScreen = () => {
   };
 
   // The cart refuses items that are out of stock, or more than the counted stock
-  const handleAddToCart = (item) => {
+  const handleAddToCart = (item, variant = null) => {
     if (isOwnStore) {
       message.info('You are viewing your own store. Open Manage Store to edit listings.');
       return false;
     }
-    const result = addItem(shop, item);
+    const result = addItem(shop, item, variant);
     if (result && result.ok === false) {
-      message.warning(result.reason === 'max' ? `Only ${result.max} in stock` : `${item.name} is ${availabilityLabels(item.listing_type).off.toLowerCase()}`);
+      const name = variant ? `${item.name} (${variant.label})` : item.name;
+      message.warning(
+        result.reason === 'max'
+          ? `Only ${result.max} in stock`
+          : result.reason === 'variant'
+          ? `Choose an option for ${item.name}`
+          : `${name} is ${availabilityLabels(item.listing_type).off.toLowerCase()}`
+      );
       return false;
     }
     return true;
@@ -342,7 +353,15 @@ const StorefrontScreen = () => {
 
   // One item card. Out-of-stock items are greyed with their label and can't be added.
   const renderItem = (item) => {
-            const inCartItem = cart.items.find((i) => i.listing_id === item.id);
+            // Variants: the chosen option set (default: cheapest available) drives price and stock
+            const variantMode = hasVariants(item);
+            const selection = variantMode ? variantPicks[item.id] || defaultVariant(item)?.option_values : null;
+            const variant = variantMode ? findVariant(item, selection) : null;
+            const stockView = variantMode ? variantAsStock(item, variant) : item;
+            const shownPrice = variant ? variant.price : item.price;
+            const shownMrp = variant ? variant.mrp : item.mrp;
+            const lineKey = cartLineKey(item.id, variant?.id);
+            const inCartItem = cart.items.find((i) => lineKeyOf(i) === lineKey);
             const qty = inCartItem?.quantity || 0;
             const isFood = item.listing_type === 'food';
             const isService = item.listing_type === 'service';
@@ -350,10 +369,11 @@ const StorefrontScreen = () => {
             const foodType = item.metadata?.food_type;
             const durationMins = item.metadata?.duration_mins;
             const deposit = item.metadata?.security_deposit;
-            const sellable = isSellable(item);
+            const sellable = variantMode ? Boolean(variant) && isSellable(stockView) : isSellable(item);
             const offLabel = availabilityLabels(item.listing_type).off;
-            const lowHint = sellable ? lowStockHint(item) : null;
-            const cap = maxOrderQty(item);
+            const lowHint = sellable ? lowStockHint(stockView) : null;
+            const cap = maxOrderQty(stockView);
+            const addThis = () => handleAddToCart(item, variant);
 
             return (
               <Col xs={24} sm={12} md={8} key={item.id}>
@@ -497,9 +517,9 @@ const StorefrontScreen = () => {
 
                       <Flex align="baseline" gap={6}>
                         <span style={{ fontSize: 17, fontWeight: 800, color: colors.primary }}>
-                          ₹{item.price}
+                          ₹{shownPrice}
                         </span>
-                        {item.mrp && item.mrp > item.price && (
+                        {shownMrp && shownMrp > shownPrice && (
                           <span
                             style={{
                               fontSize: 12,
@@ -507,7 +527,7 @@ const StorefrontScreen = () => {
                               textDecoration: 'line-through',
                             }}
                           >
-                            ₹{item.mrp}
+                            ₹{shownMrp}
                           </span>
                         )}
                         <span style={{ fontSize: 11, color: colors.textLight }}>
@@ -553,6 +573,15 @@ const StorefrontScreen = () => {
                     </div>
                   )}
 
+                  {/* Options of a product with variants */}
+                  {variantMode && (
+                    <VariantPicker
+                      listing={item}
+                      selection={selection}
+                      onChange={(next) => setVariantPicks((prev) => ({ ...prev, [item.id]: next }))}
+                    />
+                  )}
+
                   {/* Stock state */}
                   {!sellable && <span className="sf-stock-label">{offLabel}</span>}
                   {lowHint && <span className="sf-low-label">{lowHint}</span>}
@@ -579,7 +608,7 @@ const StorefrontScreen = () => {
                             borderColor: colors.primary,
                           }}
                           disabled={!sellable}
-                          onClick={() => handleAddToCart(item)}
+                          onClick={() => addThis()}
                         >
                           {sellable ? 'Book Visit' : offLabel}
                         </Button>
@@ -612,7 +641,7 @@ const StorefrontScreen = () => {
                           }}
                           disabled={!sellable}
                           onClick={() => {
-                            if (handleAddToCart(item)) openCart();
+                            if (addThis()) openCart();
                           }}
                         >
                           {sellable ? 'Reserve' : offLabel}
@@ -634,7 +663,7 @@ const StorefrontScreen = () => {
                           type="text"
                           icon={<MinusOutlined />}
                           aria-label={`Remove one ${item.name}`}
-                          onClick={() => updateQuantity(item.id, -1)}
+                          onClick={() => updateQuantity(lineKey, -1)}
                         />
                         <span style={{ fontWeight: 800, color: colors.textMain, fontSize: 13 }}>
                           {qty} in Cart
@@ -644,7 +673,7 @@ const StorefrontScreen = () => {
                           icon={<PlusOutlined />}
                           disabled={cap !== null && qty >= cap}
                           aria-label={`Add one more ${item.name}`}
-                          onClick={() => updateQuantity(item.id, 1)}
+                          onClick={() => updateQuantity(lineKey, 1)}
                         />
                       </Flex>
                     ) : (
@@ -660,7 +689,7 @@ const StorefrontScreen = () => {
                           borderColor: colors.primary,
                         }}
                         disabled={!sellable}
-                        onClick={() => handleAddToCart(item)}
+                        onClick={() => addThis()}
                       >
                         {!sellable ? offLabel : isFood ? 'Add to Order' : 'Add to Cart'}
                       </Button>

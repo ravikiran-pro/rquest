@@ -8,11 +8,31 @@
  *   form fields    the resolved form (services/listingForm + formOverrides), catalogue-locked
  *                  keys restored from the snapshot
  *   section        the requested one (400 section_not_in_shop), else the auto section
+ *   variants       POST / PUT only (allowVariants): variant_axes + variants (services/variants.js);
+ *                  price, MRP, availability and the tracked count then come from the variants
  *
  * Errors are { status, code, error, errors?: [{ key, message }] }.
  */
-const { shop_listings } = require('../models');
-const { stockState, defaultStockMode, normaliseStockInput, applyStockFields } = require('./stock');
+const { sequelize, shop_listings } = require('../models');
+const {
+  stockState,
+  defaultStockMode,
+  normaliseStockInput,
+  applyStockFields,
+  DEFAULT_LOW_STOCK_THRESHOLD,
+} = require('./stock');
+const {
+  axesOf,
+  hasVariants,
+  allowedAxesFor,
+  parseVariantAxes,
+  parseVariants,
+  variantStockMode,
+  summariseVariants,
+  serializeVariant,
+  loadVariants,
+  saveVariants,
+} = require('./variants');
 const { validateListingFields, applyOwnerStatutory, needsDetails, lockedKeysFor, keysLeavingSchema } = require('./formOverrides');
 const { listingTypeFor, categoryMetadata, pickShopSubCategory, subCategoryIdFor } = require('./listingForm');
 
@@ -66,17 +86,151 @@ function clientMetadata(raw) {
   return meta;
 }
 
-/** Listing JSON (§E1): the row plus stock_state; owner endpoints add needs_details and locked_keys. */
-function serializeListing(listing, { owner = false, schema = null } = {}) {
+/**
+ * Listing JSON (§E1): the row plus stock_state, variant_axes and variants (sorted by position;
+ * [] for simple listings); owner endpoints add needs_details and locked_keys.
+ *   variants  the listing's stored variants (variants.loadVariants(...).get(id))
+ */
+function serializeListing(listing, { owner = false, schema = null, variants = null } = {}) {
   if (!listing) return listing;
   const plain = typeof listing.get === 'function' ? listing.get({ plain: true }) : { ...listing };
   delete plain.rn;
   plain.stock_state = stockState(plain);
+  plain.variant_axes = axesOf(plain);
+  plain.variants = hasVariants(plain) ? (variants || []).map((v) => serializeVariant(v, plain)) : [];
   if (owner) {
     plain.needs_details = schema ? needsDetails(schema, plain.metadata) : false;
     plain.locked_keys = schema ? lockedKeysFor(schema, plain) : [];
   }
   return plain;
+}
+
+/** Listings JSON with their variants loaded in one query. `options(row)` → serializeListing options. */
+async function serializeListings(rows, options = () => ({})) {
+  const variants = await loadVariants(rows);
+  return Promise.all(
+    (rows || []).map(async (row) => serializeListing(row, { ...(await options(row)), variants: variants.get(row.id) }))
+  );
+}
+
+const sameAxes = (a, b) => a.length === b.length && a.every((k, i) => k === b[i]);
+
+/**
+ * The variant part of a create: null for a simple listing, else
+ * { axes, rows, price, mrp, stock: { stock_mode, stock_qty, low_stock_threshold, is_available } }
+ * or an error.
+ */
+function newListingVariants(body, subCategory, stockInput, defaultMode) {
+  if (body.variant_axes !== undefined && body.variant_axes !== null && !Array.isArray(body.variant_axes)) {
+    return parseVariantAxes(body.variant_axes);
+  }
+  const wanted = Array.isArray(body.variant_axes) && body.variant_axes.length > 0;
+  if (!wanted) {
+    if (Array.isArray(body.variants) && body.variants.length) {
+      const message = 'Choose the options (variant_axes) the variants differ by';
+      return fail('variant_axes_required', message, [{ key: 'variant_axes', message }]);
+    }
+    return null;
+  }
+  const parsedAxes = parseVariantAxes(body.variant_axes, { allowed: allowedAxesFor(subCategory) });
+  if (parsedAxes.code) return parsedAxes;
+  const { axes } = parsedAxes;
+  const mode = variantStockMode({
+    explicitMode: stockInput.stock_mode,
+    defaultMode,
+    rawVariants: Array.isArray(body.variants) ? body.variants : [],
+  });
+  const parsed = parseVariants(body.variants, { axes, stockMode: mode });
+  if (parsed.code) return parsed;
+  const summary = summariseVariants(parsed.rows, mode);
+  const threshold =
+    stockInput.low_stock_threshold !== undefined
+      ? stockInput.low_stock_threshold
+      : mode === 'tracked'
+        ? DEFAULT_LOW_STOCK_THRESHOLD
+        : null;
+  return {
+    axes,
+    rows: parsed.rows,
+    price: summary.price,
+    mrp: summary.mrp,
+    stock: { stock_mode: mode, stock_qty: summary.stock_qty, low_stock_threshold: threshold, is_available: summary.is_available },
+  };
+}
+
+/**
+ * The variant part of an update, or null when the listing is and stays simple.
+ *   { untouched: true }        a variant listing whose variants, axes and stock were not sent
+ *   { toSimple: true, rows: [] } the listing drops its variants (variant_axes: [])
+ *   { axes, rows, changes }    full replace of the variants with the listing columns derived
+ * or an error.
+ */
+function updateListingVariants({ listing, body, subCategory, subChanged, stockInput, existing }) {
+  const currentAxes = axesOf(listing);
+  const axesSent = body.variant_axes !== undefined;
+  const variantsSent = body.variants !== undefined;
+  const stockSent = stockInput.stock_mode !== undefined || stockInput.low_stock_threshold !== undefined;
+
+  let newAxes = currentAxes;
+  if (axesSent || (subChanged && currentAxes.length)) {
+    const parsedAxes = parseVariantAxes(axesSent ? body.variant_axes : currentAxes, {
+      allowed: allowedAxesFor(subCategory),
+      grandfathered: subChanged ? [] : currentAxes,
+    });
+    if (parsedAxes.code) return parsedAxes;
+    newAxes = parsedAxes.axes;
+  }
+
+  if (!newAxes.length) {
+    if (currentAxes.length) return { toSimple: true, rows: [] };
+    if (variantsSent && Array.isArray(body.variants) && body.variants.length) {
+      const message = 'Choose the options (variant_axes) the variants differ by';
+      return fail('variant_axes_required', message, [{ key: 'variant_axes', message }]);
+    }
+    return null;
+  }
+  if (!axesSent && !variantsSent && !stockSent && !subChanged) return { untouched: true };
+
+  if (!sameAxes(newAxes, currentAxes) && !variantsSent) {
+    const message = 'Send the variants for the new options';
+    return fail('variants_required', message, [{ key: 'variants', message }]);
+  }
+
+  const mode = stockInput.stock_mode !== undefined ? stockInput.stock_mode : listing.stock_mode || 'toggle';
+  // Without variants in the body the stored ones are re-checked under the new stock mode;
+  // stock_qty is left out so counted variants keep their current units
+  const raw = variantsSent
+    ? body.variants
+    : existing.map((v) => ({
+        id: v.id,
+        option_values: v.option_values,
+        price: v.price,
+        mrp: v.mrp,
+        sku: v.sku,
+        low_stock_threshold: v.low_stock_threshold,
+        is_available: v.is_available,
+        img_url: v.img_url,
+        catalog_item_id: v.catalog_item_id,
+      }));
+  const parsed = parseVariants(raw, { axes: newAxes, stockMode: mode, existing });
+  if (parsed.code) return parsed;
+  const summary = summariseVariants(parsed.rows, mode);
+  let threshold =
+    stockInput.low_stock_threshold !== undefined ? stockInput.low_stock_threshold : listing.low_stock_threshold ?? null;
+  if (threshold === null && mode === 'tracked' && listing.stock_mode !== 'tracked') threshold = DEFAULT_LOW_STOCK_THRESHOLD;
+  return {
+    axes: newAxes,
+    rows: parsed.rows,
+    changes: {
+      variant_axes: newAxes,
+      price: summary.price,
+      mrp: summary.mrp,
+      stock_mode: mode,
+      stock_qty: summary.stock_qty,
+      low_stock_threshold: threshold,
+      is_available: summary.is_available,
+    },
+  };
 }
 
 /**
@@ -92,7 +246,9 @@ function serializeListing(listing, { owner = false, schema = null } = {}) {
  *   sectionText   CSV section name (resolved / created by name)
  *   schemaKeys    take form values from these top-level fields too, and keep only form keys
  *   enforceRequired, prefill  see formOverrides.validateListingFields
- * Returns { values, schema, warnings } or { status, code, error, errors? }.
+ *   allowVariants read variant_axes / variants from the body (POST /listings); other callers
+ *                 (CSV, catalogue imports) always create simple listings
+ * Returns { values, schema, warnings, variants: [row] | null } or { status, code, error, errors? }.
  */
 async function buildNewListing({
   shop,
@@ -106,6 +262,7 @@ async function buildNewListing({
   schemaKeys = null,
   enforceRequired = true,
   prefill = false,
+  allowVariants = false,
 }) {
   const warnings = [];
   const snapshot = catalog && isPlainObject(catalog.snapshot) ? catalog.snapshot : null;
@@ -125,9 +282,6 @@ async function buildNewListing({
     return fail('invalid', `Item name can be at most ${MAX_NAME} characters`, [{ key: 'name', message: 'Name is too long' }]);
   }
 
-  const money = checkPrice(body.price, isBlank(body.mrp) ? catalog?.mrpHint ?? null : body.mrp);
-  if (money.code) return money;
-
   const listingType = LISTING_TYPES.includes(body.listing_type)
     ? body.listing_type
     : snapshot?.kind === 'service'
@@ -136,10 +290,22 @@ async function buildNewListing({
 
   const stockInput = normaliseStockInput(body);
   if (stockInput.code) return stockError(stockInput);
-  const stock = applyStockFields(null, stockInput.input, {
-    defaultMode: defaultStockMode({ listingType, templateKey: ctx.subCategory?.template_key, snapshot }),
-  });
-  if (stock.code) return stockError(stock);
+  const defaultMode = defaultStockMode({ listingType, templateKey: ctx.subCategory?.template_key, snapshot });
+
+  // Variants own price and stock; a simple listing takes them from the body
+  const variantPlan = allowVariants ? newListingVariants(body, ctx.subCategory, stockInput.input, defaultMode) : null;
+  if (variantPlan && variantPlan.code) return variantPlan;
+  let money;
+  let stock;
+  if (variantPlan) {
+    money = { price: variantPlan.price, mrp: variantPlan.mrp };
+    stock = { values: variantPlan.stock };
+  } else {
+    money = checkPrice(body.price, isBlank(body.mrp) ? catalog?.mrpHint ?? null : body.mrp);
+    if (money.code) return money;
+    stock = applyStockFields(null, stockInput.input, { defaultMode });
+    if (stock.code) return stockError(stock);
+  }
 
   let meta = clientMetadata(body.metadata);
   if (Array.isArray(schemaKeys) || schemaKeys === true) {
@@ -189,8 +355,9 @@ async function buildNewListing({
     catalog_snapshot: snapshot,
     catalog_synced_at: snapshot ? new Date() : null,
     ...stock.values,
+    variant_axes: variantPlan ? variantPlan.axes : [],
   };
-  return { values, schema: ctx.schema, warnings };
+  return { values, schema: ctx.schema, warnings, variants: variantPlan ? variantPlan.rows : null };
 }
 
 /**
@@ -238,22 +405,42 @@ async function buildListingUpdate({ listing, shop, ownIds, loadContext, sections
     changes.listing_type = body.listing_type;
   }
 
-  if (body.price !== undefined || body.mrp !== undefined) {
-    const money = checkPrice(
-      body.price !== undefined ? body.price : listing.price,
-      body.mrp !== undefined ? body.mrp : listing.mrp
-    );
-    if (money.code) return money;
-    if (body.price !== undefined) changes.price = money.price;
-    if (body.mrp !== undefined) changes.mrp = money.mrp;
-  }
+  const stockSent = STOCK_KEYS.some((k) => body[k] !== undefined);
+  const stockInput = stockSent ? normaliseStockInput(body) : { input: {} };
+  if (stockInput.code) return stockError(stockInput);
 
-  if (STOCK_KEYS.some((k) => body[k] !== undefined)) {
-    const stockInput = normaliseStockInput(body);
-    if (stockInput.code) return stockError(stockInput);
-    const stock = applyStockFields(listing, stockInput.input);
-    if (stock.code) return stockError(stock);
-    Object.assign(changes, stock.values);
+  // Variants: a variant listing's price and stock follow its variants (body price / stock_qty /
+  // is_available are ignored); a simple listing keeps today's rules
+  const existingVariants = hasVariants(listing) ? (await loadVariants([listing])).get(listing.id) || [] : [];
+  const variantPlan = updateListingVariants({
+    listing,
+    body,
+    subCategory: ctx.subCategory,
+    subChanged,
+    stockInput: stockInput.input,
+    existing: existingVariants,
+  });
+  if (variantPlan && variantPlan.code) return variantPlan;
+  const variantListing = Boolean(variantPlan) && !variantPlan.toSimple;
+
+  if (variantListing) {
+    if (variantPlan.changes) Object.assign(changes, variantPlan.changes);
+  } else {
+    if (variantPlan && variantPlan.toSimple) changes.variant_axes = [];
+    if (body.price !== undefined || body.mrp !== undefined) {
+      const money = checkPrice(
+        body.price !== undefined ? body.price : listing.price,
+        body.mrp !== undefined ? body.mrp : listing.mrp
+      );
+      if (money.code) return money;
+      if (body.price !== undefined) changes.price = money.price;
+      if (body.mrp !== undefined) changes.mrp = money.mrp;
+    }
+    if (stockSent) {
+      const stock = applyStockFields(listing, stockInput.input);
+      if (stock.code) return stockError(stock);
+      Object.assign(changes, stock.values);
+    }
   }
 
   // Catalogue reference
@@ -302,7 +489,31 @@ async function buildListingUpdate({ listing, shop, ownIds, loadContext, sections
     }
   }
 
-  return { changes, schema: ctx.schema };
+  const variants = variantPlan && !variantPlan.untouched ? variantPlan.rows : null;
+  return { changes, schema: ctx.schema, variants };
+}
+
+/**
+ * Saves a built create (buildNewListing) with its variants in one transaction.
+ * Returns { listing, variants } (variants: the stored rows, plain, by position).
+ */
+async function createListing(built) {
+  return sequelize.transaction(async (transaction) => {
+    const listing = await shop_listings.create(built.values, { transaction });
+    if (built.variants && built.variants.length) await saveVariants(listing.id, built.variants, { transaction });
+    const variants = (await loadVariants([listing], { transaction })).get(listing.id) || [];
+    return { listing, variants };
+  });
+}
+
+/** Saves a built update (buildListingUpdate) with its variants. Returns { listing, variants }. */
+async function updateListing(listing, built) {
+  return sequelize.transaction(async (transaction) => {
+    await listing.update(built.changes, { transaction });
+    if (built.variants) await saveVariants(listing.id, built.variants, { transaction });
+    const variants = (await loadVariants([listing], { transaction })).get(listing.id) || [];
+    return { listing, variants };
+  });
 }
 
 /** The listing id of this shop's copy of a catalogue item, or null. */
@@ -352,8 +563,12 @@ module.exports = {
   checkPrice,
   clientMetadata,
   serializeListing,
+  serializeListings,
   buildNewListing,
   buildListingUpdate,
+  createListing,
+  updateListing,
+  updateListingVariants,
   catalogCopyId,
   loadCatalogCopies,
   isUniqueViolation,

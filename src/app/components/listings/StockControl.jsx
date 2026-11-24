@@ -71,7 +71,17 @@ QtyStepper.propTypes = {
  * then a quantity and low-stock alert for counted items, or a switch for on/off items.
  * value: { stock_mode, stock_qty, low_stock_threshold, is_available }
  */
-export const StockBlock = ({ value, onChange, listingType, modes, error, showThreshold = true, compact, idPrefix = 'stock' }) => {
+export const StockBlock = ({
+  value,
+  onChange,
+  listingType,
+  modes,
+  error,
+  showThreshold = true,
+  compact,
+  idPrefix = 'stock',
+  perVariant = false,
+}) => {
   const v = value || {};
   const labels = availabilityLabels(listingType);
   const options = stockModeOptions(listingType).filter((o) => !modes || modes.includes(o.value));
@@ -101,7 +111,33 @@ export const StockBlock = ({ value, onChange, listingType, modes, error, showThr
         <div className="lc-stock-fixed">{options[0]?.label || 'Always available'}</div>
       )}
 
-      {v.stock_mode === 'tracked' && (
+      {/* With variants the quantity / switch is set per option in the variant table */}
+      {perVariant && v.stock_mode !== 'always' && (
+        <div className="lc-stock-hint">
+          {v.stock_mode === 'tracked' ? 'Enter the quantity of each option below.' : 'Switch each option on or off below.'}
+        </div>
+      )}
+
+      {v.stock_mode === 'tracked' && perVariant && showThreshold && (
+        <div className="lc-stock-row">
+          <label className="lc-stock-field" htmlFor={`${idPrefix}-low`}>
+            <span className="lc-stock-label">Low-stock alert at</span>
+            <InputNumber
+              id={`${idPrefix}-low`}
+              min={0}
+              precision={0}
+              inputMode="numeric"
+              size={compact ? 'small' : 'middle'}
+              value={v.low_stock_threshold ?? null}
+              onChange={(t) => set({ low_stock_threshold: t })}
+              aria-label="Low-stock alert at"
+              style={{ width: 96 }}
+            />
+          </label>
+        </div>
+      )}
+
+      {v.stock_mode === 'tracked' && !perVariant && (
         <div className="lc-stock-row">
           <label className="lc-stock-field" htmlFor={`${idPrefix}-qty`}>
             <span className="lc-stock-label">Quantity in stock</span>
@@ -133,7 +169,7 @@ export const StockBlock = ({ value, onChange, listingType, modes, error, showThr
         </div>
       )}
 
-      {v.stock_mode === 'toggle' && (
+      {v.stock_mode === 'toggle' && !perVariant && (
         <label className="lc-stock-switch">
           <Switch checked={v.is_available !== false} onChange={(checked) => set({ is_available: checked })} />
           <span>{v.is_available !== false ? labels.on : labels.off}</span>
@@ -167,4 +203,5 @@ StockBlock.propTypes = {
   showThreshold: PropTypes.bool,
   compact: PropTypes.bool,
   idPrefix: PropTypes.string,
+  perVariant: PropTypes.bool,
 };

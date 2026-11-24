@@ -35,12 +35,16 @@ export const ListingPrice = ({ item }) => {
   const price = Number(item.price) || 0;
   const mrp = Number(item.mrp) || 0;
   const discount = mrp > price && price > 0 ? Math.round((1 - price / mrp) * 100) : 0;
+  // Variants: the listing price is the cheapest available option
+  const options = Array.isArray(item.variant_axes) && item.variant_axes.length && Array.isArray(item.variants) ? item.variants.length : 0;
   return (
     <div className="ms-item-price-row">
+      {options > 0 && <span className="ms-unit">from</span>}
       <span className="ms-price">{formatINR(price)}</span>
       {item.unit && <span className="ms-unit">/ {item.unit}</span>}
       {mrp > price && <span className="ms-mrp">{formatINR(mrp)}</span>}
       {discount > 0 && <span className="ms-discount">{discount}% off</span>}
+      {options > 0 && <span className="ms-unit">· {options} options</span>}
     </div>
   );
 };

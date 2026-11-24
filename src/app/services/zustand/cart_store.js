@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { isSellable, maxOrderQty } from '../../utils/stock';
+import { hasVariants, variantAsStock, variantLabel, cartLineKey, lineKeyOf } from '../../utils/variants';
 
 const useCartStore = create(
   persist(
@@ -18,29 +19,37 @@ const useCartStore = create(
 
       /**
        * Adds one unit. Returns { ok, reason } so callers can explain a refusal:
-       *   reason 'out' (not sellable now) or 'max' (the counted stock is already in the cart).
+       *   reason 'out' (not sellable now), 'max' (the counted stock is already in the cart) or
+       *   'variant' (the listing has variants and none was chosen).
+       * Lines are keyed by listing + variant (lineKeyOf), so each variant is its own line.
        */
-      addItem: (shop, item) => {
-        if (!isSellable(item)) return { ok: false, reason: 'out' };
+      addItem: (shop, item, variant = null) => {
+        if (hasVariants(item) && !variant) return { ok: false, reason: 'variant' };
+        const stock = variant ? variantAsStock(item, variant) : item;
+        if (!isSellable(stock)) return { ok: false, reason: 'out' };
         const { cart } = get();
         // If cart belongs to a different shop, reset cart to new shop
         const isSameShop = cart.shop_id === shop?.id;
         const items = isSameShop ? [...cart.items] : [];
-        const maxQty = maxOrderQty(item);
+        const maxQty = maxOrderQty(stock);
+        const key = cartLineKey(item.id, variant?.id);
 
-        const existingIndex = items.findIndex((i) => i.listing_id === item.id);
+        const existingIndex = items.findIndex((i) => lineKeyOf(i) === key);
         if (existingIndex > -1) {
           const line = items[existingIndex];
           if (maxQty !== null && line.quantity >= maxQty) return { ok: false, reason: 'max', max: maxQty };
           items[existingIndex] = { ...line, quantity: line.quantity + 1, max_qty: maxQty, stock_issue: null };
         } else {
           items.push({
+            line_key: key,
             listing_id: item.id,
+            variant_id: variant?.id || null,
+            variant_label: variant ? variant.label || variantLabel(item.variant_axes, variant.option_values) : null,
             item_name: item.name,
-            unit_price: parseFloat(item.price) || 0,
+            unit_price: parseFloat(variant ? variant.price : item.price) || 0,
             quantity: 1,
             unit: item.unit || 'piece',
-            img_url: item.img_url || '',
+            img_url: variant?.img_url || item.img_url || '',
             listing_type: item.listing_type || 'product',
             max_qty: maxQty,
             stock_issue: null,
@@ -58,11 +67,12 @@ const useCartStore = create(
         return { ok: true };
       },
 
-      updateQuantity: (listing_id, delta) => {
+      /** `key`: the line's lineKeyOf (for a simple listing, its listing_id). */
+      updateQuantity: (key, delta) => {
         const { cart } = get();
         const items = cart.items
           .map((i) => {
-            if (i.listing_id === listing_id) {
+            if (lineKeyOf(i) === key) {
               let newQty = i.quantity + delta;
               const cap = i.stock_issue ? i.stock_issue.available : i.max_qty;
               if (delta > 0 && cap !== null && cap !== undefined) newQty = Math.min(newQty, cap);
@@ -85,9 +95,9 @@ const useCartStore = create(
         });
       },
 
-      removeItem: (listing_id) => {
+      removeItem: (key) => {
         const { cart } = get();
-        const items = cart.items.filter((i) => i.listing_id !== listing_id);
+        const items = cart.items.filter((i) => lineKeyOf(i) !== key);
         set({
           cart: {
             ...cart,
@@ -100,17 +110,17 @@ const useCartStore = create(
       },
 
       /**
-       * Marks lines the server refused (409 OUT_OF_STOCK items: [{ listing_id, available }]).
+       * Marks lines the server refused (409 OUT_OF_STOCK items: [{ listing_id, variant_id?, available }]).
        * The line keeps its quantity until the customer fixes it.
        */
       markStockIssues: (issues) => {
         const { cart } = get();
-        const byId = new Map((issues || []).map((it) => [it.listing_id, it]));
+        const byKey = new Map((issues || []).map((it) => [cartLineKey(it.listing_id, it.variant_id), it]));
         set({
           cart: {
             ...cart,
             items: cart.items.map((i) => {
-              const hit = byId.get(i.listing_id);
+              const hit = byKey.get(lineKeyOf(i));
               if (!hit) return i;
               const available = Math.max(0, Number(hit.available) || 0);
               return { ...i, max_qty: available, stock_issue: { available } };

@@ -124,7 +124,12 @@ const escapeLike = (text) => String(text).replace(/[\\%_]/g, (c) => `\\${c}`);
 // Shared SQL fragments over `l` (shop_listings)
 const HIDDEN_SECTION_SQL =
   'EXISTS (SELECT 1 FROM shop_sections hs WHERE hs.id = l.section_id AND hs.is_hidden)';
-const LOW_SQL = "l.stock_mode = 'tracked' AND l.stock_qty > 0 AND l.stock_qty <= COALESCE(l.low_stock_threshold, 5)";
+// Simple listings: the listing's count. Variant listings (whose stock_qty is the sum of their
+// variants): still in stock, and some variant is at or under its alert level.
+const LOW_SQL = `(l.stock_mode = 'tracked' AND l.stock_qty > 0 AND (
+  (l.variant_axes = '[]'::jsonb AND l.stock_qty <= COALESCE(l.low_stock_threshold, 5))
+  OR (l.variant_axes <> '[]'::jsonb AND EXISTS (SELECT 1 FROM listing_variants lv
+        WHERE lv.listing_id = l.id AND lv.stock_qty <= COALESCE(lv.low_stock_threshold, l.low_stock_threshold, 5)))))`;
 const OUT_SQL = "(NOT COALESCE(l.is_available, true) OR (l.stock_mode = 'tracked' AND COALESCE(l.stock_qty, 0) <= 0))";
 
 /**
@@ -145,7 +150,9 @@ function buildListingWhere(params, { shopId, scope = 'public', needsDetails = nu
   if (p.q) {
     replacements.q_like = `%${escapeLike(p.q)}%`;
     where.push(
-      "(l.name ILIKE :q_like OR COALESCE(l.description, '') ILIKE :q_like OR COALESCE(l.metadata->>'brand', '') ILIKE :q_like)"
+      "(l.name ILIKE :q_like OR COALESCE(l.description, '') ILIKE :q_like OR COALESCE(l.metadata->>'brand', '') ILIKE :q_like" +
+        " OR (l.variant_axes <> '[]'::jsonb AND EXISTS (SELECT 1 FROM listing_variants qv WHERE qv.listing_id = l.id" +
+        ' AND (qv.sku ILIKE :q_like OR EXISTS (SELECT 1 FROM jsonb_each_text(qv.option_values) ov WHERE ov.value ILIKE :q_like)))))'
     );
   }
   if (p.section_id === 'none') where.push('l.section_id IS NULL');

@@ -9,6 +9,9 @@
  *   always   never runs out (services). is_available is forced true, stock_qty NULL.
  *
  * is_available stays the single "sellable now" flag every reader uses.
+ *
+ * Listings with variants (variant_axes non-empty, services/variants.js) keep the mode on the
+ * listing and the units on each variant; order lines then draw on the variant.
  */
 
 const STOCK_MODES = ['tracked', 'toggle', 'always'];
@@ -198,34 +201,49 @@ function stockState(listing) {
   return listing.is_available === false ? 'out' : 'in_stock';
 }
 
+/** The stock unit a line draws on: its variant for variant lines, else its listing. */
+const stockUnitKey = (line) => (line && line.variant_id ? `v:${line.variant_id}` : line?.listing_id);
+
 /**
  * Stock check for an order.
- *   lines     [{ listing_id, quantity }]
+ *   lines     [{ listing_id, variant_id?, variant_label?, quantity }]
  *   listings  Map(listing_id → { id, name, stock_mode, stock_qty, is_available })
- * Quantities of the same listing on several lines are summed.
- * Returns { short: [{ listing_id, name, requested, available }], deductions: [{ listing_id, quantity }]
- * (tracked listings only, one per listing), lineDeducted: [number] (per line, aligned with lines) }.
+ *   variants  Map(variant_id → { id, listing_id, stock_qty, is_available })  (variant lines)
+ * A line with a variant_id draws on that variant (under its listing's stock_mode); other
+ * lines on the listing. Quantities of the same unit on several lines are summed.
+ * Returns { short: [{ listing_id, variant_id?, name, requested, available }],
+ * deductions: [{ listing_id, variant_id?, quantity }] (tracked units only, one per unit),
+ * lineDeducted: [number] (per line, aligned with lines) }.
  */
-function planOrderStock(lines, listings) {
+function planOrderStock(lines, listings, variants = new Map()) {
   const requested = new Map();
   for (const line of lines) {
-    requested.set(line.listing_id, (requested.get(line.listing_id) || 0) + (Number(line.quantity) || 0));
+    const key = stockUnitKey(line);
+    const entry = requested.get(key) || { line, quantity: 0 };
+    entry.quantity += Number(line.quantity) || 0;
+    requested.set(key, entry);
   }
   const short = [];
   const deductions = [];
-  for (const [listingId, quantity] of requested) {
+  for (const { line, quantity } of requested.values()) {
+    const listingId = line.listing_id;
     const listing = listings.get(listingId);
-    if (!listing) {
-      short.push({ listing_id: listingId, name: null, requested: quantity, available: 0 });
+    const variantId = line.variant_id || null;
+    const variant = variantId ? variants.get(variantId) : null;
+    const ids = variantId ? { listing_id: listingId, variant_id: variantId } : { listing_id: listingId };
+    if (!listing || (variantId && (!variant || variant.listing_id !== listingId))) {
+      short.push({ ...ids, name: listing ? listing.name : null, requested: quantity, available: 0 });
       continue;
     }
+    const name = variantId && line.variant_label ? `${listing.name} (${line.variant_label})` : listing.name;
+    const unit = variantId ? variant : listing;
     const tracked = listing.stock_mode === 'tracked';
-    const qty = Number(listing.stock_qty) || 0;
+    const qty = Number(unit.stock_qty) || 0;
     if (tracked) {
-      if (qty < quantity) short.push({ listing_id: listingId, name: listing.name, requested: quantity, available: Math.max(0, qty) });
-      else deductions.push({ listing_id: listingId, quantity });
-    } else if (listing.is_available === false && listing.stock_mode !== 'always') {
-      short.push({ listing_id: listingId, name: listing.name, requested: quantity, available: 0 });
+      if (qty < quantity) short.push({ ...ids, name, requested: quantity, available: Math.max(0, qty) });
+      else deductions.push({ ...ids, quantity });
+    } else if (unit.is_available === false && listing.stock_mode !== 'always') {
+      short.push({ ...ids, name, requested: quantity, available: 0 });
     }
   }
   const lineDeducted = lines.map((line) => {
@@ -236,11 +254,12 @@ function planOrderStock(lines, listings) {
 }
 
 /**
- * What a cancel puts back: one entry per tracked listing, summing the order lines that
- * still record a deduction. Listings that are no longer tracked are skipped.
- *   items     [{ listing_id, stock_deducted }]
+ * What a cancel puts back: one entry per tracked unit (the variant for variant lines, else
+ * the listing), summing the order lines that still record a deduction. Listings that are no
+ * longer tracked are skipped.
+ *   items     [{ listing_id, variant_id?, stock_deducted }]
  *   listings  Map(listing_id → { stock_mode })  (optional; without it every listing counts)
- * Returns [{ listing_id, quantity }].
+ * Returns [{ listing_id, variant_id (null for simple lines), quantity }].
  */
 function planRestock(items, listings) {
   const back = new Map();
@@ -251,9 +270,12 @@ function planRestock(items, listings) {
       const listing = listings.get(item.listing_id);
       if (!listing || listing.stock_mode !== 'tracked') continue;
     }
-    back.set(item.listing_id, (back.get(item.listing_id) || 0) + q);
+    const key = stockUnitKey(item);
+    const entry = back.get(key) || { listing_id: item.listing_id, variant_id: item.variant_id || null, quantity: 0 };
+    entry.quantity += q;
+    back.set(key, entry);
   }
-  return [...back].map(([listing_id, quantity]) => ({ listing_id, quantity }));
+  return [...back.values()];
 }
 
 module.exports = {
@@ -264,6 +286,7 @@ module.exports = {
   applyStockFields,
   deriveAvailability,
   stockState,
+  stockUnitKey,
   planOrderStock,
   planRestock,
 };
