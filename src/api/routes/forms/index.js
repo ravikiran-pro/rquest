@@ -14,6 +14,7 @@ const { normalizeOverride, layerSchema } = require('../../services/formOverrides
 const { defaultStockMode } = require('../../services/stock');
 const { loadListingContext, listingTypeFor } = require('../../services/listingForm');
 const { subCategoriesForShop } = require('../../services/shopSubCategories');
+const { allowedAxesFor, axisDefinitions } = require('../../services/variants');
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -106,6 +107,8 @@ router.get(
         fields: withFlags(ctx),
         default_stock_mode: defaultStockMode({ listingType, templateKey: ctx.subCategory?.template_key }),
         listing_type: listingType,
+        // Options products of this sub-category may vary by ([] = not set: any option name)
+        variant_axes: axisDefinitions(allowedAxesFor(ctx.subCategory)),
       },
     });
   })

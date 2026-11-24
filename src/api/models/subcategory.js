@@ -67,6 +67,11 @@ module.exports = (sequelize) => {
       type: Sequelize.INTEGER,
       defaultValue: 0,
     },
+    // Ordered attribute keys listings of this kind may vary by (the taxonomy sync fills it)
+    variant_axes: {
+      type: Sequelize.JSONB,
+      defaultValue: [],
+    },
   });
 
   SubCategories.associate = (models) => {

@@ -25,7 +25,7 @@ const subCategoryIdFor = (shop, metadata, columnId) =>
   toId(columnId) ?? toId(metadata?.sub_category_id) ?? toId(shop?.sub_category_id);
 const categoryIdFor = (shop, metadata) => toId(metadata?.category_id) ?? toId(shop?.category_id);
 
-const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type', 'template_key'];
+const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type', 'template_key', 'variant_axes'];
 
 /**
  * { schema, base, schemaSource, subCategory, category, override, subCategoryId } for a

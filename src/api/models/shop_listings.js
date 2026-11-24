@@ -99,6 +99,13 @@ module.exports = (sequelize) => {
         type: DataTypes.INTEGER,
         allowNull: true,
       },
+      // Ordered axis keys of the listing's variants (listing_variants); [] = a simple listing.
+      // With variants, price / mrp / is_available / stock_qty are kept from the variants.
+      variant_axes: {
+        type: DataTypes.JSONB,
+        allowNull: false,
+        defaultValue: [],
+      },
     },
     {
       timestamps: true,
@@ -112,6 +119,9 @@ module.exports = (sequelize) => {
     });
     if (models.shop_sections) {
       ShopListing.belongsTo(models.shop_sections, { foreignKey: 'section_id', as: 'section' });
+    }
+    if (models.listing_variants) {
+      ShopListing.hasMany(models.listing_variants, { foreignKey: 'listing_id', as: 'variants' });
     }
     if (models.products) {
       ShopListing.belongsTo(models.products, {

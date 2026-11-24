@@ -1,6 +1,17 @@
 const express = require('express');
-const { sequelize, orders, order_items, shops, shop_listings, users, chats, user_addresses } = require('../../models');
-const { planOrderStock, planRestock } = require('../../services/stock');
+const {
+  sequelize,
+  orders,
+  order_items,
+  shops,
+  shop_listings,
+  listing_variants,
+  users,
+  chats,
+  user_addresses,
+} = require('../../models');
+const { planOrderStock, planRestock, stockUnitKey } = require('../../services/stock');
+const { axesOf, hasVariants, variantLabel, refreshListingsFromVariants } = require('../../services/variants');
 const { authMiddleware, isAdminReq } = require('../../auth');
 const {
   getSettings: getPlatformSettings,
@@ -39,9 +50,10 @@ const canMoveOrder = (from, to) => {
 
 /** Thrown inside the order transaction when a conditional stock decrement finds too few units. */
 class OutOfStockError extends Error {
-  constructor(listingId) {
+  constructor(listingId, variantId = null) {
     super('OUT_OF_STOCK');
     this.listingId = listingId;
+    this.variantId = variantId;
   }
 }
 
@@ -49,33 +61,69 @@ const outOfStockBody = (short) => ({
   success: false,
   code: 'OUT_OF_STOCK',
   error: 'Some items are out of stock',
-  items: short.map(({ listing_id, name, requested, available }) => ({ listing_id, name, requested, available })),
+  items: short.map(({ listing_id, variant_id, name, requested, available }) => ({
+    listing_id,
+    ...(variant_id ? { variant_id } : {}),
+    name,
+    requested,
+    available,
+  })),
 });
+
+// What the order route reads of a listing (price and stock; variant_axes says where they live)
+const LISTING_STOCK_ATTRS = ['id', 'name', 'price', 'stock_mode', 'stock_qty', 'is_available', 'variant_axes'];
+
+/** Map(variant_id → plain variant) for ids (already UUID-checked). */
+const variantsByIds = async (ids) => {
+  if (!ids.length) return new Map();
+  const rows = await listing_variants.findAll({
+    where: { id: ids },
+    attributes: ['id', 'listing_id', 'option_values', 'price', 'stock_qty', 'is_available'],
+  });
+  return new Map(rows.map((v) => [v.id, v.get({ plain: true })]));
+};
+
+/** "2x T-shirt (M / Navy)" for chat and push summaries. */
+const lineText = (it) => `${it.quantity}x ${it.item_name}${it.variant_label ? ` (${it.variant_label})` : ''}`;
 
 /**
  * Cancelling an order puts back what it took from counted listings, once: the lines'
  * stock_deducted is read and zeroed in one statement (row-locked), so a second cancel finds
- * nothing to restock. Listings no longer counted are skipped.
+ * nothing to restock. Listings no longer counted are skipped. Variant lines go back to their
+ * variant (skipped when the variant was deleted); a listing that has variants by now never
+ * takes back units of a simple line.
  */
 async function restockOrder(orderId, transaction) {
   const [lines] = await sequelize.query(
     `WITH taken AS (
-       SELECT id, listing_id, stock_deducted FROM order_items
+       SELECT id, listing_id, variant_id, stock_deducted FROM order_items
         WHERE order_id = :orderId AND stock_deducted > 0
         FOR UPDATE
      )
      UPDATE order_items oi SET stock_deducted = 0, "updatedAt" = now()
        FROM taken WHERE oi.id = taken.id
-     RETURNING taken.listing_id, taken.stock_deducted`,
+     RETURNING taken.listing_id, taken.variant_id, taken.stock_deducted`,
     { replacements: { orderId }, transaction }
   );
-  for (const { listing_id, quantity } of planRestock(lines)) {
+  const variantListings = new Set();
+  for (const { listing_id, variant_id, quantity } of planRestock(lines)) {
+    if (variant_id) {
+      await sequelize.query(
+        `UPDATE listing_variants v SET stock_qty = v.stock_qty + :q, is_available = true, "updatedAt" = now()
+           FROM shop_listings l
+          WHERE v.id = :vid AND l.id = v.listing_id AND l.stock_mode = 'tracked' AND v.stock_qty IS NOT NULL`,
+        { replacements: { vid: variant_id, q: quantity }, transaction }
+      );
+      variantListings.add(listing_id);
+      continue;
+    }
     await sequelize.query(
       `UPDATE shop_listings SET stock_qty = stock_qty + :q, is_available = true, "updatedAt" = now()
-        WHERE id = :id AND stock_mode = 'tracked'`,
+        WHERE id = :id AND stock_mode = 'tracked' AND variant_axes = '[]'::jsonb`,
       { replacements: { id: listing_id, q: quantity }, transaction }
     );
   }
+  await refreshListingsFromVariants([...variantListings], { transaction });
 }
 
 // Orders a delivery partner can take before anyone has claimed them
@@ -155,7 +203,7 @@ router.post('/', async (req, res) => {
     const shopListings = listingIds.length
       ? await shop_listings.findAll({
           where: { id: listingIds, shop_id },
-          attributes: ['id', 'name', 'price', 'stock_mode', 'stock_qty', 'is_available'],
+          attributes: LISTING_STOCK_ATTRS,
         })
       : [];
     const listingById = new Map(shopListings.map((l) => [l.id, l]));
@@ -166,11 +214,49 @@ router.post('/', async (req, res) => {
       });
     }
 
+    // Listings with variants: every line names one of the listing's variants, whose price
+    // and stock apply. Simple listings take no variant.
+    const variantIds = [...new Set(items.map((it) => it.variant_id).filter((v) => UUID_RE_LISTING.test(String(v || ''))))];
+    const variantById = await variantsByIds(variantIds);
+    for (const it of items) {
+      const listing = listingById.get(it.listing_id);
+      const hasId = it.variant_id !== undefined && it.variant_id !== null && it.variant_id !== '';
+      if (hasVariants(listing)) {
+        if (!hasId) {
+          return res.status(400).json({
+            success: false,
+            code: 'variant_required',
+            listing_id: listing.id,
+            error: `Choose an option for ${listing.name}. Please refresh your cart.`,
+          });
+        }
+        const variant = variantById.get(String(it.variant_id));
+        if (!variant || variant.listing_id !== listing.id) {
+          return res.status(400).json({
+            success: false,
+            code: 'variant_not_found',
+            listing_id: listing.id,
+            variant_id: it.variant_id,
+            error: `An option of ${listing.name} is no longer sold. Please refresh your cart.`,
+          });
+        }
+      } else if (hasId) {
+        return res.status(400).json({
+          success: false,
+          code: 'variant_not_found',
+          listing_id: listing.id,
+          variant_id: it.variant_id,
+          error: `${listing.name} has no options any more. Please refresh your cart.`,
+        });
+      }
+    }
+
     // Calculate subtotal
     let itemsTotal = 0;
     const validatedItems = items.map((it) => {
       const listing = listingById.get(it.listing_id);
-      const unit_price = parseFloat(listing.price) || 0;
+      const variant = hasVariants(listing) ? variantById.get(String(it.variant_id)) : null;
+      const unit_price = parseFloat(variant ? variant.price : listing.price) || 0;
       // Positive whole number only: a negative quantity would make the server total go negative
       const quantity = Math.max(1, parseInt(it.quantity) || 1);
       const subtotal = unit_price * quantity;
@@ -181,11 +267,14 @@ router.post('/', async (req, res) => {
         unit_price,
         quantity,
         subtotal,
+        ...(variant
+          ? { variant_id: variant.id, variant_label: variantLabel(axesOf(listing), variant.option_values) || null }
+          : {}),
       };
     });
 
     // Stock: unavailable items and counted items with too few units stop the order
-    const stockPlan = planOrderStock(validatedItems, listingById);
+    const stockPlan = planOrderStock(validatedItems, listingById, variantById);
     if (stockPlan.short.length) {
       return res.status(409).json(outOfStockBody(stockPlan.short));
     }
@@ -258,9 +347,27 @@ router.post('/', async (req, res) => {
           { transaction }
         );
 
-        // Fixed order (by id) so two orders never wait on each other's rows
-        const deductions = [...stockPlan.deductions].sort((a, b) => String(a.listing_id).localeCompare(String(b.listing_id)));
-        for (const { listing_id, quantity } of deductions) {
+        // Fixed order (by unit) so two orders never wait on each other's rows
+        const deductions = [...stockPlan.deductions].sort((a, b) =>
+          String(stockUnitKey(a)).localeCompare(String(stockUnitKey(b)))
+        );
+        const variantListings = new Set();
+        for (const { listing_id, variant_id, quantity } of deductions) {
+          if (variant_id) {
+            // The variant's count; its listing's denormalised stock is refreshed below
+            const [rows] = await sequelize.query(
+              `UPDATE listing_variants v
+                  SET stock_qty = v.stock_qty - :q, is_available = (v.stock_qty - :q) > 0, "updatedAt" = now()
+                 FROM shop_listings l
+                WHERE v.id = :vid AND v.listing_id = :id AND l.id = v.listing_id AND l.stock_mode = 'tracked'
+                  AND v.stock_qty >= :q
+                RETURNING v.id`,
+              { replacements: { id: listing_id, vid: variant_id, q: quantity }, transaction }
+            );
+            if (!rows.length) throw new OutOfStockError(listing_id, variant_id);
+            variantListings.add(listing_id);
+            continue;
+          }
           const [rows] = await sequelize.query(
             `UPDATE shop_listings
                 SET stock_qty = stock_qty - :q, is_available = (stock_qty - :q) > 0, "updatedAt" = now()
@@ -270,6 +377,7 @@ router.post('/', async (req, res) => {
           );
           if (!rows.length) throw new OutOfStockError(listing_id);
         }
+        await refreshListingsFromVariants([...variantListings], { transaction });
         return created;
       });
     } catch (err) {
@@ -277,16 +385,24 @@ router.post('/', async (req, res) => {
       // Someone else bought the last units meanwhile: report the current stock
       const fresh = await shop_listings.findAll({
         where: { id: listingIds, shop_id },
-        attributes: ['id', 'name', 'price', 'stock_mode', 'stock_qty', 'is_available'],
+        attributes: LISTING_STOCK_ATTRS,
       });
-      const short = planOrderStock(validatedItems, new Map(fresh.map((l) => [l.id, l]))).short;
-      return res.status(409).json(outOfStockBody(short.length ? short : [{ listing_id: err.listingId, name: listingById.get(err.listingId)?.name || null, requested: 0, available: 0 }]));
+      const freshVariants = await variantsByIds(variantIds);
+      const short = planOrderStock(validatedItems, new Map(fresh.map((l) => [l.id, l])), freshVariants).short;
+      const fallback = {
+        listing_id: err.listingId,
+        ...(err.variantId ? { variant_id: err.variantId } : {}),
+        name: listingById.get(err.listingId)?.name || null,
+        requested: 0,
+        available: 0,
+      };
+      return res.status(409).json(outOfStockBody(short.length ? short : [fallback]));
     }
 
     // Automated chat notification to shop owner on self-pickup order or service booking
     if (shop.owner_id) {
       try {
-        const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+        const itemsSummary = validatedItems.map(lineText).join(', ');
         const isSelfPickup = order_type === 'pickup';
         const isService = order_type === 'service' || items.some((i) => i.listing_type === 'service');
 
@@ -321,7 +437,7 @@ router.post('/', async (req, res) => {
 
     // 1. Dispatch Push Notification to Customer
     try {
-      const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+      const itemsSummary = validatedItems.map(lineText).join(', ');
       await sendPushNotification({
         userId: user_id,
         title: `🛍️ Order Placed! #${orderNumber}`,
@@ -347,7 +463,7 @@ router.post('/', async (req, res) => {
         const isSelfPickup = order_type === 'pickup';
         const isService = order_type === 'service';
         const orderTypeLabel = isSelfPickup ? 'Self-Pickup' : isService ? 'Service' : 'Delivery';
-        const itemsSummary = validatedItems.map((it) => `${it.quantity}x ${it.item_name}`).join(', ');
+        const itemsSummary = validatedItems.map(lineText).join(', ');
         await sendPushNotification({
           userId: shop.owner_id,
           title: `🔔 New ${orderTypeLabel} Order #${orderNumber}!`,
