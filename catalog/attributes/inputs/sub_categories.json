@@ -1,0 +1,7932 @@
+[
+ {
+  "key": "kirana",
+  "category": "food_groceries",
+  "name": "Kirana / General Store",
+  "description": "Neighbourhood provision store for daily groceries and household needs",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "kirana",
+   "provision",
+   "grocery",
+   "general store",
+   "departmental",
+   "household items",
+   "convenience"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "supermarket",
+  "category": "food_groceries",
+  "name": "Supermarket",
+  "description": "Large self-service grocery and household store",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "supermarket",
+   "hypermarket",
+   "mart",
+   "superstore"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "fruits_vegetables",
+  "category": "food_groceries",
+  "name": "Fruits & Vegetables",
+  "description": "Fresh fruits, vegetables, greens and herbs",
+  "listing_type": "product",
+  "template": "produce",
+  "keywords": [
+   "vegetable",
+   "fruit",
+   "greengrocer",
+   "sabzi",
+   "produce",
+   "greens"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1033",
+   "ondc:RET10-1034",
+   "ondc:RET10-1035"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "produce_type",
+    "label": "Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Vegetable",
+     "Fruit",
+     "Leafy Greens",
+     "Herbs",
+     "Exotic"
+    ]
+   },
+   {
+    "key": "sold_by",
+    "label": "Sold By",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per kg",
+     "Per 500 g",
+     "Per Piece",
+     "Per Bunch",
+     "Per Dozen"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "grade",
+    "label": "Grade",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Premium",
+     "Regular",
+     "Economy"
+    ]
+   },
+   {
+    "key": "origin",
+    "label": "Origin",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "dairy",
+  "category": "food_groceries",
+  "name": "Dairy / Milk Booth",
+  "description": "Milk, curd, paneer, butter, ghee and eggs",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "dairy",
+   "milk",
+   "aavin",
+   "amul",
+   "curd",
+   "paneer"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1006",
+   "ondc:RET10-1037",
+   "ondc:RET10-1043",
+   "ondc:RET10-102A"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "meat_fish",
+  "category": "food_groceries",
+  "name": "Meat & Fish",
+  "description": "Chicken, mutton, fish, seafood and eggs",
+  "listing_type": "product",
+  "template": "meat_fish",
+  "keywords": [
+   "meat",
+   "chicken",
+   "mutton",
+   "fish",
+   "seafood",
+   "butcher",
+   "prawn",
+   "egg"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-102B",
+   "ondc:RET10-102D",
+   "ondc:RET10-102A"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "meat_type",
+    "label": "Meat",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Chicken",
+     "Mutton",
+     "Fish",
+     "Prawns & Seafood",
+     "Eggs",
+     "Other"
+    ]
+   },
+   {
+    "key": "cut",
+    "label": "Cut",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Whole",
+     "Curry Cut",
+     "Boneless",
+     "Fillet",
+     "Mince",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "freshness",
+    "label": "Fresh or Frozen",
+    "type": "radio",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Fresh",
+     "Frozen"
+    ]
+   },
+   {
+    "key": "net_weight",
+    "label": "Net Weight",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "halal",
+    "label": "Halal",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "bakery",
+  "category": "food_groceries",
+  "name": "Bakery & Cake Shop",
+  "description": "Bread, cakes, pastries, puffs and biscuits",
+  "listing_type": "food",
+  "template": "bakery",
+  "keywords": [
+   "bakery",
+   "bakers",
+   "cake",
+   "pastry",
+   "bread",
+   "puff"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1003",
+   "ondc:RET10-1004",
+   "ondc:RET10-1005",
+   "ondc:RET10-1045"
+  ],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "egg",
+     "eggless",
+     "vegan"
+    ]
+   },
+   {
+    "key": "weight",
+    "label": "Weight / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "flavour",
+    "label": "Flavour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "made_to_order",
+    "label": "Made to Order",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life_days",
+    "label": "Shelf Life (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "sweet_shop",
+  "category": "food_groceries",
+  "name": "Sweet Shop (Mithai)",
+  "description": "Indian sweets, savouries and namkeen",
+  "listing_type": "food",
+  "template": "bakery",
+  "keywords": [
+   "sweet",
+   "mithai",
+   "sweets",
+   "namkeen",
+   "savouries",
+   "confectionery"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1049",
+   "ondc:RET10-1046"
+  ],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "egg",
+     "eggless",
+     "vegan"
+    ]
+   },
+   {
+    "key": "weight",
+    "label": "Weight / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "flavour",
+    "label": "Flavour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "made_to_order",
+    "label": "Made to Order",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life_days",
+    "label": "Shelf Life (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "dry_fruits_spices",
+  "category": "food_groceries",
+  "name": "Dry Fruits & Spices",
+  "description": "Dry fruits, nuts, spices and masalas",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "dry fruit",
+   "nuts",
+   "spice",
+   "masala",
+   "cashew",
+   "almond"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1038",
+   "ondc:RET10-1040"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "organic_store",
+  "category": "food_groceries",
+  "name": "Organic & Health Foods",
+  "description": "Organic staples, millets, cold-pressed oils and health foods",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "organic",
+   "millet",
+   "health food",
+   "natural food",
+   "cold pressed"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "flour_mill",
+  "category": "food_groceries",
+  "name": "Flour Mill (Chakki)",
+  "description": "Fresh-ground atta, rice flour and grinding service",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "flour mill",
+   "chakki",
+   "atta",
+   "grinding",
+   "mill"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1030"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "drinking_water",
+  "category": "food_groceries",
+  "name": "Drinking Water Supplier",
+  "description": "Water cans, packaged drinking water and tanker supply",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [
+   "water can",
+   "drinking water",
+   "mineral water",
+   "water supplier",
+   "water tanker",
+   "bisleri"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1017"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "container",
+    "label": "Container",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "20 L Can",
+     "Bottle",
+     "Tanker Load",
+     "Other"
+    ]
+   },
+   {
+    "key": "deposit_amount",
+    "label": "Can Deposit (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "paan_shop",
+  "category": "food_groceries",
+  "name": "Paan & Petty Shop",
+  "description": "Paan, beverages, snacks and small daily items",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "paan",
+   "pan shop",
+   "petty shop",
+   "beeda",
+   "tea kadai",
+   "bunk"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1046",
+   "ondc:RET10-1045",
+   "ondc:RET10-1018"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "restaurant",
+  "category": "food_groceries",
+  "name": "Restaurant",
+  "description": "Dine-in and takeaway restaurants and messes",
+  "listing_type": "food",
+  "template": "food",
+  "keywords": [
+   "restaurant",
+   "restaurent",
+   "hotel",
+   "mess",
+   "biryani",
+   "biriyani",
+   "dhaba",
+   "bhavan",
+   "eatery",
+   "dining"
+  ],
+  "catalog_nodes": [],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "prep_time_mins",
+    "label": "Prep Time (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "spice_level",
+    "label": "Spice Level",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Mild",
+     "Medium",
+     "Spicy",
+     "Extra Hot"
+    ]
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "fast_food",
+  "category": "food_groceries",
+  "name": "Fast Food & Street Food",
+  "description": "Chaat, rolls, burgers, shawarma and street food stalls",
+  "listing_type": "food",
+  "template": "food",
+  "keywords": [
+   "fast food",
+   "street food",
+   "chaat",
+   "shawarma",
+   "burger",
+   "pizza",
+   "momos",
+   "takeaway",
+   "carry out"
+  ],
+  "catalog_nodes": [],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "prep_time_mins",
+    "label": "Prep Time (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "spice_level",
+    "label": "Spice Level",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Mild",
+     "Medium",
+     "Spicy",
+     "Extra Hot"
+    ]
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "cafe",
+  "category": "food_groceries",
+  "name": "Café & Tea Stall",
+  "description": "Coffee, tea, snacks and light bites",
+  "listing_type": "food",
+  "template": "food",
+  "keywords": [
+   "cafe",
+   "café",
+   "coffee",
+   "tea stall",
+   "chai",
+   "tea shop"
+  ],
+  "catalog_nodes": [],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "prep_time_mins",
+    "label": "Prep Time (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "spice_level",
+    "label": "Spice Level",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Mild",
+     "Medium",
+     "Spicy",
+     "Extra Hot"
+    ]
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "ice_cream_juice",
+  "category": "food_groceries",
+  "name": "Ice Cream & Juice Shop",
+  "description": "Ice creams, kulfi, falooda, juices and shakes",
+  "listing_type": "food",
+  "template": "food",
+  "keywords": [
+   "ice cream",
+   "kulfi",
+   "gulfi",
+   "juice",
+   "falooda",
+   "milkshake",
+   "dessert"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1007",
+   "ondc:RET10-1018"
+  ],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "prep_time_mins",
+    "label": "Prep Time (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "home_kitchen",
+  "category": "food_groceries",
+  "name": "Home Kitchen / Tiffin Service",
+  "description": "Home-cooked meals, tiffin and meal subscriptions",
+  "listing_type": "food",
+  "template": "food",
+  "keywords": [
+   "tiffin",
+   "tiffan",
+   "home kitchen",
+   "home food",
+   "meal subscription",
+   "cloud kitchen",
+   "dabba"
+  ],
+  "catalog_nodes": [
+   "service:tiffin_service"
+  ],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "prep_time_mins",
+    "label": "Prep Time (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "spice_level",
+    "label": "Spice Level",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Mild",
+     "Medium",
+     "Spicy",
+     "Extra Hot"
+    ]
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "catering",
+  "category": "food_groceries",
+  "name": "Catering Service",
+  "description": "Catering for weddings, functions and office events",
+  "listing_type": "service",
+  "template": "food",
+  "keywords": [
+   "catering",
+   "caterer",
+   "caterers",
+   "bulk food",
+   "party order"
+  ],
+  "catalog_nodes": [
+   "service:event_catering"
+  ],
+  "ondc": [
+   "RET11"
+  ],
+  "current_form_fields": [
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "radio",
+    "required": true,
+    "source": "store",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "spice_level",
+    "label": "Spice Level",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Mild",
+     "Medium",
+     "Spicy",
+     "Extra Hot"
+    ]
+   },
+   {
+    "key": "portion_info",
+    "label": "Portion / Serves",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "min_order_plates",
+    "label": "Minimum Order (Plates)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_days",
+    "label": "Book Days in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "food_others",
+  "category": "food_groceries",
+  "name": "Other Food Shop",
+  "description": "Any other food or grocery business",
+  "listing_type": "product",
+  "template": "grocery",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET10"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "food_type",
+    "label": "Dietary Tag",
+    "type": "select",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.food_type",
+    "statutory": true,
+    "options": [
+     "veg",
+     "non-veg",
+     "vegan",
+     "egg"
+    ]
+   },
+   {
+    "key": "organic",
+    "label": "Organic",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.organic",
+    "statutory": false
+   },
+   {
+    "key": "shelf_life",
+    "label": "Shelf Life",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.shelf_life",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "pharmacy",
+  "category": "health_wellness",
+  "name": "Pharmacy / Chemist",
+  "description": "Medicines, OTC products and health supplies",
+  "listing_type": "product",
+  "template": "pharmacy",
+  "keywords": [
+   "pharmacy",
+   "medical shop",
+   "medicals",
+   "chemist",
+   "drug store",
+   "medical store",
+   "jan aushadhi"
+  ],
+  "catalog_nodes": [
+   "ondc:RET19",
+   "ondc:RET18"
+  ],
+  "ondc": [
+   "RET19",
+   "RET18"
+  ],
+  "current_form_fields": [
+   {
+    "key": "composition",
+    "label": "Salt / Active Chemical Composition",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.generic",
+    "statutory": false
+   },
+   {
+    "key": "dosage_form",
+    "label": "Dosage Form",
+    "type": "select",
+    "required": true,
+    "source": "catalog",
+    "catalog_path": "attributes.dosage_form",
+    "statutory": false,
+    "options": [
+     "Strip / Tablets",
+     "Syrup / Liquid",
+     "Capsules",
+     "Injection",
+     "Cream / Ointment",
+     "Drops",
+     "Powder",
+     "Medical Equipment"
+    ]
+   },
+   {
+    "key": "manufacturer",
+    "label": "Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "manufacturer",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "prescription_required",
+    "label": "Prescription Required (Rx)",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.prescription_required",
+    "statutory": true
+   },
+   {
+    "key": "schedule_drug",
+    "label": "Schedule H / Controlled Substance",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.schedule_drug",
+    "statutory": true
+   },
+   {
+    "key": "batch_no",
+    "label": "Batch / Lot Number",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "expiry_date",
+    "label": "Expiry Date",
+    "type": "date",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "medical_supply",
+  "category": "health_wellness",
+  "name": "Medical & Surgical Supplies",
+  "description": "Medical devices, surgical items and mobility aids",
+  "listing_type": "product",
+  "template": "pharmacy",
+  "keywords": [
+   "surgical",
+   "medical equipment",
+   "medical supply",
+   "wheelchair",
+   "medical device"
+  ],
+  "catalog_nodes": [
+   "ondc:RET18"
+  ],
+  "ondc": [
+   "RET18"
+  ],
+  "current_form_fields": [
+   {
+    "key": "composition",
+    "label": "Salt / Active Chemical Composition",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.generic",
+    "statutory": false
+   },
+   {
+    "key": "dosage_form",
+    "label": "Dosage Form",
+    "type": "select",
+    "required": true,
+    "source": "catalog",
+    "catalog_path": "attributes.dosage_form",
+    "statutory": false,
+    "options": [
+     "Strip / Tablets",
+     "Syrup / Liquid",
+     "Capsules",
+     "Injection",
+     "Cream / Ointment",
+     "Drops",
+     "Powder",
+     "Medical Equipment"
+    ]
+   },
+   {
+    "key": "manufacturer",
+    "label": "Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "manufacturer",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   },
+   {
+    "key": "prescription_required",
+    "label": "Prescription Required (Rx)",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.prescription_required",
+    "statutory": true
+   },
+   {
+    "key": "schedule_drug",
+    "label": "Schedule H / Controlled Substance",
+    "type": "boolean",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.schedule_drug",
+    "statutory": true
+   },
+   {
+    "key": "batch_no",
+    "label": "Batch / Lot Number",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "expiry_date",
+    "label": "Expiry Date",
+    "type": "date",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "optician",
+  "category": "health_wellness",
+  "name": "Optician & Eyewear",
+  "description": "Spectacles, contact lenses, sunglasses and eye tests",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "optical",
+   "optician",
+   "opticals",
+   "spectacle",
+   "eyewear",
+   "lens",
+   "eye test"
+  ],
+  "catalog_nodes": [
+   "ondc:RET18"
+  ],
+  "ondc": [
+   "RET18"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   },
+   {
+    "key": "lens_type",
+    "label": "Lens Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Single Vision",
+     "Bifocal",
+     "Progressive",
+     "Contact Lens",
+     "Sunglasses",
+     "Frame Only"
+    ]
+   },
+   {
+    "key": "frame_material",
+    "label": "Frame Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "clinic",
+  "category": "health_wellness",
+  "name": "Clinic & Doctor",
+  "description": "General physicians, specialists and polyclinics",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "clinic",
+   "doctor",
+   "physician",
+   "polyclinic",
+   "medical centre",
+   "medical center",
+   "pediatric",
+   "gynaec",
+   "skin clinic"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "hospital",
+  "category": "health_wellness",
+  "name": "Hospital & Nursing Home",
+  "description": "Hospitals, nursing homes and emergency care",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "hospital",
+   "nursing home",
+   "emergency",
+   "maternity",
+   "multispeciality",
+   "multi speciality"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "dental",
+  "category": "health_wellness",
+  "name": "Dental Clinic",
+  "description": "Dentists, orthodontics and dental care",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "dental",
+   "dentist",
+   "orthodont",
+   "teeth"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "diagnostic_lab",
+  "category": "health_wellness",
+  "name": "Diagnostic Lab & Scan Centre",
+  "description": "Blood tests, health check-ups, X-ray and scans",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "diagnostic",
+   "lab",
+   "laboratory",
+   "scan",
+   "x-ray",
+   "xray",
+   "blood test",
+   "pathology",
+   "imaging"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "home_sample_collection",
+    "label": "Home Sample Collection",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "report_time",
+    "label": "Report Ready In",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "fasting_required",
+    "label": "Fasting Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "physiotherapy",
+  "category": "health_wellness",
+  "name": "Physiotherapy & Rehab",
+  "description": "Physiotherapy, rehabilitation and pain management",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "physio",
+   "physiotherapy",
+   "rehab",
+   "rehabilitation",
+   "physical therapy"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "ayush",
+  "category": "health_wellness",
+  "name": "Ayurveda, Siddha & Homeopathy",
+  "description": "AYUSH clinics and traditional medicine stores",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "ayurveda",
+   "ayurvedic",
+   "siddha",
+   "homeopathy",
+   "homoeopathy",
+   "unani",
+   "naturopathy",
+   "ayush"
+  ],
+  "catalog_nodes": [
+   "ondc:RET18"
+  ],
+  "ondc": [
+   "RET18"
+  ],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "home_nursing",
+  "category": "health_wellness",
+  "name": "Home Nursing & Elder Care",
+  "description": "Nurses, caretakers and elder care at home",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "home nursing",
+   "nurse",
+   "caretaker",
+   "elder care",
+   "home care",
+   "attendant",
+   "old age"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "gym_fitness",
+  "category": "health_wellness",
+  "name": "Gym, Yoga & Fitness",
+  "description": "Gyms, yoga studios, zumba and fitness centres",
+  "listing_type": "service",
+  "template": "fitness",
+  "keywords": [
+   "gym",
+   "fitness",
+   "yoga",
+   "zumba",
+   "crossfit",
+   "workout",
+   "aerobics"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "plan_period",
+    "label": "Plan",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per Session",
+     "Monthly",
+     "Quarterly",
+     "Half-Yearly",
+     "Yearly"
+    ]
+   },
+   {
+    "key": "for_gender",
+    "label": "For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "trainer_included",
+    "label": "Personal Trainer Included",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "timings",
+    "label": "Timings",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "health_others",
+  "category": "health_wellness",
+  "name": "Other Health Service",
+  "description": "Any other health or wellness business",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET18"
+  ],
+  "ondc": [
+   "RET18"
+  ],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "clothing",
+  "category": "fashion_beauty",
+  "name": "Clothing Store",
+  "description": "Readymade garments, boutiques and ethnic wear",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [
+   "clothing",
+   "clothes",
+   "garment",
+   "boutique",
+   "apparel",
+   "readymade",
+   "textiles",
+   "dress",
+   "fashion"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12"
+  ],
+  "ondc": [
+   "RET12"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "size",
+    "label": "Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "Free Size"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "footwear",
+  "category": "fashion_beauty",
+  "name": "Footwear",
+  "description": "Shoes, sandals, chappals and shoe repair",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [
+   "shoe",
+   "shoes",
+   "footwear",
+   "chappal",
+   "sandal",
+   "slipper",
+   "cobbler"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12",
+   "service:shoe_bag_repair"
+  ],
+  "ondc": [
+   "RET12"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "size",
+    "label": "Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "Free Size"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "fabric",
+  "category": "fashion_beauty",
+  "name": "Fabric & Saree Store",
+  "description": "Sarees, dress materials and fabrics",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [
+   "saree",
+   "sari",
+   "silk",
+   "fabric",
+   "dress material",
+   "textile",
+   "handloom"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12"
+  ],
+  "ondc": [
+   "RET12"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "size",
+    "label": "Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "Free Size"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "jewellery",
+  "category": "fashion_beauty",
+  "name": "Jewellery",
+  "description": "Gold, silver, diamond and fashion jewellery",
+  "listing_type": "product",
+  "template": "jewellery",
+  "keywords": [
+   "jewel",
+   "jewellery",
+   "jewelry",
+   "gold",
+   "silver",
+   "diamond",
+   "imitation"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12",
+   "service:watch_jewellery_repair"
+  ],
+  "ondc": [
+   "RET12"
+  ],
+  "current_form_fields": [
+   {
+    "key": "metal",
+    "label": "Metal",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Gold",
+     "Silver",
+     "Platinum",
+     "Diamond",
+     "Imitation / Fashion",
+     "Other"
+    ]
+   },
+   {
+    "key": "purity",
+    "label": "Purity",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "24K",
+     "22K",
+     "18K",
+     "14K",
+     "925 Sterling",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "weight_grams",
+    "label": "Weight (Grams)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "hallmarked",
+    "label": "BIS Hallmarked",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "making_charges",
+    "label": "Making Charges",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "bags_accessories",
+  "category": "fashion_beauty",
+  "name": "Bags, Watches & Accessories",
+  "description": "Bags, wallets, belts, watches and fashion accessories",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [
+   "bag",
+   "bags",
+   "wallet",
+   "belt",
+   "watch",
+   "watches",
+   "accessories",
+   "luggage"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12"
+  ],
+  "ondc": [
+   "RET12"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "kids_baby",
+  "category": "fashion_beauty",
+  "name": "Baby & Kids Store",
+  "description": "Kids wear, baby care, diapers and baby food",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [
+   "baby",
+   "kids",
+   "infant",
+   "diaper",
+   "toddler",
+   "maternity"
+  ],
+  "catalog_nodes": [
+   "ondc:RET12",
+   "ondc:RET10-1000",
+   "ondc:RET10-1001",
+   "ondc:RET10-1002"
+  ],
+  "ondc": [
+   "RET12",
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "size",
+    "label": "Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "Free Size"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "cosmetics",
+  "category": "fashion_beauty",
+  "name": "Cosmetics & Beauty Store",
+  "description": "Make-up, skin care, hair care and fragrances",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "cosmetic",
+   "cosmetics",
+   "beauty store",
+   "makeup store",
+   "perfume",
+   "fancy store",
+   "beauty supplies"
+  ],
+  "catalog_nodes": [
+   "ondc:RET13",
+   "ondc:RET10-1009",
+   "ondc:RET10-100A",
+   "ondc:RET10-100B",
+   "ondc:RET10-100C",
+   "ondc:RET10-100D",
+   "ondc:RET10-100E",
+   "ondc:RET10-100F",
+   "ondc:RET10-1010",
+   "ondc:RET10-1011",
+   "ondc:RET10-1012",
+   "ondc:RET10-1014",
+   "ondc:RET10-1015"
+  ],
+  "ondc": [
+   "RET13"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "skin_type",
+    "label": "Suitable For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "All Skin Types",
+     "Oily",
+     "Dry",
+     "Sensitive",
+     "Combination"
+    ]
+   },
+   {
+    "key": "net_quantity",
+    "label": "Net Quantity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "salon",
+  "category": "fashion_beauty",
+  "name": "Salon & Barber",
+  "description": "Haircuts, styling, shaving and grooming",
+  "listing_type": "service",
+  "template": "salon",
+  "keywords": [
+   "salon",
+   "barber",
+   "hair cut",
+   "haircut",
+   "hair style",
+   "unisex salon",
+   "grooming"
+  ],
+  "catalog_nodes": [
+   "service:haircut",
+   "service:hair_colour",
+   "service:shave_beard"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_for",
+    "label": "For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.service_for",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.duration_mins",
+    "statutory": false
+   },
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Salon",
+     "Home Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "beauty_parlour",
+  "category": "fashion_beauty",
+  "name": "Beauty Parlour & Spa",
+  "description": "Facials, waxing, threading, nails, massage and spa",
+  "listing_type": "service",
+  "template": "salon",
+  "keywords": [
+   "beauty parlour",
+   "beauty parlor",
+   "parlour",
+   "spa",
+   "facial",
+   "nail",
+   "waxing",
+   "massage",
+   "makeup lounge"
+  ],
+  "catalog_nodes": [
+   "service:facial",
+   "service:threading_waxing",
+   "service:manicure_pedicure",
+   "service:massage_spa"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_for",
+    "label": "For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.service_for",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.duration_mins",
+    "statutory": false
+   },
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Salon",
+     "Home Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "makeup_artist",
+  "category": "fashion_beauty",
+  "name": "Makeup & Mehendi Artist",
+  "description": "Bridal makeup, party makeup and mehendi at home or venue",
+  "listing_type": "service",
+  "template": "salon",
+  "keywords": [
+   "makeup artist",
+   "bridal makeup",
+   "mehendi",
+   "mehndi",
+   "henna"
+  ],
+  "catalog_nodes": [
+   "service:bridal_makeup"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_for",
+    "label": "For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.service_for",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "catalog_path": "attributes.duration_mins",
+    "statutory": false
+   },
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Salon",
+     "Home Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "tailor",
+  "category": "fashion_beauty",
+  "name": "Tailor & Alterations",
+  "description": "Stitching, blouse work, alterations and embroidery",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "tailor",
+   "tailoring",
+   "stitching",
+   "alteration",
+   "blouse",
+   "embroidery",
+   "boutique stitching"
+  ],
+  "catalog_nodes": [
+   "service:clothing_alterations"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "garment_for",
+    "label": "For",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "delivery_days",
+    "label": "Ready In (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "laundry",
+  "category": "fashion_beauty",
+  "name": "Laundry & Dry Cleaning",
+  "description": "Washing, ironing, dry cleaning and shoe cleaning",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "laundry",
+   "dry clean",
+   "dry cleaning",
+   "ironing",
+   "iron",
+   "wash",
+   "laundromat",
+   "dhobi"
+  ],
+  "catalog_nodes": [
+   "service:dry_cleaning",
+   "service:ironing",
+   "service:wash_fold"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "pricing_unit",
+    "label": "Priced",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per Piece",
+     "Per kg",
+     "Per Set"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Ready In",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "pickup_drop",
+    "label": "Free Pickup & Drop",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "fashion_others",
+  "category": "fashion_beauty",
+  "name": "Other Fashion & Beauty",
+  "description": "Any other fashion, beauty or personal care business",
+  "listing_type": "product",
+  "template": "fashion",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET12",
+   "ondc:RET13"
+  ],
+  "ondc": [
+   "RET12",
+   "RET13"
+  ],
+  "current_form_fields": [
+   {
+    "key": "gender",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Men",
+     "Women",
+     "Kids",
+     "Unisex"
+    ]
+   },
+   {
+    "key": "size",
+    "label": "Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "XS",
+     "S",
+     "M",
+     "L",
+     "XL",
+     "XXL",
+     "Free Size"
+    ]
+   },
+   {
+    "key": "colour",
+    "label": "Colour",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material / Fabric",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "mobile_phones",
+  "category": "electronics_appliances",
+  "name": "Mobile Phones & Accessories",
+  "description": "Smartphones, feature phones, chargers, covers and accessories",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "mobile",
+   "mobiles",
+   "phone",
+   "smartphone",
+   "cell phone",
+   "mobile accessories",
+   "sim"
+  ],
+  "catalog_nodes": [
+   "ondc:RET14"
+  ],
+  "ondc": [
+   "RET14"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   },
+   {
+    "key": "storage",
+    "label": "RAM / Storage",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "network",
+    "label": "Network",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "5G",
+     "4G",
+     "Not Applicable"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "electronics_store",
+  "category": "electronics_appliances",
+  "name": "Electronics Store",
+  "description": "TVs, audio, cameras and consumer electronics",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "electronics",
+   "tv",
+   "television",
+   "audio",
+   "speaker",
+   "camera",
+   "gadget"
+  ],
+  "catalog_nodes": [
+   "ondc:RET14"
+  ],
+  "ondc": [
+   "RET14"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "computers",
+  "category": "electronics_appliances",
+  "name": "Computers & Laptops",
+  "description": "Laptops, desktops, printers and computer peripherals",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "computer",
+   "laptop",
+   "desktop",
+   "printer",
+   "peripherals",
+   "it store"
+  ],
+  "catalog_nodes": [
+   "ondc:RET14"
+  ],
+  "ondc": [
+   "RET14"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "home_appliances",
+  "category": "electronics_appliances",
+  "name": "Home Appliances",
+  "description": "Fridges, washing machines, ACs, fans, mixers and kitchen appliances",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "appliance",
+   "appliances",
+   "refrigerator",
+   "fridge",
+   "washing machine",
+   "mixer",
+   "grinder",
+   "fan",
+   "air conditioner"
+  ],
+  "catalog_nodes": [
+   "ondc:RET15"
+  ],
+  "ondc": [
+   "RET15"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "inverter_battery",
+  "category": "electronics_appliances",
+  "name": "Inverter, Battery & Solar",
+  "description": "Inverters, UPS, batteries, solar panels and installation",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "inverter",
+   "ups",
+   "battery",
+   "batteries",
+   "solar",
+   "exide",
+   "luminous"
+  ],
+  "catalog_nodes": [
+   "ondc:RET15"
+  ],
+  "ondc": [
+   "RET15"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "cctv_security",
+  "category": "electronics_appliances",
+  "name": "CCTV & Security Systems",
+  "description": "CCTV cameras, video doorbells, alarms and installation",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [
+   "cctv",
+   "security camera",
+   "surveillance",
+   "alarm",
+   "biometric",
+   "access control"
+  ],
+  "catalog_nodes": [
+   "ondc:RET14"
+  ],
+  "ondc": [
+   "RET14"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   },
+   {
+    "key": "installation_included",
+    "label": "Installation Included",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "electronics_repair",
+  "category": "electronics_appliances",
+  "name": "Electronics, Mobile & AC Repair",
+  "description": "Mobile, laptop, TV, AC, fridge, RO and appliance repair",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "mobile repair",
+   "phone repair",
+   "laptop repair",
+   "tv repair",
+   "ac service",
+   "ac repair",
+   "appliance repair",
+   "ro service",
+   "water purifier",
+   "service centre",
+   "service center"
+  ],
+  "catalog_nodes": [
+   "service:mobile_repair",
+   "service:computer_repair",
+   "service:ac_service",
+   "service:appliance_repair",
+   "service:water_purifier_service"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "visiting_charge",
+    "label": "Visiting / Inspection Fee (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Estimated Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_days",
+    "label": "Service Warranty (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "telecom_recharge",
+  "category": "electronics_appliances",
+  "name": "Recharge, DTH & Internet",
+  "description": "Mobile recharge, DTH, broadband and SIM services",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "recharge",
+   "dth",
+   "broadband",
+   "internet",
+   "wifi",
+   "sim card",
+   "fiber"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "operator",
+    "label": "Operator / Provider",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "electronics_others",
+  "category": "electronics_appliances",
+  "name": "Other Electronics",
+  "description": "Any other electronics or appliance business",
+  "listing_type": "product",
+  "template": "electronics",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET14",
+   "ondc:RET15"
+  ],
+  "ondc": [
+   "RET14",
+   "RET15"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand / Manufacturer",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "model_number",
+    "label": "Model Number / Specs",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "attributes.model_number",
+    "statutory": false
+   },
+   {
+    "key": "warranty_period",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New Sealed",
+     "Open Box",
+     "Refurbished Certified",
+     "Pre-Owned"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "hardware_store",
+  "category": "home_property",
+  "name": "Hardware Store",
+  "description": "Tools, fittings, fasteners and general hardware",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "hardware",
+   "hardwares",
+   "hardawers",
+   "tools",
+   "fasteners",
+   "hand tools"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1B"
+  ],
+  "ondc": [
+   "RET1B"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "electrical_supplies",
+  "category": "home_property",
+  "name": "Electrical Supplies",
+  "description": "Wires, switches, lights, fans and electrical fittings",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "electrical",
+   "electricals",
+   "wire",
+   "switch",
+   "lighting",
+   "led",
+   "electrical supply"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1B"
+  ],
+  "ondc": [
+   "RET1B"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "plumbing_sanitary",
+  "category": "home_property",
+  "name": "Plumbing & Sanitaryware",
+  "description": "Pipes, taps, tanks, sanitaryware and bath fittings",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "sanitary",
+   "sanitaryware",
+   "pipes",
+   "pipe",
+   "tap",
+   "bath fittings",
+   "water tank",
+   "pvc"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1C"
+  ],
+  "ondc": [
+   "RET1C"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "paints",
+  "category": "home_property",
+  "name": "Paints",
+  "description": "Paints, primers, putty and painting tools",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "paint",
+   "paints",
+   "putty",
+   "primer",
+   "asian paints",
+   "berger"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1C"
+  ],
+  "ondc": [
+   "RET1C"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "building_materials",
+  "category": "home_property",
+  "name": "Building Materials",
+  "description": "Cement, steel, sand, bricks and construction supplies",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "cement",
+   "steel",
+   "sand",
+   "brick",
+   "building material",
+   "construction material",
+   "tmt",
+   "aggregates"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1C"
+  ],
+  "ondc": [
+   "RET1C"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "tiles_plywood",
+  "category": "home_property",
+  "name": "Tiles, Plywood & Glass",
+  "description": "Tiles, marble, granite, plywood, laminates and glass",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "tiles",
+   "marble",
+   "granite",
+   "plywood",
+   "laminate",
+   "glass",
+   "timber",
+   "aluminium"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1C"
+  ],
+  "ondc": [
+   "RET1C"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "furniture",
+  "category": "home_property",
+  "name": "Furniture",
+  "description": "Home and office furniture, mattresses and modular furniture",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "furniture",
+   "sofa",
+   "bed",
+   "mattress",
+   "wardrobe",
+   "chair",
+   "table"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "home_decor",
+  "category": "home_property",
+  "name": "Home Décor & Furnishings",
+  "description": "Curtains, carpets, lighting, décor and furnishings",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "decor",
+   "décor",
+   "curtain",
+   "carpet",
+   "furnishing",
+   "interior decoration",
+   "home decor"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "kitchenware",
+  "category": "home_property",
+  "name": "Utensils & Kitchenware",
+  "description": "Vessels, cookware, steel and plastic household items",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "utensil",
+   "vessel",
+   "vessels",
+   "kitchenware",
+   "cookware",
+   "steel",
+   "plastic"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16",
+   "ondc:RET10-103E",
+   "ondc:RET10-103F"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "garden_nursery",
+  "category": "home_property",
+  "name": "Plant Nursery & Garden",
+  "description": "Plants, seeds, pots, manure and garden tools",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "nursery",
+   "plants",
+   "garden",
+   "seeds",
+   "manure",
+   "pots",
+   "landscaping"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "variety_store",
+  "category": "home_property",
+  "name": "Variety / Discount Store",
+  "description": "Everything stores, ₹99 shops and household variety items",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "variety",
+   "discount store",
+   "fancy",
+   "99 store",
+   "department store",
+   "everything store"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16",
+   "ondc:RET10"
+  ],
+  "ondc": [
+   "RET16",
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "lpg_gas",
+  "category": "home_property",
+  "name": "LPG Gas Agency",
+  "description": "Cooking gas cylinders, refills, stoves and connections",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "gas agency",
+   "lpg",
+   "cylinder",
+   "indane",
+   "hp gas",
+   "bharat gas",
+   "gas stove"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "cylinder_size",
+    "label": "Cylinder Size",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "5 kg",
+     "14.2 kg",
+     "19 kg (Commercial)",
+     "47.5 kg",
+     "Not Applicable"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "home_repair",
+  "category": "home_property",
+  "name": "Home Repair (Plumber, Electrician, Carpenter)",
+  "description": "Plumbing, electrical work, carpentry and painting at home",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "plumber",
+   "electrician",
+   "carpenter",
+   "home repair",
+   "handyman",
+   "painter",
+   "mason",
+   "waterproofing"
+  ],
+  "catalog_nodes": [
+   "service:plumbing",
+   "service:electrical",
+   "service:carpentry",
+   "service:painting"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "visiting_charge",
+    "label": "Visiting / Inspection Fee (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Estimated Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_days",
+    "label": "Service Warranty (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "cleaning_pest_control",
+  "category": "home_property",
+  "name": "Cleaning & Pest Control",
+  "description": "Home deep cleaning, sofa and tank cleaning, pest control",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "cleaning",
+   "deep clean",
+   "pest control",
+   "termite",
+   "sofa cleaning",
+   "tank cleaning",
+   "housekeeping"
+  ],
+  "catalog_nodes": [
+   "service:home_cleaning",
+   "service:sofa_carpet_cleaning",
+   "service:pest_control"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "visiting_charge",
+    "label": "Visiting / Inspection Fee (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Estimated Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_days",
+    "label": "Service Warranty (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "interior_design",
+  "category": "home_property",
+  "name": "Interior Design & Modular Kitchen",
+  "description": "Interior designers, modular kitchens, false ceiling and wardrobes",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "interior",
+   "interiors",
+   "modular kitchen",
+   "false ceiling",
+   "wardrobe design"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "visiting_charge",
+    "label": "Visiting / Inspection Fee (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Estimated Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_days",
+    "label": "Service Warranty (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "construction_contractor",
+  "category": "home_property",
+  "name": "Builders, Architects & Contractors",
+  "description": "Civil contractors, builders, architects, engineers and surveyors",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "builder",
+   "builders",
+   "contractor",
+   "construction",
+   "architect",
+   "civil engineer",
+   "surveyor",
+   "structural"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "real_estate",
+  "category": "home_property",
+  "name": "Real Estate Agent",
+  "description": "Buying, selling and leasing homes, plots and shops",
+  "listing_type": "service",
+  "template": "property",
+  "keywords": [
+   "real estate",
+   "realtor",
+   "property",
+   "broker",
+   "plots",
+   "flats for sale",
+   "property management"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "deal_type",
+    "label": "Deal",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Rent",
+     "Sale",
+     "Lease",
+     "PG / Hostel"
+    ]
+   },
+   {
+    "key": "property_type",
+    "label": "Property Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Apartment",
+     "Independent House",
+     "Villa",
+     "Plot / Land",
+     "Shop / Office",
+     "Room / PG Bed"
+    ]
+   },
+   {
+    "key": "bedrooms",
+    "label": "Bedrooms",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "1 RK",
+     "1 BHK",
+     "2 BHK",
+     "3 BHK",
+     "4+ BHK",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "area_sqft",
+    "label": "Area (sq ft)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "furnishing",
+    "label": "Furnishing",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Unfurnished",
+     "Semi-Furnished",
+     "Fully Furnished"
+    ]
+   },
+   {
+    "key": "available_from",
+    "label": "Available From",
+    "type": "date",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "house_rental",
+  "category": "home_property",
+  "name": "House, PG & Hostel Rental",
+  "description": "Houses and flats for rent, PGs, hostels and co-living",
+  "listing_type": "rental",
+  "template": "property",
+  "keywords": [
+   "pg",
+   "paying guest",
+   "hostel",
+   "house for rent",
+   "flat for rent",
+   "co-living",
+   "apartment",
+   "condominium"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "deal_type",
+    "label": "Deal",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Rent",
+     "Sale",
+     "Lease",
+     "PG / Hostel"
+    ]
+   },
+   {
+    "key": "property_type",
+    "label": "Property Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Apartment",
+     "Independent House",
+     "Villa",
+     "Plot / Land",
+     "Shop / Office",
+     "Room / PG Bed"
+    ]
+   },
+   {
+    "key": "bedrooms",
+    "label": "Bedrooms",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "1 RK",
+     "1 BHK",
+     "2 BHK",
+     "3 BHK",
+     "4+ BHK",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "area_sqft",
+    "label": "Area (sq ft)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "furnishing",
+    "label": "Furnishing",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Unfurnished",
+     "Semi-Furnished",
+     "Fully Furnished"
+    ]
+   },
+   {
+    "key": "available_from",
+    "label": "Available From",
+    "type": "date",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "equipment_rental",
+  "category": "home_property",
+  "name": "Furniture, Appliance & Tool Rental",
+  "description": "Furniture, appliances, tools and equipment on rent",
+  "listing_type": "rental",
+  "template": "rentals",
+  "keywords": [
+   "furniture rental",
+   "appliance rental",
+   "tool hire",
+   "equipment rental",
+   "on rent"
+  ],
+  "catalog_nodes": [
+   "service:furniture_appliance_rental"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "security_deposit",
+    "label": "Refundable Security Deposit (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "min_rental_days",
+    "label": "Minimum Rental Period (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "id_proof_required",
+    "label": "Government ID Proof Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "home_others",
+  "category": "home_property",
+  "name": "Other Home Service",
+  "description": "Any other home, hardware or property business",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET16",
+   "ondc:RET1B",
+   "ondc:RET1C"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "auto_parts",
+  "category": "vehicles_travel",
+  "name": "Auto Parts & Accessories",
+  "description": "Spare parts, lubricants and accessories for bikes and cars",
+  "listing_type": "product",
+  "template": "automotive",
+  "keywords": [
+   "spare parts",
+   "auto parts",
+   "spares",
+   "car accessories",
+   "bike accessories",
+   "engine oil",
+   "lubricant"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1A",
+   "ondc:RET10-1024"
+  ],
+  "ondc": [
+   "RET1A"
+  ],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle Class",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "2-Wheeler (Bike/Scooter)",
+     "4-Wheeler (Car/SUV)",
+     "Commercial / Truck",
+     "Universal"
+    ]
+   },
+   {
+    "key": "compatibility",
+    "label": "Compatible Models & Make",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "part_number",
+    "label": "OEM / Part Number",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New OEM",
+     "Aftermarket New",
+     "Refurbished",
+     "Pre-Owned Tested"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "tyres",
+  "category": "vehicles_travel",
+  "name": "Tyres & Puncture",
+  "description": "Tyres, tubes, alignment, balancing and puncture repair",
+  "listing_type": "product",
+  "template": "automotive",
+  "keywords": [
+   "tyre",
+   "tyres",
+   "tire",
+   "puncture",
+   "wheel alignment",
+   "balancing"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1A"
+  ],
+  "ondc": [
+   "RET1A"
+  ],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle Class",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "2-Wheeler (Bike/Scooter)",
+     "4-Wheeler (Car/SUV)",
+     "Commercial / Truck",
+     "Universal"
+    ]
+   },
+   {
+    "key": "compatibility",
+    "label": "Compatible Models & Make",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "part_number",
+    "label": "OEM / Part Number",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New OEM",
+     "Aftermarket New",
+     "Refurbished",
+     "Pre-Owned Tested"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "vehicle_repair",
+  "category": "vehicles_travel",
+  "name": "Car & Bike Service",
+  "description": "Mechanics, service centres, denting, painting and towing",
+  "listing_type": "service",
+  "template": "automotive",
+  "keywords": [
+   "mechanic",
+   "garage",
+   "workshop",
+   "bike service",
+   "car service",
+   "two wheeler service",
+   "towing",
+   "denting",
+   "cng fitment",
+   "auto gas"
+  ],
+  "catalog_nodes": [
+   "service:vehicle_service",
+   "service:bicycle_repair"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle Class",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "2-Wheeler (Bike/Scooter)",
+     "4-Wheeler (Car/SUV)",
+     "Commercial / Truck",
+     "Universal"
+    ]
+   },
+   {
+    "key": "compatibility",
+    "label": "Compatible Models & Make",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "car_wash",
+  "category": "vehicles_travel",
+  "name": "Car & Bike Wash",
+  "description": "Washing, detailing, polishing and ceramic coating",
+  "listing_type": "service",
+  "template": "services",
+  "keywords": [
+   "car wash",
+   "bike wash",
+   "detailing",
+   "water wash",
+   "ceramic coating",
+   "polish"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1024"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Doorstep / Home Visit",
+     "Workshop / Site Visit",
+     "Both Available"
+    ]
+   },
+   {
+    "key": "visiting_charge",
+    "label": "Visiting / Inspection Fee (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Estimated Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "fuel_station",
+  "category": "vehicles_travel",
+  "name": "Fuel & EV Charging",
+  "description": "Petrol, diesel, CNG, auto LPG and EV charging stations",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "petrol",
+   "diesel",
+   "fuel",
+   "petrol bunk",
+   "cng station",
+   "ev charging",
+   "charging station"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "fuel_type",
+    "label": "Fuel",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Petrol",
+     "Diesel",
+     "CNG",
+     "Auto LPG",
+     "EV Charging"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "vehicle_dealer",
+  "category": "vehicles_travel",
+  "name": "Vehicle Showroom (New & Used)",
+  "description": "New and pre-owned bikes, scooters, cars and EVs",
+  "listing_type": "product",
+  "template": "vehicles",
+  "keywords": [
+   "showroom",
+   "dealer",
+   "used car",
+   "second hand bike",
+   "pre-owned",
+   "two wheeler dealer",
+   "ev showroom"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "vehicle_class",
+    "label": "Vehicle",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Bike / Scooter",
+     "Car",
+     "Commercial",
+     "Electric 2-Wheeler",
+     "Electric Car"
+    ]
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "radio",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Pre-Owned"
+    ]
+   },
+   {
+    "key": "fuel_type",
+    "label": "Fuel",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Petrol",
+     "Diesel",
+     "CNG",
+     "Electric",
+     "Hybrid"
+    ]
+   },
+   {
+    "key": "model_year",
+    "label": "Model Year",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "km_driven",
+    "label": "Km Driven",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "vehicle_rental",
+  "category": "vehicles_travel",
+  "name": "Car & Bike Rental",
+  "description": "Self-drive bikes, scooters and cars on rent",
+  "listing_type": "rental",
+  "template": "rentals",
+  "keywords": [
+   "bike rental",
+   "bike rentals",
+   "scooter rental",
+   "car rental",
+   "self drive",
+   "rent a bike",
+   "rent a car",
+   "rentals & vehicles"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "security_deposit",
+    "label": "Refundable Security Deposit (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "min_rental_days",
+    "label": "Minimum Rental Period (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "id_proof_required",
+    "label": "Government ID Proof Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "fuel_policy",
+    "label": "Fuel / Usage Policy",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Full-to-Full",
+     "Same-as-Received",
+     "Unlimited",
+     "Capped km/day"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "taxi_auto",
+  "category": "vehicles_travel",
+  "name": "Taxi, Auto & Drivers",
+  "description": "Taxis, autos, cabs with driver and acting drivers",
+  "listing_type": "service",
+  "template": "travel",
+  "keywords": [
+   "taxi",
+   "cab",
+   "auto rickshaw",
+   "call taxi",
+   "acting driver",
+   "driver",
+   "tours and travels"
+  ],
+  "catalog_nodes": [
+   "service:car_with_driver"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Bike",
+     "Auto",
+     "Car (Hatchback / Sedan)",
+     "SUV / MUV",
+     "Tempo / Mini Truck",
+     "Bus / Van",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "trip_type",
+    "label": "Trip Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Within City",
+     "Outstation",
+     "Airport / Station",
+     "Tour Package",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Seats / Load Capacity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_hours",
+    "label": "Book Hours in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "packers_movers",
+  "category": "vehicles_travel",
+  "name": "Packers, Movers & Transport",
+  "description": "House shifting, goods transport and mini trucks",
+  "listing_type": "service",
+  "template": "travel",
+  "keywords": [
+   "packers",
+   "movers",
+   "shifting",
+   "goods transport",
+   "mini truck",
+   "lorry",
+   "tempo",
+   "logistics"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Bike",
+     "Auto",
+     "Car (Hatchback / Sedan)",
+     "SUV / MUV",
+     "Tempo / Mini Truck",
+     "Bus / Van",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "trip_type",
+    "label": "Trip Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Within City",
+     "Outstation",
+     "Airport / Station",
+     "Tour Package",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Seats / Load Capacity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_hours",
+    "label": "Book Hours in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "courier",
+  "category": "vehicles_travel",
+  "name": "Courier & Local Delivery",
+  "description": "Courier, parcel and same-day local delivery",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "courier",
+   "parcel",
+   "delivery",
+   "shipping",
+   "dtdc",
+   "speed post",
+   "logistics"
+  ],
+  "catalog_nodes": [
+   "service:courier",
+   "service:local_delivery"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "delivery_area",
+    "label": "Delivers To",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Within City",
+     "Domestic",
+     "International"
+    ]
+   },
+   {
+    "key": "weight_limit",
+    "label": "Weight Limit",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "travel_agency",
+  "category": "vehicles_travel",
+  "name": "Travel Agent & Tours",
+  "description": "Tickets, tour packages, visas and pilgrim tours",
+  "listing_type": "service",
+  "template": "travel",
+  "keywords": [
+   "travel agent",
+   "travels",
+   "tour",
+   "tours",
+   "ticket booking",
+   "visa",
+   "holiday package",
+   "pilgrimage"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Bike",
+     "Auto",
+     "Car (Hatchback / Sedan)",
+     "SUV / MUV",
+     "Tempo / Mini Truck",
+     "Bus / Van",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "trip_type",
+    "label": "Trip Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Within City",
+     "Outstation",
+     "Airport / Station",
+     "Tour Package",
+     "Not Applicable"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Seats / Load Capacity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_hours",
+    "label": "Book Hours in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "hotel_lodge",
+  "category": "vehicles_travel",
+  "name": "Hotels, Lodges & Homestays",
+  "description": "Rooms, lodges, homestays, resorts and service apartments",
+  "listing_type": "rental",
+  "template": "lodging",
+  "keywords": [
+   "lodge",
+   "lodging",
+   "rooms",
+   "homestay",
+   "resort",
+   "guest house",
+   "service apartment",
+   "stay"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "room_type",
+    "label": "Room Type",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Single",
+     "Double",
+     "Deluxe",
+     "Suite",
+     "Dormitory Bed",
+     "Entire Home"
+    ]
+   },
+   {
+    "key": "max_guests",
+    "label": "Max Guests",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "air_conditioned",
+    "label": "Air Conditioned",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "meals_included",
+    "label": "Meals Included",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "None",
+     "Breakfast",
+     "All Meals"
+    ]
+   },
+   {
+    "key": "check_in_time",
+    "label": "Check-in Time",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "driving_school",
+  "category": "vehicles_travel",
+  "name": "Driving School",
+  "description": "Car and two-wheeler driving lessons and licence help",
+  "listing_type": "service",
+  "template": "education",
+  "keywords": [
+   "driving school",
+   "driving class",
+   "driving lessons",
+   "licence",
+   "license"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "mode",
+    "label": "Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Centre",
+     "Online",
+     "Home Tuition",
+     "Hybrid"
+    ]
+   },
+   {
+    "key": "level",
+    "label": "Class / Level",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "course_duration",
+    "label": "Course Duration",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "batch_size",
+    "label": "Batch Size",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "demo_class",
+    "label": "Free Demo Class",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "vehicles_others",
+  "category": "vehicles_travel",
+  "name": "Other Vehicle & Travel Service",
+  "description": "Any other vehicle, transport or travel business",
+  "listing_type": "service",
+  "template": "automotive",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET1A"
+  ],
+  "ondc": [
+   "RET1A"
+  ],
+  "current_form_fields": [
+   {
+    "key": "vehicle_type",
+    "label": "Vehicle Class",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "2-Wheeler (Bike/Scooter)",
+     "4-Wheeler (Car/SUV)",
+     "Commercial / Truck",
+     "Universal"
+    ]
+   },
+   {
+    "key": "compatibility",
+    "label": "Compatible Models & Make",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "part_number",
+    "label": "OEM / Part Number",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Brand New OEM",
+     "Aftermarket New",
+     "Refurbished",
+     "Pre-Owned Tested"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "stationery",
+  "category": "lifestyle_events",
+  "name": "Stationery",
+  "description": "Notebooks, pens, school and office supplies",
+  "listing_type": "product",
+  "template": "books",
+  "keywords": [
+   "stationery",
+   "stationary",
+   "school supplies",
+   "office supplies",
+   "notebook",
+   "pens"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-104D",
+   "ondc:RET10-104E",
+   "ondc:RET10-104F",
+   "ondc:RET10-1050",
+   "ondc:RET10-1051",
+   "ondc:RET10-1052",
+   "ondc:RET10-1053",
+   "ondc:RET10-1054",
+   "ondc:RET10-1055",
+   "ondc:RET10-1056"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "author_brand",
+    "label": "Author / Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "language",
+    "label": "Language",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "English",
+     "Tamil",
+     "Hindi",
+     "Telugu",
+     "Kannada",
+     "Malayalam",
+     "Other"
+    ]
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Used - Like New",
+     "Used - Good"
+    ]
+   },
+   {
+    "key": "edition",
+    "label": "Edition / Class",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "books",
+  "category": "lifestyle_events",
+  "name": "Bookstore",
+  "description": "New and used books, textbooks and magazines",
+  "listing_type": "product",
+  "template": "books",
+  "keywords": [
+   "book",
+   "books",
+   "bookstore",
+   "book shop",
+   "textbook",
+   "magazine"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "author_brand",
+    "label": "Author / Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "language",
+    "label": "Language",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "English",
+     "Tamil",
+     "Hindi",
+     "Telugu",
+     "Kannada",
+     "Malayalam",
+     "Other"
+    ]
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Used - Like New",
+     "Used - Good"
+    ]
+   },
+   {
+    "key": "edition",
+    "label": "Edition / Class",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "toys",
+  "category": "lifestyle_events",
+  "name": "Toys & Games",
+  "description": "Toys, board games, kids cycles and hobby kits",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "toy",
+   "toys",
+   "games",
+   "board game",
+   "kids cycle",
+   "hobby"
+  ],
+  "catalog_nodes": [
+   "ondc:RET17"
+  ],
+  "ondc": [
+   "RET17"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "sports",
+  "category": "lifestyle_events",
+  "name": "Sports & Fitness Goods",
+  "description": "Cricket, football, gym equipment, cycles and sportswear",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "sports goods",
+   "sports shop",
+   "cricket bat",
+   "football",
+   "gym equipment",
+   "cycle",
+   "bicycle"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "gifts",
+  "category": "lifestyle_events",
+  "name": "Gift & Novelty Shop",
+  "description": "Gifts, greeting cards, return gifts and custom prints",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "gift",
+   "gifts",
+   "greeting card",
+   "return gift",
+   "novelty",
+   "customised",
+   "personalised"
+  ],
+  "catalog_nodes": [
+   "ondc:RET16",
+   "ondc:RET10-1054"
+  ],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "florist",
+  "category": "lifestyle_events",
+  "name": "Florist",
+  "description": "Flowers, bouquets, garlands and floral decoration",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "florist",
+   "flower",
+   "flowers",
+   "bouquet",
+   "garland",
+   "malai"
+  ],
+  "catalog_nodes": [],
+  "ondc": [
+   "RET16"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "pooja_store",
+  "category": "lifestyle_events",
+  "name": "Pooja & Religious Items",
+  "description": "Pooja items, idols, incense, camphor and religious books",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "pooja",
+   "puja",
+   "religious",
+   "agarbatti",
+   "incense",
+   "camphor",
+   "idol",
+   "temple"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1028"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "pet_shop",
+  "category": "lifestyle_events",
+  "name": "Pet Shop",
+  "description": "Pet food, accessories, aquariums and pet birds",
+  "listing_type": "product",
+  "template": "pets",
+  "keywords": [
+   "pet shop",
+   "pet store",
+   "pet food",
+   "aquarium",
+   "dog food",
+   "cat food",
+   "pets"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10-1057",
+   "ondc:RET10-1058",
+   "ondc:RET10-1059",
+   "ondc:RET10-105A",
+   "ondc:RET10-105B",
+   "ondc:RET10-105C",
+   "ondc:RET10-105D",
+   "ondc:RET10-105E",
+   "ondc:RET10-105F"
+  ],
+  "ondc": [
+   "RET10"
+  ],
+  "current_form_fields": [
+   {
+    "key": "pet_type",
+    "label": "For",
+    "type": "select",
+    "required": true,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Dog",
+     "Cat",
+     "Bird",
+     "Fish",
+     "Small Pets",
+     "All Pets"
+    ]
+   },
+   {
+    "key": "life_stage",
+    "label": "Life Stage",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Puppy / Kitten",
+     "Adult",
+     "Senior",
+     "All Ages"
+    ]
+   },
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "pack_size",
+    "label": "Pack Size",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "quantity_text",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "vet_pet_care",
+  "category": "lifestyle_events",
+  "name": "Vet & Pet Care",
+  "description": "Veterinary clinics, pet grooming, boarding and training",
+  "listing_type": "service",
+  "template": "health_services",
+  "keywords": [
+   "vet",
+   "veterinary",
+   "animal hospital",
+   "pet clinic",
+   "pet grooming",
+   "pet boarding",
+   "dog training"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "consultation_mode",
+    "label": "Consultation Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "In Clinic",
+     "Home Visit",
+     "Online / Video",
+     "In Clinic and Online"
+    ]
+   },
+   {
+    "key": "practitioner",
+    "label": "Doctor / Practitioner",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "specialty",
+    "label": "Specialty",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_mins",
+    "label": "Duration (Minutes)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "appointment_required",
+    "label": "Appointment Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "pet_type",
+    "label": "Pet",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Dog",
+     "Cat",
+     "Bird",
+     "Cattle",
+     "All Pets"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "musical_instruments",
+  "category": "lifestyle_events",
+  "name": "Musical Instruments",
+  "description": "Guitars, keyboards, veena, mridangam and audio gear",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "musical instrument",
+   "guitar",
+   "keyboard",
+   "veena",
+   "mridangam",
+   "tabla",
+   "harmonium"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "tuition",
+  "category": "lifestyle_events",
+  "name": "Tuition & Coaching",
+  "description": "School tuition, entrance coaching and competitive exams",
+  "listing_type": "service",
+  "template": "education",
+  "keywords": [
+   "tuition",
+   "coaching",
+   "academy",
+   "tutor",
+   "neet",
+   "jee",
+   "tnpsc",
+   "upsc",
+   "entrance"
+  ],
+  "catalog_nodes": [
+   "service:school_tuition"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "mode",
+    "label": "Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Centre",
+     "Online",
+     "Home Tuition",
+     "Hybrid"
+    ]
+   },
+   {
+    "key": "level",
+    "label": "Class / Level",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "subject",
+    "label": "Subject / Skill",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "course_duration",
+    "label": "Course Duration",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "batch_size",
+    "label": "Batch Size",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "demo_class",
+    "label": "Free Demo Class",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "hobby_classes",
+  "category": "lifestyle_events",
+  "name": "Music, Dance & Hobby Classes",
+  "description": "Music, dance, art, swimming, sports and yoga coaching",
+  "listing_type": "service",
+  "template": "education",
+  "keywords": [
+   "music class",
+   "dance class",
+   "art class",
+   "drawing class",
+   "swimming class",
+   "karate",
+   "chess",
+   "abacus",
+   "yoga class"
+  ],
+  "catalog_nodes": [
+   "service:music_classes",
+   "service:sports_yoga_coaching"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "mode",
+    "label": "Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Centre",
+     "Online",
+     "Home Tuition",
+     "Hybrid"
+    ]
+   },
+   {
+    "key": "level",
+    "label": "Class / Level",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "subject",
+    "label": "Subject / Skill",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "course_duration",
+    "label": "Course Duration",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "batch_size",
+    "label": "Batch Size",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "demo_class",
+    "label": "Free Demo Class",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "school_college",
+  "category": "lifestyle_events",
+  "name": "Schools, Colleges & Play Schools",
+  "description": "Play schools, schools, colleges and training institutes",
+  "listing_type": "service",
+  "template": "education",
+  "keywords": [
+   "school",
+   "matriculation",
+   "play school",
+   "kindergarten",
+   "college",
+   "institute",
+   "preschool",
+   "day care"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "mode",
+    "label": "Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Centre",
+     "Online",
+     "Home Tuition",
+     "Hybrid"
+    ]
+   },
+   {
+    "key": "level",
+    "label": "Class / Level",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "subject",
+    "label": "Subject / Skill",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "course_duration",
+    "label": "Course Duration",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "batch_size",
+    "label": "Batch Size",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "photo_studio",
+  "category": "lifestyle_events",
+  "name": "Photo Studio & Photographers",
+  "description": "Photography, videography, passport photos and albums",
+  "listing_type": "service",
+  "template": "events",
+  "keywords": [
+   "photo studio",
+   "photographer",
+   "photography",
+   "videography",
+   "studio",
+   "passport photo",
+   "album"
+  ],
+  "catalog_nodes": [
+   "service:photography"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "event_type",
+    "label": "Event Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Wedding",
+     "Birthday",
+     "Corporate",
+     "Religious / Pooja",
+     "Any Event"
+    ]
+   },
+   {
+    "key": "guest_capacity",
+    "label": "Guests Up To",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_hours",
+    "label": "Duration (Hours)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_days",
+    "label": "Book Days in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "at_your_venue",
+    "label": "Comes to Your Venue",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "event_planner",
+  "category": "lifestyle_events",
+  "name": "Event Planners & Decorators",
+  "description": "Wedding, birthday and corporate event planning and decoration",
+  "listing_type": "service",
+  "template": "events",
+  "keywords": [
+   "event",
+   "events",
+   "decoration",
+   "decorators",
+   "wedding planner",
+   "balloon",
+   "stage decoration",
+   "dj"
+  ],
+  "catalog_nodes": [
+   "service:event_decoration"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "event_type",
+    "label": "Event Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Wedding",
+     "Birthday",
+     "Corporate",
+     "Religious / Pooja",
+     "Any Event"
+    ]
+   },
+   {
+    "key": "guest_capacity",
+    "label": "Guests Up To",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "duration_hours",
+    "label": "Duration (Hours)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "advance_booking_days",
+    "label": "Book Days in Advance",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "at_your_venue",
+    "label": "Comes to Your Venue",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "tent_sound_rental",
+  "category": "lifestyle_events",
+  "name": "Tent, Light & Sound Rental",
+  "description": "Shamiana, chairs, lighting, sound systems and generators on rent",
+  "listing_type": "rental",
+  "template": "rentals",
+  "keywords": [
+   "tent",
+   "shamiana",
+   "pandal",
+   "sound system",
+   "light and sound",
+   "audio & light",
+   "audio visual",
+   "generator rental",
+   "chair rental"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "security_deposit",
+    "label": "Refundable Security Deposit (₹)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "min_rental_days",
+    "label": "Minimum Rental Period (Days)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "id_proof_required",
+    "label": "Government ID Proof Required",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "setup_included",
+    "label": "Setup & Operator Included",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "wedding_venue",
+  "category": "lifestyle_events",
+  "name": "Marriage Halls & Party Venues",
+  "description": "Kalyana mandapams, banquet halls and party halls",
+  "listing_type": "rental",
+  "template": "venue",
+  "keywords": [
+   "marriage hall",
+   "wedding hall",
+   "wedding venue",
+   "mahal",
+   "mandapam",
+   "banquet",
+   "party hall",
+   "convention"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "venue_type",
+    "label": "Venue Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Marriage Hall",
+     "Party Hall",
+     "Sports Turf / Court",
+     "Swimming Pool",
+     "Auditorium",
+     "Play / Gaming Zone",
+     "Other"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Capacity (People)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "booking_unit",
+    "label": "Booked",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per Hour",
+     "Per Session",
+     "Per Day"
+    ]
+   },
+   {
+    "key": "air_conditioned",
+    "label": "Air Conditioned",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "amenities",
+    "label": "Amenities",
+    "type": "textarea",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "sports_venue",
+  "category": "lifestyle_events",
+  "name": "Turfs, Courts & Swimming Pools",
+  "description": "Football turfs, cricket nets, badminton courts and pools",
+  "listing_type": "rental",
+  "template": "venue",
+  "keywords": [
+   "turf",
+   "sports complex",
+   "swimming pool",
+   "badminton court",
+   "cricket nets",
+   "box cricket",
+   "stadium",
+   "club"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "venue_type",
+    "label": "Venue Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Marriage Hall",
+     "Party Hall",
+     "Sports Turf / Court",
+     "Swimming Pool",
+     "Auditorium",
+     "Play / Gaming Zone",
+     "Other"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Capacity (People)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "booking_unit",
+    "label": "Booked",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per Hour",
+     "Per Session",
+     "Per Day"
+    ]
+   },
+   {
+    "key": "air_conditioned",
+    "label": "Air Conditioned",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "amenities",
+    "label": "Amenities",
+    "type": "textarea",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "entertainment_venue",
+  "category": "lifestyle_events",
+  "name": "Cinemas, Gaming & Play Zones",
+  "description": "Cinemas, gaming zones, kids play areas and amusement",
+  "listing_type": "service",
+  "template": "venue",
+  "keywords": [
+   "cinema",
+   "theatre",
+   "theater",
+   "gaming zone",
+   "play zone",
+   "amusement",
+   "bowling",
+   "escape room"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "venue_type",
+    "label": "Venue Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Marriage Hall",
+     "Party Hall",
+     "Sports Turf / Court",
+     "Swimming Pool",
+     "Auditorium",
+     "Play / Gaming Zone",
+     "Other"
+    ]
+   },
+   {
+    "key": "capacity",
+    "label": "Capacity (People)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "booking_unit",
+    "label": "Booked",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Per Hour",
+     "Per Session",
+     "Per Day"
+    ]
+   },
+   {
+    "key": "air_conditioned",
+    "label": "Air Conditioned",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "amenities",
+    "label": "Amenities",
+    "type": "textarea",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "lifestyle_others",
+  "category": "lifestyle_events",
+  "name": "Other Lifestyle & Events",
+  "description": "Any other leisure, learning or event business",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [],
+  "catalog_nodes": [
+   "ondc:RET17"
+  ],
+  "ondc": [
+   "RET17"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   }
+  ]
+ },
+ {
+  "key": "printing",
+  "category": "business_professional",
+  "name": "Printing & Photocopy",
+  "description": "Xerox, printing, flex banners, visiting cards and binding",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "xerox",
+   "printing",
+   "print",
+   "photocopy",
+   "flex",
+   "banner",
+   "visiting card",
+   "binding",
+   "press"
+  ],
+  "catalog_nodes": [
+   "service:printing"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "print_type",
+    "label": "Print Type",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "Black & White",
+     "Colour",
+     "Flex / Banner",
+     "Offset",
+     "Other"
+    ]
+   },
+   {
+    "key": "paper_size",
+    "label": "Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "online_services",
+  "category": "business_professional",
+  "name": "Online Services & e-Sevai",
+  "description": "Online applications, bill payments, certificates and CSC services",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "online services",
+   "e-sevai",
+   "e sevai",
+   "csc",
+   "common service",
+   "internet centre",
+   "browsing centre",
+   "aadhaar",
+   "pan card"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "accountant_tax",
+  "category": "business_professional",
+  "name": "Accountants & Tax Consultants",
+  "description": "GST filing, income tax, bookkeeping and auditing",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "accountant",
+   "chartered accountant",
+   "auditor",
+   "gst filing",
+   "income tax",
+   "tax consultant",
+   "bookkeeping",
+   "ca"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "legal",
+  "category": "business_professional",
+  "name": "Lawyers & Notary",
+  "description": "Advocates, notary, documentation and registration help",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "lawyer",
+   "advocate",
+   "legal",
+   "notary",
+   "attorney",
+   "documentation",
+   "deed writer"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "insurance_finance",
+  "category": "business_professional",
+  "name": "Insurance, Loans & Finance",
+  "description": "Insurance agents, loans, investments and money transfer",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "insurance",
+   "loan",
+   "finance",
+   "lic",
+   "mutual fund",
+   "investment",
+   "chit fund",
+   "money transfer",
+   "bank"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "it_services",
+  "category": "business_professional",
+  "name": "Software & IT Services",
+  "description": "Websites, apps, software, networking and IT support",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "software",
+   "website",
+   "web design",
+   "app development",
+   "it services",
+   "networking",
+   "it support",
+   "tech"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "marketing_design",
+  "category": "business_professional",
+  "name": "Marketing, Advertising & Design",
+  "description": "Digital marketing, advertising, branding and graphic design",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "marketing",
+   "advertising",
+   "digital marketing",
+   "branding",
+   "graphic design",
+   "social media",
+   "agency"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "staffing_security",
+  "category": "business_professional",
+  "name": "Staffing, Security & Facility Services",
+  "description": "Manpower, security guards, housekeeping staff and facility management",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [
+   "manpower",
+   "staffing",
+   "placement",
+   "security guard",
+   "security services",
+   "facility management",
+   "recruitment",
+   "jobs"
+  ],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "wholesale",
+  "category": "business_professional",
+  "name": "Wholesale & Distributors",
+  "description": "Wholesalers, distributors and bulk suppliers",
+  "listing_type": "product",
+  "template": "general",
+  "keywords": [
+   "wholesale",
+   "wholesaler",
+   "distributor",
+   "dealer",
+   "stockist",
+   "bulk",
+   "agency",
+   "supplier"
+  ],
+  "catalog_nodes": [
+   "ondc:RET10",
+   "ondc:RET1B"
+  ],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "variant",
+    "label": "Variant / Size",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "condition",
+    "label": "Condition",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "New",
+     "Refurbished",
+     "Used"
+    ]
+   },
+   {
+    "key": "min_order_qty",
+    "label": "Minimum Order Quantity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "gst_invoice",
+    "label": "GST Invoice Available",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "manufacturing",
+  "category": "business_professional",
+  "name": "Manufacturers & Industrial Supplies",
+  "description": "Manufacturers, fabrication, industrial and chemical supplies",
+  "listing_type": "product",
+  "template": "hardware",
+  "keywords": [
+   "manufacturer",
+   "manufacturing",
+   "factory",
+   "fabrication",
+   "industrial",
+   "engineering works",
+   "industries",
+   "pvt ltd",
+   "private limited",
+   "chemicals"
+  ],
+  "catalog_nodes": [
+   "ondc:RET1B",
+   "ondc:RET1D"
+  ],
+  "ondc": [
+   "RET1B",
+   "RET1D"
+  ],
+  "current_form_fields": [
+   {
+    "key": "brand",
+    "label": "Brand",
+    "type": "text",
+    "required": false,
+    "source": "catalog",
+    "catalog_path": "brand",
+    "statutory": false
+   },
+   {
+    "key": "material",
+    "label": "Material",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "dimensions",
+    "label": "Size / Dimensions",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "warranty_months",
+    "label": "Warranty (Months)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "min_order_qty",
+    "label": "Minimum Order Quantity",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "custom_orders",
+    "label": "Accepts Custom Orders",
+    "type": "boolean",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ },
+ {
+  "key": "business_others",
+  "category": "business_professional",
+  "name": "Other Business Service",
+  "description": "Any other business or professional service",
+  "listing_type": "service",
+  "template": "professional",
+  "keywords": [],
+  "catalog_nodes": [],
+  "ondc": [],
+  "current_form_fields": [
+   {
+    "key": "service_mode",
+    "label": "Service Mode",
+    "type": "select",
+    "required": false,
+    "source": "store",
+    "statutory": false,
+    "options": [
+     "At Office",
+     "Online",
+     "Doorstep Visit",
+     "Any"
+    ]
+   },
+   {
+    "key": "turnaround",
+    "label": "Turnaround",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "experience_years",
+    "label": "Experience (Years)",
+    "type": "number",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   },
+   {
+    "key": "qualification",
+    "label": "Qualification / Licence",
+    "type": "text",
+    "required": false,
+    "source": "store",
+    "statutory": false
+   }
+  ]
+ }
+]
