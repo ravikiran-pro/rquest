@@ -221,11 +221,16 @@ function parseVariants(raw, { axes, stockMode, existing = [] }) {
     const message = `A product can have at most ${MAX_VARIANTS} variants`;
     return fail('too_many_variants', message, [{ key: 'variants', message }]);
   }
-  const byId = new Map(existing.map((v) => [v.id, v]));
+  const byId = new Map(existing.map((v) => [String(v.id).toLowerCase(), v]));
   const byOptions = new Map(existing.map((v) => [optionKey(axes, v.option_values), v]));
   const claimed = new Set();
   const seen = new Map();
   const rows = [];
+  // Stored variants a row names by id: option-value matching never takes these, so renaming
+  // one variant and adding a new one with its old options matches correctly
+  const namedIds = new Set(
+    raw.filter((item) => isPlainObject(item) && !isBlank(item.id)).map((item) => String(item.id).toLowerCase())
+  );
 
   for (const [index, item] of raw.entries()) {
     const at = (field) => `variants[${index}].${field}`;
@@ -259,11 +264,11 @@ function parseVariants(raw, { axes, stockMode, existing = [] }) {
     // Which stored variant this is
     let match = null;
     if (!isBlank(item.id)) {
-      match = UUID_RE.test(String(item.id)) ? byId.get(String(item.id)) : null;
+      match = UUID_RE.test(String(item.id)) ? byId.get(String(item.id).toLowerCase()) : null;
       if (!match) return bad('variant_not_found', 'id', `Variant ${index + 1} is not one of this product's variants`);
     } else {
       const candidate = byOptions.get(key);
-      if (candidate && !claimed.has(candidate.id)) match = candidate;
+      if (candidate && !claimed.has(candidate.id) && !namedIds.has(String(candidate.id).toLowerCase())) match = candidate;
     }
     if (match) {
       if (claimed.has(match.id)) return bad('duplicate_variant', 'id', `Variant ${index + 1} is sent twice`);
@@ -290,11 +295,17 @@ function parseVariants(raw, { axes, stockMode, existing = [] }) {
     // Stock under the listing's mode
     let stockQty = null;
     let available = true;
+    // True when the count was not sent and the stored one stands: the save must not write it
+    // back (an order may have changed it since it was read)
+    let keepStoredStock = false;
     if (stockMode === 'tracked') {
       const qty = wholeNumber(item.stock_qty);
       if (qty.error) return bad('invalid', 'stock_qty', 'Stock quantity must be a whole number of 0 or more');
       stockQty = qty.value;
-      if (stockQty === null && match && match.stock_qty !== null && match.stock_qty !== undefined) stockQty = Number(match.stock_qty);
+      if (stockQty === null && match && match.stock_qty !== null && match.stock_qty !== undefined) {
+        stockQty = Number(match.stock_qty);
+        keepStoredStock = true;
+      }
       if (stockQty === null) {
         return bad('stock_qty_required', 'stock_qty', `Enter the stock quantity for ${variantLabel(axes, optionValues)}`);
       }
@@ -312,10 +323,13 @@ function parseVariants(raw, { axes, stockMode, existing = [] }) {
       price: price.value,
       mrp: mrp.value,
       stock_qty: stockQty,
-      low_stock_threshold: threshold.value,
+      // Not sent (undefined) keeps the stored value; an explicit null or '' clears it
+      low_stock_threshold: item.low_stock_threshold === undefined && match ? match.low_stock_threshold ?? null : threshold.value,
+      keep_stored_stock: keepStoredStock,
       is_available: available,
       catalog_item_id: isBlank(item.catalog_item_id) ? (match ? match.catalog_item_id ?? null : null) : String(item.catalog_item_id).trim(),
-      img_url: isBlank(item.img_url) ? null : String(item.img_url).trim(),
+      img_url:
+        item.img_url === undefined && match ? match.img_url ?? null : isBlank(item.img_url) ? null : String(item.img_url).trim(),
       position: index,
     });
   }
@@ -418,13 +432,27 @@ async function saveVariants(listingId, rows, { transaction } = {}) {
     );
   }
   const now = new Date();
+  const keptStock = [];
   for (const row of rows) {
-    const { id, ...values } = row;
-    if (id) {
-      await listing_variants.update({ ...values, updatedAt: now }, { where: { id, listing_id: listingId }, transaction });
+    const { id, keep_stored_stock: keepStock, ...values } = row;
+    if (!id) continue;
+    if (keepStock) {
+      // The count was not sent: leave the stored one (an order may have changed it since it
+      // was read) and derive availability from it below
+      delete values.stock_qty;
+      delete values.is_available;
+      keptStock.push(id);
     }
+    await listing_variants.update({ ...values, updatedAt: now }, { where: { id, listing_id: listingId }, transaction });
   }
-  const fresh = rows.filter((r) => !r.id).map(({ id, ...values }) => ({ ...values, listing_id: listingId })); // eslint-disable-line no-unused-vars
+  if (keptStock.length) {
+    await listing_variants.sequelize.query(
+      'UPDATE listing_variants SET is_available = stock_qty > 0 WHERE id IN (:ids) AND stock_qty IS NOT NULL',
+      { replacements: { ids: keptStock }, transaction }
+    );
+  }
+  // eslint-disable-next-line no-unused-vars
+  const fresh = rows.filter((r) => !r.id).map(({ id, keep_stored_stock, ...values }) => ({ ...values, listing_id: listingId }));
   if (fresh.length) await listing_variants.bulkCreate(fresh, { transaction });
 }
 

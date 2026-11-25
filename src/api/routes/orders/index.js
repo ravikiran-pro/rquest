@@ -96,17 +96,20 @@ const lineText = (it) => `${it.quantity}x ${it.item_name}${it.variant_label ? ` 
 async function restockOrder(orderId, transaction) {
   const [lines] = await sequelize.query(
     `WITH taken AS (
-       SELECT id, listing_id, variant_id, stock_deducted FROM order_items
+       SELECT id, listing_id, variant_id, variant_label, stock_deducted FROM order_items
         WHERE order_id = :orderId AND stock_deducted > 0
         FOR UPDATE
      )
      UPDATE order_items oi SET stock_deducted = 0, "updatedAt" = now()
        FROM taken WHERE oi.id = taken.id
-     RETURNING taken.listing_id, taken.variant_id, taken.stock_deducted`,
+     RETURNING taken.listing_id, taken.variant_id, taken.variant_label, taken.stock_deducted`,
     { replacements: { orderId }, transaction }
   );
   const variantListings = new Set();
-  for (const { listing_id, variant_id, quantity } of planRestock(lines)) {
+  // A variant line whose variant was deleted since (variant_id set to NULL, label kept) has
+  // nowhere to go back to: never restock it into the listing as a simple item
+  const restockable = lines.filter((l) => l.variant_id || !l.variant_label);
+  for (const { listing_id, variant_id, quantity } of planRestock(restockable)) {
     if (variant_id) {
       await sequelize.query(
         `UPDATE listing_variants v SET stock_qty = v.stock_qty + :q, is_available = true, "updatedAt" = now()
@@ -175,18 +178,21 @@ router.post('/', async (req, res) => {
       delivery_address,
       customer_phone,
       notes,
-      items,
+      items: rawItems,
       delivery_address_id,
       shop_upi_id,
     } = req.body;
     // platform_fee / delivery_fee in the body are ignored: fees come from platform settings
 
-    if (!shop_id || !items || !Array.isArray(items) || items.length === 0) {
+    if (!shop_id || !rawItems || !Array.isArray(rawItems) || rawItems.length === 0) {
       return res.status(400).json({ error: 'Shop ID and non-empty items array are required' });
     }
-    if (items.some((it) => !it || typeof it !== 'object' || Array.isArray(it))) {
+    if (rawItems.some((it) => !it || typeof it !== 'object' || Array.isArray(it))) {
       return res.status(400).json({ success: false, error: 'Each item must be an object with listing_id and quantity' });
     }
+    // Ids are matched against what Postgres returns (lower-case UUIDs)
+    const lowerId = (v) => (typeof v === 'string' ? v.trim().toLowerCase() : v);
+    const items = rawItems.map((it) => ({ ...it, listing_id: lowerId(it.listing_id), variant_id: lowerId(it.variant_id) }));
     // Any other value would skip the delivery fee and the enable_delivery switch
     if (!['delivery', 'pickup', 'service'].includes(order_type)) {
       return res.status(400).json({ success: false, error: 'Unknown order type' });

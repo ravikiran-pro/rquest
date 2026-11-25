@@ -32,6 +32,7 @@ const {
   serializeVariant,
   loadVariants,
   saveVariants,
+  refreshListingsFromVariants,
 } = require('./variants');
 const { validateListingFields, applyOwnerStatutory, needsDetails, lockedKeysFor, keysLeavingSchema } = require('./formOverrides');
 const { listingTypeFor, categoryMetadata, pickShopSubCategory, subCategoryIdFor } = require('./listingForm');
@@ -510,7 +511,15 @@ async function createListing(built) {
 async function updateListing(listing, built) {
   return sequelize.transaction(async (transaction) => {
     await listing.update(built.changes, { transaction });
-    if (built.variants) await saveVariants(listing.id, built.variants, { transaction });
+    if (built.variants) {
+      await saveVariants(listing.id, built.variants, { transaction });
+      // Totals from the stored rows: counts kept from the database may have moved since the
+      // edit was built, so the built summary is not trusted for them
+      if (built.variants.length) {
+        await refreshListingsFromVariants([listing.id], { transaction });
+        await listing.reload({ transaction });
+      }
+    }
     const variants = (await loadVariants([listing], { transaction })).get(listing.id) || [];
     return { listing, variants };
   });

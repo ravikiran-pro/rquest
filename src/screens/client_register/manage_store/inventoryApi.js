@@ -28,7 +28,10 @@ export const patchInventory = async (shopId, updates) => {
       break;
     }
   }
-  return { updated, skipped, error };
+  // A listing whose variants spanned two batches comes back twice: keep its latest copy
+  const latest = new Map();
+  updated.forEach((l) => latest.set(l?.id, l));
+  return { updated: [...latest.values()], skipped, error };
 };
 
 /**
