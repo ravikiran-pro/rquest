@@ -10,7 +10,8 @@ const path = require('path');
  * An item belongs to a sub-category when its taxonomy node is one of the sub-category's
  * catalog_nodes (attributes/inputs/sub_categories.json) or a descendant, or when
  * attributes.shop_type is the sub-category key — the same rule the app uses.
- * Attributes that are item columns read the column; the rest read attributes->>key.
+ * Attributes that are item columns read the column; the rest read attributes->>key. Reads
+ * items_enriched, so facts other collectors added (catalog.item_facts) count as filled.
  */
 
 const ROOT = path.join(__dirname, '..');
@@ -42,7 +43,7 @@ async function gaps(client, { sub } = {}) {
         SELECT unnest($1::text[])
         UNION SELECT n.id FROM catalog.taxonomy_nodes n JOIN tree t ON n.parent_id = t.node_id
       ), member AS (
-        SELECT DISTINCT i.* FROM catalog.items i
+        SELECT DISTINCT i.* FROM catalog.items_enriched i
          WHERE i.is_active AND i.status <> 'rejected'
            AND (i.taxonomy_node_id IN (SELECT node_id FROM tree) OR i.attributes->>'shop_type' = $2)
       )

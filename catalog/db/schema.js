@@ -458,6 +458,66 @@ CREATE TABLE catalog.collect_records (
 CREATE INDEX collect_records_changed_idx ON catalog.collect_records (scraper, changed_at);
 `,
   },
+  {
+    version: 6,
+    name: 'item facts: attributes other sources add to existing items',
+    get sql() {
+      const view = MIGRATIONS[2].sql.slice(MIGRATIONS[2].sql.indexOf('CREATE VIEW catalog.items_enriched'));
+      const head = 'SELECT i.*,';
+      if (!view.includes(head)) throw new Error('migration 6: items_enriched view text changed');
+      // Same view, but attributes = facts filled in under the item's own (non-null) values, and
+      // manufacturer / country of origin fall back to a fact when the item has none
+      const columns = [
+        'i.id', 'i.gtin', 'i.kind', 'i.name', 'i.name_key', 'i.brand_key', 'i.net_quantity', 'i.unit',
+        'i.quantity_text', 'i.taxonomy_node_id', 'i.classification_basis', 'i.hsn_code',
+        "coalesce(i.country_of_origin, fx.facts->>'country_of_origin') AS country_of_origin",
+        "coalesce(i.manufacturer, fx.facts->>'manufacturer') AS manufacturer",
+        'i.image_url',
+        "coalesce(fx.facts, '{}'::jsonb) || jsonb_strip_nulls(i.attributes) AS attributes",
+        'i.dedupe_key', 'i.status', 'i.quality_score', 'i.primary_source', 'i.content_hash', 'i.is_active',
+        'i.first_run_id', 'i.last_changed_run_id', 'i.created_at', 'i.updated_at', 'i.family_id',
+        'i.variant_values', 'i.attributes AS own_attributes',
+        "coalesce(fx.fact_sources, '{}'::jsonb) AS fact_sources",
+      ];
+      const body = view
+        .replace(head, `SELECT ${columns.join(',\n       ')},`)
+        .replace(
+          'FROM catalog.items i',
+          `FROM catalog.items i
+LEFT JOIN LATERAL (
+  SELECT jsonb_object_agg(f.attribute_key, f.value) AS facts,
+         jsonb_object_agg(f.attribute_key, f.source) AS fact_sources
+    FROM catalog.item_facts_best f WHERE f.item_id = i.id
+) fx ON true`
+        );
+      return `
+-- A fact one source adds to an item another source owns (a medicine's ceiling price, an
+-- appliance's star rating, a brand's manufacturer). Items are never edited by other sources;
+-- facts sit beside them and items_enriched merges them in. The item's own value wins.
+CREATE TABLE catalog.item_facts (
+  item_id       text     NOT NULL REFERENCES catalog.items(id) DEFERRABLE INITIALLY DEFERRED,
+  attribute_key text     NOT NULL CHECK (attribute_key ~ '^[a-z][a-z0-9_]{0,39}$'),
+  value         jsonb    NOT NULL CHECK (value <> 'null'::jsonb),
+  source        text     NOT NULL,
+  source_url    text,
+  -- 0-100: how sure the source is (exact id match 90+, name match lower)
+  confidence    smallint NOT NULL DEFAULT 50 CHECK (confidence BETWEEN 0 AND 100),
+  ${TRACKING},
+  PRIMARY KEY (item_id, attribute_key, source)
+);
+CREATE INDEX item_facts_source_idx ON catalog.item_facts (source);
+
+-- The fact used per (item, attribute): most confident, then most recently changed
+CREATE VIEW catalog.item_facts_best AS
+SELECT DISTINCT ON (item_id, attribute_key) item_id, attribute_key, value, source, confidence
+  FROM catalog.item_facts
+ WHERE is_active
+ ORDER BY item_id, attribute_key, confidence DESC, updated_at DESC;
+
+DROP VIEW catalog.items_enriched;
+${body}`;
+    },
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

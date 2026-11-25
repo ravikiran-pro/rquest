@@ -59,6 +59,21 @@ module.exports = {
 };
 ```
 
+### Filling missing attributes on items you do not own
+
+A collector never edits items another source owns. To add what an item is missing (a
+medicine's ceiling price, an appliance's BEE rating, a book's author), emit **facts** with
+`_shared/factEntities.js` → `catalog.item_facts { item_id, attribute_key, value, source,
+source_url, confidence }`. `items_enriched` (what the app reads) merges the most confident
+fact per key in under the item's own non-null values; `fact_sources` says where each came
+from. Match items by GTIN where you can (confidence 90+); a name match is 40–70.
+
+### Curated data without a website
+
+A collector may read a file in its own folder (`hosts: []`, one seed job, `handle` reads the
+CSV/JSON) — e.g. a researched service menu for salons. Put the references you used in the
+file header and keep `license` honest (`Internal (researched from …)`).
+
 `ctx.json / ctx.text / ctx.fetch` go through the shared polite fetcher (`lib/collect/fetcher`):
 host allowlist, per-host interval, retries with backoff, robots.txt for `access: 'crawl'`,
 optional disk cache (`{ cacheTtlMs }`).
