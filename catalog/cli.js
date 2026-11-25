@@ -11,6 +11,13 @@
  *   node cli.js run-all [flags]              every source in dependency order, then dedupe
  *   node cli.js dedupe                       queue probable duplicate items for review
  *   node cli.js families [--dry-run]         group pack-size variants into item_families
+ *   node cli.js collect list                 scrapers (catalog/scrapers/*) and what they feed
+ *   node cli.js collect seed <scraper|all>   queue a scraper's seed jobs (idempotent)
+ *   node cli.js collect status               queue and record counts per scraper
+ *   node cli.js collect retry <scraper>      put failed jobs back in the queue
+ *   node cli.js worker [--scrapers=a,b] [--once] [--max-jobs=N] [--idle-ms=N]
+ *                                            background collector (long-running unless --once)
+ *   node cli.js gaps [--sub=<key>] [--json]  items and attribute fill per sub-category
  *   node cli.js merge <keep_id> <drop_id>    mark drop as a duplicate of keep (rejected)
  *   node cli.js verify <item_id>             mark an item verified (sources won't change it)
  *   node cli.js status                       last runs, catalog health, open review items
@@ -29,6 +36,10 @@ const { migrate } = require('./db/schema');
 const { runSource } = require('./lib/run');
 const { findDuplicates, mergeItems, setItemStatus } = require('./lib/dedupe');
 const { buildFamilies } = require('./lib/families');
+const { runWorker, seed: seedScraper } = require('./lib/collect/worker');
+const collectQueue = require('./lib/collect/queue');
+const { listScrapers } = require('./lib/collect/registry');
+const { gaps } = require('./lib/gaps');
 const { SOURCES, getSource } = require('./sources');
 
 const withClient = async (fn) => {
@@ -45,8 +56,9 @@ function parseFlags(argv) {
   const positional = [];
   for (const arg of argv) {
     if (arg.startsWith('--')) {
-      const name = arg.slice(2).replace(/-([a-z])/g, (_, c) => c.toUpperCase());
-      flags[name] = true;
+      const [rawName, ...rest] = arg.slice(2).split('=');
+      const name = rawName.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+      flags[name] = rest.length ? rest.join('=') : true;
     } else positional.push(arg);
   }
   return { flags, positional };
@@ -150,6 +162,58 @@ async function cmdStatus() {
   }
 }
 
+async function cmdCollect([sub, name], flags) {
+  if (sub === 'list') {
+    for (const s of listScrapers()) {
+      console.log(`${s.name.padEnd(24)} ${s.access.padEnd(6)} ${s.hosts.join(', ')}`);
+      console.log(`${''.padEnd(24)} ${s.title} — ${s.license}`);
+      if (s.categories && s.categories.length) console.log(`${''.padEnd(24)} feeds: ${s.categories.join(', ')}`);
+    }
+    return undefined;
+  }
+  if (sub === 'seed') {
+    if (!name) throw new Error('Usage: node cli.js collect seed <scraper|all>');
+    const names = name === 'all' ? listScrapers().map((s) => s.name) : [name];
+    for (const n of names) await seedScraper(n);
+    return undefined;
+  }
+  if (sub === 'status') {
+    const rows = await withClient((c) => collectQueue.status(c));
+    console.log('  scraper                  queued running   done failed records  last finished');
+    for (const r of rows) {
+      console.log(
+        `  ${r.scraper.padEnd(24)} ${String(r.queued).padStart(6)} ${String(r.running).padStart(7)} ` +
+          `${String(r.done).padStart(6)} ${String(r.failed).padStart(6)} ${String(r.records).padStart(7)}  ` +
+          `${r.last_finished ? new Date(r.last_finished).toISOString().slice(0, 16) : '—'}`
+      );
+      if (r.last_error) console.log(`    last error: ${r.last_error.slice(0, 160)}`);
+    }
+    return undefined;
+  }
+  if (sub === 'retry') {
+    if (!name) throw new Error('Usage: node cli.js collect retry <scraper>');
+    const n = await withClient((c) => collectQueue.retry(c, name));
+    console.log(`${name}: ${n} job(s) queued again`);
+    return undefined;
+  }
+  throw new Error('Usage: node cli.js collect list|seed|status|retry');
+}
+
+async function cmdGaps(flags) {
+  const rows = await withClient((c) => gaps(c, { sub: typeof flags.sub === 'string' ? flags.sub : undefined }));
+  if (flags.json) {
+    console.log(JSON.stringify(rows, null, 1));
+    return undefined;
+  }
+  console.log('  sub-category               items  ready  weakest catalogue attributes (< 50% filled)');
+  for (const r of rows) {
+    console.log(
+      `  ${r.sub_category.padEnd(26)} ${String(r.items).padStart(5)} ${String(r.ready).padStart(6)}  ${r.missing.slice(0, 6).join(', ') || '—'}`
+    );
+  }
+  return undefined;
+}
+
 /** Every source in registry order (the order encodes the dependencies), then dedupe. */
 async function cmdRunAll(flags) {
   for (const name of Object.keys(SOURCES)) {
@@ -177,6 +241,18 @@ async function main() {
       return withClient((c) => findDuplicates(c));
     case 'families':
       return withClient((c) => buildFamilies(c, { dryRun: flags.dryRun }));
+    case 'collect':
+      return cmdCollect(positional, flags);
+    case 'worker':
+      await runWorker({
+        scrapers: typeof flags.scrapers === 'string' ? flags.scrapers.split(',').filter(Boolean) : null,
+        once: Boolean(flags.once),
+        maxJobs: Number(flags.maxJobs) || Infinity,
+        idleMs: Number(flags.idleMs) || 60000,
+      });
+      return undefined;
+    case 'gaps':
+      return cmdGaps(flags);
     case 'merge': {
       const [keep, drop] = positional;
       if (!keep || !drop)

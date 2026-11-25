@@ -13,6 +13,10 @@ const SOURCES = {
   'curated-items': () => require('./curated-items'),
 };
 
+// Sources shipped by collectors (catalog/scrapers/<name>), after the built-in ones: they
+// read collected records and may reference any taxonomy or brand the built-ins load.
+Object.assign(SOURCES, require('../lib/collect/registry').scraperSources());
+
 function getSource(name) {
   const load = SOURCES[name];
   if (!load) {

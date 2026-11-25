@@ -19,7 +19,8 @@
     "catalog:load": "cd catalog && node cli.js run-all",
     "taxonomy:sync": "node scripts/taxonomy-sync.js",
     "catalog:link-sub-categories": "node scripts/catalog-sub-category-links.js",
-    "taxonomy:export-catalog": "node scripts/taxonomy-export-catalog.js"
+    "taxonomy:export-catalog": "node scripts/taxonomy-export-catalog.js",
+    "catalog:publish": "node catalog/scripts/publish.js"
   },
   "devDependencies": {
     "concurrently": "^6.2.1",

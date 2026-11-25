@@ -410,6 +410,54 @@ ${MIGRATIONS[2].sql.slice(MIGRATIONS[2].sql.indexOf('CREATE VIEW catalog.items_e
 `;
     },
   },
+  {
+    version: 5,
+    name: 'background collection: job queue and collected records',
+    sql: `
+-- Work for the background collectors (lib/collect): one row per page/request to make.
+-- Workers claim due rows with FOR UPDATE SKIP LOCKED, so several can run at once.
+CREATE TABLE catalog.collect_jobs (
+  id            bigserial PRIMARY KEY,
+  scraper       text        NOT NULL CHECK (scraper ~ '^[a-z0-9][a-z0-9-]*$'),
+  job_key       text        NOT NULL CHECK (length(job_key) BETWEEN 1 AND 500),
+  kind          text        NOT NULL DEFAULT 'page',
+  params        jsonb       NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(params) = 'object'),
+  status        text        NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'done', 'failed', 'skipped')),
+  priority      smallint    NOT NULL DEFAULT 0,
+  attempts      smallint    NOT NULL DEFAULT 0,
+  next_run_at   timestamptz NOT NULL DEFAULT now(),
+  locked_until  timestamptz,
+  locked_by     text,
+  last_error    text,
+  records       integer     NOT NULL DEFAULT 0,
+  -- A done job is queued again this long after it finished (null = never)
+  refresh_after interval,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+  finished_at   timestamptz,
+  UNIQUE (scraper, job_key)
+);
+CREATE INDEX collect_jobs_due_idx ON catalog.collect_jobs (scraper, priority DESC, next_run_at)
+  WHERE status IN ('queued', 'running');
+
+-- What collectors found, one row per record of a scraper (product, price row, ...). A source
+-- (sources/<scraper>) turns these into items through the normal loader. payload is the raw
+-- record; content_hash lets a re-collect skip unchanged rows.
+CREATE TABLE catalog.collect_records (
+  scraper      text        NOT NULL,
+  record_key   text        NOT NULL CHECK (length(record_key) BETWEEN 1 AND 500),
+  job_id       bigint      REFERENCES catalog.collect_jobs(id) ON DELETE SET NULL,
+  source_url   text,
+  payload      jsonb       NOT NULL CHECK (jsonb_typeof(payload) = 'object'),
+  content_hash char(64)    NOT NULL,
+  first_seen   timestamptz NOT NULL DEFAULT now(),
+  last_seen    timestamptz NOT NULL DEFAULT now(),
+  changed_at   timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (scraper, record_key)
+);
+CREATE INDEX collect_records_changed_idx ON catalog.collect_records (scraper, changed_at);
+`,
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

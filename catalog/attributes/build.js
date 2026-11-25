@@ -4,7 +4,8 @@
  * Merge attributes/research/*.json into:
  *   seeds/attributes/definitions.json   attribute dictionary (catalog source attribute-sets)
  *   seeds/attributes/sets.json          attribute set per sub-category
- *   ../src/api/data/attributeSets.json  what the app needs: basic form, variant axes, full set
+ *   exports/attributeSets.json          what the app needs: basic form, variant axes, full set
+ *                                       (published to the app by `npm run catalog:publish`)
  *   attributes/build/report.md          conflicts, near-duplicates, coverage, open questions
  *
  * Rules (see SPEC.md):
@@ -24,7 +25,9 @@ const path = require('path');
 const ROOT = __dirname;
 const RESEARCH = path.join(ROOT, 'research');
 const SEED_DIR = path.join(ROOT, '..', 'seeds', 'attributes');
-const APP_EXPORT = path.join(ROOT, '..', '..', 'src', 'api', 'data', 'attributeSets.json');
+// Published for the app (copied into src/api/data by `npm run catalog:publish`): the catalogue
+// never writes outside its own folder
+const APP_EXPORT = path.join(ROOT, '..', 'exports', 'attributeSets.json');
 const REPORT = path.join(ROOT, 'build', 'report.md');
 const SUBS = JSON.parse(fs.readFileSync(path.join(ROOT, 'inputs', 'sub_categories.json'), 'utf8'));
 const ALIASES_FILE = path.join(ROOT, 'aliases.json');
@@ -316,6 +319,7 @@ const appExport = {
     Object.entries(outSets).map(([k, s]) => [k, { variant_axes: s.variant_axes, basic_form: s.basic_form, attributes: s.attributes.map(({ key, level, owner, per_variant, filterable, form_required }) => ({ key, level, owner, per_variant, filterable, ...(form_required === false ? { form_required } : {}) })) }])
   ),
 };
+fs.mkdirSync(path.dirname(APP_EXPORT), { recursive: true });
 fs.writeFileSync(APP_EXPORT, JSON.stringify(appExport, null, 1) + '\n');
 
 const lines = [

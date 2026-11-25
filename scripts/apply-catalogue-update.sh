@@ -11,9 +11,9 @@
 # Steps (each is idempotent, so the script can be re-run after a failure):
 #   1. app migrations (listing variants, sub_categories.variant_axes, ...)
 #   2. taxonomy sync: basic forms + variant axes per sub-category (admin-customised forms kept)
-#   3. catalogue schema migration 4 (attribute dictionary, attribute sets, item families)
-#   4. catalogue loads: attribute-sets, jan-aushadhi and off-india (new attribute keys)
-#   5. product families, then sub-category ↔ catalogue links
+#   3-4. the catalogue's own release script (catalog/scripts/apply.sh): schema migrations,
+#        every source, dedupe and product families
+#   5. sub-category ↔ catalogue links (an app table)
 # Needs network access to the Open Food Facts API and pib.gov.in for step 4.
 set -euo pipefail
 cd "$(dirname "$0")/.."
@@ -30,16 +30,9 @@ npx sequelize-cli db:migrate
 echo "== 2/5 taxonomy sync (basic forms, variant axes)"
 npm run taxonomy:sync
 
-echo "== 3/5 catalogue schema"
-(cd catalog && node cli.js migrate)
+echo "== 3-4/5 catalogue (schema, loads, families) — catalog/scripts/apply.sh"
+catalog/scripts/apply.sh
 
-echo "== 4/5 catalogue loads"
-export NODE_USE_ENV_PROXY="${NODE_USE_ENV_PROXY:-1}"
-(cd catalog && node cli.js run attribute-sets && node cli.js run jan-aushadhi && node cli.js run off-india)
-
-echo "== 5/5 families and links"
-(cd catalog && node cli.js families)
+echo "== 5/5 sub-category links (app table)"
 npm run catalog:link-sub-categories
-
-(cd catalog && node cli.js status)
 echo "Done."
