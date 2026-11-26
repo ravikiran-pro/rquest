@@ -19,7 +19,14 @@ const CUSTOM_TYPES = [
 ];
 const TYPE_LABEL = { text: 'Text', number: 'Number', boolean: 'Yes/No', select: 'Choice', radio: 'Choice', date: 'Date', textarea: 'Long text' };
 
-const emptyOverride = () => ({ fields: {}, custom_fields: [] });
+const emptyOverride = () => ({ fields: {}, custom_fields: [], enabled_attributes: [] });
+const LEVEL_LABEL = { statutory: 'Required by law', required: 'Key detail', recommended: 'Recommended', optional: 'Optional' };
+
+/** Catalogue attributes the draft switched on, in the server's research order. */
+const enabledFields = (available, draft) => {
+  const on = new Set(draft.enabled_attributes || []);
+  return (available || []).filter((f) => on.has(f.key));
+};
 
 // What a store may change on a base field (spec §C5), from the server's flags or the field itself
 const fieldFlags = (field, resolvedByKey) => {
@@ -41,10 +48,10 @@ const slugKey = (label, taken) => {
   return key;
 };
 
-/** Base fields with the draft applied (hidden removed), then custom fields: the preview's form. */
-const layerDraft = (base, draft) => {
+/** Base fields, then enabled catalogue fields, with the draft applied (hidden removed), then custom fields: the preview's form. */
+const layerDraft = (base, draft, available) => {
   const out = [];
-  base.forEach((f) => {
+  [...base, ...enabledFields(available, draft)].forEach((f) => {
     const o = draft.fields[f.key] || {};
     if (o.hidden) return;
     out.push({
@@ -60,9 +67,9 @@ const layerDraft = (base, draft) => {
 };
 
 /** Only the props that differ from the base, as the API expects. */
-const cleanDraft = (base, draft) => {
+const cleanDraft = (base, draft, available) => {
   const fields = {};
-  base.forEach((f) => {
+  [...base, ...enabledFields(available, draft)].forEach((f) => {
     const o = draft.fields[f.key];
     if (!o) return;
     const next = {};
@@ -81,7 +88,7 @@ const cleanDraft = (base, draft) => {
     if (c.defaultValue !== undefined && c.defaultValue !== null && c.defaultValue !== '') field.defaultValue = c.defaultValue;
     return field;
   });
-  return { fields, custom_fields };
+  return { fields, custom_fields, enabled_attributes: [...(draft.enabled_attributes || [])] };
 };
 
 const localIssues = (draft) => {
@@ -141,6 +148,7 @@ const FormSettings = ({ open, onClose, shop }) => {
 
   const entry = useMemo(() => entries.find((e) => e.sub_category?.id === subId) || null, [entries, subId]);
   const base = useMemo(() => (Array.isArray(entry?.base) ? entry.base : []), [entry]);
+  const available = useMemo(() => (Array.isArray(entry?.available) ? entry.available : []), [entry]);
   const resolvedByKey = useMemo(() => new Map((entry?.resolved || []).map((f) => [f.key, f])), [entry]);
 
   // A new sub-category (or a fresh load) starts from its saved override
@@ -149,13 +157,24 @@ const FormSettings = ({ open, onClose, shop }) => {
     setDraft({
       fields: { ...(o?.fields || {}) },
       custom_fields: Array.isArray(o?.custom_fields) ? o.custom_fields.map((c) => ({ ...c, _id: c.key })) : [],
+      enabled_attributes: Array.isArray(o?.enabled_attributes) ? [...o.enabled_attributes] : [],
     });
     setDirty(false);
     setServerErrors({});
   }, [entry]);
 
   const issues = useMemo(() => ({ ...localIssues(draft), ...serverErrors }), [draft, serverErrors]);
-  const previewFields = useMemo(() => layerDraft(base, draft), [base, draft]);
+  const previewFields = useMemo(() => layerDraft(base, draft, available), [base, draft, available]);
+
+  const setEnabled = (keys) => {
+    setDirty(true);
+    setDraft((d) => {
+      const on = new Set(keys);
+      // Settings of a field that is switched off are dropped with it
+      const fields = Object.fromEntries(Object.entries(d.fields).filter(([k]) => !available.some((f) => f.key === k) || on.has(k)));
+      return { ...d, fields, enabled_attributes: available.map((f) => f.key).filter((k) => on.has(k)) };
+    });
+  };
 
   const setFieldProp = (key, prop, value) => {
     setDirty(true);
@@ -213,7 +232,7 @@ const FormSettings = ({ open, onClose, shop }) => {
     }
     setSaving(true);
     try {
-      const body = cleanDraft(base, draft);
+      const body = cleanDraft(base, draft, available);
       const res = await netWorkCall(`${apiConfig.forms_shop}/${shopId}/${subId}`, 'PUT', JSON.stringify(body), true);
       if (res?.success && res.data) {
         message.success(`Saved the ${entry?.sub_category?.name || ''} form`.replace(/\s+/g, ' '));
@@ -240,7 +259,7 @@ const FormSettings = ({ open, onClose, shop }) => {
   const reset = () => {
     modal.confirm({
       title: `Reset the ${entry?.sub_category?.name || ''} form?`.replace(/\s+/g, ' '),
-      content: 'Your hidden, renamed and custom fields for this category are removed. Values already saved on items are kept.',
+      content: 'Your hidden, renamed, enabled and custom fields for this category are removed. Values already saved on items are kept.',
       okText: 'Reset to default',
       okButtonProps: { danger: true },
       cancelText: 'Cancel',
@@ -457,6 +476,34 @@ const FormSettings = ({ open, onClose, shop }) => {
             <div className="ms-label">Fields</div>
             {base.length === 0 && <div className="ms-muted">This category has no extra fields.</div>}
             {base.map(renderBaseRow)}
+
+            {available.length > 0 && (
+              <>
+                <div className="mc-form-custom-head">
+                  <div className="ms-label">
+                    More fields from the catalogue ({(draft.enabled_attributes || []).length}/{available.length})
+                  </div>
+                </div>
+                <Select
+                  mode="multiple"
+                  allowClear
+                  showSearch
+                  optionFilterProp="label"
+                  placeholder="Switch on more details for this category, e.g. Fabric, Warranty"
+                  value={draft.enabled_attributes || []}
+                  onChange={setEnabled}
+                  style={{ width: '100%', marginBottom: 8 }}
+                  aria-label="More fields from the catalogue"
+                  options={['statutory', 'required', 'recommended', 'optional']
+                    .map((level) => ({
+                      label: LEVEL_LABEL[level],
+                      options: available.filter((f) => (f.level || 'optional') === level).map((f) => ({ value: f.key, label: f.label })),
+                    }))
+                    .filter((g) => g.options.length)}
+                />
+                {enabledFields(available, draft).map(renderBaseRow)}
+              </>
+            )}
 
             <div className="mc-form-custom-head">
               <div className="ms-label">

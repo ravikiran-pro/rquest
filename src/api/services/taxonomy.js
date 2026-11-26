@@ -8,6 +8,7 @@
  */
 const { CATEGORIES, SUB_CATEGORIES } = require('../data/taxonomy');
 const { FORM_TEMPLATES, normalizeSchema, annotateFieldSources } = require('./formSchema');
+const attributeSets = require('./attributeSets');
 
 const LISTING_TYPES = ['product', 'food', 'service', 'rental'];
 const KEY_PATTERN = /^[a-z][a-z0-9_]{1,49}$/;
@@ -19,15 +20,20 @@ const normalizeName = (text) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
 
-/** The listing form of a sub-category: its template's fields, minus omitted ones, plus extras. */
+/**
+ * The listing form of a sub-category. With attribute research (data/attributeSets.json) it
+ * is the researched basic form; otherwise its template's fields, minus omitted ones, plus
+ * extras. Everything else in the research can be switched on per store.
+ */
 const buildSubCategoryForm = (sub) => {
   const template = FORM_TEMPLATES.find((t) => t.key === sub.template);
   if (!template) throw new Error(`${sub.key}: unknown form template "${sub.template}"`);
   const omit = new Set(sub.omit_fields || []);
-  const fields = [
+  const legacy = [
     ...template.fields.filter((f) => !omit.has(f.key)),
     ...(sub.extra_fields || []),
   ];
+  const fields = attributeSets.basicFormFields(sub, legacy) || legacy;
   // Extra fields carry no ownership props; known catalogue keys (brand, ...) get them here
   const { schema, errors } = normalizeSchema(annotateFieldSources(fields));
   if (errors.length) {
@@ -63,7 +69,8 @@ const validateTaxonomy = () => {
       }
     });
     try {
-      if (buildSubCategoryForm(s).length === 0) problems.push(`${s.key}: form has no fields`);
+      // A researched basic form may be empty (every basic field is a variant axis)
+      if (buildSubCategoryForm(s).length === 0 && !attributeSets.hasSet(s.key)) problems.push(`${s.key}: form has no fields`);
     } catch (err) {
       problems.push(err.message);
     }
@@ -195,6 +202,10 @@ const syncTaxonomy = async (sequelize, { transaction, log = () => {} } = {}) => 
     }
   }
 
+  const [axesColumn] = await q(
+    `SELECT 1 AS ok FROM information_schema.columns
+      WHERE table_schema = current_schema() AND table_name = 'sub_categories' AND column_name = 'variant_axes'`
+  );
   const subIds = {};
   for (const [index, s] of SUB_CATEGORIES.entries()) {
     const [existing] = await q(
@@ -245,6 +256,12 @@ const syncTaxonomy = async (sequelize, { transaction, log = () => {} } = {}) => 
       );
       subIds[s.key] = row.id;
       log(`  + sub-category ${s.key}`);
+    }
+    if (axesColumn) {
+      await exec('UPDATE sub_categories SET variant_axes = CAST(:axes AS jsonb) WHERE key = :key', {
+        key: s.key,
+        axes: json(attributeSets.variantAxes(s.key)),
+      });
     }
   }
 

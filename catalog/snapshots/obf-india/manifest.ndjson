@@ -1,0 +1,6 @@
+{"attribution":"Product data from Open Beauty Facts (openbeautyfacts.org), available under the Open Database License.","input_sha256":"4c3c7bb4b62969736e97861edec5576d47f9328cd896fec4d681f036753a38ba","license":"ODbL 1.0 (database), DbCL 1.0 (contents), CC BY-SA 3.0 (images)","source":"obf-india","source_version":"records-300+t3","title":"Open Beauty Facts — products sold in India (collected)"}
+{"file":"brands.ndjson.gz","rows":168,"sha256":"088d9bf1f2e63701f694b7c51598b1dcb2aae52a154012c2e11cccb4efb7f2f7"}
+{"file":"items.ndjson.gz","rows":293,"sha256":"0039ad12bd749e860137badb217c5d002293b4e0d3792a5bee1724b3ccb19986"}
+{"file":"item_sources.ndjson.gz","rows":293,"sha256":"18d32149063f1d142325364d6e7a0c693e37069c5c6eff26187eff9ffdb4d8f2"}
+{"file":"rejects.ndjson.gz","rows":7,"sha256":"a2d450a5099b3f20dcb0f5de0bebb323bde6ace88631ffbfe3b1511200e609ed"}
+{"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

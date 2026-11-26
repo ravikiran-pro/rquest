@@ -37,7 +37,8 @@ const meta = {
   license: LICENSE,
   attribution:
     'Generic medicines: Pradhan Mantri Bhartiya Janaushadhi Pariyojana, via the Press Information Bureau (pib.gov.in).',
-  transformVersion: 1,
+  // 2: generic → generic_medicine (a flag), composition = the listed salt/strength name
+  transformVersion: 2,
   maxRejectRatio: 0.01,
 };
 
@@ -152,7 +153,9 @@ function transform(input) {
         drug_code: row.code,
         unit_size: cleanText(row.unit),
         dosage_form: form,
-        generic: true,
+        // The list names each medicine by its salts and strengths
+        composition: name,
+        generic_medicine: true,
         prescription_status: 'unknown',
         prescription_note:
           'Drug schedule (H/H1/X) is not in the source list: classify before open sale.',

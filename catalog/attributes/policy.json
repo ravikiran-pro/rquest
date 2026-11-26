@@ -1,0 +1,23 @@
+{
+ "_comment": "Merge policy applied by build.js on top of the research. shop_level: recorded once on the shop profile (shop-wide default), never in a listing form: shop-wide policies, GST invoicing, and registrations held by the business (eMigrate RC, AMFI ARN, SEBI/IRDAI/ICAI/CoA registration). form_optional: shown in the basic form but not enforced, because the rule applies only to some items (perishables, allergen-containing food, services that offer a warranty, RERA-registrable projects, mutual-fund distributors, overseas recruitment).",
+ "shop_level": [
+  "return_policy",
+  "price_breakup_charges",
+  "gst_invoice",
+  "emigration_rc_number",
+  "amfi_arn",
+  "sebi_registration_no",
+  "irdai_registration_no",
+  "icai_membership_no",
+  "coa_registration_no"
+ ],
+ "form_optional": [
+  "expiry_date",
+  "best_before_date",
+  "amfi_arn",
+  "emigration_rc_number",
+  "allergens",
+  "warranty_days",
+  "rera_project_registration_no"
+ ]
+}

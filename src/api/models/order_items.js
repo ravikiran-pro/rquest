@@ -48,6 +48,17 @@ module.exports = (sequelize) => {
         allowNull: false,
         defaultValue: 0,
       },
+      // The variant ordered (listings with variant_axes); NULL for simple listings
+      variant_id: {
+        type: DataTypes.UUID,
+        allowNull: true,
+        references: { model: 'listing_variants', key: 'id' },
+      },
+      // Snapshot of the variant's options when ordered, e.g. "M / Navy"
+      variant_label: {
+        type: DataTypes.TEXT,
+        allowNull: true,
+      },
     },
     {
       timestamps: true,
@@ -64,6 +75,9 @@ module.exports = (sequelize) => {
         foreignKey: 'listing_id',
         as: 'listing',
       });
+    }
+    if (models.listing_variants) {
+      OrderItem.belongsTo(models.listing_variants, { foreignKey: 'variant_id', as: 'variant' });
     }
   };
 

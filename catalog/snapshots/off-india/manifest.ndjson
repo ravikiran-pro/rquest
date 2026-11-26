@@ -1,6 +1,6 @@
-{"attribution":"Product data from Open Food Facts (openfoodfacts.org), available under the Open Database License.","input_sha256":"f91801daa3998fea96f76c9b75b9b1668e05f4ee14248bd11ccc299702cdc382","license":"ODbL 1.0 (database), DbCL 1.0 (contents), CC BY-SA 3.0 (images)","source":"off-india","source_version":"api-sample-2026-11-15+t2","title":"Open Food Facts — products sold in India"}
-{"file":"brands.ndjson.gz","rows":496,"sha256":"df2fc6c26ec930c8f9d0b9951b9d2871dc79876f32b40531bf8fe1bf42bd2944"}
-{"file":"items.ndjson.gz","rows":896,"sha256":"67f91e653b51119ff89801a09b37c77f509b21a890b000fd9632a7e7a1193b70"}
-{"file":"item_sources.ndjson.gz","rows":896,"sha256":"f803f7dc8ac9ee347b6d642d8032842b828b16a0ab32d0c1d00ff9f1bc5348e5"}
-{"file":"rejects.ndjson.gz","rows":104,"sha256":"60cc1d39720251428f6962526bd51abe611c06ce371a43bb2f77b3fbcee6d1a1"}
-{"file":"review.ndjson.gz","rows":1,"sha256":"32aacb7ac905a3cbbfef6f168810cae32e7ac77307e4620695c3687298ddf6c7"}
+{"attribution":"Product data from Open Food Facts (openfoodfacts.org), available under the Open Database License.","input_sha256":"93b2dbb0a436e429ed731fe5edfbfa66bcaa9fb35af4b53d9f40e372c0f01491","license":"ODbL 1.0 (database), DbCL 1.0 (contents), CC BY-SA 3.0 (images)","source":"off-india","source_version":"api-sample-2026-11-24-1b337bf3+t3","title":"Open Food Facts — products sold in India"}
+{"file":"brands.ndjson.gz","rows":496,"sha256":"e48cd988d2c81b222b418a543e3f0279b93fbc79ee3fa66c68e2063dde8d8165"}
+{"file":"items.ndjson.gz","rows":888,"sha256":"3460e082a50598cf68017dd90d07e2e906e9890a7538af0a31ef7c16403e20ae"}
+{"file":"item_sources.ndjson.gz","rows":888,"sha256":"dcd32038c7586e67c78408483760397c0d1500a4a19d968885464626d879ce79"}
+{"file":"rejects.ndjson.gz","rows":112,"sha256":"7e0898a0998344b8e3268d4af0abae53d5bce8b30bbf63a4c383e88eee9a1f8a"}
+{"file":"review.ndjson.gz","rows":1,"sha256":"2863f3e91a0c32d7b8d635f5fedf0ff3ef57ba6490810c7e397df2279181bcc3"}

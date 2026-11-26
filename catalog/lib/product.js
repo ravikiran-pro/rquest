@@ -149,6 +149,35 @@ function dietOf(labels) {
   return null;
 }
 
+/** Dictionary food_type (FSSAI veg / non-veg mark) from the label-derived diet. */
+const foodTypeOf = (diet) => ({ vegan: 'vegan', veg: 'veg', non_veg: 'non-veg' }[diet] || null);
+
+/** Trimmed single-spaced text, or null; cut at `max` characters. */
+const cleanGeneric = (text, max = 200) => {
+  const t = String(text || '').replace(/\s+/g, ' ').trim();
+  return t ? t.slice(0, max) : null;
+};
+
+/** Per-100 g/ml nutrition as one readable line, or null (Open Facts nutriments). */
+const NUTRIENTS = [
+  ['energy-kcal_100g', 'Energy', 'kcal'],
+  ['proteins_100g', 'Protein', 'g'],
+  ['carbohydrates_100g', 'Carbohydrate', 'g'],
+  ['sugars_100g', 'Sugars', 'g'],
+  ['fat_100g', 'Fat', 'g'],
+  ['saturated-fat_100g', 'Saturated fat', 'g'],
+  ['sodium_100g', 'Sodium', 'g'],
+];
+const nutritionOf = (n) => {
+  if (!n || typeof n !== 'object') return null;
+  const parts = [];
+  for (const [key, label, unit] of NUTRIENTS) {
+    const v = Number(n[key]);
+    if (Number.isFinite(v) && v >= 0) parts.push(`${label} ${Math.round(v * 10) / 10} ${unit}`);
+  }
+  return parts.length >= 3 ? `Per 100 g/ml: ${parts.join(', ')}` : null;
+};
+
 const countryOf = (originTags) => {
   for (const t of originTags || []) if (COUNTRY[t]) return COUNTRY[t];
   return null;
@@ -197,6 +226,9 @@ module.exports = {
   titleCaseIfShouting,
   brandOf,
   dietOf,
+  foodTypeOf,
+  cleanGeneric,
+  nutritionOf,
   countryOf,
   qualityOf,
   identityOf,

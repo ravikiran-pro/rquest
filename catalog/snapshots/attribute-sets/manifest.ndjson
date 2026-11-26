@@ -1,0 +1,5 @@
+{"attribution":null,"input_sha256":"a695c34ad2631334cd0c55277b9a751344e908b0d507fe30784c3bd19d15bc73","license":"Internal (research citations kept per attribute)","source":"attribute-sets","source_version":"seed+t1","title":"Researched attribute dictionary and attribute sets per shop type"}
+{"file":"attribute_definitions.ndjson.gz","rows":837,"sha256":"766416fba318fef13986c8889c65b392ee01d3c4704fb4cea2e5bdec3e850569"}
+{"file":"attribute_sets.ndjson.gz","rows":3155,"sha256":"d5c5cb0beafb4ed2505c58545e1da90d6e0bd15e4ba48c7dfa3c750fa4bc9040"}
+{"file":"rejects.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}
+{"file":"review.ndjson.gz","rows":0,"sha256":"e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"}

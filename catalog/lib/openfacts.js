@@ -14,7 +14,7 @@ const { sha256 } = require('./hash');
  *   resumes where it stopped. A `complete.json` marker records a finished crawl.
  * - Sorted by created_t so pages stay stable while the crawl runs (new products shift
  *   items into later pages → duplicates, which the transform drops; never gaps).
- * - crawlId defaults to today's UTC date: one snapshot per day. Pass CATALOG_OFF_CRAWL to
+ * - crawlId defaults to today's UTC date plus a hash of FIELDS: one snapshot per day and field set. Pass CATALOG_OFF_CRAWL to
  *   reuse an older crawl (e.g. to re-run a transform without network).
  */
 const FIELDS = [
@@ -35,6 +35,10 @@ const FIELDS = [
   'origins_tags',
   'manufacturing_places',
   'allergens_tags',
+  'ingredients_text',
+  'ingredients_text_en',
+  'serving_size',
+  'nutriments',
   'nutriscore_grade',
   'nova_group',
   'image_front_url',
@@ -66,7 +70,8 @@ async function crawlCountry(
   const id =
     crawlId ||
     process.env.CATALOG_OFF_CRAWL ||
-    new Date().toISOString().slice(0, 10);
+    // A change to FIELDS starts a new crawl instead of reusing pages without the new fields
+    `${new Date().toISOString().slice(0, 10)}-${sha256(FIELDS.join(',')).slice(0, 8)}`;
   const dir = path.join(ctx.cacheDir, id);
   const marker = path.join(dir, 'complete.json');
   fs.mkdirSync(dir, { recursive: true });

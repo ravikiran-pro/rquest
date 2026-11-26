@@ -337,6 +337,187 @@ LEFT JOIN LATERAL catalog.default_hsn(i.taxonomy_node_id) dh ON i.hsn_code IS NU
 LEFT JOIN LATERAL catalog.gst_rate(coalesce(i.hsn_code, dh.hsn_code)) r ON true;
 `,
   },
+  {
+    version: 4,
+    name: 'attributes: definitions, per-shop-type attribute sets, item families and variants',
+    get sql() {
+      return `
+-- Every attribute the catalogue knows, defined once (seeds/attributes, source attribute-sets).
+CREATE TABLE catalog.attribute_definitions (
+  key            text PRIMARY KEY CHECK (key ~ '^[a-z][a-z0-9_]{0,39}$'),
+  label          text NOT NULL CHECK (length(btrim(label)) > 0),
+  type           text NOT NULL CHECK (type IN ('text', 'textarea', 'number', 'boolean', 'date', 'enum', 'multi_enum', 'measure')),
+  unit_family    text CHECK (unit_family IN ('mass', 'volume', 'length', 'area', 'power', 'energy', 'data', 'duration', 'count', 'temperature', 'currency', 'percent')),
+  default_unit   text,
+  "values"       jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof("values") = 'array'),
+  open_values    boolean NOT NULL DEFAULT false,
+  description    text,
+  shopify_handle text,
+  ondc_attribute text,
+  sources        jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(sources) = 'array'),
+  source         text NOT NULL,
+  ${TRACKING},
+  CONSTRAINT attribute_measure_unit CHECK ((type = 'measure') = (unit_family IS NOT NULL)),
+  CONSTRAINT attribute_enum_values CHECK (type NOT IN ('enum', 'multi_enum') OR jsonb_array_length("values") > 0 OR open_values)
+);
+
+-- What a kind of shop (shop_type node = app sub-category) records about what it sells.
+CREATE TABLE catalog.attribute_sets (
+  node_id       text NOT NULL REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  attribute_key text NOT NULL REFERENCES catalog.attribute_definitions(key) DEFERRABLE INITIALLY DEFERRED,
+  level         text NOT NULL CHECK (level IN ('statutory', 'required', 'recommended', 'optional')),
+  owner         text NOT NULL CHECK (owner IN ('catalog', 'store')),
+  per_variant   boolean NOT NULL DEFAULT false,
+  filterable    boolean NOT NULL DEFAULT false,
+  axis_order    smallint CHECK (axis_order BETWEEN 1 AND 5),
+  in_basic_form boolean NOT NULL DEFAULT false,
+  sort_order    integer NOT NULL DEFAULT 0,
+  note          text,
+  source        text NOT NULL,
+  ${TRACKING},
+  PRIMARY KEY (node_id, attribute_key),
+  -- A variant axis always differs per SKU
+  CONSTRAINT attribute_set_axis_per_variant CHECK (axis_order IS NULL OR per_variant)
+);
+CREATE INDEX attribute_sets_attribute_idx ON catalog.attribute_sets (attribute_key);
+-- One axis per position is guaranteed by the attribute-sets transform (positions come from
+-- an ordered list). Not a unique index: a reload that swaps two axes would collide mid-upsert.
+
+-- A product sold in several variants (sizes, colours, pack sizes…). Each SKU is one item.
+CREATE TABLE catalog.item_families (
+  id               text PRIMARY KEY CHECK (id ~ '^fam:[0-9a-f]{20}$'),
+  name             text NOT NULL CHECK (length(btrim(name)) > 0),
+  brand_key        text REFERENCES catalog.brands(brand_key) DEFERRABLE INITIALLY DEFERRED,
+  taxonomy_node_id text REFERENCES catalog.taxonomy_nodes(id) DEFERRABLE INITIALLY DEFERRED,
+  variant_axes     jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(variant_axes) = 'array'),
+  attributes       jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(attributes) = 'object'),
+  source           text NOT NULL,
+  ${TRACKING}
+);
+CREATE INDEX item_families_name_trgm ON catalog.item_families USING gin (name gin_trgm_ops);
+
+ALTER TABLE catalog.items
+  ADD COLUMN family_id      text REFERENCES catalog.item_families(id) DEFERRABLE INITIALLY DEFERRED,
+  ADD COLUMN variant_values jsonb NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(variant_values) = 'object'),
+  ADD CONSTRAINT items_variant_needs_family CHECK (family_id IS NOT NULL OR variant_values = '{}'::jsonb);
+CREATE INDEX items_family_idx ON catalog.items (family_id);
+CREATE UNIQUE INDEX items_family_variant_uniq ON catalog.items (family_id, variant_values)
+  WHERE family_id IS NOT NULL;
+
+-- i.* was expanded when the view was created: rebuild it so it carries the new columns.
+DROP VIEW catalog.items_enriched;
+${MIGRATIONS[2].sql.slice(MIGRATIONS[2].sql.indexOf('CREATE VIEW catalog.items_enriched'))}
+`;
+    },
+  },
+  {
+    version: 5,
+    name: 'background collection: job queue and collected records',
+    sql: `
+-- Work for the background collectors (lib/collect): one row per page/request to make.
+-- Workers claim due rows with FOR UPDATE SKIP LOCKED, so several can run at once.
+CREATE TABLE catalog.collect_jobs (
+  id            bigserial PRIMARY KEY,
+  scraper       text        NOT NULL CHECK (scraper ~ '^[a-z0-9][a-z0-9-]*$'),
+  job_key       text        NOT NULL CHECK (length(job_key) BETWEEN 1 AND 500),
+  kind          text        NOT NULL DEFAULT 'page',
+  params        jsonb       NOT NULL DEFAULT '{}'::jsonb CHECK (jsonb_typeof(params) = 'object'),
+  status        text        NOT NULL DEFAULT 'queued' CHECK (status IN ('queued', 'running', 'done', 'failed', 'skipped')),
+  priority      smallint    NOT NULL DEFAULT 0,
+  attempts      smallint    NOT NULL DEFAULT 0,
+  next_run_at   timestamptz NOT NULL DEFAULT now(),
+  locked_until  timestamptz,
+  locked_by     text,
+  last_error    text,
+  records       integer     NOT NULL DEFAULT 0,
+  -- A done job is queued again this long after it finished (null = never)
+  refresh_after interval,
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  updated_at    timestamptz NOT NULL DEFAULT now(),
+  finished_at   timestamptz,
+  UNIQUE (scraper, job_key)
+);
+CREATE INDEX collect_jobs_due_idx ON catalog.collect_jobs (scraper, priority DESC, next_run_at)
+  WHERE status IN ('queued', 'running');
+
+-- What collectors found, one row per record of a scraper (product, price row, ...). A source
+-- (sources/<scraper>) turns these into items through the normal loader. payload is the raw
+-- record; content_hash lets a re-collect skip unchanged rows.
+CREATE TABLE catalog.collect_records (
+  scraper      text        NOT NULL,
+  record_key   text        NOT NULL CHECK (length(record_key) BETWEEN 1 AND 500),
+  job_id       bigint      REFERENCES catalog.collect_jobs(id) ON DELETE SET NULL,
+  source_url   text,
+  payload      jsonb       NOT NULL CHECK (jsonb_typeof(payload) = 'object'),
+  content_hash char(64)    NOT NULL,
+  first_seen   timestamptz NOT NULL DEFAULT now(),
+  last_seen    timestamptz NOT NULL DEFAULT now(),
+  changed_at   timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (scraper, record_key)
+);
+CREATE INDEX collect_records_changed_idx ON catalog.collect_records (scraper, changed_at);
+`,
+  },
+  {
+    version: 6,
+    name: 'item facts: attributes other sources add to existing items',
+    get sql() {
+      const view = MIGRATIONS[2].sql.slice(MIGRATIONS[2].sql.indexOf('CREATE VIEW catalog.items_enriched'));
+      const head = 'SELECT i.*,';
+      if (!view.includes(head)) throw new Error('migration 6: items_enriched view text changed');
+      // Same view, but attributes = facts filled in under the item's own (non-null) values, and
+      // manufacturer / country of origin fall back to a fact when the item has none
+      const columns = [
+        'i.id', 'i.gtin', 'i.kind', 'i.name', 'i.name_key', 'i.brand_key', 'i.net_quantity', 'i.unit',
+        'i.quantity_text', 'i.taxonomy_node_id', 'i.classification_basis', 'i.hsn_code',
+        "coalesce(i.country_of_origin, fx.facts->>'country_of_origin') AS country_of_origin",
+        "coalesce(i.manufacturer, fx.facts->>'manufacturer') AS manufacturer",
+        'i.image_url',
+        "coalesce(fx.facts, '{}'::jsonb) || jsonb_strip_nulls(i.attributes) AS attributes",
+        'i.dedupe_key', 'i.status', 'i.quality_score', 'i.primary_source', 'i.content_hash', 'i.is_active',
+        'i.first_run_id', 'i.last_changed_run_id', 'i.created_at', 'i.updated_at', 'i.family_id',
+        'i.variant_values', 'i.attributes AS own_attributes',
+        "coalesce(fx.fact_sources, '{}'::jsonb) AS fact_sources",
+      ];
+      const body = view
+        .replace(head, `SELECT ${columns.join(',\n       ')},`)
+        .replace(
+          'FROM catalog.items i',
+          `FROM catalog.items i
+LEFT JOIN LATERAL (
+  SELECT jsonb_object_agg(f.attribute_key, f.value) AS facts,
+         jsonb_object_agg(f.attribute_key, f.source) AS fact_sources
+    FROM catalog.item_facts_best f WHERE f.item_id = i.id
+) fx ON true`
+        );
+      return `
+-- A fact one source adds to an item another source owns (a medicine's ceiling price, an
+-- appliance's star rating, a brand's manufacturer). Items are never edited by other sources;
+-- facts sit beside them and items_enriched merges them in. The item's own value wins.
+CREATE TABLE catalog.item_facts (
+  item_id       text     NOT NULL REFERENCES catalog.items(id) DEFERRABLE INITIALLY DEFERRED,
+  attribute_key text     NOT NULL CHECK (attribute_key ~ '^[a-z][a-z0-9_]{0,39}$'),
+  value         jsonb    NOT NULL CHECK (value <> 'null'::jsonb),
+  source        text     NOT NULL,
+  source_url    text,
+  -- 0-100: how sure the source is (exact id match 90+, name match lower)
+  confidence    smallint NOT NULL DEFAULT 50 CHECK (confidence BETWEEN 0 AND 100),
+  ${TRACKING},
+  PRIMARY KEY (item_id, attribute_key, source)
+);
+CREATE INDEX item_facts_source_idx ON catalog.item_facts (source);
+
+-- The fact used per (item, attribute): most confident, then most recently changed
+CREATE VIEW catalog.item_facts_best AS
+SELECT DISTINCT ON (item_id, attribute_key) item_id, attribute_key, value, source, confidence
+  FROM catalog.item_facts
+ WHERE is_active
+ ORDER BY item_id, attribute_key, confidence DESC, updated_at DESC;
+
+DROP VIEW catalog.items_enriched;
+${body}`;
+    },
+  },
 ];
 
 const REQUIRED_EXTENSIONS = ['btree_gist', 'pg_trgm', 'unaccent'];

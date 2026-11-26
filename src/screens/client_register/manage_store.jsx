@@ -60,6 +60,7 @@ import {
 import ChatIcon from '../../app/components/common/ChatIcon';
 import { shopSubCategories } from '../../app/utils/shopSubCategories';
 import { netWorkCall, apiConfig } from '../../app/utils';
+import { lineName } from '../../app/utils/variants';
 import { subCategoryArchetype } from '../../app/utils/form_schema';
 import { useHistory, useLocation } from 'react-router-dom';
 import { AddProductModal, ImportProductCsvModal } from '../../app/components/listings';
@@ -791,7 +792,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
         (o.order_number || '').toLowerCase().includes(q) ||
         (o.customer?.username || '').toLowerCase().includes(q) ||
         (o.customer_phone || o.customer?.mobile || '').includes(q) ||
-        (o.items || []).some((it) => (it.item_name || '').toLowerCase().includes(q))
+        (o.items || []).some((it) => lineName(it, '').toLowerCase().includes(q))
       );
     });
   }, [orders, orderFilter, orderSearch]);
@@ -867,7 +868,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
       <span className="ms-order-items">
         {shown.map((it, idx) => (
           <span key={it.id || idx} className="ms-order-item-line">
-            {it.quantity}× {it.item_name}
+            {it.quantity}× {lineName(it)}
           </span>
         ))}
         {items.length > max && <span className="ms-muted">+{items.length - max} more</span>}
@@ -2009,7 +2010,7 @@ const ManageStore = ({ shop, allShops, onSwitchShop, onClose, onRefreshShop }) =
                 {(selectedOrder.items || []).map((item, idx) => (
                   <div key={item.id || idx} className="ms-bill-line">
                     <div className="ms-cell-stack">
-                      <span className="ms-strong">{item.item_name}</span>
+                      <span className="ms-strong">{lineName(item)}</span>
                       <span className="ms-muted">
                         {item.quantity} × {formatINR(item.unit_price)}
                       </span>

@@ -10,6 +10,30 @@ Postgres schema**. It is fully isolated from the app:
 | Dev server not disturbed | Raw downloads go to `~/.cache/rquest-catalog` (outside the repo); snapshots are `.ndjson.gz`, which nodemon ignores. (Editing pipeline `.js` files still restarts `npm run dev`, like any `.js` in the repo.) |
 | Database | Uses the **app's own database** (the `DB_*` / `NODE_ENV` settings in the root `.env`, the same connection the API uses), so `catalog` sits next to `public` in the existing database. |
 
+## Service boundary (everything catalogue lives in this folder)
+
+The catalogue is built to become its own service. Everything it owns is under `catalog/`:
+schema (`db/`), sources (`sources/`), collectors (`scrapers/`, `lib/collect/`), attribute
+research and build (`attributes/`), seeds, snapshots, scripts (`scripts/apply.sh`) and its own
+`package.json`. It never imports app code and never writes outside this folder.
+
+What crosses the boundary:
+
+| Direction | What | How |
+|---|---|---|
+| app → catalogue | shop types, sub-categories and their catalogue nodes | `npm run taxonomy:export-catalog` writes `seeds/shop_types.csv`; `attributes/inputs/sub_categories.json` |
+| catalogue → app | attribute dictionary, basic forms, variant axes | `attributes/build.js` writes `exports/attributeSets.json`; `npm run catalog:publish` copies it to `src/api/data/` |
+| catalogue → app | items for search and catalogue copies | the app reads `catalog.items_enriched` (read-only) |
+
+When split out, the last two become API calls to the catalogue service; nothing else changes.
+
+## Background collection
+
+`scrapers/README.md`: collectors queue jobs in `catalog.collect_jobs`, a worker
+(`node cli.js worker`) fetches politely and stores `catalog.collect_records`, and each
+collector's source turns records into items through the normal loader.
+`node cli.js gaps` shows items and attribute fill per sub-category.
+
 ## Quick start
 
 The pipeline uses the app's database by default, so there is nothing to configure when the

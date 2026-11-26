@@ -24,3 +24,5 @@ tests/ui/output/
 tests/ui/*
 uploads/
 snapshots/*
+# Agent worktrees (local only)
+.claude/worktrees/

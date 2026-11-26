@@ -1184,11 +1184,17 @@ const SearchScreen = () => {
                       <Col xs={24} sm={12} md={24} lg={12} xl={8} xxl={8} key={item.id}>
                         <OfferingCard
                           item={item}
-                          onOrder={(it) => {
+                          onOrder={(it, variant) => {
                             // Cart is keyed by shop: pass the listing's shop alongside the item
-                            const added = addItem(it.shop, it);
+                            const added = addItem(it.shop, it, variant);
                             if (added && added.ok === false) {
-                              message.warning(added.reason === 'max' ? `Only ${added.max} in stock` : 'This item is out of stock');
+                              message.warning(
+                                added.reason === 'max'
+                                  ? `Only ${added.max} in stock`
+                                  : added.reason === 'variant'
+                                  ? 'Choose an option first'
+                                  : 'This item is out of stock'
+                              );
                               return;
                             }
                             openCart();

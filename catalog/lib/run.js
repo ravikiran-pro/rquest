@@ -19,6 +19,7 @@ const { writeSnapshot } = require('./snapshot');
  *   meta:      { name, title, license, transformVersion, maxRejectRatio? }
  *   entities:  [loader specs] in load order
  *   extract(ctx)            → { version, inputSha256, ...anything transform needs }
+ *                             (ctx: config, log, cacheDir, db — the run's pg client)
  *   transform(extracted, ctx) → { entities: { [table]: rows[] }, rejects: [], review: [], inputCount, notes? }
  */
 async function runSource(source, opts = {}) {
@@ -30,6 +31,8 @@ async function runSource(source, opts = {}) {
     cacheDir: path.join(cfg.cacheDir, source.meta.name),
   };
   const client = await connect(opts.databaseUrl);
+  // Sources that read collected records (lib/collect) query through the run's connection
+  ctx.db = client;
   const lockKey = `rquest-catalog:${source.meta.name}`;
   let locked = false;
   try {

@@ -31,6 +31,8 @@ export const CATALOG_PATH_SUGGESTIONS = [
   'gst_rate',
   'country_of_origin',
   'attributes.generic',
+  'attributes.composition',
+  'attributes.generic_medicine',
   'attributes.dosage_form',
   'attributes.prescription_required',
   'attributes.schedule_drug',

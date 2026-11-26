@@ -35,7 +35,8 @@ function makeOpenFactsSource({ name, host, title, siteName }) {
       /^world\./,
       ''
     )}), available under the Open Database License.`,
-    transformVersion: 2,
+    // 3: dictionary keys (generic, food_type, organic, ingredients, nutrition_info, serving_size)
+    transformVersion: 3,
     // Records without any name are rejected (~10% of Open Food Facts India).
     maxRejectRatio: 0.2,
   };
@@ -174,6 +175,13 @@ function makeOpenFactsSource({ name, host, title, siteName }) {
             nutriscore: rec.nutriscore_grade || null,
             nova_group: rec.nova_group || null,
             allergens: (rec.allergens_tags || []).slice(0, 20),
+            // Attribute dictionary keys (catalog/seeds/attributes): FSSAI listing declarations
+            generic: P.cleanGeneric(rec.generic_name_en || rec.generic_name),
+            food_type: P.foodTypeOf(diet),
+            organic: (rec.labels_tags || []).includes('en:organic') ? true : null,
+            ingredients: P.cleanGeneric(rec.ingredients_text_en || rec.ingredients_text, 2000),
+            nutrition_info: P.nutritionOf(rec.nutriments),
+            serving_size: P.cleanGeneric(rec.serving_size, 60),
             labels: (rec.labels_tags || []).slice(0, 20),
             manufacturing_places: rec.manufacturing_places || null,
             classified_by: cls.matched,

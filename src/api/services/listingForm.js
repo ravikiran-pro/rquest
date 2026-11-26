@@ -13,6 +13,7 @@
  */
 const { categories, sub_categories, shop_form_overrides } = require('../models');
 const { resolveListingSchema } = require('./formOverrides');
+const attributeSets = require('./attributeSets');
 const { subCategoryIdsByShop } = require('./shopSubCategories');
 
 const toId = (value) => {
@@ -25,7 +26,7 @@ const subCategoryIdFor = (shop, metadata, columnId) =>
   toId(columnId) ?? toId(metadata?.sub_category_id) ?? toId(shop?.sub_category_id);
 const categoryIdFor = (shop, metadata) => toId(metadata?.category_id) ?? toId(shop?.category_id);
 
-const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type', 'template_key'];
+const SUB_ATTRS = ['id', 'key', 'name', 'category_id', 'form_schema', 'listing_type', 'template_key', 'variant_axes'];
 
 /**
  * { schema, base, schemaSource, subCategory, category, override, subCategoryId } for a
@@ -50,15 +51,24 @@ const loadListingContext = async (shop, metadata, { subCategoryId, transaction }
           transaction,
         })
       : null;
+  const baseForm = Array.isArray(subCategory?.form_schema) && subCategory.form_schema.length
+    ? subCategory.form_schema
+    : category?.form_schema || [];
+  // Researched attributes this store may switch on (not already in the base form)
+  const available = subCategory
+    ? attributeSets.enableableFields(subCategory.key, (baseForm || []).map((f) => f && f.key))
+    : [];
   const { schema, base, source } = resolveListingSchema({
     override: override ? override.overrides : null,
     shopForm: shop?.form_schema,
     subForm: subCategory?.form_schema,
     categoryForm: category?.form_schema,
+    available,
   });
   return {
     schema,
     base,
+    available,
     schemaSource: source,
     subCategory,
     category,

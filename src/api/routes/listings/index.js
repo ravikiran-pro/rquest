@@ -22,12 +22,17 @@ const {
 } = require('../../services/listingQuery');
 const {
   serializeListing,
+  serializeListings,
   buildNewListing,
   buildListingUpdate,
+  createListing,
+  updateListing,
+  updateListingVariants,
   catalogCopyId,
   loadCatalogCopies,
   isUniqueViolation,
 } = require('../../services/listingWrite');
+const { hasVariants, loadVariants, refreshListingsFromVariants } = require('../../services/variants');
 
 const router = express.Router();
 
@@ -154,14 +159,12 @@ const writeContext = async (shop) => ({
   sections: await createSectionResolver(shop.id),
 });
 
-/** Listings JSON for owners: each with needs_details / locked_keys from its own form. */
+/** Listings JSON for owners: each with needs_details / locked_keys from its own form, and variants. */
 const serializeForOwner = async (rows, loadContext, shop) =>
-  Promise.all(
-    rows.map(async (row) => {
-      const ctx = await loadContext(subCategoryIdFor(shop, row.metadata, row.sub_category_id));
-      return serializeListing(row, { owner: true, schema: ctx.schema });
-    })
-  );
+  serializeListings(rows, async (row) => {
+    const ctx = await loadContext(subCategoryIdFor(shop, row.metadata, row.sub_category_id));
+    return { owner: true, schema: ctx.schema };
+  });
 
 /** The resolved forms a shop's listings follow, keyed by sub-category id, with UI flags. */
 const resolvedForms = async (shop, loadContext, subIds) => {
@@ -227,7 +230,10 @@ router.get('/shop/:shop_id/storefront', async (req, res) => {
          ) x WHERE x.rn <= :per ORDER BY x.section_id, x.rn`,
         { shopId: shop.id, ids: prefetchIds, per: perSection.value }
       );
-      rows.forEach((row) => itemsBySection.get(row.section_id)?.push(serializeListing(row)));
+      const variants = await loadVariants(rows);
+      rows.forEach((row) =>
+        itemsBySection.get(row.section_id)?.push(serializeListing(row, { variants: variants.get(row.id) }))
+      );
     }
 
     // Forms of the shop's sub-categories and of any other sub-category its listings follow
@@ -282,13 +288,13 @@ router.get('/shop/:shop_id', async (req, res) => {
         `SELECT l.* FROM shop_listings l WHERE ${sql} ORDER BY l.is_available DESC, l."createdAt" DESC`,
         replacements
       );
-      return res.status(200).json({ success: true, data: items.map((item) => serializeListing(item)) });
+      return res.status(200).json({ success: true, data: await serializeListings(items) });
     }
 
     const { rows, total } = await pageOfListings(shop_id, params, { scope: 'public' });
     res.status(200).json({
       success: true,
-      data: rows.map((row) => serializeListing(row)),
+      data: await serializeListings(rows),
       total,
       limit: params.limit,
       offset: params.offset,
@@ -415,7 +421,7 @@ router.post('/search', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      data: items.map((item) => serializeListing(item)),
+      data: await serializeListings(items),
       // Custom-field filters the client can offer for these results
       filter_fields: await loadFilterFields(items),
     });
@@ -482,11 +488,100 @@ router.get('/manage/:shop_id', async (req, res) => {
 });
 
 // 4. Inventory: stock changes for many listings
-//   PATCH /listings/inventory { shop_id, updates: [{ id, stock_mode?, stock_qty?, delta?,
+//   PATCH /listings/inventory { shop_id, updates: [{ id, variant_id?, stock_mode?, stock_qty?, delta?,
 //                                low_stock_threshold?, is_available? }] }  (1–200)
-//   200 { success, updated: [Listing], skipped: [{ id, reason }] }
-//   reasons: not_found · stock_qty_required · is_available_derived · negative_stock · invalid
+//   Listings with variants: stock_qty / delta / is_available need the variant_id; without it
+//   only stock_mode and low_stock_threshold (for all the listing's variants) can change.
+//   200 { success, updated: [Listing], skipped: [{ id, variant_id?, reason }] }
+//   reasons: not_found · stock_qty_required · is_available_derived · negative_stock ·
+//            variant_required · invalid
 const INVENTORY_REASONS = new Set(['stock_qty_required', 'is_available_derived']);
+
+/**
+ * One inventory change on a listing with variants. Returns {} when applied (the listing's
+ * denormalised columns are refreshed and the instance reloaded) or { reason }.
+ */
+const updateVariantStock = async (listing, rawVariantId, input) => {
+  const variantId = typeof rawVariantId === 'string' && rawVariantId ? rawVariantId : null;
+  if (!variantId) {
+    if (input.stock_qty !== undefined || input.delta !== undefined || input.is_available !== undefined) {
+      return { reason: 'variant_required' };
+    }
+    if (input.stock_mode === undefined && input.low_stock_threshold === undefined) return { reason: 'invalid' };
+    const existing = (await loadVariants([listing])).get(listing.id) || [];
+    const plan = updateListingVariants({ listing, body: {}, subCategory: null, subChanged: false, stockInput: input, existing });
+    if (!plan || plan.code) return { reason: plan && INVENTORY_REASONS.has(plan.code) ? plan.code : 'invalid' };
+    if (plan.changes) await updateListing(listing, { changes: plan.changes, variants: plan.rows });
+    return {};
+  }
+  if (!UUID_PATTERN.test(variantId)) return { reason: 'not_found' };
+  if (input.stock_mode !== undefined) return { reason: 'invalid' };
+  const mode = listing.stock_mode;
+
+  return sequelize.transaction(async (transaction) => {
+    const [variant] = await sequelize.query(
+      'SELECT id, stock_qty, is_available FROM listing_variants WHERE id = :variantId AND listing_id = :listingId FOR UPDATE',
+      { replacements: { variantId, listingId: listing.id }, type: QueryTypes.SELECT, transaction }
+    );
+    if (!variant) return { reason: 'not_found' };
+    const replacements = { variantId, listingId: listing.id };
+
+    if (input.delta !== undefined) {
+      // ±delta on a counted variant, applied atomically (orders may change it meanwhile)
+      if (mode !== 'tracked' || input.stock_qty !== undefined || input.is_available !== undefined) return { reason: 'invalid' };
+      const [rows] = await sequelize.query(
+        `UPDATE listing_variants
+            SET stock_qty = stock_qty + :delta,
+                is_available = (stock_qty + :delta) > 0,
+                low_stock_threshold = COALESCE(CAST(:threshold AS integer), low_stock_threshold),
+                "updatedAt" = now()
+          WHERE id = :variantId AND listing_id = :listingId AND stock_qty IS NOT NULL AND stock_qty + :delta >= 0
+          RETURNING id`,
+        {
+          replacements: {
+            ...replacements,
+            delta: input.delta,
+            threshold: input.low_stock_threshold === undefined ? null : input.low_stock_threshold,
+          },
+          transaction,
+        }
+      );
+      if (!rows.length) return { reason: 'negative_stock' };
+    } else {
+      const sets = [];
+      if (input.stock_qty !== undefined) {
+        if (mode !== 'tracked') return { reason: 'invalid' };
+        replacements.qty = input.stock_qty;
+        sets.push('stock_qty = :qty', 'is_available = :qty > 0');
+      }
+      if (input.is_available !== undefined) {
+        if (mode === 'tracked') {
+          const qty = input.stock_qty !== undefined ? input.stock_qty : Number(variant.stock_qty) || 0;
+          if (input.is_available !== qty > 0) return { reason: 'is_available_derived' };
+        } else if (mode === 'always') {
+          if (input.is_available === false) return { reason: 'is_available_derived' };
+        } else {
+          replacements.flag = input.is_available;
+          sets.push('is_available = :flag');
+        }
+      }
+      if (input.low_stock_threshold !== undefined) {
+        replacements.threshold = input.low_stock_threshold;
+        sets.push('low_stock_threshold = CAST(:threshold AS integer)');
+      }
+      if (!sets.length && input.is_available === undefined) return { reason: 'invalid' };
+      if (sets.length) {
+        await sequelize.query(
+          `UPDATE listing_variants SET ${sets.join(', ')}, "updatedAt" = now() WHERE id = :variantId AND listing_id = :listingId`,
+          { replacements, transaction }
+        );
+      }
+    }
+    await refreshListingsFromVariants([listing.id], { transaction });
+    await listing.reload({ transaction });
+    return {};
+  });
+};
 router.patch('/inventory', async (req, res) => {
   try {
     const { shop_id, updates } = req.body || {};
@@ -519,6 +614,21 @@ router.patch('/inventory', async (req, res) => {
         continue;
       }
       const input = parsed.input;
+
+      // Variant listings: counts live on the variants (update.variant_id)
+      if (hasVariants(listing)) {
+        const outcome = await updateVariantStock(listing, update.variant_id, input);
+        if (outcome.reason) {
+          skipped.push({ id, ...(update.variant_id ? { variant_id: update.variant_id } : {}), reason: outcome.reason });
+          continue;
+        }
+        touched.set(id, listing);
+        continue;
+      }
+      if (update.variant_id !== undefined && update.variant_id !== null && update.variant_id !== '') {
+        skipped.push({ id, variant_id: update.variant_id, reason: 'not_found' });
+        continue;
+      }
 
       if (input.delta !== undefined) {
         // ±delta on a counted item, applied atomically (orders may change it meanwhile)
@@ -646,14 +756,15 @@ router.post('/', async (req, res) => {
       sectionText: isBlank(body.section) ? legacySection : body.section,
       enforceRequired: !body.is_starter,
       prefill: Boolean(catalog),
+      allowVariants: true,
     });
     if (built.code) return sendFail(res, built);
 
-    const newListing = await shop_listings.create(built.values);
+    const { listing: newListing, variants } = await createListing(built);
     res.status(201).json({
       success: true,
       message: 'Listing created successfully',
-      data: serializeListing(newListing, { owner: true, schema: built.schema }),
+      data: serializeListing(newListing, { owner: true, schema: built.schema, variants }),
       ...(built.warnings.length ? { warnings: built.warnings } : {}),
     });
   } catch (err) {
@@ -797,12 +908,12 @@ router.put('/:id', async (req, res) => {
     const ctx = await writeContext(shop);
     const built = await buildListingUpdate({ listing, shop, ...ctx, body, catalog });
     if (built.code) return sendFail(res, built);
-    await listing.update(built.changes);
+    const { variants } = await updateListing(listing, built);
 
     res.status(200).json({
       success: true,
       message: 'Listing updated successfully',
-      data: serializeListing(listing, { owner: true, schema: built.schema }),
+      data: serializeListing(listing, { owner: true, schema: built.schema, variants }),
     });
   } catch (err) {
     if (isUniqueViolation(err)) {

@@ -6,6 +6,7 @@ import ChatIcon from '../common/ChatIcon';
 import CardMedia from './CardMedia';
 import { useChatStore, useGlobalStore, useCartStore } from '../../services';
 import { formatDistance } from '../../utils';
+import { hasVariants } from '../../utils/variants';
 import { useHistory } from 'react-router-dom';
 import './shop-list.css';
 
@@ -97,6 +98,12 @@ const ShopTableView = ({ items = [], searchMode = 'shops', onOpenMap }) => {
   };
 
   const orderItem = (row) => {
+    // A product with options is chosen on its store page
+    if (hasVariants(row.item) && row.shop?.id) {
+      message.info('Choose an option on the store page');
+      history.push(`/shop/${row.shop.id}`);
+      return;
+    }
     const added = addItem(row.shop, row.item);
     if (added && added.ok === false) {
       message.warning(added.reason === 'max' ? `Only ${added.max} in stock` : 'This item is out of stock');
